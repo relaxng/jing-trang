@@ -465,7 +465,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     public void topLevelAnnotation(ParsedElementAnnotation ea) throws BuildException {
     }
 
-    public void addComment(String value, Location loc) throws BuildException {
+    public void topLevelComment(CommentList comments) throws BuildException {
     }
 
     private RefPattern lookup(String name) {
@@ -546,7 +546,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       // nothing to do
     }
 
-    public void addComment(String value, Location loc) throws BuildException {
+    public void topLevelComment(CommentList comments) throws BuildException {
     }
 
     public Div makeDiv() {
@@ -614,11 +614,11 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     return nc;
   }
 
-  public ParsedPattern commentAfter(ParsedPattern p, String value, Location loc) throws BuildException {
+  public ParsedPattern commentAfter(ParsedPattern p, CommentList comments) throws BuildException {
     return p;
   }
 
-  public ParsedNameClass commentAfter(ParsedNameClass nc, String value, Location loc) throws BuildException {
+  public ParsedNameClass commentAfter(ParsedNameClass nc, CommentList comments) throws BuildException {
     return nc;
   }
 
@@ -733,12 +733,20 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     // nothing needed
   }
 
+  public void addComment(CommentList comments) throws BuildException {
+    // nothing needed
+  }
+
   public void addText(String value, Location loc) {
     // nothing needed
   }
 
   public ParsedElementAnnotation makeElementAnnotation() {
     return null;
+  }
+
+  public boolean usesComments() {
+    return false;
   }
 
   private void error(SAXParseException message) throws BuildException {

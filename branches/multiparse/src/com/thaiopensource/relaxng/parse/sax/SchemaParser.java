@@ -13,6 +13,7 @@ import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.Annotations;
 import com.thaiopensource.relaxng.parse.Context;
+import com.thaiopensource.relaxng.parse.CommentList;
 import com.thaiopensource.util.Uri;
 import com.thaiopensource.util.Localizer;
 import org.relaxng.datatype.Datatype;
@@ -24,6 +25,8 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import java.util.Hashtable;
@@ -34,7 +37,7 @@ import java.util.Vector;
 Deal with comments
 Deal with element annotations
 */
-class SchemaParser {
+class SchemaParser extends AbstractLexicalHandler {
 
   static final String relaxngURIPrefix = "http://relaxng.org/ns/structure/";
   static final String relaxng10URI = relaxngURIPrefix + "1.0";
@@ -50,6 +53,7 @@ class SchemaParser {
   Locator locator;
   PrefixMapping prefixMapping;
   XmlBaseHandler xmlBaseHandler = new XmlBaseHandler();
+  private boolean inDtd = false;
 
   boolean hadError = false;
 
@@ -69,7 +73,11 @@ class SchemaParser {
     }
   }
 
-  abstract class State implements ContentHandler, Context {
+  static interface CommentHandler {
+    void comment(String value);
+  }
+
+  abstract class State implements ContentHandler, Context, CommentHandler {
     State parent;
     String nsInherit;
     String ns;
@@ -77,6 +85,7 @@ class SchemaParser {
     Scope scope;
     Location startLocation;
     Annotations annotations;
+    CommentList comments;
 
     void set() {
       xr.setContentHandler(this);
@@ -96,6 +105,10 @@ class SchemaParser {
       this.datatypeLibrary = parent.datatypeLibrary;
       this.scope = parent.scope;
       this.startLocation = makeLocation();
+      if (parent.comments != null) {
+        annotations = schemaBuilder.makeAnnotations(parent.comments, this);
+        parent.comments = null;
+      }
     }
 
     String getNs() {
@@ -208,10 +221,27 @@ class SchemaParser {
     }
 
     public void startDocument() { }
-    public void endDocument() throws SAXException { }
+    public void endDocument() {
+      if (comments != null && startPattern != null) {
+        startPattern = schemaBuilder.commentAfter(startPattern, comments);
+        comments = null;
+      }
+    }
     public void processingInstruction(String target, String date) { }
     public void skippedEntity(String name) { }
     public void ignorableWhitespace(char[] ch, int start, int len) { }
+
+    public void comment(String value) {
+      if (comments == null)
+        comments = schemaBuilder.makeCommentList();
+      comments.addComment(value, makeLocation());
+    }
+
+    CommentList getComments() {
+      CommentList tem = comments;
+      comments = null;
+      return tem;
+    }
 
     public void characters(char[] ch, int start, int len) throws SAXException {
       for (int i = 0; i < len; i++) {
@@ -270,7 +300,7 @@ class SchemaParser {
 
   }
 
-  class Skipper extends DefaultHandler {
+  class Skipper extends DefaultHandler implements CommentHandler {
     int level = 1;
     State nextState;
 
@@ -292,6 +322,8 @@ class SchemaParser {
 	nextState.set();
     }
 
+    public void comment(String value) {
+    }
   }
 
   abstract class EmptyContentState extends State {
@@ -304,6 +336,12 @@ class SchemaParser {
     abstract ParsedPattern makePattern() throws SAXException;
 
     void end() throws SAXException {
+      if (comments != null) {
+        if (annotations == null)
+          annotations = schemaBuilder.makeAnnotations(null, this);
+        annotations.addComment(comments);
+        comments = null;
+      }
       parent.endChild(makePattern());
     }
   }
@@ -344,6 +382,10 @@ class SchemaParser {
       if (nChildPatterns == 0) {
 	error("missing_children");
 	endChild(schemaBuilder.makeErrorPattern());
+      }
+      if (comments != null) {
+        childPatterns[nChildPatterns - 1] = schemaBuilder.commentAfter(childPatterns[nChildPatterns - 1], comments);
+        comments = null;
       }
       sendPatternToParent(buildPattern(childPatterns, nChildPatterns, startLocation, annotations));
     }
@@ -623,6 +665,7 @@ class SchemaParser {
       }
       else
         p = schemaBuilder.makeErrorPattern();
+      // XXX need to capture comments
       parent.endChild(p);
     }
 
@@ -763,9 +806,12 @@ class SchemaParser {
     }
 
     void end() throws SAXException {
+      if (comments != null) {
+        section.topLevelComment(comments);
+        comments = null;
+      }
     }
   }
-
 
   class IncludeState extends DivState {
     String href;
@@ -793,6 +839,7 @@ class SchemaParser {
     }
 
     void end() throws SAXException {
+      super.end();
       if (href != null) {
         try {
           include.endInclude(href, getNs(), startLocation, annotations);
@@ -811,6 +858,7 @@ class SchemaParser {
     }
 
     void end() throws SAXException {
+      super.end();
       parent.endChild(grammar.endIncludedGrammar(startLocation, annotations));
     }
   }
@@ -830,6 +878,7 @@ class SchemaParser {
     }
 
     void end() throws SAXException {
+      super.end();
       parent.endChild(grammar.endGrammar(startLocation, annotations));
     }
   }
@@ -1184,6 +1233,10 @@ class SchemaParser {
 	parent.endChild(schemaBuilder.makeErrorNameClass());
 	return;
       }
+      if (comments != null) {
+        nameClasses[nNameClasses - 1] = schemaBuilder.commentAfter(nameClasses[nNameClasses - 1], comments);
+        comments = null;
+      }
       parent.endChild(schemaBuilder.makeChoice(nameClasses, nNameClasses, startLocation, annotations));
     }
   }
@@ -1291,17 +1344,52 @@ class SchemaParser {
                SchemaBuilder schemaBuilder,
                Datatype ncNameDatatype,
                IncludedGrammar grammar,
-               Scope scope) {
+               Scope scope) throws SAXException {
     this.xr = xr;
     this.eh = eh;
     this.schemaBuilder = schemaBuilder;
     this.ncNameDatatype = ncNameDatatype;
     if (eh != null)
       xr.setErrorHandler(eh);
+    if (schemaBuilder.usesComments()) {
+      try {
+        xr.setProperty("http://xml.org/sax/properties/lexical-handler", this);
+      }
+      catch (SAXNotRecognizedException e) {
+        warning("no_comment_support", xr.getClass().getName());
+      }
+      catch (SAXNotSupportedException e) {
+        warning("no_comment_support", xr.getClass().getName());
+      }
+    }
     initPatternTable();
     initNameClassTable();
     prefixMapping = new PrefixMapping("xml", xmlURI, null);
     new RootState(grammar, scope, SchemaBuilder.INHERIT_NS).set();
+  }
+
+  public void startDTD(String s, String s1, String s2) throws SAXException {
+    inDtd = true;
+  }
+
+  public void endDTD() throws SAXException {
+    inDtd = false;
+  }
+
+  public void comment(char[] chars, int start, int length) throws SAXException {
+    if (!inDtd) {
+      if (length > 0 && (chars[start] == ' ' || chars[start] == '\n')) {
+        length--;
+        start++;
+      }
+      while (length > 0) {
+        char c = chars[start + length - 1];
+        if (c != ' ' && c != '\n')
+          break;
+        length--;
+      }
+      ((CommentHandler)xr.getContentHandler()).comment(new String(chars, start, length));
+    }
   }
 
   ParsedNameClass expandName(String name, String ns) throws SAXException {
