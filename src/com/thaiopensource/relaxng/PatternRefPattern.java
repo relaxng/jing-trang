@@ -12,6 +12,7 @@ class PatternRefPattern extends Pattern {
   private boolean combineImplicit = false;
   private byte combineType = COMBINE_NONE;
   private byte replacementStatus = REPLACEMENT_KEEP;
+  private boolean expanded = false;
 
   static final byte REPLACEMENT_KEEP = 0;
   static final byte REPLACEMENT_REQUIRE = 1;
@@ -55,7 +56,11 @@ class PatternRefPattern extends Pattern {
   }
 
   Pattern expand(PatternBuilder b) {
-    return p.expand(b);
+    if (!expanded) {
+      p = p.expand(b);
+      expanded = true;
+    }
+    return p;
   }
 
   boolean samePattern(Pattern other) {
