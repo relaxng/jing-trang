@@ -1763,6 +1763,47 @@ element foo { "z\x{D}\x{A}" }
 </correct>
 </xml>
 </testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+"'"'"'
+]]></correct>
+</compact>
+<xml>
+<correct>
+<value xmlns="http://relaxng.org/ns/structure/1.0">'"</value>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+namespace eg = "http://" "www.example.com"
+token "xyzzy"
+]]></correct>
+</compact>
+<xml>
+<correct>
+<value xmlns="http://relaxng.org/ns/structure/1.0">xyzzy</value>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+datatypes xsd = "http://www.w3.org/" "2001" "/" "" "XMLSchema-datatypes" ""
+xsd:string { pattern = "foo" "|" "bar" }
+]]></correct>
+</compact>
+<xml>
+<correct>
+<data type="string" xmlns="http://relaxng.org/ns/structure/1.0"
+  datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+<param name="pattern">foo|bar</param>
+</data>
+</correct>
+</xml>
+</testCase>
 <!--
 <testCase>
 <compact>

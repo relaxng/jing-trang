@@ -159,11 +159,7 @@ public class CompactSyntax implements Context {
   }
 
   private static String unquote(String s) {
-    char quoteChar = s.charAt(0);
-    s = s.substring(1, s.length() - 1);
-    for (int i = 0; (i = s.indexOf(quoteChar, i)) >= 0; i++)
-      s = s.substring(0, i) + s.substring(i + 1);
-    return s;
+    return s.substring(1, s.length() - 1);
   }
 
   Location makeLocation(Token t) {
@@ -366,7 +362,8 @@ void LookaheadBody() :
 {}
 {
   "["
-   ( (<PREFIXED_NAME> | UnprefixedName()) ("=" <LITERAL> | LookaheadBody()) )*
+   ( (<PREFIXED_NAME> | UnprefixedName()) 
+     ("=" (<LITERAL>)+ | LookaheadBody()) )*
   "]"
 }
 
@@ -1315,13 +1312,13 @@ ParsedElementAnnotation IdentifierAnnotationElement() :
 
 void AnnotationElementContent(ElementAnnotationBuilder eab) :
 {
-  LocatedString s;
+  Token t;
   ParsedElementAnnotation e;
 }
 {
   "[" { clearAttributeList(); }
   (LOOKAHEAD(2) AnnotationAttribute(eab))* 
-  (s = LocatedLiteral() { eab.addText(s.getString(), s.getLocation()); }
+  (t = <LITERAL> { eab.addText(unquote(t.image), makeLocation(t)); }
    | e = AnnotationElement() { eab.addElement(e); })*
   { eab.addComment(getComments()); }
   "]"
@@ -1330,23 +1327,40 @@ void AnnotationElementContent(ElementAnnotationBuilder eab) :
 String Literal() :
 {
   Token t;
+  String s;
+  StringBuffer buf;
 }
 {
   t = <LITERAL>
   {
-    return unquote(t.image);
+    s = unquote(t.image);
   }
+  (LOOKAHEAD(1)
+    { buf = new StringBuffer(s); }
+    (LOOKAHEAD(1) t = <LITERAL> { buf.append(unquote(t.image)); })+
+    { s = buf.toString(); }
+  )?
+  { return s; }
 }
 
 LocatedString LocatedLiteral() :
 {
   Token t;
+  Token t2;
+  String s;
+  StringBuffer buf;
 }
 {
   t = <LITERAL>
   {
-    return new LocatedString(unquote(t.image), t);
+    s = unquote(t.image);
   }
+  (LOOKAHEAD(1)
+    { buf = new StringBuffer(s); }
+    (LOOKAHEAD(1) t2 = <LITERAL> { buf.append(unquote(t2.image)); })+
+    { s = buf.toString(); }
+  )?
+  { return new LocatedString(s, t); }
 }
 
 Token Keyword() :
@@ -1745,8 +1759,8 @@ TOKEN :
   | < ESCAPED_IDENTIFIER: "\\" <NCNAME> >
   | < PREFIX_STAR: <NCNAME> ":*" >
   | < PREFIXED_NAME: <NCNAME> ":" <NCNAME> >
-  | < LITERAL : ( "\"" (<CHAR_NOT_QUOT> | "\"\"")* "\"")
-                | ("'" (<CHAR_NOT_APOS> | "''")* "'") >
+  | < LITERAL : ( "\"" (<CHAR_NOT_QUOT>)* "\"")
+                | ("'" (<CHAR_NOT_APOS>)* "'") >
   | < BYTE_ORDER_MARK : "\ufeff" >
   | < FANNOTATE : ">>" >
 }
