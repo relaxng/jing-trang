@@ -1,5 +1,11 @@
 Remove dependence of relaxng.parse.sax on relaxng.impl.
 
+Localize NonXmlParser properly.
+
+Implement >> annotations.
+
+Don't lose annotations after a left parenthesis.
+
 Support for IDREF checking via JARV.
 
 In a big choice or interleave or attribute group, memoization for each
