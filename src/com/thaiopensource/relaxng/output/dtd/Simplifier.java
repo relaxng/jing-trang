@@ -20,11 +20,26 @@ import com.thaiopensource.relaxng.edit.TextPattern;
 import com.thaiopensource.relaxng.edit.MixedPattern;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.Annotated;
+import com.thaiopensource.relaxng.edit.SchemaCollection;
 
 import java.util.List;
 import java.util.Iterator;
+import java.util.Map;
 
 class Simplifier extends AbstractVisitor {
+  public static void simplify(SchemaCollection sc) {
+    Simplifier simplifier = new Simplifier();
+    sc.setMainSchema((Pattern)sc.getMainSchema().accept(simplifier));
+    Map schemas = sc.getSchemas();
+    for (Iterator iter = schemas.keySet().iterator(); iter.hasNext();) {
+      Object href = iter.next();
+      schemas.put(href, ((Pattern)schemas.get(href)).accept(simplifier));
+    }
+  }
+
+  private Simplifier() {
+  }
+
   public Object visitGrammar(GrammarPattern p) {
     return visitContainer(p);
   }

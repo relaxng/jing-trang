@@ -439,10 +439,12 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     return ns;
   }
 
-  static public Pattern parse(Parseable parseable, SchemaCollection sc, DatatypeLibraryFactory dlf)
+  static public SchemaCollection parse(Parseable parseable, DatatypeLibraryFactory dlf)
           throws IncorrectSchemaException, IOException, SAXException {
     try {
-      return (Pattern)parseable.parse(new SchemaBuilderImpl(parseable, sc.getSchemas(), dlf));
+      SchemaCollection sc = new SchemaCollection();
+      sc.setMainSchema((Pattern)parseable.parse(new SchemaBuilderImpl(parseable, sc.getSchemas(), dlf)));
+      return sc;
     }
     catch (IllegalSchemaException e) {
       throw new IncorrectSchemaException();

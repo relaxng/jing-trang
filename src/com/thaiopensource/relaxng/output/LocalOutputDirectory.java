@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng.output.dtd;
+package com.thaiopensource.relaxng.output;
 
 import java.io.Writer;
 import java.io.IOException;
@@ -7,7 +7,7 @@ import java.io.OutputStreamWriter;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 
-class LocalOutputDirectory implements OutputDirectory {
+public class LocalOutputDirectory implements OutputDirectory {
   private File mainOutputFile;
   private String lineSeparator;
   private String ext;

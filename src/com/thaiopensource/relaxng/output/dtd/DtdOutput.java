@@ -27,6 +27,7 @@ import com.thaiopensource.relaxng.edit.TextPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
 import com.thaiopensource.relaxng.edit.IncludeComponent;
+import com.thaiopensource.relaxng.output.OutputDirectory;
 
 import java.io.IOException;
 import java.io.Writer;
