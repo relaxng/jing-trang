@@ -59,13 +59,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 /*
 
 Tasks:
-Order param entities catch bad recursion
+Catch bad recursion
 Check single element type
 Handle name class choice
 Non-local namespaces
+Generate parameter entities to allow change of namespace prefix
 Include
 combine attribute/suppress definition corresponding to ATTLIST
 nested grammars
@@ -344,6 +348,8 @@ public class DtdOutput {
 
   StringBuffer buf = new StringBuffer();
   List elementQueue = new Vector();
+  List requiredParamEntities = new Vector();
+  Set doneParamEntitySet = new HashSet();
 
   PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
   PatternVisitor nestedContentModelOutput = new ContentModelOutput();
@@ -364,11 +370,8 @@ public class DtdOutput {
       Pattern def = grammar.getBody(p.getName());
       if (getType(def) == DIRECT_SINGLE_ELEMENT)
         buf.append(((NameNameClass)((ElementPattern)def).getNameClass()).getLocalName());
-      else {
-        buf.append('%');
-        buf.append(p.getName());
-        buf.append(';');
-      }
+      else
+        paramEntityRef(p);
       return null;
     }
 
@@ -550,9 +553,7 @@ public class DtdOutput {
     public Object visitRef(RefPattern p) {
       if (getType(p).isA(ATTRIBUTE_GROUP)) {
         indent();
-        buf.append('%');
-        buf.append(p.getName());
-        buf.append(';');
+        paramEntityRef(p);
       }
       return null;
     }
@@ -601,9 +602,7 @@ public class DtdOutput {
     }
 
     public Object visitRef(RefPattern p) {
-      buf.append('%');
-      buf.append(p.getName());
-      buf.append(';');
+      paramEntityRef(p);
       return null;
     }
 
@@ -698,29 +697,10 @@ public class DtdOutput {
           c.getBody().accept(nestedContentModelOutput);
       }
       else {
-        Pattern body = c.getBody();
-        Type t = getType(body);
-        if (t == DIRECT_SINGLE_ELEMENT)
-          outputElement((ElementPattern)body);
-        else {
-          write("<!ENTITY % ");
-          write(c.getName());
-          write(' ');
-          write('"');
-          buf.setLength(0);
-          if (t.isA(MODEL_GROUP) || t.isA(NOT_ALLOWED) || t.isA(MIXED_ELEMENT_CLASS))
-            body.accept(nestedContentModelOutput);
-          else if (t.isA(ATTRIBUTE_GROUP))
-            body.accept(attributeOutput);
-          else if (t.isA(ENUM))
-            body.accept(nestedAttributeTypeOutput);
-          else if (t.isA(ATTRIBUTE_TYPE))
-            body.accept(topLevelAttributeTypeOutput);
-          write(buf.toString());
-          write('"');
-          write('>');
-          newline();
-        }
+        if (c.getBody() instanceof ElementPattern)
+          outputElement((ElementPattern)c.getBody());
+        else
+          outputParamEntity(c.getName(), c.getBody());
       }
       outputQueuedElements();
       return null;
@@ -889,7 +869,48 @@ public class DtdOutput {
     return (Type)patternTypes.get(p);
   }
 
+  void paramEntityRef(RefPattern p) {
+    String name = p.getName();
+    buf.append('%');
+    buf.append(name);
+    buf.append(';');
+    if (!doneParamEntitySet.contains(name))
+      requiredParamEntities.add(name);
+  }
 
+  void outputRequiredParamEntities() {
+    for (int i = 0; i < requiredParamEntities.size(); i++) {
+      String name = (String)requiredParamEntities.get(i);
+      outputParamEntity(name, grammar.getBody(name));
+    }
+    requiredParamEntities.clear();
+  }
+
+  void outputParamEntity(String name, Pattern body) {
+    if (doneParamEntitySet.contains(name))
+      return;
+    doneParamEntitySet.add(name);
+    Type t = getType(body);
+    buf.setLength(0);
+    if (t.isA(MODEL_GROUP) || t.isA(NOT_ALLOWED) || t.isA(MIXED_ELEMENT_CLASS))
+      body.accept(nestedContentModelOutput);
+    else if (t.isA(ATTRIBUTE_GROUP))
+      body.accept(attributeOutput);
+    else if (t.isA(ENUM))
+      body.accept(nestedAttributeTypeOutput);
+    else if (t.isA(ATTRIBUTE_TYPE))
+      body.accept(topLevelAttributeTypeOutput);
+    String replacement = buf.toString();
+    outputRequiredParamEntities();
+    write("<!ENTITY % ");
+    write(name);
+    write(' ');
+    write('"');
+    write(replacement);
+    write('"');
+    write('>');
+    newline();
+  }
 
   void outputElement(ElementPattern p) {
     String name = ((NameNameClass)p.getNameClass()).getLocalName();
@@ -897,21 +918,22 @@ public class DtdOutput {
     Pattern content = p.getChild();
     if (!getType(content).isA(ATTRIBUTE_GROUP))
      content.accept(topLevelContentModelOutput);
+    String contentModel = buf.length() == 0 ? "EMPTY" : buf.toString();
+    outputRequiredParamEntities();
     write("<!ELEMENT ");
     write(name);
     write(' ');
-    if (buf.length() == 0)
-      write("EMPTY");
-    else
-      write(buf.toString());
+    write(contentModel);
     write('>');
     newline();
     buf.setLength(0);
     content.accept(attributeOutput);
     if (buf.length() != 0) {
+      String atts = buf.toString();
+      outputRequiredParamEntities();
       write("<!ATTLIST ");
       write(name);
-      write(buf.toString());
+      write(atts);
       write('>');
       newline();
     }
