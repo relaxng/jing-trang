@@ -51,3 +51,6 @@ Multiple pattern parameters
 
 Use complexType in place of group: contains attributes/text and sometimes referenced as a complexType, then
 define as complexType
+
+Make use of element substitution groups.
+
