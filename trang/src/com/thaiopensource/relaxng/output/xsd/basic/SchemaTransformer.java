@@ -100,13 +100,20 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     if (type != null) {
       type = (SimpleType)type.accept(this);
       if (type == null || type != a.getType())
-        return new Attribute(a.getLocation(), a.getName(), type, a.getUse());
+        return new Attribute(a.getLocation(), a.getName(), type);
     }
     return a;
   }
 
   public Object visitAttributeGroupRef(AttributeGroupRef a) {
     return a;
+  }
+
+  public Object visitOptionalAttribute(OptionalAttribute a) {
+    Attribute attribute = (Attribute)a.getAttribute().accept(this);
+    if (attribute == a.getAttribute())
+      return a;
+    return new OptionalAttribute(a.getLocation(), attribute);
   }
 
   public Object visitRestriction(SimpleTypeRestriction t) {

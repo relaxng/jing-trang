@@ -6,27 +6,14 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 public class Attribute extends AttributeUse implements Structure {
   private final Name name;
   private final SimpleType type;
-  private final Use use;
-
-  static public class Use {
-    private final String name;
-    private Use(String name) {
-      this.name = name;
-    }
-  }
-
-  static public final Use REQUIRED = new Use("REQUIRED");
-  static public final Use OPTIONAL = new Use("OPTIONAL");
-  static public final Use PROHIBITED = new Use("PROHIBITED");
 
   /**
    * type may be null, indicating any type
    */
-  public Attribute(SourceLocation location, Name name, SimpleType type, Use use) {
+  public Attribute(SourceLocation location, Name name, SimpleType type) {
     super(location);
     this.name = name;
     this.type = type;
-    this.use = use;
   }
 
   public Name getName() {
@@ -37,10 +24,6 @@ public class Attribute extends AttributeUse implements Structure {
     return type;
   }
 
-  public Use getUse() {
-    return use;
-  }
-
   public Object accept(AttributeUseVisitor visitor) {
     return visitor.visitAttribute(this);
   }
@@ -49,4 +32,23 @@ public class Attribute extends AttributeUse implements Structure {
     return visitor.visitAttribute(this);
   }
 
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Attribute))
+      return false;
+    Attribute other = (Attribute)obj;
+    if (type == null) {
+      if (other.type != null)
+        return false;
+    }
+    else if (!type.equals(other.type))
+      return false;
+    return this.name.equals(other.name);
+  }
+
+  public int hashCode() {
+    int hc = name.hashCode();
+    if (type != null)
+      hc ^= type.hashCode();
+    return hc;
+  }
 }

@@ -19,4 +19,15 @@ public class Facet extends Located {
   public String getValue() {
     return value;
   }
+
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Facet))
+      return false;
+    Facet other = (Facet)obj;
+    return this.name.equals(other.name) && this.value.equals(other.value);
+  }
+
+  public int hashCode() {
+    return name.hashCode() ^ value.hashCode();
+  }
 }

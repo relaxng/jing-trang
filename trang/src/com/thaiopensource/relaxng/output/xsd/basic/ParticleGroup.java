@@ -16,4 +16,8 @@ public abstract class ParticleGroup extends Particle {
   public List getChildren() {
     return children;
   }
+
+  public int hashCode() {
+    return getChildren().hashCode();
+  }
 }

@@ -17,4 +17,12 @@ public class GroupRef extends Particle {
   public Object accept(ParticleVisitor visitor) {
     return visitor.visitGroupRef(this);
   }
+
+  public boolean equals(Object obj) {
+    return obj instanceof GroupRef && name.equals(((GroupRef)obj).name);
+  }
+
+  public int hashCode() {
+    return name.hashCode();
+  }
 }

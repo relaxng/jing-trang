@@ -108,11 +108,7 @@ foo = list { xsd:int* }
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
   <xs:simpleType name="foo">
-    <xs:list>
-      <xs:simpleType>
-        <xs:restriction base="xs:int"/>
-      </xs:simpleType>
-    </xs:list>
+    <xs:list itemType="xs:int"/>
   </xs:simpleType>
 </xs:schema>
 </correct>
@@ -130,11 +126,7 @@ foo = list { xsd:int+ }
   <xs:simpleType name="foo">
     <xs:restriction>
       <xs:simpleType>
-        <xs:list>
-          <xs:simpleType>
-            <xs:restriction base="xs:int"/>
-          </xs:simpleType>
-        </xs:list>
+        <xs:list itemType="xs:int"/>
       </xs:simpleType>
       <xs:minLength value="1"/>
     </xs:restriction>
@@ -157,14 +149,7 @@ foo = list { xsd:int, xsd:int+ }
       <xs:simpleType>
         <xs:list>
           <xs:simpleType>
-            <xs:union>
-              <xs:simpleType>
-                <xs:restriction base="xs:int"/>
-              </xs:simpleType>
-              <xs:simpleType>
-                <xs:restriction base="xs:int"/>
-              </xs:simpleType>
-            </xs:union>
+            <xs:union memberTypes="xs:int xs:int"/>
           </xs:simpleType>
         </xs:list>
       </xs:simpleType>
@@ -271,20 +256,9 @@ foo = element foo { attribute bar { xsd:double }, (xsd:int | xsd:boolean) }
       <xs:simpleContent>
 	<xs:restriction base="xs:anyType">
 	  <xs:simpleType>
-	    <xs:union>
-	      <xs:simpleType>
-		<xs:restriction base="xs:int"/>
-	      </xs:simpleType>
-	      <xs:simpleType>
-		<xs:restriction base="xs:boolean"/>
-	      </xs:simpleType>
-	    </xs:union>
+	    <xs:union memberTypes="xs:int xs:boolean"/>
 	  </xs:simpleType>
-	  <xs:attribute name="bar" use="required">
-	    <xs:simpleType>
-	      <xs:restriction base="xs:double"/>
-	    </xs:simpleType>
-	  </xs:attribute>
+	  <xs:attribute name="bar" use="required" type="xs:double"/>
 	</xs:restriction>
       </xs:simpleContent>
     </xs:complexType>
@@ -303,26 +277,9 @@ bar = xsd:int | xsd:boolean
 <xsd>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
-  <xs:element name="foo">
-    <xs:complexType>
-      <xs:simpleContent>
-	<xs:restriction base="xs:anyType">
-	  <xs:simpleType>
-	    <xs:restriction base="bar"/>
-	  </xs:simpleType>
-	</xs:restriction>
-      </xs:simpleContent>
-    </xs:complexType>
-  </xs:element>
+  <xs:element name="foo" type="bar"/>
   <xs:simpleType name="bar">
-    <xs:union>
-      <xs:simpleType>
-        <xs:restriction base="xs:int"/>
-      </xs:simpleType>
-      <xs:simpleType>
-        <xs:restriction base="xs:boolean"/>
-      </xs:simpleType>
-    </xs:union>
+    <xs:union memberTypes="xs:int xs:boolean"/>
   </xs:simpleType>
 </xs:schema>
 </correct>
@@ -349,23 +306,9 @@ foo = attribute foo { xsd:double } | element foo { xsd:double }
       <xs:element ref="foo" minOccurs="0"/>
     </xs:sequence>
   </xs:group>
-  <xs:element name="foo">
-    <xs:complexType>
-      <xs:simpleContent>
-        <xs:restriction base="xs:anyType">
-          <xs:simpleType>
-            <xs:restriction base="xs:double"/>
-          </xs:simpleType>
-        </xs:restriction>
-      </xs:simpleContent>
-    </xs:complexType>
-  </xs:element>
+  <xs:element name="foo" type="xs:double"/>
   <xs:attributeGroup name="foo">
-    <xs:attribute name="foo" use="required">
-      <xs:simpleType>
-        <xs:restriction base="xs:double"/>
-      </xs:simpleType>
-    </xs:attribute>
+    <xs:attribute name="foo" use="required" type="xs:double"/>
   </xs:attributeGroup>
 </xs:schema>
 </correct>
@@ -849,9 +792,7 @@ element x { attribute eg:y { text } }
 <resource name="eg.xsd">
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com" xmlns:eg="http://www.example.com">
   <xs:import schemaLocation="c.xsd"/>
-  <xs:attributeGroup name="anon0">
-    <xs:attribute name="y" form="qualified" use="required"/>
-  </xs:attributeGroup>
+  <xs:attribute name="y"/>
 </xs:schema>
 </resource>
 <correct>
@@ -859,7 +800,7 @@ element x { attribute eg:y { text } }
   <xs:import namespace="http://www.example.com" schemaLocation="eg.xsd"/>
   <xs:element name="x">
     <xs:complexType>
-      <xs:attributeGroup ref="eg:anon0"/>
+      <xs:attribute ref="eg:y" use="required"/>
     </xs:complexType>
   </xs:element>
 </xs:schema>
@@ -1228,6 +1169,92 @@ bar = element bar { bar* }
       <xs:sequence>
         <xs:element ref="bar" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct><![CDATA[element foo {
+  element bar { empty } *
+  & element baz { empty } *
+}
+]]></correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="bar"/>
+        <xs:element ref="baz"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="bar">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="baz">
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>element foo {
+  attribute xml:lang { xsd:language }
+}
+| element bar {
+  attribute xml:lang { xsd:language }
+}</correct>
+</compact>
+<xsd>
+<resource name="xml.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.w3.org/XML/1998/namespace">
+  <xs:import schemaLocation="c.xsd"/>
+  <xs:attribute name="lang" type="xs:language"/>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:attribute ref="xml:lang" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="bar">
+    <xs:complexType>
+      <xs:attribute ref="xml:lang" use="required"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>element foo {
+  attribute bar { text },
+  xsd:float
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:float">
+          <xs:attribute name="bar" use="required"/>
+        </xs:extension>
+      </xs:simpleContent>
     </xs:complexType>
   </xs:element>
 </xs:schema>

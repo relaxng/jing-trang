@@ -12,4 +12,8 @@ public class ParticleAll extends ParticleGroup {
   public Object accept(ParticleVisitor visitor) {
     return visitor.visitAll(this);
   }
+
+  public boolean equals(Object obj) {
+    return obj instanceof ParticleAll && ((ParticleAll)obj).getChildren().equals(getChildren());
+  }
 }
