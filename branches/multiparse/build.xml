@@ -23,38 +23,11 @@
    token="java.io.IOException" value="EOFException"/>
 </target>
 
-<target name="compile-gen" depends="init">
-  <mkdir dir="build/gen"/>
-  <javac srcdir="src" destdir="build/gen" includes="com/thaiopensource/datatype/xsd/regex/jdk1_4/gen/*.java,com/thaiopensource/xml/util/Naming.java"/>
+<target name="regex-gen">
+  <ant antfile="regex-build.xml" target="gen"/>
 </target>
 
-<target name="gen" depends="compile-gen,check-gen" unless="gen-ok">
-  <mkdir dir="build/src/com/thaiopensource/datatype/xsd/regex/jdk1_4"/>
-  <java classname="com.thaiopensource.datatype.xsd.regex.jdk1_4.gen.NamingExceptionsGen" fork="yes" failonerror="yes">
-    <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.NamingExceptions"/>
-    <arg value="build/src"/>
-    <classpath>
-      <pathelement location="build/gen"/>
-    </classpath>
-  </java>
-  <java classname="com.thaiopensource.datatype.xsd.regex.jdk1_4.gen.CategoriesGen" fork="yes" failonerror="yes">
-    <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.Categories"/>
-    <arg value="build/src"/>
-    <arg value="lib/UnicodeData-3.1.0.txt"/>
-    <classpath>
-      <pathelement location="build/gen"/>
-    </classpath>
-  </java>
-</target>
-
-<target name="check-gen">
-  <uptodate property="gen-ok"
-    targetfile="build/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/Categories.java">
-    <srcfiles dir="build/gen" includes="**/*.class"/>
-  </uptodate>
-</target>
-
-<target name="compile" depends="compile-grammar,gen">
+<target name="compile" depends="compile-grammar,regex-gen">
   <mkdir dir="build/classes"/>
   <javac srcdir="src:build/src" destdir="build/classes" excludes="com/thaiopensource/datatype/xsd/regex/jdk1_4/gen/*.java" target="1.1"/>
 </target>
@@ -184,44 +157,43 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
   </java>
 </target>
 
+<target name="regex-jar">
+  <ant antfile="regex-build.xml" target="jar">
+    <property name="classes.dir" value="build/regex-classes"/>
+  </ant>
+</target>
+
 <target name="regex-test" depends="jar">
   <jing rngfile="test/regextest.rnc" compactsyntax="true">
     <fileset dir="test" includes="regextest.xml"/>
   </jing>
-  <java classname="com.thaiopensource.datatype.xsd.regex.test.TestDriver" fork="yes" failonerror="yes">
-    <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.RegexEngineImpl"/>
-    <arg value="test/regextest.xml"/>
-    <classpath>
-      <pathelement location="build/jing.jar"/>
-      <pathelement path="${java.class.path}"/>
-    </classpath>
-  </java>
-</target>
-
-<target name="full-regex-test" depends="regex-test">
-  <echo>This will take about 5 minutes on a fast machine.</echo>
-  <java classname="com.thaiopensource.datatype.xsd.regex.test.CategoryTest" fork="yes" failonerror="yes">
-    <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.RegexEngineImpl"/>
-    <arg value="lib/UnicodeData-3.1.0.txt"/>
-    <classpath>
-      <pathelement location="build/jing.jar"/>
-      <pathelement path="${java.class.path}"/>
-    </classpath>
-  </java>
+  <ant antfile="regex-build.xml" target="test">
+    <property name="classes.dir" value="build/regex-classes"/>
+  </ant>
 </target>
 
 <target name="xerces-regex-test" depends="jar">
   <jing rngfile="test/regextest.rnc" compactsyntax="true">
     <fileset dir="test" includes="regextest.xml"/>
   </jing>
-  <java classname="com.thaiopensource.datatype.xsd.regex.test.TestDriver" fork="yes" failonerror="yes">
-    <arg value="com.thaiopensource.datatype.xsd.regex.xerces2.RegexEngineImpl"/>
-    <arg value="test/regextest.xml"/>
-    <classpath>
-      <pathelement location="build/jing.jar"/>
-      <pathelement path="${java.class.path}"/>
-    </classpath>
-  </java>
+  <ant antfile="regex-build.xml" target="xerces-test">
+    <property name="classes.dir" value="build/regex-classes"/>
+  </ant>
+</target>
+
+<target name="full-regex-test">
+  <ant antfile="regex-build.xml" target="full-test">
+    <property name="classes.dir" value="build/regex-classes"/>
+  </ant>
+</target>
+
+<target name="regex-dist">
+  <ant antfile="regex-build.xml" target="dist">
+    <property name="classes.dir" value="build/regex-classes"/>
+    <property name="apidoc.dir" value="build/regex-apidoc"/>
+    <property name="build.xml" value="regex-build.xml"/>
+    <property name="UnicodeData.file" value="lib/UnicodeData-3.1.0.txt"/>
+  </ant>
 </target>
 
 <target name="javadoc" depends="init">
