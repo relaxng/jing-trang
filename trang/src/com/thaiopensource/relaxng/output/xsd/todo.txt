@@ -1,0 +1,23 @@
+Attributes
+
+<start>
+
+Use global element declarations
+
+Name classes
+- choice
+- attribute wildcards
+- element wildcards
+
+Namespaces
+
+Include
+
+externalRef
+
+Check for ref loops
+
+Check for RNG contextual constraints
+
+
+
