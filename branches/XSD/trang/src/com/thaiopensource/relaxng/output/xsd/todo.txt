@@ -20,21 +20,6 @@ If expansion of a group causes the group to become unreferenced, then remove the
 
 If define referenced only in something that is unreachable because of notAllowed, remove the define.
 
-Map
-
-  foo = element bar|baz { xyzzy }
-
-<xs:group name="foo">
-  <xs:choice>
-    <xs:element name="bar" type="foo"/>
-    <xs:element name="baz" type="foo"/>
-  </xs:choice>
-</xs:group>
-
-<xs:complexType name="foo">
-  xyzzy
-</xs:complexType>
-
 Use complexTypes for groups and simpleTypes with associated attributes, even if not all references can
 make use of them.
 

@@ -831,6 +831,7 @@ root = element foo|bar|baz { empty }
 <xsd>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:complexType name="root"/>
   <xs:group name="root">
     <xs:choice>
       <xs:element ref="foo"/>
@@ -838,15 +839,9 @@ root = element foo|bar|baz { empty }
       <xs:element ref="baz"/>
     </xs:choice>
   </xs:group>
-  <xs:element name="foo">
-    <xs:complexType/>
-  </xs:element>
-  <xs:element name="bar">
-    <xs:complexType/>
-  </xs:element>
-  <xs:element name="baz">
-    <xs:complexType/>
-  </xs:element>
+  <xs:element name="foo" type="root"/>
+  <xs:element name="bar" type="root"/>
+  <xs:element name="baz" type="root"/>
 </xs:schema>
 </correct>
 </xsd>
@@ -2309,18 +2304,15 @@ inline |= element code { text }
 <xsd>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:complexType name="inline" mixed="true"/>
   <xs:group name="inline">
     <xs:choice>
       <xs:element ref="em"/>
       <xs:element ref="code"/>
     </xs:choice>
   </xs:group>
-  <xs:element name="em">
-    <xs:complexType mixed="true"/>
-  </xs:element>
-  <xs:element name="code">
-    <xs:complexType mixed="true"/>
-  </xs:element>
+  <xs:element name="em" type="inline"/>
+  <xs:element name="code" type="inline"/>
 </xs:schema>
 </correct>
 </xsd>
@@ -2335,18 +2327,15 @@ inline = element em { text }
 <xsd>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:complexType name="inline" mixed="true"/>
   <xs:group name="inline">
     <xs:choice>
       <xs:element ref="code"/>
       <xs:element ref="em"/>
     </xs:choice>
   </xs:group>
-  <xs:element name="code">
-    <xs:complexType mixed="true"/>
-  </xs:element>
-  <xs:element name="em">
-    <xs:complexType mixed="true"/>
-  </xs:element>
+  <xs:element name="code" type="inline"/>
+  <xs:element name="em" type="inline"/>
 </xs:schema>
 </correct>
 </xsd>
@@ -2362,6 +2351,7 @@ inline |= element b { text }
 <xsd>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:complexType name="inline" mixed="true"/>
   <xs:group name="inline">
     <xs:choice>
       <xs:element ref="code"/>
@@ -2369,15 +2359,9 @@ inline |= element b { text }
       <xs:element ref="b"/>
     </xs:choice>
   </xs:group>
-  <xs:element name="code">
-    <xs:complexType mixed="true"/>
-  </xs:element>
-  <xs:element name="em">
-    <xs:complexType mixed="true"/>
-  </xs:element>
-  <xs:element name="b">
-    <xs:complexType mixed="true"/>
-  </xs:element>
+  <xs:element name="code" type="inline"/>
+  <xs:element name="em" type="inline"/>
+  <xs:element name="b" type="inline"/>
 </xs:schema>
 </correct>
 </xsd>
@@ -2780,60 +2764,36 @@ head =		element head {
       <xs:attributeGroup ref="aligns"/>
     </xs:complexType>
   </xs:element>
+  <xs:complexType name="tabledata">
+    <xs:complexContent>
+      <xs:extension base="vert.model">
+        <xs:attributeGroup ref="aligns"/>
+        <xs:attribute name="abbr"/>
+        <xs:attribute name="axis"/>
+        <xs:attribute name="colspan" type="xs:nonNegativeInteger"/>
+        <xs:attribute name="headers" type="xs:IDREFS"/>
+        <xs:attribute name="rowspan" type="xs:nonNegativeInteger"/>
+        <xs:attribute name="scope">
+          <xs:simpleType>
+            <xs:restriction base="xs:token">
+              <xs:enumeration value="row"/>
+              <xs:enumeration value="col"/>
+              <xs:enumeration value="rowgroup"/>
+              <xs:enumeration value="colgroup"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:group name="tabledata">
     <xs:choice>
       <xs:element ref="th"/>
       <xs:element ref="td"/>
     </xs:choice>
   </xs:group>
-  <xs:element name="th">
-    <xs:complexType>
-      <xs:complexContent>
-        <xs:extension base="vert.model">
-          <xs:attributeGroup ref="aligns"/>
-          <xs:attribute name="abbr"/>
-          <xs:attribute name="axis"/>
-          <xs:attribute name="colspan" type="xs:nonNegativeInteger"/>
-          <xs:attribute name="headers" type="xs:IDREFS"/>
-          <xs:attribute name="rowspan" type="xs:nonNegativeInteger"/>
-          <xs:attribute name="scope">
-            <xs:simpleType>
-              <xs:restriction base="xs:token">
-                <xs:enumeration value="row"/>
-                <xs:enumeration value="col"/>
-                <xs:enumeration value="rowgroup"/>
-                <xs:enumeration value="colgroup"/>
-              </xs:restriction>
-            </xs:simpleType>
-          </xs:attribute>
-        </xs:extension>
-      </xs:complexContent>
-    </xs:complexType>
-  </xs:element>
-  <xs:element name="td">
-    <xs:complexType>
-      <xs:complexContent>
-        <xs:extension base="vert.model">
-          <xs:attributeGroup ref="aligns"/>
-          <xs:attribute name="abbr"/>
-          <xs:attribute name="axis"/>
-          <xs:attribute name="colspan" type="xs:nonNegativeInteger"/>
-          <xs:attribute name="headers" type="xs:IDREFS"/>
-          <xs:attribute name="rowspan" type="xs:nonNegativeInteger"/>
-          <xs:attribute name="scope">
-            <xs:simpleType>
-              <xs:restriction base="xs:token">
-                <xs:enumeration value="row"/>
-                <xs:enumeration value="col"/>
-                <xs:enumeration value="rowgroup"/>
-                <xs:enumeration value="colgroup"/>
-              </xs:restriction>
-            </xs:simpleType>
-          </xs:attribute>
-        </xs:extension>
-      </xs:complexContent>
-    </xs:complexType>
-  </xs:element>
+  <xs:element name="th" type="tabledata"/>
+  <xs:element name="td" type="tabledata"/>
   <xs:group name="vert.other">
     <xs:choice>
       <xs:element ref="address"/>
@@ -3299,6 +3259,7 @@ x = element foo|bar { empty }
 <xsd>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:complexType name="x"/>
   <xs:group name="x">
     <xs:annotation>
       <xs:documentation>An x.</xs:documentation>
@@ -3308,12 +3269,8 @@ x = element foo|bar { empty }
       <xs:element ref="bar"/>
     </xs:choice>
   </xs:group>
-  <xs:element name="foo">
-    <xs:complexType/>
-  </xs:element>
-  <xs:element name="bar">
-    <xs:complexType/>
-  </xs:element>
+  <xs:element name="foo" type="x"/>
+  <xs:element name="bar" type="x"/>
 </xs:schema>
 </correct>
 </xsd>
