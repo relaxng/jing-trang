@@ -122,7 +122,7 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
   private RegexEngine findRegexEngine() {
     Enumeration e = new Service(RegexEngine.class).getProviders();
     if (!e.hasMoreElements())
-      return new NullRegexEngine();
+      return null;
     return (RegexEngine)e.nextElement();
   }
 
