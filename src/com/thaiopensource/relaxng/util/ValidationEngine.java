@@ -28,6 +28,7 @@ class ValidationEngine {
 
   public void setXMLReaderCreator(XMLReaderCreator xrc) {
     this.xrc = xrc;
+    factory.setXMLReaderCreator(xrc);
   }
   
   /**
@@ -53,6 +54,7 @@ class ValidationEngine {
    */
   public boolean loadPattern(InputSource in) throws SAXException, IOException {
     schema = null;
+    vh = null;
     try {
       schema = factory.createSchema(in);
       return true;
