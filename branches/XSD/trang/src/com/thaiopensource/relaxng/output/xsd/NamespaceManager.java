@@ -42,9 +42,8 @@ public class NamespaceManager {
     List movedStructures = new Vector();
     Set movedStructureSet = new HashSet();
     Map movedStructureNameMap = new HashMap();
-    Set movedStructureNameSet = new HashSet();
-    int nextMovedElementSuffix;
-    int nextMovedAttributeSuffix;
+    Set movedElementNameSet = new HashSet();
+    Set movedAttributeNameSet = new HashSet();
   }
 
   static class NameInfo {
@@ -137,8 +136,11 @@ public class NamespaceManager {
 
     private Object visitWildcard(Wildcard wc) {
       String ns = otherNamespace(wc);
-      if (ns != null)
+      if (ns != null) {
         lookupTargetNamespace(ns);
+        if (!nested)
+          getUsage(ns).attributeCount++;
+      }
       return null;
     }
 
@@ -359,10 +361,13 @@ public class NamespaceManager {
     TargetNamespace tn = lookupTargetNamespace(ns);
     String name = (String)tn.movedStructureNameMap.get(struct);
     if (name == null) {
+      Set movedStructureNameSet = (struct instanceof Element
+                                   ? tn.movedElementNameSet
+                                   : tn.movedAttributeNameSet);
       String base = struct.getName().getLocalName();
       name = base;
       for (int n = 1;; n++) {
-        if (!tn.movedStructureNameSet.contains(name)) {
+        if (!movedStructureNameSet.contains(name)) {
           Definition def;
           if (struct instanceof Element)
             def = schema.getGroup(name);
@@ -376,7 +381,7 @@ public class NamespaceManager {
         }
         name = base + Integer.toString(n);
       }
-      tn.movedStructureNameSet.add(name);
+      movedStructureNameSet.add(name);
       tn.movedStructureNameMap.put(struct, name);
     }
     return name;
