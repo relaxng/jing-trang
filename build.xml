@@ -101,7 +101,7 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
 
 <target name="validate" depends="jar">
   <jing rngfile="xhtml/xhtml-basic.rng">
-    <fileset dir="doc" includes="*.html,jing-win32-bin/*.html,jing--bin/*.html"/>
+    <fileset dir="doc" includes="*.html,jing-win32-bin/*.html,jing-bin/*.html"/>
     <fileset dir="datatype-sample" includes="index.html"/>
     <fileset dir="test" includes="index.html"/>
   </jing>
