@@ -69,11 +69,11 @@ Catch bad recursion
 Check single element type
 Warning when approximating datatypes
 Non-local namespaces
-Generate parameter entities to allow change of namespace prefix
-Include
-Support combine="interleave" for attlists
-nested grammars
 a:defaultValue
+Include
+Support duplicate definitions with combine="interleave" for attlists
+Generate parameter entities to allow change of namespace prefix
+nested grammars
 a:documentation
 non-deterministic content models
 option to protect element declarations with included section
@@ -1243,7 +1243,7 @@ public class DtdOutput {
     SchemaCollection sc = new SchemaCollection();
     Pattern p = SchemaBuilderImpl.parse(new SAXParseable(new Jaxp11XMLReaderCreator(),
                                                          ValidationEngine.fileInputSource(args[0]),
-                                                          new DraconianErrorHandler()),
+                                                         new DraconianErrorHandler()),
                                         sc,
                                         new DatatypeLibraryLoader());
 
