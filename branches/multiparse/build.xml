@@ -2,19 +2,11 @@
 
 <property name="sdkjava.dir" value="c:\Program Files\Microsoft SDK for Java 4.0"/>
 
-<property name="convfiles"
-          value="com/thaiopensource/relaxng/output/**,
-                 com/thaiopensource/relaxng/edit/**"/>
-
 <target name="all" depends="jar, exegen, test, validate"/>
 
 <target name="init">
   <mkdir dir="build"/>
   <property file="src/com/thaiopensource/relaxng/util/resources/Version.properties"/>
-</target>
-
-<target name="init-conv" depends="init">
-  <mkdir dir="build/conv"/>
 </target>
 
 <target name="compile-grammar" depends="init">
@@ -31,38 +23,10 @@
 
 <target name="compile" depends="compile-grammar">
   <mkdir dir="build/classes"/>
-  <javac srcdir="src:build/src" destdir="build/classes"
-         excludes="${convfiles}"/>
+  <javac srcdir="src:build/src" destdir="build/classes"/>
 </target>
 
-<target name="conv-compile" depends="compile,init-conv">
-  <mkdir dir="build/conv/classes"/>
-  <javac srcdir="src" destdir="build/conv/classes"
-         classpath="build/classes"
-         includes="${convfiles}"/>
-</target>
-
-<target name="copy-resources" depends="init">
-  <mkdir dir="build/resources"/>
-  <copy todir="build/resources" includeEmptyDirs="no">
-    <fileset dir="src"
-       includes="**/*.properties"
-       excludes="${convfiles}"/>
-    <fileset dir="src" includes="META-INF/services/*"/>
-  </copy>
-</target>
-
-<target name="conv-copy-resources" depends="init-conv">
-  <mkdir dir="build/conv/resources"/>
-  <copy todir="build/conv/resources" includeEmptyDirs="no">
-    <fileset dir="src" includes="${convfiles}" excludes="**/*.java,**/*.txt"/>
-  </copy>
-  <delete>
-    <fileset dir="build/conv/resources" excludes="**/*.properties"/>
-  </delete>
-</target>
-
-<target name="jar" depends="compile,copy-resources">
+<target name="jar" depends="compile">
 
   <echo file="build/jing-manifest.txt">Manifest-Version: 1.0
 Main-Class: com/thaiopensource/relaxng/util/Driver
@@ -70,7 +34,7 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
 
   <jar jarfile="build/jing.jar" manifest="build/jing-manifest.txt">
     <fileset dir="build/classes"/>
-    <fileset dir="build/resources"/>
+    <fileset dir="src" includes="**/*.properties,META-INF/services/*"/>
   </jar>
 
   <taskdef name="jing" classname="com.thaiopensource.relaxng.util.JingTask">
@@ -81,29 +45,16 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
 
 </target>
 
-<target name="conv-jar" depends="conv-compile,conv-copy-resources">
-
-  <echo file="build/conv-manifest.txt">Manifest-Version: 1.0
-Main-Class: com/thaiopensource/relaxng/output/Driver
-Class-Path: jing.jar
-</echo>
-
-  <jar jarfile="build/conv.jar" manifest="build/conv-manifest.txt">
-    <fileset dir="build/conv/classes"/>
-    <fileset dir="build/conv/resources"/>
-  </jar>
-
-</target>
-
-<target name="exegen" depends="compile,copy-resources,check-exe,crimson-files,regex-files"
+<target name="exegen" depends="compile,check-exe,crimson-files,regex-files"
         unless="exe-ok">
   <exec dir="." executable="${sdkjava.dir}\bin\jexegen" failonerror="yes">
     <arg value="/main:com.thaiopensource.relaxng.util.ExegenDriver"/>
     <arg value="/nologo"/>
     <arg value="/out:build\jing.exe"/>
     <arg value="/r"/>
-    <arg value="/base:build\resources"/>
-    <arg value="*.*"/>
+    <arg value="/base:src"/>
+    <arg value="*.properties"/>
+    <arg value="META-INF\services\*"/>
     <arg value="/base:build\classes"/>
     <arg value="*.class"/>
     <arg value="/base:build\crimson-files"/>
@@ -183,14 +134,6 @@ Class-Path: jing.jar
   </uptodate>
 </target>
 
-<target name="conv-split" depends="init">
-  <delete dir="build/convtest"/>
-  <mkdir dir="build/convtest"/>
-  <style basedir="test" destdir="build/convtest" includes="convtest.xml" extension=".stamp" style="test/split.xsl">
-    <param name="dir" expression="build/convtest"/>
-  </style>
-</target>
-
 <target name="test" depends="jar,split">
   <java classname="com.thaiopensource.relaxng.util.TestDriver" fork="yes" failonerror="yes">
     <arg value="build/test/out.log"/>
@@ -240,9 +183,9 @@ Class-Path: jing.jar
          style="doc/derivative.xsl"/>
 </target>
 
-<target name="dist" depends="jar, exegen, validate, test, javadoc, datatype-sample, doc">
+<target name="dist" depends="jar,exegen,validate,test,javadoc,datatype-sample,doc">
   <zip zipfile="build/jing-src.zip">
-    <fileset dir="src" includes="**/*.java,**/*.properties" excludes="${convfiles}"/>
+    <fileset dir="src" includes="**/*.java,**/*.properties"/>
   </zip>
   <zip zipfile="build/xhtml-rng.zip">
     <fileset dir="." includes="xhtml/**/*.rng,xhtml/index.html"/>
@@ -300,6 +243,14 @@ Class-Path: jing.jar
 
 <target name="clean">
   <delete dir="build"/>
+</target>
+
+<target name="trang-jar" depends="compile">
+  <ant dir="trang" target="jar">
+    <property name="build.dir" value="../build/trang"/>
+    <property name="dist.dir" value="../build"/>
+    <property name="jing.classes" value="../build/classes"/>
+  </ant>
 </target>
 
 </project>
