@@ -1,0 +1,162 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Jing</title>
+</head>
+<body>
+<h1>Jing</h1>
+<h2>A RELAX NG validator in Java</h2>
+
+<p>Copyright &#169; 2001, 2002, 2003 Thai Open Source Software Center Ltd</p>
+
+<p>See the file <a href="copying.html">copying.html</a> for copying
+permission.</p>
+
+<h3>Version @VERSION@</h3>
+
+<p>This version of Jing implements</p>
+
+<ul>
+
+<li><a
+href="http://www.oasis-open.org/committees/relax-ng/spec-20011203.html">RELAX
+NG 1.0 Specification</a>,</li>
+
+<li><a
+href="http://www.oasis-open.org/committees/relax-ng/compact-20021121.html"
+>RELAX NG Compact Syntax</a>, and</li>
+
+<li>parts of <a
+href="http://www.oasis-open.org/committees/relax-ng/compatibility-20011203.html"
+>RELAX NG DTD Compatibility</a>, specifically checking of
+ID/IDREF/IDREFS.</li>
+
+</ul>
+
+<p>Jing also has experimental support for schema languages other than
+RELAX NG; specifically</p>
+
+<ul>
+<li><a href="http://www.w3.org/TR/xmlschema-1/">W3C
+XML Schema</a> (based on <a
+href="http://xml.apache.org/xerces2-j/">Xerces-J</a>);</li>
+
+<li><a
+href="http://www.ascc.net/xml/resource/schematron/schematron.html">Schematron</a>;</li>
+
+<li><a href="nrl.html">Namespace Routing Language</a>.</li>
+
+</ul>
+
+<p>A separate <a href="jing-other.html">document</a> describes this
+support in more detail.</p>
+
+<p>Jing is available in the <a
+href="http://www.thaiopensource.com/download/">download</a>
+directory in a number of different forms:</p>
+
+<dl>
+<dt><code>jing-<var>version</var>.zip</code></dt>
+
+<dd>the main Jing distribution for use with a Java Runtime
+Environment, including binaries, source code, documentation</dd>
+
+<dt><code>win32/jing-<var>version</var>-win32-bin.zip</code></dt>
+
+<dd>a Win32 executable for use with the Microsoft Java VM</dd>
+
+<dt><code>gcj/jing-<var>version</var>.tar.gz</code></dt>
+
+<dd>source code packaged for compilation with GCJ (GNU Compiler for
+Java)</dd>
+
+<dt><code>gcj/jing-<var>version</var>-<var>release</var>.i386.rpm</code></dt>
+
+<dd>RPM for Linux compiled with GCJ</dd>
+
+<dt><code>gcj/jing-<var>version</var>-<var>release</var>.src.rpm</code></dt>
+
+<dd>source RPM for Linux for compilation with GCJ</dd>
+
+</dl>
+
+<p>The main class is
+<code>com.thaiopensource.relaxng.util.Driver</code>.  The first
+argument expected by the main class is the name of the file containing
+the schema.  The second and subsequent arguments are the names of one
+or more files to be validated against this schema.</p>
+
+<p>Jing accepts the following command-line options, which must precede
+the arguments specifying the schema and files to be validated:</p>
+
+<dl>
+
+<dt><code>-c</code></dt>
+
+<dd>The schema uses RELAX NG Compact Syntax.</dd>
+
+<dt><code>-e <var>enc</var></code></dt>
+
+<dd>Uses the encoding <code><var>enc</var></code> to read the
+schema.</dd>
+
+<dt><code>-f</code></dt>
+
+<dd>Checks that the document is <em>feasibly valid</em>.  A document
+is <em>feasibly valid</em> if it could be transformed into a valid
+document by inserting any number of attributes and child elements
+anywhere in the tree.  This is equivalent to transforming the schema
+by wrapping every <code>data</code>, <code>list</code>,
+<code>element</code> and <code>attribute</code> element in an
+<code>optional</code> element and then validating against the
+transformed schema. This option may be useful while a document is
+still under construction.  This option also disables checking that for
+every IDREF there is a corresponding ID.</dd>
+
+<dt><code>-i</code></dt>
+
+<dd>Disables checking of ID/IDREF/IDREFS. By default,
+Jing enforces the constraints imposed by RELAX NG DTD Compatibility
+with respect to ID/IDREF/IDREFS.</dd>
+
+<dt><code>-t</code></dt>
+
+<dd>Prints the time used by Jing for loading the schema and
+for validation.</dd>
+
+</dl>
+
+<p>Jing uses a vendor-independent <a
+href="pluggable-datatypes.html">pluggable datatypes API</a> that
+allows datatype libraries to be added at runtime and be interoperable
+with Java-based RELAX NG implementation that supports the API.</p>
+
+<p>Jing also includes an implementation of a datatype library for the
+W3C XML Schema Part 2 datatypes.  There is a separate <a
+href="jing-datatypes.html">document</a> describing this implementation
+and how to use it.</p>
+
+<p>If you wish to use Jing in your programs, you have a choice.</p>
+
+<ul>
+
+<li>You can use Jing's <a href="api/jing/index.html">native
+API</a>.</li>
+
+<li>You can use JARV (Java API for RELAX Verifiers).  JARV is part of
+the <a href="http://iso-relax.sourceforge.net">ISO-RELAX</a>
+SourceForge project.  Jing's implementation uses the <a
+href="http://prdownloads.sourceforge.net/iso-relax/isorelax.20030108.zip?download"
+>20030108 version</a>. Support for DTD Compatibility validation of
+ID/IDREF and for validation with languages other than RELAX NG is not
+currently available via this interface.</li>
+
+</ul>
+
+<p>There is a <a href="jing-ant.html">Jing task</a> that allows Jing
+to be invoked by the <a href="http://ant.apache.org/">Ant</a>
+build tool.</p>
+
+<address><a href="mailto:jjc@jclark.com">James Clark</a></address>
+
+</body>
+</html>
