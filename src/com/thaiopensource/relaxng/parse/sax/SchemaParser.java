@@ -1143,7 +1143,7 @@ class SchemaParser extends AbstractLexicalHandler {
     }
 
     ParsedNameClass makeNameClassNoExcept() {
-      return schemaBuilder.makeAnyName(null, null);
+      return schemaBuilder.makeAnyName(startLocation, annotations);
     }
 
     ParsedNameClass makeNameClassExcept(ParsedNameClass except) {
