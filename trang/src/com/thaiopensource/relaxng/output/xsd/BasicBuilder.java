@@ -430,12 +430,18 @@ public class BasicBuilder {
           break;
         }
       }
+      boolean hasChildren = false;
       List uses = new Vector();
       for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
         Pattern child = (Pattern)iter.next();
-        if (si.getChildType(child).contains(ChildType.ATTRIBUTE))
+        ChildType ct = si.getChildType(child);
+        if (ct.contains(ChildType.ATTRIBUTE))
           uses.add((AttributeUse)child.accept(childVisitor));
+        if (!ct.equals(ChildType.EMPTY))
+          hasChildren = true;
       }
+      if (hasChildren)
+        er.warning("attribute_child_choice", p.getSourceLocation());
       if (uses.size() == 1)
         return uses.get(0);
       return new AttributeUseChoice(p.getSourceLocation(), uses);
