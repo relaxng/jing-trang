@@ -109,7 +109,7 @@ class Analysis {
     }
 
     public Object visitEmpty(EmptyPattern p) {
-      return Type.EMPTY;
+      return Type.ATTRIBUTE_GROUP;
     }
 
     public Object visitData(DataPattern p) {
