@@ -34,6 +34,7 @@ import com.thaiopensource.relaxng.edit.NameClass;
 import com.thaiopensource.relaxng.edit.AnyNameNameClass;
 import com.thaiopensource.relaxng.edit.NsNameNameClass;
 import com.thaiopensource.relaxng.edit.SchemaCollection;
+import com.thaiopensource.relaxng.output.OutputDirectory;
 
 import java.util.List;
 import java.util.HashMap;
@@ -323,17 +324,16 @@ class Analysis {
     return false;
   }
 
-  Analysis(Pattern pattern, SchemaCollection schemas, ErrorReporter er) {
-    this.pattern = pattern;
+  Analysis(SchemaCollection schemas, ErrorReporter er) {
     this.schemas = schemas;
     this.er = er;
-    new Analyzer().analyzeType(pattern);
+    new Analyzer().analyzeType(schemas.getMainSchema());
     if (!er.hadError)
       nsm.assignPrefixes();
   }
 
   Pattern getPattern() {
-    return pattern;
+    return schemas.getMainSchema();
   }
 
   String getPrefixForNamespaceUri(String ns) {
