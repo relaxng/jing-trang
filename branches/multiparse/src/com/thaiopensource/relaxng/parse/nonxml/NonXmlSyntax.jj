@@ -16,6 +16,7 @@ import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.ParsedNameClass;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.GrammarSection;
+import com.thaiopensource.relaxng.parse.Div;
 import com.thaiopensource.relaxng.parse.Grammar;
 import com.thaiopensource.relaxng.parse.Include;
 import com.thaiopensource.relaxng.parse.IncludedGrammar;
@@ -25,7 +26,6 @@ import com.thaiopensource.relaxng.parse.Location;
 import com.thaiopensource.relaxng.parse.Context;
 
 import com.thaiopensource.util.Localizer;
-
 
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
@@ -699,7 +699,7 @@ void GrammarBody(GrammarSection section, Scope scope, Annotations a) :
 }
 {
   (LOOKAHEAD(2) e = AnnotationElementNotKeyword() { a.addElement(e); })*
-  (GrammarComponent(section, scope))+
+  (GrammarComponent(section, scope))*
 }
 
 void GrammarComponent(GrammarSection section, Scope scope) :
@@ -708,8 +708,11 @@ void GrammarComponent(GrammarSection section, Scope scope) :
   Annotations a;
 }
 {
-  a = Annotations()
-  (Definition(section, scope, a) | Include(section, scope, a))
+ (Definition(section, scope, null)
+  | Include(section, scope, null)
+  | (a = RequiredAnnotations() (Definition(section, scope, a)
+                                | Include(section, scope, a)
+                                | Div(section, scope, a))))
   (LOOKAHEAD(2) e = AnnotationElementNotKeyword() { section.topLevelAnnotation(e); })*
 }
 
@@ -754,19 +757,50 @@ void Include(GrammarSection section, Scope scope, Annotations a) :
   Token t;
   String href;
   String ns;
-  Annotations da;
   Include include = section.makeInclude();
 }
 {
   t = "include" href = Literal()
   ns = Inherit()
-  ("{" (da = Annotations() Definition(include, scope, da))* "}")?
+  ("{" (IncludeComponent(include, scope))* "}")?
   {
     try {
       include.endInclude(resolve(href), ns, makeLocation(t), a);
     }
     catch (IllegalSchemaException e) { }
   }
+}
+
+void IncludeComponent(GrammarSection section, Scope scope) :
+{
+  ParsedElementAnnotation e;
+  Annotations a;
+}
+{
+ (Definition(section, scope, null)
+  | (a = RequiredAnnotations() (Definition(section, scope, a)
+                                | IncludeDiv(section, scope, a))))
+  (LOOKAHEAD(2) e = AnnotationElementNotKeyword() { section.topLevelAnnotation(e); })*
+}
+
+void Div(GrammarSection section, Scope scope, Annotations a) :
+{
+  Token t;
+  Div div = section.makeDiv();
+}
+{
+  t = "{" (GrammarComponent(div, scope))* "}"
+  { div.endDiv(makeLocation(t), a); }
+}
+
+void IncludeDiv(GrammarSection section, Scope scope, Annotations a) :
+{
+  Token t;
+  Div div = section.makeDiv();
+}
+{
+  t = "{" (IncludeComponent(div, scope))* "}"
+  { div.endDiv(makeLocation(t), a); }
 }
 
 ParsedPattern ExternalRefExpr(Scope scope, Annotations a) :
@@ -946,13 +980,22 @@ ParsedPattern Except(Scope scope) :
 Annotations Annotations() :
 {
   Annotations a = null;
+}
+{
+  (a = RequiredAnnotations())?
+  { return a; }
+}
+
+Annotations RequiredAnnotations() :
+{
+  Annotations a;
   ParsedElementAnnotation e;
 }
 {
-  ("[" { a = sb.makeAnnotations(getContext()); }
+  "[" { a = sb.makeAnnotations(getContext()); }
        (LOOKAHEAD(2) PrefixedAnnotationAttribute(a, false) )*
        ( e = AnnotationElement() { a.addElement(e); } )*
-   "]")?
+   "]"
   { return a; }
 }
 
