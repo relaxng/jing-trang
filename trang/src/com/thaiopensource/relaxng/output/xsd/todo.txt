@@ -9,6 +9,11 @@ Name classes
 - attribute wildcards
 - element wildcards
 
+Nested grammars
+- check and give an error
+- handle some cases
+- expand when necessary
+
 Check for single namespace constraint
 
 Allow attribute names with empty namespace or target namespace
