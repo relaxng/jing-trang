@@ -7,10 +7,6 @@ Document ## in compact syntax.
 
 Handle comments embedded within strings better.
 
-Compact syntax UTF-8/UTF-16 autodetection.
-
-Compact syntax: skip BOM before \x interpretation.
-
 Make SAX-based parser preserve element annotations.
 
 SAXParser and comment formatting.
