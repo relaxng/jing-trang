@@ -1,6 +1,10 @@
 <xsdtest>
 <datatype name="dateTime">
 <valid>2001-12-01T19:45:00</valid>
+<valid>2001-12-01T19:45:00Z</valid>
+<valid>2001-12-01T19:45:00-12:59</valid>
+<valid>0001-01-12T00:00:00+23:59</valid>
+<invalid>2001-12-1T19:45:00+24:00</invalid>
 <invalid>2001-12-1T19:45:00</invalid>
 <equiv>
 <class>
@@ -55,12 +59,24 @@
 </datatype>
 <datatype name="duration">
 <valid>P1Y</valid>
+<valid>P1Y0M2DT17H5M12S</valid>
+<valid>-P1Y</valid>
+<valid>P60D</valid>
+<valid>PT24H</valid>
+<valid>PT1.2S</valid>
+<invalid>P24h</invalid>
+<invalid>P24H</invalid>
+<invalid>P1YT</invalid>
+<invalid>P</invalid>
+<invalid>-P</invalid>
 </datatype>
 <datatype name="time">
 <valid>12:45:00</valid>
+<valid>12:45:00Z</valid>
 </datatype>
 <datatype name="date">
 <valid>1886-12-01</valid>
+<valid>1886-12-01Z</valid>
 </datatype>
 <datatype name="gYearMonth">
 <valid>1996-12</valid>
@@ -80,12 +96,15 @@
 </datatype>
 <datatype name="gYear">
 <valid>2001</valid>
+<valid>2001Z</valid>
 </datatype>
 <datatype name="gMonthDay">
 <valid>--12-01</valid>
+<valid>--12-01Z</valid>
 </datatype>
 <datatype name="gDay">
 <valid>---20</valid>
+<valid>---20Z</valid>
 </datatype>
 <datatype name="gMonth">
 <valid>--12</valid>
@@ -288,7 +307,7 @@ B EEF </value>
 <valid>foo</valid>
 <valid xmlns:x="http://www.example.com">x:foo</valid>
 <invalid>y:foo</invalid>
-<equiv xmlns:x="http://www.example.com" 
+<equiv xmlns:x="http://www.example.com"
        xmlns:y="http://www.example.com/"
        xmlns:z="http://www.example.com">
 <class>
@@ -314,6 +333,8 @@ B EEF </value>
 </datatype>
 <datatype name="NOTATION">
 <valid>foo</valid>
+<valid xmlns:x="http://www.example.com">x:foo</valid>
+<invalid>y:foo</invalid>
 </datatype>
 <datatype name="decimal">
 <valid>1.0</valid>
@@ -337,15 +358,27 @@ B EEF </value>
 </datatype>
 <datatype name="nonPositiveInteger">
 <valid>-1</valid>
+<valid>0</valid>
+<valid>-0</valid>
+<invalid>1</invalid>
 </datatype>
 <datatype name="nonNegativeInteger">
 <valid>1</valid>
+<valid>0</valid>
+<valid>+1</valid>
+<valid>+0</valid>
+<invalid>-1</invalid>
 </datatype>
 <datatype name="positiveInteger">
+<valid>+1</valid>
 <valid>1</valid>
+<invalid>0</invalid>
+<invalid>-1</invalid>
 </datatype>
 <datatype name="negativeInteger">
 <valid>-1</valid>
+<invalid>+1</invalid>
+<invalid>0</invalid>
 </datatype>
 <datatype name="long">
 <valid>1</valid>
