@@ -39,6 +39,7 @@ import com.thaiopensource.relaxng.edit.CompositePattern;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
 import com.thaiopensource.relaxng.output.common.NameClassSplitter;
+import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.xml.util.Naming;
 
 import java.util.List;
