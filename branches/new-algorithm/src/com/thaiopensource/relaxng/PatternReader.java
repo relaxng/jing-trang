@@ -25,7 +25,7 @@ import org.relaxng.datatype.DatatypeException;
 
 import com.thaiopensource.util.Uri;
 
-public class PatternReader implements ValidationContext {
+public class PatternReader {
 
   static final String relaxngURI = "http://relaxng.org/ns/structure/1.0";
   static final String xmlURI = "http://www.w3.org/XML/1998/namespace";
@@ -69,7 +69,7 @@ public class PatternReader implements ValidationContext {
     }
   }
 
-  abstract class State implements ContentHandler {
+  abstract class State implements ContentHandler, ValidationContext {
     State parent;
     String nsInherit;
     String ns;
@@ -210,6 +210,31 @@ public class PatternReader implements ValidationContext {
 
     public void endPrefixMapping(String prefix) {
       prefixMapping = prefixMapping.next;
+    }
+
+    public String resolveNamespacePrefix(String prefix) {
+      if (prefix.equals(""))
+        return ns == null ? nsInherit : ns;
+      for (PrefixMapping p = prefixMapping; p != null; p = p.next)
+        if (p.prefix.equals(prefix))
+          return p.uri;
+      return null;
+    }
+
+    public String getBaseUri() {
+      return xmlBaseHandler.getBaseUri();
+    }
+
+    public boolean isUnparsedEntity(String name) {
+      return false;
+    }
+
+    public boolean isNotation(String name) {
+      return false;
+    }
+
+    boolean isPatternNamespaceURI(String s) {
+      return s.equals(relaxngURI);
     }
 
   }
@@ -488,7 +513,7 @@ public class PatternReader implements ValidationContext {
 	dtb = getDatatypeBuilder(datatypeLibrary, type);
       try {
 	Datatype dt = dtb.createDatatype();
-	Object value = dt.createValue(buf.toString(), PatternReader.this);
+	Object value = dt.createValue(buf.toString(), this);
 	if (value != null)
 	  return patternBuilder.makeValue(dt, value);
 	error("invalid_value", buf.toString());
@@ -615,7 +640,7 @@ public class PatternReader implements ValidationContext {
       if (name == null)
 	return;
       try {
-	dtb.addParameter(name, buf.toString(), PatternReader.this);
+	dtb.addParameter(name, buf.toString(), this);
       }
       catch (DatatypeException e) {
 	String detail = e.getMessage();
@@ -1478,28 +1503,6 @@ public class PatternReader implements ValidationContext {
     return pr.getStartPattern();
   }
 
-  public String resolveNamespacePrefix(String prefix) {
-    for (PrefixMapping p = prefixMapping; p != null; p = p.next)
-      if (p.prefix.equals(prefix))
-	return p.uri;
-    return null;
-  }
-
-  public String getBaseUri() {
-    return xmlBaseHandler.getBaseUri();
-  }
-
-  public boolean isUnparsedEntity(String name) {
-    return false;
-  }
-
-  public boolean isNotation(String name) {
-    return false;
-  }
-
-  boolean isPatternNamespaceURI(String s) {
-    return s.equals(relaxngURI);
-  }
 
   DatatypeBuilder getDatatypeBuilder(String datatypeLibrary, String type) throws SAXException {
     DatatypeLibrary dl
