@@ -1,37 +1,29 @@
 package com.thaiopensource.relaxng.parse.sax;
 
-import com.thaiopensource.relaxng.XMLReaderCreator;
 import com.thaiopensource.relaxng.impl.Localizer;
-import com.thaiopensource.relaxng.parse.SchemaBuilder;
-import com.thaiopensource.relaxng.parse.BuildException;
+import com.thaiopensource.relaxng.parse.DataPatternBuilder;
 import com.thaiopensource.relaxng.parse.Grammar;
+import com.thaiopensource.relaxng.parse.GrammarSection;
+import com.thaiopensource.relaxng.parse.IllegalSchemaException;
+import com.thaiopensource.relaxng.parse.Include;
+import com.thaiopensource.relaxng.parse.IncludedGrammar;
 import com.thaiopensource.relaxng.parse.Location;
 import com.thaiopensource.relaxng.parse.ParsedNameClass;
 import com.thaiopensource.relaxng.parse.ParsedPattern;
-import com.thaiopensource.relaxng.parse.Annotations;
-import com.thaiopensource.relaxng.parse.GrammarSection;
-import com.thaiopensource.relaxng.parse.Include;
-import com.thaiopensource.relaxng.parse.DataPatternBuilder;
+import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
-import com.thaiopensource.relaxng.parse.IllegalSchemaException;
-import com.thaiopensource.relaxng.parse.IncludedGrammar;
 import com.thaiopensource.util.Uri;
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.ValidationContext;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
+import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
-import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.helpers.LocatorImpl;
 
-import java.io.IOException;
-import java.util.Enumeration;
 import java.util.Hashtable;
 
 /*
