@@ -25,6 +25,7 @@ Namespaces
 - check for single namespace
 - allow multiple namespaces but not mixed in a file
 - split files based on namespace
+- Need to deal with inherited namespace
 
 Include overrides
 - Check and give error
@@ -32,6 +33,8 @@ Include overrides
 
 combine attributes
 - combine="choice" on <start>
+- combine in a single file
+- combine="interleave"
 - others
 
 externalRef
@@ -70,7 +73,8 @@ Deal with a:documentation
 Strategy for handling namespaces
 
 - assign a target namespace to each source URI based on counting attribute and element declarations
-in the file (what if no attribute or element declarations?)
+in the file (what if no attribute or element declarations?); don't count declarations within
+element and attribute declarations
 
 - assign a unique prefix to each target namespace
 
@@ -80,7 +84,9 @@ files with that target namespace, use that source file as the head; otherwise cr
 file to be the head whose name is based on the prefix
 
 - if a declaration of an element or attribute with some target namespace occurs in a file
-which has been assigned a different target namespace, move that declaration into the head
+which has been assigned a different target namespace, add to list of orphaned elements/attributes
+
+- when outputting, add orphanned elements/attributes to head
 
 - if a file F with target namespace x includes a file G with another target namespace, pretend that
 the includes of G occured in F

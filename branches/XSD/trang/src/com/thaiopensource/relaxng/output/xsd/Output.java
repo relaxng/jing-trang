@@ -49,6 +49,7 @@ class Output {
   private final XmlWriter xw;
   private final String sourceUri;
   private final OutputDirectory od;
+  private final String targetNamespace;
   private final ComponentVisitor topLevelOutput = new TopLevelOutput();
   private final ComponentVisitor includeOutput = new IncludeOutput();
   private final PatternVisitor simpleTypeOutput = new SimpleTypeOutput();
@@ -78,6 +79,7 @@ class Output {
     this.er = er;
     this.od = od;
     this.sourceUri = sourceUri;
+    this.targetNamespace = si.getTargetNamespace(sourceUri);
     xw = new XmlWriter(od.getLineSeparator(),
                        od.open(sourceUri),
                        new String[0],
@@ -93,6 +95,8 @@ class Output {
     xw.attribute("xmlns:xs", "http://www.w3.org/2001/XMLSchema");
     xw.attribute("elementFormDefault", "qualified");
     xw.attribute("version", "1.0");
+    if (!targetNamespace.equals(""))
+      xw.attribute("targetNamespace", targetNamespace);
     grammar.componentsAccept(includeOutput);
     grammar.componentsAccept(topLevelOutput);
     xw.endElement();

@@ -1,6 +1,7 @@
 package com.thaiopensource.relaxng.output.xsd;
 
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
+import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.edit.Pattern;
 import com.thaiopensource.relaxng.edit.PatternVisitor;
@@ -27,12 +28,16 @@ import com.thaiopensource.relaxng.edit.DivComponent;
 import com.thaiopensource.relaxng.edit.CompositePattern;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.IncludeComponent;
+import com.thaiopensource.relaxng.edit.NameNameClass;
+import com.thaiopensource.relaxng.edit.ChoiceNameClass;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Vector;
+import java.util.Iterator;
 
 class SchemaInfo {
   private final SchemaCollection sc;
@@ -40,6 +45,10 @@ class SchemaInfo {
   private final ErrorReporter er;
   private final Map childTypeMap = new HashMap();
   private final Map defineMap = new HashMap();
+  // maps each sourceUri to list of sourceUris that it includes
+  private final Map includeMap = new HashMap();
+  // maps each sourceUri to the selected targetNamespace
+  private final Map targetNamespaceMap = new HashMap();
   private final Set rootElements = new HashSet();
   private final PatternVisitor childTypeVisitor = new ChildTypeVisitor();
 
@@ -180,6 +189,12 @@ class SchemaInfo {
   }
 
   class GrammarVisitor extends AbstractVisitor {
+    private final String sourceUri;
+    GrammarVisitor(String sourceUri) {
+      this.sourceUri = sourceUri;
+      // TODO detect multiple inclusions
+      includeMap.put(sourceUri, new Vector());
+    }
     public Object visitDefine(DefineComponent c) {
       if (c.getName() != DefineComponent.START)
         defineMap.put(c.getName(), c.getBody());
@@ -192,7 +207,9 @@ class SchemaInfo {
     }
 
     public Object visitInclude(IncludeComponent c) {
-      getSchema(c.getHref()).componentsAccept(this);
+      String href = c.getHref();
+      ((List)includeMap.get(sourceUri)).add(href);
+      getSchema(href).componentsAccept(new GrammarVisitor(href));
       return null;
     }
   }
@@ -233,17 +250,135 @@ class SchemaInfo {
     }
   }
 
+  static class NamespaceUsage {
+    int elementCount;
+    int attributeCount;
+    static boolean isBetter(NamespaceUsage n1, NamespaceUsage n2) {
+      return (n1.elementCount > n2.elementCount
+              || (n1.elementCount == n2.elementCount
+                  && n1.attributeCount > n2.attributeCount));
+    }
+  }
+
+  static class PrefixUsage {
+    int count;
+  }
+
+  class TargetNamespaceSelector extends AbstractVisitor {
+    private boolean isElement;
+    private final Map namespaceUsageMap = new HashMap();
+    private final Map namespacePrefixUsageMap = new HashMap();
+
+    public Object visitElement(ElementPattern p) {
+      isElement = true;
+      return p.getNameClass().accept(this);
+      // don't visit the content
+    }
+
+    public Object visitAttribute(AttributePattern p) {
+      isElement = false;
+      return p.getNameClass().accept(this);
+    }
+
+    public Object visitChoice(ChoiceNameClass nc) {
+      nc.childrenAccept(this);
+      return null;
+    }
+
+    public Object visitName(NameNameClass nc) {
+      String ns = nc.getNamespaceUri();
+      NamespaceUsage usage = (NamespaceUsage)namespaceUsageMap.get(ns);
+      if (usage == null) {
+        usage = new NamespaceUsage();
+        namespaceUsageMap.put(ns, usage);
+      }
+      if (isElement)
+        usage.elementCount++;
+      else
+        usage.attributeCount++;
+      Map prefixUsageMap = (Map)namespacePrefixUsageMap.get(ns);
+      if (prefixUsageMap == null) {
+        prefixUsageMap = new HashMap();
+        namespacePrefixUsageMap.put(ns, prefixUsageMap);
+      }
+      String prefix = nc.getPrefix();
+      if (prefix != null) {
+        PrefixUsage prefixUsage = (PrefixUsage)prefixUsageMap.get(prefix);
+        if (prefixUsage == null) {
+          prefixUsage = new PrefixUsage();
+          prefixUsageMap.put(prefix, prefixUsage);
+        }
+        prefixUsage.count++;
+      }
+      return null;
+    }
+
+    public Object visitComposite(CompositePattern p) {
+      p.childrenAccept(this);
+      return null;
+    }
+
+    public Object visitUnary(UnaryPattern p) {
+      return p.getChild().accept(this);
+    }
+
+    public Object visitDefine(DefineComponent c) {
+      c.getBody().accept(this);
+      return null;
+    }
+
+    public Object visitDiv(DivComponent c) {
+      c.componentsAccept(this);
+      return null;
+    }
+
+    String selectTargetNamespace(GrammarPattern p) {
+      targetNamespaceMap.clear();
+      p.componentsAccept(this);
+      Map.Entry best = null;
+      for (Iterator iter = namespaceUsageMap.entrySet().iterator(); iter.hasNext();) {
+        Map.Entry tem = (Map.Entry)iter.next();
+        if (best == null
+            || NamespaceUsage.isBetter((NamespaceUsage)tem.getValue(),
+                                        (NamespaceUsage)best.getValue()))
+          best = tem;
+      }
+      if (best == null)
+        return "";  // TODO maybe better to use targetNamespace of included schemas
+      return (String)best.getKey();
+    }
+
+    // map target namespace to prefixes; must contain all non-local target namespaces
+    void assignNamespacePrefixes(Map prefixMap) {
+    }
+
+  }
+
   SchemaInfo(SchemaCollection sc, ErrorReporter er) {
     this.sc = sc;
     this.er = er;
     forceGrammar();
     grammar = (GrammarPattern)sc.getMainSchema();
-    grammar.componentsAccept(new GrammarVisitor());
+    grammar.componentsAccept(new GrammarVisitor(OutputDirectory.MAIN));
     grammar.componentsAccept(new RootMarker());
+    assignTargetNamespaces();
   }
 
   void forceGrammar() {
     sc.setMainSchema(convertToGrammar(sc.getMainSchema()));
+    // TODO convert other schemas
+  }
+
+  void assignTargetNamespaces() {
+    TargetNamespaceSelector selector = new TargetNamespaceSelector();
+    targetNamespaceMap.put(OutputDirectory.MAIN,
+                           selector.selectTargetNamespace(grammar));
+    for (Iterator iter = getSourceUris().iterator(); iter.hasNext();) {
+      String sourceUri = (String)iter.next();
+      GrammarPattern p = getSchema(sourceUri);
+      targetNamespaceMap.put(sourceUri,
+                             selector.selectTargetNamespace(p));
+    }
   }
 
   GrammarPattern convertToGrammar(Pattern p) {
@@ -263,6 +398,10 @@ class SchemaInfo {
 
   GrammarPattern getSchema(String sourceUri) {
     return (GrammarPattern)sc.getSchemas().get(sourceUri);
+  }
+
+  String getTargetNamespace(String sourceUri) {
+    return (String)targetNamespaceMap.get(sourceUri);
   }
 
   Set getSourceUris() {
