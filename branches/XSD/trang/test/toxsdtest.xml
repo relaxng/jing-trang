@@ -610,6 +610,34 @@ element e1:x {
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+namespace e1 = "http://www.example.com/1"
+
+element e1:x {
+  element y {
+    empty
+  }
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:e1="http://www.example.com/1">
+  <xs:element name="x">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="y" form="unqualified">
+          <xs:complexType/>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>
@@ -618,9 +646,6 @@ element e1:x {
 </compact>
 <xsd>
 <correct>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           elementFormDefault="qualified" version="1.0">
-</xs:schema>
 </correct>
 </xsd>
 </testCase>
