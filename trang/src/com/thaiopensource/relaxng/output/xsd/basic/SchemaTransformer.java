@@ -123,6 +123,13 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     return new AttributeGroup(a.getLocation(), children);
   }
 
+  public Object visitAttributeUseChoice(AttributeUseChoice a) {
+    List children = transformAttributeUseList(a.getChildren());
+    if (children == a.getChildren())
+      return a;
+    return new AttributeUseChoice(a.getLocation(), children);
+  }
+
   public Object visitRestriction(SimpleTypeRestriction t) {
     return t;
   }

@@ -20,7 +20,7 @@ public class AttributeGroup extends AttributeUse {
   }
 
   public boolean equals(Object obj) {
-    return obj instanceof AttributeGroup && ((AttributeGroup)obj).children.equals(children);
+    return obj.getClass() == this.getClass() && ((AttributeGroup)obj).children.equals(children);
   }
 
   public int hashCode() {

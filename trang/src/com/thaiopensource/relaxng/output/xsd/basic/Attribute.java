@@ -3,7 +3,7 @@ package com.thaiopensource.relaxng.output.xsd.basic;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
-public class Attribute extends AttributeUse implements Structure {
+public class Attribute extends SingleAttributeUse implements Structure {
   private final Name name;
   private final SimpleType type;
 
@@ -50,5 +50,9 @@ public class Attribute extends AttributeUse implements Structure {
     if (type != null)
       hc ^= type.hashCode();
     return hc;
+  }
+
+  public boolean isOptional() {
+    return false;
   }
 }

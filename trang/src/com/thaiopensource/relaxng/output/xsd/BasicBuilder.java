@@ -50,6 +50,7 @@ import com.thaiopensource.relaxng.output.xsd.basic.Schema;
 import com.thaiopensource.relaxng.output.xsd.basic.AttributeUse;
 import com.thaiopensource.relaxng.output.xsd.basic.OptionalAttribute;
 import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroup;
+import com.thaiopensource.relaxng.output.xsd.basic.AttributeUseChoice;
 import com.thaiopensource.relaxng.output.common.NameClassSplitter;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
@@ -361,8 +362,13 @@ public class BasicBuilder {
     }
 
     public Object visitRef(RefPattern p) {
-      // TODO this isn't right for a ref inside an optional if the refed pattern contains required attributes
-      return new AttributeGroupRef(p.getSourceLocation(), p.getName());
+      AttributeUse ref = new AttributeGroupRef(p.getSourceLocation(), p.getName());
+      if (!isOptional())
+        return ref;
+      List choices = new Vector();
+      choices.add(ref);
+      choices.add(AttributeGroup.EMPTY);
+      return new AttributeUseChoice(p.getSourceLocation(), choices);
     }
 
     public Object visitComposite(CompositePattern p) {
@@ -380,8 +386,22 @@ public class BasicBuilder {
     }
 
     public Object visitChoice(ChoicePattern p) {
-      // TODO this isn't right: should be optional in some cases
-      return visitComposite(p);
+      PatternVisitor childVisitor = this;
+      for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
+        if (!si.getChildType((Pattern)iter.next()).contains(ChildType.ATTRIBUTE)) {
+          childVisitor = optionalAttributeUseBuilder;
+          break;
+        }
+      }
+      List uses = new Vector();
+      for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
+        Pattern child = (Pattern)iter.next();
+        if (si.getChildType(child).contains(ChildType.ATTRIBUTE))
+          uses.add((AttributeUse)child.accept(childVisitor));
+      }
+      if (uses.size() == 1)
+        return uses.get(0);
+      return new AttributeUseChoice(p.getSourceLocation(), uses);
     }
   }
 

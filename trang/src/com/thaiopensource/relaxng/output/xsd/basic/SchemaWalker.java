@@ -83,6 +83,10 @@ public abstract class SchemaWalker implements
     return null;
   }
 
+  public Object visitAttributeUseChoice(AttributeUseChoice a) {
+    return visitAttributeGroup(a);
+  }
+
   public void visitSimpleType(SimpleTypeDefinition def) {
     def.getSimpleType().accept(this);
   }
