@@ -2,10 +2,9 @@ package com.thaiopensource.datatype.xsd;
 
 import org.relaxng.datatype.ValidationContext;
 
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 class DateTimeDatatype extends RegexDatatype implements OrderRelation {
   static private final String YEAR_PATTERN = "-?([1-9][0-9]*)?[0-9]{4}";
