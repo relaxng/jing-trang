@@ -1,10 +1,6 @@
-Global elements
-
-Global attributes
-
 Map
 
-foo = element bar|baz { xyzzy }
+  foo = element bar|baz { xyzzy }
 
 <xs:group name="foo">
   <xs:choice>
@@ -25,20 +21,13 @@ Use global attributes for cross-schema references.
 
 Make choice of targetNamespace not depend on order of hash table iteration.
 
-Use global element declarations
-- when only one element of particular name
-- when occurs at namespace boundary
-- when multiple elements, but only one occurs as the sole content of a define
-- when there's something we want to use in a subsitution group
-- avoid duplicate global elements with moved patterns
-
 Avoid duplicate attributes.
 
 Deal with <ref> to attributes inside optional.
 
-Name classes
-- attribute wildcards
-- element wildcards
+Attribute wildcards
+
+Element wildcards
 
 Nested grammars
 - check and give an error
@@ -78,13 +67,17 @@ complexType, then define as complexType.
 
 Deal with xsi attributes.
 
-Make use of element substitution groups.
+Make use of element substitution groups; may affect which elements are global.
 
 Deal with comments
 
 Deal with annotations
 
 Deal with a:documentation
+
+Take advantage of type attribute in output.
+
+Push minOccurs down onto single child.
 
 -----
 

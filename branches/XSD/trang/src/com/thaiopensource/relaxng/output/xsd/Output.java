@@ -4,6 +4,7 @@ import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
 import com.thaiopensource.relaxng.output.common.XmlWriter;
 import com.thaiopensource.relaxng.output.common.NameClassSplitter;
+import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.edit.Pattern;
 import com.thaiopensource.relaxng.edit.GrammarPattern;
 import com.thaiopensource.relaxng.edit.AbstractVisitor;
@@ -283,18 +284,20 @@ class Output {
       Set movedNamespaces = new HashSet();
       for (Iterator iter = names.iterator(); iter.hasNext();) {
         NameNameClass name = (NameNameClass)iter.next();
-        if (si.isGlobal(p)) {
+        if (si.isGlobalElement(makeName(name), body)) {
           xw.startElement(xs("element"));
           xw.attribute("ref", qualifyName(name));
           xw.endElement();
         }
         else {
           String ns = resolveNamespace(name.getNamespaceUri());
-          if (!ns.equals(targetNamespace) && !ns.equals("") && !movedNamespaces.contains(ns)) {
-            movedNamespaces.add(ns);
-            xw.startElement(xs("group"));
-            xw.attribute("ref", si.qualifyName(ns, si.getMovedPatternName(p, ns)));
-            xw.endElement();
+          if (!ns.equals(targetNamespace) && !ns.equals("")) {
+            if (!movedNamespaces.contains(ns)) {
+              movedNamespaces.add(ns);
+              xw.startElement(xs("group"));
+              xw.attribute("ref", si.qualifyName(ns, si.getMovedPatternName(p, ns)));
+              xw.endElement();
+            }
           }
           else
             declareElement(name, body);
@@ -579,11 +582,13 @@ class Output {
       for (Iterator iter = names.iterator(); iter.hasNext();) {
         NameNameClass nc = (NameNameClass)iter.next();
         String ns = resolveNamespace(nc.getNamespaceUri());
-        if (!ns.equals(targetNamespace) && !ns.equals("") && !movedNamespaces.contains(ns)) {
-          movedNamespaces.add(ns);
-          xw.startElement(xs("attributeGroup"));
-          xw.attribute("ref", si.qualifyName(ns, si.getMovedPatternName(p, ns)));
-          xw.endElement();
+        if (!ns.equals(targetNamespace) && !ns.equals("")) {
+          if (!movedNamespaces.contains(ns)) {
+            movedNamespaces.add(ns);
+            xw.startElement(xs("attributeGroup"));
+            xw.attribute("ref", si.qualifyName(ns, si.getMovedPatternName(p, ns)));
+            xw.endElement();
+          }
         }
         else {
           xw.startElement(xs("attribute"));
@@ -652,13 +657,11 @@ class Output {
     public Object visitElement(ElementPattern p) {
       List names = NameClassSplitter.split(p.getNameClass());
       Pattern body = p.getChild();
-      if (si.isGlobal(p)) {
-        for (Iterator iter = names.iterator(); iter.hasNext();) {
-          NameNameClass nc = (NameNameClass)iter.next();
-          String ns = resolveNamespace(nc.getNamespaceUri());
-          if (ns.equals(targetNamespace))
-            declareElement(nc, body);
-        }
+      for (Iterator iter = names.iterator(); iter.hasNext();) {
+        NameNameClass nc = (NameNameClass)iter.next();
+        String ns = resolveNamespace(nc.getNamespaceUri());
+        if (ns.equals(targetNamespace) && si.isGlobalElement(makeName(nc), body))
+          declareElement(nc, body);
       }
       body.accept(this);
       return null;
@@ -717,13 +720,36 @@ class Output {
     public Object visitElement(ElementPattern p) {
       inheritedNamespace = si.getMovedPatternInheritedNamespace(p);
       if (globalElementName(p) == null) {
-        xw.startElement(xs("group"));
-        xw.attribute("name", si.getMovedPatternName(p, targetNamespace));
-        groupOutput.visitElement(p);
-        xw.endElement();
+        Pattern body = p.getChild();
+        List names = NameClassSplitter.split(p.getNameClass());
+        int count = 0;
+        for (Iterator iter = names.iterator(); iter.hasNext();) {
+          if (shouldOutput((NameNameClass)iter.next(), body))
+            count++;
+        }
+        if (count > 0) {
+          xw.startElement(xs("group"));
+          xw.attribute("name", si.getMovedPatternName(p, targetNamespace));
+          xw.startElement(xs("choice"));
+          for (Iterator iter = names.iterator(); iter.hasNext();) {
+            NameNameClass nc = (NameNameClass)iter.next();
+            if (shouldOutput(nc, body))
+              declareElement(nc, body);
+          }
+          xw.endElement();
+          xw.endElement();
+        }
       }
-      p.accept(globalElementOutput);
+      if (!si.getMovedPatternTargetNamespace(p).equals(targetNamespace))
+        p.accept(globalElementOutput);
       return null;
+    }
+
+    private boolean shouldOutput(NameNameClass nc, Pattern body) {
+      String ns = resolveNamespace(nc.getNamespaceUri());
+      if (!ns.equals(targetNamespace))
+        return false;
+      return !si.isGlobalElement(new Name(ns, nc.getLocalName()), body);
     }
 
     public Object visitAttribute(AttributePattern p) {
@@ -803,12 +829,13 @@ class Output {
     if (!(p instanceof ElementPattern))
       return null;
     ElementPattern ep = (ElementPattern)p;
-    if (!si.isGlobal(ep))
-      return null;
     NameClass nc = ep.getNameClass();
     if (!(nc instanceof NameNameClass))
       return null;
-    return qualifyName((NameNameClass)nc);
+    NameNameClass name = (NameNameClass)nc;
+    if (!si.isGlobalElement(makeName(name), ep.getChild()))
+      return null;
+    return qualifyName(name);
   }
 
   void outputInclude(String href) {
@@ -833,4 +860,8 @@ class Output {
     return SchemaInfo.resolveNamespace(ns, inheritedNamespace);
   }
 
- }
+  Name makeName(NameNameClass nc) {
+    return new Name(SchemaInfo.resolveNamespace(nc.getNamespaceUri(), inheritedNamespace),
+                    nc.getLocalName());
+  }
+}

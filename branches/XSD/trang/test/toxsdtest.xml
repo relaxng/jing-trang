@@ -250,13 +250,9 @@ foo = element foo { empty }
 <xsd>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
-  <xs:group name="foo">
-    <xs:sequence>
-      <xs:element name="foo">
-        <xs:complexType/>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
+  <xs:element name="foo">
+    <xs:complexType/>
+  </xs:element>
 </xs:schema>
 </correct>
 </xsd>
@@ -270,33 +266,29 @@ foo = element foo { attribute bar { xsd:double }, (xsd:int | xsd:boolean) }
 <xsd>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
-  <xs:group name="foo">
-    <xs:sequence>
-      <xs:element name="foo">
-        <xs:complexType>
-          <xs:simpleContent>
-            <xs:restriction base="xs:anyType">
-              <xs:simpleType>
-                <xs:union>
-                  <xs:simpleType>
-                    <xs:restriction base="xs:int"/>
-                  </xs:simpleType>
-                  <xs:simpleType>
-                    <xs:restriction base="xs:boolean"/>
-                  </xs:simpleType>
-                </xs:union>
-              </xs:simpleType>
-              <xs:attribute name="bar" use="required">
-                <xs:simpleType>
-                  <xs:restriction base="xs:double"/>
-                </xs:simpleType>
-              </xs:attribute>
-            </xs:restriction>
-          </xs:simpleContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:simpleContent>
+	<xs:restriction base="xs:anyType">
+	  <xs:simpleType>
+	    <xs:union>
+	      <xs:simpleType>
+		<xs:restriction base="xs:int"/>
+	      </xs:simpleType>
+	      <xs:simpleType>
+		<xs:restriction base="xs:boolean"/>
+	      </xs:simpleType>
+	    </xs:union>
+	  </xs:simpleType>
+	  <xs:attribute name="bar" use="required">
+	    <xs:simpleType>
+	      <xs:restriction base="xs:double"/>
+	    </xs:simpleType>
+	  </xs:attribute>
+	</xs:restriction>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
 </xs:schema>
 </correct>
 </xsd>
@@ -311,21 +303,17 @@ bar = xsd:int | xsd:boolean
 <xsd>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
-  <xs:group name="foo">
-    <xs:sequence>
-      <xs:element name="foo">
-        <xs:complexType>
-          <xs:simpleContent>
-            <xs:restriction base="xs:anyType">
-              <xs:simpleType>
-                <xs:restriction base="bar"/>
-              </xs:simpleType>
-            </xs:restriction>
-          </xs:simpleContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:simpleContent>
+	<xs:restriction base="xs:anyType">
+	  <xs:simpleType>
+	    <xs:restriction base="bar"/>
+	  </xs:simpleType>
+	</xs:restriction>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
   <xs:simpleType name="bar">
     <xs:union>
       <xs:simpleType>
@@ -350,30 +338,16 @@ foo = attribute foo { xsd:double } | element foo { xsd:double }
 <xsd>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
-  <xs:group name="bar">
-    <xs:sequence>
-      <xs:element name="bar">
-        <xs:complexType>
-          <xs:group ref="foo"/>
-          <xs:attributeGroup ref="foo"/>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
+  <xs:element name="bar">
+    <xs:complexType>
+      <xs:group ref="foo"/>
+      <xs:attributeGroup ref="foo"/>
+    </xs:complexType>
+  </xs:element>
   <xs:group name="foo">
     <xs:sequence>
       <xs:choice minOccurs="0">
-        <xs:element name="foo">
-          <xs:complexType>
-            <xs:simpleContent>
-              <xs:restriction base="xs:anyType">
-                <xs:simpleType>
-                  <xs:restriction base="xs:double"/>
-                </xs:simpleType>
-              </xs:restriction>
-            </xs:simpleContent>
-          </xs:complexType>
-        </xs:element>
+        <xs:element ref="foo"/>
       </xs:choice>
     </xs:sequence>
   </xs:group>
@@ -384,6 +358,17 @@ foo = attribute foo { xsd:double } | element foo { xsd:double }
       </xs:simpleType>
     </xs:attribute>
   </xs:attributeGroup>
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:restriction base="xs:anyType">
+          <xs:simpleType>
+            <xs:restriction base="xs:double"/>
+          </xs:simpleType>
+        </xs:restriction>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
 </xs:schema>
 </correct>
 </xsd>
@@ -469,37 +454,25 @@ include "bar.rnc"
 <xsd>
 <resource name="bar.xsd">
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
-  <xs:group name="bar">
-    <xs:sequence>
-      <xs:element name="bar">
-        <xs:complexType/>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
-  <xs:group name="baz">
-    <xs:sequence>
-      <xs:element name="baz">
-        <xs:complexType/>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
+  <xs:element name="bar">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="baz">
+    <xs:complexType/>
+  </xs:element>
 </xs:schema>
 </resource>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
   <xs:include schemaLocation="bar.xsd"/>
-  <xs:group name="foo">
-    <xs:sequence>
-      <xs:element name="foo">
-        <xs:complexType>
-          <xs:choice>
-            <xs:group ref="bar"/>
-            <xs:group ref="baz"/>
-          </xs:choice>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:choice>
+	<xs:element ref="bar"/>
+	<xs:element ref="baz"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
 </xs:schema>
 </correct>
 </xsd>
@@ -586,13 +559,9 @@ element e1:x {
 <resource name="e2.xsd">
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
   <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
-  <xs:group name="anon0">
-    <xs:sequence>
-      <xs:element name="y">
-        <xs:complexType/>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
+  <xs:element name="y">
+    <xs:complexType/>
+  </xs:element>
 </xs:schema>
 </resource>
 <correct>
@@ -601,7 +570,7 @@ element e1:x {
   <xs:element name="x">
     <xs:complexType>
       <xs:sequence>
-        <xs:group ref="e2:anon0"/>
+        <xs:element ref="e2:y"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -662,14 +631,15 @@ element e1:x {
         <xs:element name="y" form="unqualified">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="z">
-                <xs:complexType/>
-              </xs:element>
+              <xs:element ref="e1:z"/>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
       </xs:sequence>
     </xs:complexType>
+  </xs:element>
+  <xs:element name="z">
+    <xs:complexType/>
   </xs:element>
 </xs:schema>
 </correct>
@@ -694,17 +664,13 @@ element e1:x {
 <resource name="e2.xsd">
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
   <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
-  <xs:group name="anon0">
-    <xs:sequence>
-      <xs:element name="y">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:group ref="e1:anon0"/>
-          </xs:sequence>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
+  <xs:element name="y">
+    <xs:complexType>
+      <xs:sequence>
+	<xs:element ref="e1:z"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
 </xs:schema>
 </resource>
 <correct>
@@ -713,17 +679,13 @@ element e1:x {
   <xs:element name="x">
     <xs:complexType>
       <xs:sequence>
-        <xs:group ref="e2:anon0"/>
+        <xs:element ref="e2:y"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-  <xs:group name="anon0">
-    <xs:sequence>
-      <xs:element name="z">
-        <xs:complexType/>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
+  <xs:element name="z">
+    <xs:complexType/>
+  </xs:element>
 </xs:schema>
 </correct>
 </xsd>
@@ -860,7 +822,7 @@ include "example.rnc"
   <xs:import schemaLocation="c.xsd"/>
   <xs:element name="y">
     <xs:complexType>
-      <xs:group ref="x"/>
+      <xs:element ref="x"/>
     </xs:complexType>
   </xs:element>
 </xs:schema>
@@ -868,13 +830,9 @@ include "example.rnc"
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" xmlns:eg="http://www.example.com">
   <xs:import namespace="http://www.example.com" schemaLocation="example.xsd"/>
-  <xs:group name="x">
-    <xs:sequence>
-      <xs:element name="x">
-        <xs:complexType/>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
+  <xs:element name="x">
+    <xs:complexType/>
+  </xs:element>
 </xs:schema>
 </correct>
 </xsd>
@@ -975,6 +933,220 @@ element foo { attribute bar|baz { text } }
       <xs:attribute name="baz"/>
     </xs:complexType>
   </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+namespace e1 = "http://www.example.com/1"
+namespace e2 = "http://www.example.com/2"
+
+element e1:x { element e2:y|e2:z { element e2:y { empty } } }
+
+</correct>
+</compact>
+<xsd>
+<resource name="e2.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
+  <xs:element name="y">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="y">
+          <xs:complexType/>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="z">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="y">
+          <xs:complexType/>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/2" schemaLocation="e2.xsd"/>
+  <xs:element name="x">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="e2:y"/>
+          <xs:element ref="e2:z"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+namespace e1 = "http://www.example.com/1"
+namespace e2 = "http://www.example.com/2"
+namespace e3 = "http://www.example.com/3"
+
+element e1:x { element e2:y|e3:z { element e1:x|e1:v { empty } } }
+| element e1:w { element e2:y { text } }
+</correct>
+</compact>
+<xsd>
+<resource name="e2.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:e3="http://www.example.com/3" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/3" schemaLocation="e3.xsd"/>
+  <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
+  <xs:group name="anon0">
+    <xs:choice>
+      <xs:element name="y">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:choice>
+              <xs:group ref="e1:anon0"/>
+              <xs:element ref="e1:v"/>
+            </xs:choice>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
+  <xs:group name="anon1">
+    <xs:choice>
+      <xs:element name="y">
+        <xs:complexType mixed="true"/>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
+</xs:schema>
+</resource>
+<resource name="e3.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/3" xmlns:e3="http://www.example.com/3" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/2" schemaLocation="e2.xsd"/>
+  <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
+  <xs:element name="z">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:group ref="e1:anon0"/>
+          <xs:element ref="e1:v"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:e3="http://www.example.com/3" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/3" schemaLocation="e3.xsd"/>
+  <xs:import namespace="http://www.example.com/2" schemaLocation="e2.xsd"/>
+  <xs:element name="x">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:group ref="e2:anon0"/>
+          <xs:element ref="e3:z"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="v">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="w">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:group ref="e2:anon1"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="anon0">
+    <xs:choice>
+      <xs:element name="x">
+        <xs:complexType/>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+namespace e1 = "http://www.example.com/1"
+namespace e2 = "http://www.example.com/2"
+
+element e1:x { element e1:x|e2:y { element e1:x|e2:y { empty } } }
+</correct>
+</compact>
+<xsd>
+<resource name="e2.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
+  <xs:group name="anon1">
+    <xs:choice>
+      <xs:element name="y">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:choice>
+              <xs:group ref="e1:anon0"/>
+              <xs:element name="y">
+                <xs:complexType/>
+              </xs:element>
+            </xs:choice>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
+  <xs:group name="anon0">
+    <xs:choice>
+      <xs:element name="y">
+        <xs:complexType/>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/2" schemaLocation="e2.xsd"/>
+  <xs:element name="x">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element name="x">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:choice>
+                  <xs:element name="x">
+                    <xs:complexType/>
+                  </xs:element>
+                  <xs:group ref="e2:anon0"/>
+                </xs:choice>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:group ref="e2:anon1"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="anon0">
+    <xs:choice>
+      <xs:element name="x">
+        <xs:complexType/>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
 </xs:schema>
 </correct>
 </xsd>

@@ -1,6 +1,8 @@
 package com.thaiopensource.relaxng.output.xsd;
 
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
+import com.thaiopensource.relaxng.output.common.Name;
+import com.thaiopensource.relaxng.output.common.NameClassSplitter;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.edit.Pattern;
@@ -47,10 +49,12 @@ class SchemaInfo {
   private final Map childTypeMap = new HashMap();
   private final Map defineMap = new HashMap();
   private final Map whereDefinedMap = new HashMap();
-  private final Set rootElements = new HashSet();
   private final Map movedPatternInheritedNamespaceMap = new HashMap();
+  private final Map movedPatternTargetNamespaceMap = new HashMap();
   private final PatternVisitor childTypeVisitor = new ChildTypeVisitor();
   private final List generatedSourceUris = new Vector();
+  private final Map elementNameMap = new HashMap();
+
   private static final String ANON = "anon";
 
   static class SourceUri {
@@ -63,10 +67,21 @@ class SchemaInfo {
   static class TargetNamespace {
     String rootSchema;
     String prefix;
-    Set movedPatterns = new HashSet();
+    List movedPatterns = new Vector();
+    Set movedPatternSet = new HashSet();
     Map movedPatternNameMap = new HashMap();
     int nextMovedElementSuffix;
     int nextMovedAttributeSuffix;
+  }
+
+  static class NameInfo {
+    static final int OCCUR_NONE = 0;
+    static final int OCCUR_NESTED = 1;
+    static final int OCCUR_TOP = 2;
+    static final int OCCUR_MOVE = 3;
+    static final int OCCUR_ROOT = 4;
+    int occur;
+    Pattern globalType;
   }
 
   // Maps sourceUri to SourceUri
@@ -241,6 +256,12 @@ class SchemaInfo {
   }
 
   class RootMarker extends AbstractVisitor {
+    private String inheritedNamespace;
+
+    RootMarker(String inheritedNamespace) {
+      this.inheritedNamespace = inheritedNamespace;
+    }
+
     public Object visitDiv(DivComponent c) {
       c.componentsAccept(this);
       return null;
@@ -253,7 +274,13 @@ class SchemaInfo {
     }
 
     public Object visitElement(ElementPattern p) {
-      rootElements.add(p);
+      for (Iterator iter = NameClassSplitter.split(p.getNameClass()).iterator(); iter.hasNext();) {
+        Name name = makeName((NameNameClass)iter.next(), inheritedNamespace);
+        lookupTargetNamespace(name.getNamespaceUri());  // for "" case
+        NameInfo info = lookupElementName(name);
+        info.globalType = p.getChild();
+        info.occur = NameInfo.OCCUR_ROOT;
+      }
       return null;
     }
 
@@ -267,11 +294,12 @@ class SchemaInfo {
     }
 
     public Object visitRef(RefPattern p) {
-      return getBody(p).accept(this);
+      return getBody(p).accept(new RootMarker(getInheritedNamespace((String)whereDefinedMap.get(p.getName()))));
     }
 
     public Object visitInclude(IncludeComponent c) {
-      getSchema(c.getHref()).componentsAccept(this);
+      String href = c.getHref();
+      getSchema(href).componentsAccept(new RootMarker(getInheritedNamespace(href)));
       return null;
     }
   }
@@ -292,26 +320,26 @@ class SchemaInfo {
 
   class TargetNamespaceSelector extends AbstractVisitor {
     private boolean isElement;
-    private boolean isRoot;
     private boolean nested;
     private String inheritedNamespace;
+    private Pattern child;
     private final Map namespaceUsageMap = new HashMap();
     private final Map namespacePrefixUsageMap = new HashMap();
 
     public Object visitElement(ElementPattern p) {
       isElement = true;
-      isRoot = rootElements.contains(p);
+      child = p.getChild();
       p.getNameClass().accept(this);
       boolean saveNested = nested;
       nested = true;
-      p.getChild().accept(this);
+      child.accept(this);
       nested = saveNested;
       return null;
     }
 
     public Object visitAttribute(AttributePattern p) {
       isElement = false;
-      isRoot = false;
+      child = p.getChild();
       return p.getNameClass().accept(this);
     }
 
@@ -326,8 +354,19 @@ class SchemaInfo {
       if (usage == null) {
         usage = new NamespaceUsage();
         namespaceUsageMap.put(ns, usage);
-        if (!ns.equals("") || isRoot)
+        if (!ns.equals(""))
           lookupTargetNamespace(ns);
+      }
+      Name name = new Name(ns, nc.getLocalName());
+      if (isElement) {
+        NameInfo info = lookupElementName(name);
+        int occur = nested ? NameInfo.OCCUR_NESTED : NameInfo.OCCUR_TOP;
+        if (occur > info.occur) {
+          info.occur = occur;
+          info.globalType = child;
+        }
+        else if (occur == info.occur)
+          info.globalType = null;
       }
       if (!nested) {
         if (isElement)
@@ -436,54 +475,72 @@ class SchemaInfo {
   }
 
   class PatternMover extends AbstractVisitor {
-    private String targetNamespace;
+    private String currentNamespace;
     private String inheritedNamespace;
-    private Set namespaces = new HashSet();
+    private String targetNamespace;
 
-    PatternMover(String targetNamespace, String inheritedNamespace) {
+    private PatternMover(String targetNamespace, String inheritedNamespace, String currentNamespace) {
       this.targetNamespace = targetNamespace;
       this.inheritedNamespace = inheritedNamespace;
+      this.currentNamespace = currentNamespace;
+    }
+
+    PatternMover(String targetNamespace, String inheritedNamespace) {
+      this(targetNamespace, inheritedNamespace, targetNamespace);
     }
 
     public Object visitElement(ElementPattern p) {
-      p.getNameClass().accept(this);
       processNamespaces(p, true);
       return null;
     }
 
     public Object visitAttribute(AttributePattern p) {
-      p.getNameClass().accept(this);
       processNamespaces(p, false);
       return null;
     }
 
     private void processNamespaces(NameClassedPattern p, boolean isElement) {
       boolean haveLocal = false;
-      for (Iterator iter = namespaces.iterator(); iter.hasNext();) {
-        String ns = (String)iter.next();
-        if (ns.equals(targetNamespace)
-            || (ns.equals("") && (!isElement || !rootElements.contains(p))))
+      Set movedNamespaces = new HashSet();
+      for (Iterator iter = NameClassSplitter.split(p.getNameClass()).iterator(); iter.hasNext();) {
+        NameNameClass nc = (NameNameClass)iter.next();
+        String ns = resolveNamespace(nc.getNamespaceUri(), inheritedNamespace);
+        Name name = new Name(ns, nc.getLocalName());
+        boolean isLocal = ns.equals(currentNamespace) || ns.equals("");
+        if (isElement) {
+          NameInfo info = lookupElementName(name);
+          if (ns.equals("") && !currentNamespace.equals("") && info.globalType == p.getChild()) {
+            if (info.occur == NameInfo.OCCUR_ROOT)
+              isLocal = false;
+            else
+              info.globalType = null;
+          }
+          if (!isLocal) {
+            if (info.occur < NameInfo.OCCUR_MOVE) {
+              info.occur = NameInfo.OCCUR_MOVE;
+              info.globalType = p.getChild();
+            }
+            else if (info.occur == NameInfo.OCCUR_MOVE && info.globalType != p.getChild())
+              info.globalType = null;
+          }
+        }
+        if (isLocal)
           haveLocal = true;
-        else {
-          lookupTargetNamespace(ns).movedPatterns.add(p);
+        else if (!movedNamespaces.contains(ns)) {
+          movedNamespaces.add(ns);
+          TargetNamespace tn = lookupTargetNamespace(ns);
+          if (!tn.movedPatternSet.contains(p)) {
+            tn.movedPatternSet.add(p);
+            tn.movedPatterns.add(p);
+          }
           if (isElement)
-            p.getChild().accept(new PatternMover(ns, inheritedNamespace));
+            p.getChild().accept(new PatternMover(targetNamespace, inheritedNamespace, ns));
           movedPatternInheritedNamespaceMap.put(p, inheritedNamespace);
+          movedPatternTargetNamespaceMap.put(p, targetNamespace);
         }
       }
-      namespaces.clear();
       if (isElement && haveLocal)
         p.getChild().accept(this);
-    }
-
-    public Object visitName(NameNameClass nc) {
-      namespaces.add(resolveNamespace(nc.getNamespaceUri(), inheritedNamespace));
-      return null;
-    }
-
-    public Object visitChoice(ChoiceNameClass nc) {
-      nc.childrenAccept(this);
-      return null;
     }
 
     public Object visitComposite(CompositePattern p) {
@@ -516,7 +573,7 @@ class SchemaInfo {
     forceGrammar();
     grammar = (GrammarPattern)sc.getMainSchema();
     grammar.componentsAccept(new GrammarVisitor(OutputDirectory.MAIN, ""));
-    grammar.componentsAccept(new RootMarker());
+    grammar.componentsAccept(new RootMarker(""));
     assignTargetNamespaces();
     chooseRootSchemas();
     movePatterns();
@@ -636,7 +693,7 @@ class SchemaInfo {
     }
   }
 
-  Set getMovedPatterns(String targetNamespace) {
+  List getMovedPatterns(String targetNamespace) {
     return lookupTargetNamespace(targetNamespace).movedPatterns;
   }
 
@@ -656,6 +713,10 @@ class SchemaInfo {
 
   String getMovedPatternInheritedNamespace(NameClassedPattern p) {
     return (String)movedPatternInheritedNamespaceMap.get(p);
+  }
+
+  String getMovedPatternTargetNamespace(NameClassedPattern p) {
+    return (String)movedPatternTargetNamespaceMap.get(p);
   }
 
   String getRootSchema(String targetNamespace) {
@@ -725,8 +786,8 @@ class SchemaInfo {
     return getPrefix(ns) + ":" + localName;
   }
 
-  boolean isGlobal(ElementPattern p) {
-    return rootElements.contains(p);
+  boolean isGlobalElement(Name name, Pattern p) {
+    return lookupElementName(name).globalType == p;
   }
 
   Set getTargetNamespaces() {
@@ -759,5 +820,19 @@ class SchemaInfo {
       targetNamespaceMap.put(ns, t);
     }
     return t;
+  }
+
+  private NameInfo lookupElementName(Name name) {
+    NameInfo info = (NameInfo)elementNameMap.get(name);
+    if (info == null) {
+      info = new NameInfo();
+      elementNameMap.put(name, info);
+    }
+    return info;
+  }
+
+  private Name makeName(NameNameClass nc, String inheritedNamespace) {
+    return new Name(resolveNamespace(nc.getNamespaceUri(), inheritedNamespace),
+                    nc.getLocalName());
   }
 }
