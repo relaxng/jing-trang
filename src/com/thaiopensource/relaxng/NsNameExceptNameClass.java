@@ -10,9 +10,9 @@ class NsNameExceptNameClass implements NameClass {
     this.nameClass = nameClass;
   }
 
-  public boolean contains(String namespaceURI, String localName) {
-    return (this.namespaceURI.equals(namespaceURI)
-	    && !nameClass.contains(namespaceURI, localName));
+  public boolean contains(Name name) {
+    return (this.namespaceURI.equals(name.getNamespaceUri())
+	    && !nameClass.contains(name));
   }
 
   public boolean equals(Object obj) {

@@ -1,7 +1,7 @@
 package com.thaiopensource.relaxng;
 
 class ErrorNameClass implements NameClass {
-  public boolean contains(String namespaceURI, String localName) {
+  public boolean contains(Name name) {
     return false;
   }
 

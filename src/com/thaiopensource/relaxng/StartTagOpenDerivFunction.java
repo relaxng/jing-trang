@@ -66,7 +66,7 @@ class StartTagOpenDerivFunction extends AbstractPatternFunction {
 
 
   public Object caseElement(ElementPattern p) {
-    if (!p.getNameClass().contains(name.getNamespaceUri(), name.getLocalName()))
+    if (!p.getNameClass().contains(name))
       return builder.makeNotAllowed();
     return builder.makeAfter(p.getContent(), builder.makeEmpty());
   }

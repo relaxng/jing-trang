@@ -10,9 +10,9 @@ class ChoiceNameClass implements NameClass {
     this.nameClass2 = nameClass2;
   }
 
-  public boolean contains(String namespaceURI, String localName) {
-    return (nameClass1.contains(namespaceURI, localName)
-	    || nameClass2.contains(namespaceURI, localName));
+  public boolean contains(Name name) {
+    return (nameClass1.contains(name)
+	    || nameClass2.contains(name));
   }
 
   public int hashCode() {

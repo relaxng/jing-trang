@@ -1,5 +1,6 @@
 package com.thaiopensource.relaxng;
 
+
 class StartAttributeDerivFunction extends StartTagOpenDerivFunction {
   StartAttributeDerivFunction(Name name, PatternBuilder builder) {
     super(name, builder);
@@ -26,8 +27,7 @@ class StartAttributeDerivFunction extends StartTagOpenDerivFunction {
   }
 
   public Object caseAttribute(AttributePattern p) {
-    if (!p.getNameClass().contains(getName().getNamespaceUri(),
-				   getName().getLocalName()))
+    if (!p.getNameClass().contains(getName()))
       return getPatternBuilder().makeNotAllowed();
     return getPatternBuilder().makeAfter(p.getContent(),
 					 getPatternBuilder().makeEmpty());

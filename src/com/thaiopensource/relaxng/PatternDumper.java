@@ -313,10 +313,10 @@ public class PatternDumper {
       endElement();
     }
 
-    public void visitName(String ns, String localName) {
+    public void visitName(Name name) {
       startElement("name");
-      attribute("ns", ns);
-      data(localName);
+      attribute("ns", name.getNamespaceUri());
+      data(name.getLocalName());
       endElement();
     }
 

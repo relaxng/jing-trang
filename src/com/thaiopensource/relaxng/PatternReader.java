@@ -1412,14 +1412,14 @@ public class PatternReader implements ValidationContext {
   SimpleNameClass expandName(String name, String ns) throws SAXException {
     int ic = name.indexOf(':');
     if (ic == -1)
-      return new SimpleNameClass(ns, checkNCName(name));
+      return new SimpleNameClass(new Name(ns, checkNCName(name)));
     String prefix = checkNCName(name.substring(0, ic));
     String localName = checkNCName(name.substring(ic + 1));
     for (PrefixMapping tem = prefixMapping; tem != null; tem = tem.next)
       if (tem.prefix.equals(prefix))
-	return new SimpleNameClass(tem.uri, localName);
+	return new SimpleNameClass(new Name(tem.uri, localName));
     error("undefined_prefix", prefix);
-    return new SimpleNameClass("", localName);
+    return new SimpleNameClass(new Name("", localName));
   }
 
   String checkNCName(String str) throws SAXException {
