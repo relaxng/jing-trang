@@ -10,11 +10,18 @@ import java.util.Map;
 import java.util.HashMap;
 
 class NamespaceManager {
+  static private final String xmlURI = "http://www.w3.org/XML/1998/namespace";
+
   // map namespace URIs to non-empty prefix
   private Map namespaceUriMap = new HashMap();
   private String defaultNamespaceUri = null;
   private Set usedPrefixes = new HashSet();
   private Set unassignedNamespaceUris = new HashSet();
+
+  NamespaceManager() {
+    usedPrefixes.add("xml");
+    namespaceUriMap.put(xmlURI, "xml");
+  }
 
   String getPrefixForNamespaceUri(String ns) {
     return (String)namespaceUriMap.get(ns);
@@ -40,6 +47,7 @@ class NamespaceManager {
       }
     }
   }
+
   void noteName(NameNameClass nc, boolean defaultable) {
     String ns = nc.getNamespaceUri();
     if (ns.equals("") || ns == NameClass.INHERIT_NS) {

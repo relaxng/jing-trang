@@ -1,5 +1,4 @@
 Error for <include> content
-Special handling for "xml" prefix
 Check single element type
 Warning when approximating datatypes
 Avoid duplicate namespace declarations for global attributes
