@@ -425,6 +425,8 @@ public class BasicBuilder {
         return AttributeGroup.EMPTY;
       if (uses.size() == 1)
         return uses.get(0);
+      if (isOptional())
+        er.warning("optional_attribute_group", p.getSourceLocation());
       return new AttributeGroup(p.getSourceLocation(), uses);
     }
 

@@ -9,6 +9,7 @@ Approximation warnings:
 - element wildcard with content that does not allow everything
 - wildcards with two or more negative namespaces
 - wildcards with negative single names
+- choice between attributes
 - choice between elements and data
 
 Provide annotation to control which target namespace is assigned to a file.
