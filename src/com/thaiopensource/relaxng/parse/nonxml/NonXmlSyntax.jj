@@ -21,6 +21,8 @@ import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.BuildException;
 import com.thaiopensource.relaxng.parse.Location;
 
+import com.thaiopensource.util.Localizer;
+
 import org.relaxng.datatype.ValidationContext;
 
 import org.xml.sax.ErrorHandler;
@@ -44,6 +46,7 @@ public class NonXmlSyntax implements ValidationContext {
   private Hashtable namespaceTable = new Hashtable();
   private Hashtable datatypesTable = new Hashtable();
   private boolean hadError = false;
+  private static Localizer localizer = new Localizer(NonXmlSyntax.class);
 
   final class LocatedString {
     private final String str;
@@ -82,7 +85,7 @@ public class NonXmlSyntax implements ValidationContext {
         return p;
     }
     catch (ParseException e) {
-      error("syntax error", e.currentToken.next);
+      error("syntax_error", e.currentToken.next);
     }
     throw new IllegalSchemaException();
   }
@@ -94,13 +97,20 @@ public class NonXmlSyntax implements ValidationContext {
         return;
     }
     catch (ParseException e) {
-      error("syntax error", e.currentToken.next);
+      error("syntax_error", e.currentToken.next);
     }
     throw new IllegalSchemaException();
   }
 
+  private void error(String key, Token tok) {
+    doError(localizer.message(key), tok);
+  }
 
-  private void error(String message, Token tok) {
+  private void error(String key, String arg, Token tok) {
+    doError(localizer.message(key, arg), tok);
+  }
+
+   private void doError(String key, Token tok) {
     if (eh != null) {
       LocatorImpl loc = new LocatorImpl();
       loc.setLineNumber(tok.beginLine);
@@ -152,7 +162,7 @@ public class NonXmlSyntax implements ValidationContext {
   private String lookupPrefix(String prefix, Token t) {
     String ns = (String)namespaceTable.get(prefix);
     if (ns == null) {
-      error("undeclared prefix \"" + prefix + "\"", t);
+      error("undeclared_prefix", prefix, t);
       return "#error";
     }
     return ns;
@@ -160,7 +170,7 @@ public class NonXmlSyntax implements ValidationContext {
   private String lookupDatatype(String prefix, Token t) {
     String ns = (String)datatypesTable.get(prefix);
     if (ns == null) {
-      error("undeclared prefix \"" + prefix + "\"", t);
+      error("undeclared_prefix", prefix, t);
       return ""; // XXX
     }
     return ns;
@@ -679,7 +689,7 @@ ParsedPattern ParentExpr(Scope scope) :
   "parent" name = Identifier() a = Annotations()
   { 
     if (scope == null || scope.getParent() == null) {
-      error("no parent grammar", name.getToken());
+      error(scope == null ? "no_grammar" : "no_parent_grammar", name.getToken());
       return sb.makeErrorPattern();
     }
     return scope.getParent().makeRef(name.getString(), name.getLocation(), a); 
@@ -695,7 +705,7 @@ ParsedPattern IdentifierExpr(Scope scope) :
   name = Identifier() a = Annotations()
   { 
     if (scope == null) {
-      error("no grammar", name.getToken());
+      error("no_grammar", name.getToken());
       return sb.makeErrorPattern();
     }
     return scope.makeRef(name.getString(), name.getLocation(), a);
@@ -849,8 +859,8 @@ void AnnotationAttribute(Annotations a) :
     int colon = qn.indexOf(':');
     String prefix = qn.substring(0, colon);
     String ns = lookupPrefix(prefix, t);
-    if (ns == SchemaBuilder.INHERIT_NS || ns.length() == 0)
-      error("prefix \"" + prefix + "\" cannot be used as the prefix of an annotation", t);
+    if (ns == SchemaBuilder.INHERIT_NS)
+      error("unqualified_annotation_attribute", t);
     else
       a.addAttribute(ns, qn.substring(colon + 1), prefix, value, makeLocation(t));
   }
