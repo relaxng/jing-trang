@@ -98,6 +98,8 @@ class Analysis {
       Datatypes.Info info = Datatypes.getInfo(p.getDatatypeLibrary(), p.getType());
       if (info.usesTokenEquality() && Naming.isNmtoken(p.getValue()))
         return ContentType.ENUM;
+      if (info.usesCdataEquality())
+        return ContentType.VALUE;
       return ContentType.SIMPLE_TYPE;
     }
 

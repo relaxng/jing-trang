@@ -69,6 +69,7 @@ class DtdOutput {
   AttributeOutput optionalAttributeOutput = new OptionalAttributeOutput();
   PatternVisitor topLevelSimpleTypeOutput = new TopLevelSimpleTypeOutput();
   PatternVisitor nestedSimpleTypeOutput = new SimpleTypeOutput();
+  PatternVisitor valueOutput = new ValueOutput();
   GrammarOutput grammarOutput = new GrammarOutput();
 
   static private final String COMPATIBILITY_ANNOTATIONS_URI = "http://relaxng.org/ns/compatibility/annotations/1.0";
@@ -468,21 +469,25 @@ class DtdOutput {
         }
         buf.append(nnc.getLocalName());
         buf.append(" ");
-        if (ct.isA(ContentType.SIMPLE_TYPE) || ct == ContentType.TEXT)
-          p.getChild().accept(topLevelSimpleTypeOutput);
-        else if (ct == ContentType.EMPTY) {
-          er.warning("empty_attribute_approx", p.getSourceLocation());
-          buf.append("CDATA");
-        }
-        if (isRequired() && len == 1)
-          buf.append(" #REQUIRED");
+        if (ct == ContentType.VALUE)
+          p.getChild().accept(valueOutput);
         else {
-          String dv = getDefaultValue(p);
-          if (dv == null)
-            buf.append(" #IMPLIED");
+          if (ct.isA(ContentType.SIMPLE_TYPE) || ct == ContentType.TEXT)
+            p.getChild().accept(topLevelSimpleTypeOutput);
+          else if (ct == ContentType.EMPTY) {
+            er.warning("empty_attribute_approx", p.getSourceLocation());
+            buf.append("CDATA");
+          }
+          if (isRequired() && len == 1)
+            buf.append(" #REQUIRED");
           else {
-            buf.append(' ');
-            attributeValueLiteral(dv);
+            String dv = getDefaultValue(p);
+            if (dv == null)
+              buf.append(" #IMPLIED");
+            else {
+              buf.append(' ');
+              attributeValueLiteral(dv);
+            }
           }
         }
       }
@@ -640,6 +645,19 @@ class DtdOutput {
       return null;
     }
 
+  }
+
+  class ValueOutput extends AbstractVisitor {
+    public Object visitValue(ValuePattern p) {
+      buf.append("CDATA #FIXED ");
+      attributeValueLiteral(p.getValue());
+      return null;
+    }
+
+    public Object visitRef(RefPattern p) {
+      paramEntityRef(p);
+      return null;
+    }
   }
 
   class GrammarOutput extends AbstractVisitor {
@@ -872,6 +890,8 @@ class DtdOutput {
       attributeOutput.output(body);
     else if (t.isA(ContentType.ENUM))
       body.accept(nestedSimpleTypeOutput);
+    else if (t.isA(ContentType.VALUE))
+      body.accept(valueOutput);
     else if (t.isA(ContentType.SIMPLE_TYPE))
       body.accept(topLevelSimpleTypeOutput);
     String replacement = buf.toString();

@@ -63,7 +63,7 @@ public class Datatypes {
     }
 
     public boolean usesCdataEquality() {
-      return (flags & TOKEN_EQUALITY) != 0;
+      return (flags & CDATA_EQUALITY) != 0;
     }
   }
 

@@ -1,16 +1,15 @@
-Bulletproof LocalOutputDirectory.
+Bulletproof LocalOutputDirectory
 Pretty-print content models to avoid excessively long lines
-Recognize #FIXED attributes
 Support duplicate definitions with combine="interleave" for attlists
 Generate comments from a:documentation or dtd:comment elements
 
 Avoid warning for content that is data of type string
 Option to generate namespace declarations only on start elements
 Generate parameter entities to allow change of namespace prefix
-nested grammars
+Support nested grammars
 Check for non-deterministic content models
 Option to protect attlist/element declarations with marked section
-allow mixed(repeat(NOT_ALLOWED))
+Allow mixed(repeat(NOT_ALLOWED))
 Prettier formatting of ATTLISTs
 Order requiredParamEntities by definition order
 Customizable indentation
