@@ -1,0 +1,118 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Jing</title>
+</head>
+<body>
+<h1>Jing</h1>
+<h2>A RELAX NG validator in Java</h2>
+
+<p>Copyright &#169; 2001, 2002 Thai Open Source Software Center Ltd</p>
+
+<p>See the file <a href="copying.txt">copying.txt</a> for copying
+permission.</p>
+
+<h3>Version @VERSION@</h3>
+
+<p>This version of Jing implements the final <a
+href="http://www.oasis-open.org/committees/relax-ng/spec-20011203.html">RELAX
+NG 1.0 Specification</a>.  It also implements parts of <a
+href="http://www.oasis-open.org/committees/relax-ng/compatibility-20011203.html"
+>RELAX NG DTD Compatibility</a>, specifically checking of
+ID/IDREF/IDREFS.</p>
+
+<p>The implementation is available for download as a <a
+href="jing.jar">JAR</a> file and as a <a href="jing.exe">Win32
+executable</a> for use with the Microsoft Java VM.</p>
+
+<p>To invoke the Win32 executable, simply copy <code>jing.exe</code>
+to a directory in your path and run the command</p>
+
+<pre>jing <var>file</var>.rng <var>file</var>.xml</pre>
+
+<p>If <code><var>file</var>.rng</code> is a correct schema and
+<code><var>file</var>.rng</code> is valid with respect to
+<code><var>file</var>.rng</code>, then Jing will generate no output.
+Otherwise, it will generate one or more error messages.</p>
+
+<p>To use Jing packaged as a JAR file, you must have an implementation
+of the <a href="http://java.sun.com/xml/">Java API for XML Processing
+(JAXP) 1.1</a> in your CLASSPATH.  The main class for Jing is
+<code>com.thaiopensource.relaxng.util.Driver</code>.  The first
+argument expected by the main class is the name of the file containing
+the RELAX NG schema.  The second and subsequent arguments are the
+names of one or more files to be validated against this schema. So,
+for example, on Windows, the command:</p>
+
+<pre>c:\jdk1.3\bin\java -cp c:\lib\jing.jar;c:\lib\jaxp.jar;c:\lib\crimson.jar com.thaiopensource.relaxng.util.Driver doc.rng doc.xml</pre>
+
+<p>would validate the XML document contained in <code>doc.xml</code>
+against the RELAX NG schema contained in <code>doc.rng</code>. Obviously,
+you must replace <code>c:\lib</code> by the path to the directory
+where you have put the various JAR files. The command will be
+slightly different on non-Windows machines.  Consult your Java
+documentation.</p>
+
+<p>Alternatively, if you have JAXP installed as a Java extension, you
+can simply use:</p>
+
+<pre>c:\jdk1.3\bin\java -jar jing.jar doc.rng doc.xml</pre>
+
+<p>Jing understands a couple of command-line options:</p>
+
+<dl>
+
+<dt><code>-i</code></dt>
+
+<dd>Disables checking of ID/IDREF/IDREFS. By default,
+Jing enforces the constraints imposed by RELAX NG DTD Compatibility
+with respect to ID/IDREF/IDREFS.</dd>
+
+<dt><code>-t</code></dt>
+<dd>Print the time used by Jing for loading the schema and
+for validation.</dd>
+
+</dl>
+
+<p>Jing uses a vendor-independent Java interface for RELAX NG datatype
+libraries, developed by James Clark and KAWAGUCHI Kohsuke and hosted
+at SourceForge in the <a
+href="http://sourceforge.net/projects/relaxng">relaxng</a> project.
+Jing can use any datatype library that implements this interface.  For
+more information on creating your own datatype libraries, including a
+sample, download <a
+href="datatype-sample.zip">datatype-sample.zip</a>.</p>
+
+<p>Jing also includes an <a
+href="jing-datatypes.html">implementation</a> of a datatype library
+for the W3C XML Schema Part 2 datatypes.</p>
+
+<p>The <a href="jing-src.zip">source</a> is also available.</p>
+
+<p>If you wish to use Jing in your programs, you have a choice.</p>
+
+<ul>
+
+<li>You can use Jing's
+native API.  The documentation of Jing's API can
+be <a href="api/jing/index.html">browsed</a> online, or can be <a
+href="jing-api.zip">downloaded</a>.</li>
+
+<li>You can use JARV (Java API for RELAX Verifiers).  JARV is part of
+the <a href="http://iso-relax.sourceforge.net">ISO-RELAX</a>
+SourceForge project.  Jing's implementation requires the dev snapshot
+version of <a
+href="http://iso-relax.sourceforge.net/devSnapShot/iso-relax.jar"
+><code>iso-relax.jar</code></a>. Support for DTD Compatibility
+validation of ID/IDREF is not currently available via this
+interface.</li>
+
+</ul>
+
+<p>There is a <a href="jing-ant.html">Jing task</a> that allows Jing
+to be invoked by the <a href="http://jakarta.apache.org/ant/">Ant</a>
+build tool.</p>
+
+<address><a href="mailto:jjc@jclark.com">James Clark</a></address>
+
+</body>
+</html>
