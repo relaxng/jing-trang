@@ -200,7 +200,7 @@ public class BasicOutput {
     }
 
     public Object visitRepeat(ParticleRepeat p) {
-      occ = Occurs.multiply(occ, p.getOcccurs());
+      occ = Occurs.multiply(occ, p.getOccurs());
       p.getChild().accept(this);
       return null;
     }
