@@ -1709,6 +1709,20 @@ element foo { "\x{10300}" }
 <testCase>
 <compact>
 <correct>
+element foo { "&#x0e00;" }
+</correct>
+</compact>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <value>&#x0e00;</value>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct>
 element foo { "z
 " }
 </correct>
