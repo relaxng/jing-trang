@@ -110,6 +110,13 @@ class DtdOutput {
       return null;
     }
 
+    public Object visitElement(ElementPattern p) {
+      if (getContentType(p) == ContentType.DIRECT_SINGLE_ELEMENT)
+        p.getNameClass().accept(nestedContentModelOutput);
+      else
+        visitPattern(p);
+      return null;
+    }
   }
 
   class ChoiceContentModelOutput extends ParenthesizedContentModelOutput {
