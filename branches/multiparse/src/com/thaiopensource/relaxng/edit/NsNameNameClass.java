@@ -19,4 +19,8 @@ public class NsNameNameClass extends OpenNameClass {
   public void setNs(String ns) {
     this.ns = ns;
   }
+
+  Object accept(NameClassVisitor visitor) {
+    return visitor.visitNsName(this);
+  }
 }

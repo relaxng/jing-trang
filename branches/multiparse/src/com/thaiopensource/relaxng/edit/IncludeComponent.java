@@ -40,4 +40,8 @@ public class IncludeComponent extends Component implements Container {
   public void setBaseUri(String baseUri) {
     this.baseUri = baseUri;
   }
+
+  Object accept(ComponentVisitor visitor) {
+    return visitor.visitInclude(this);
+  }
 }

@@ -7,4 +7,8 @@ public class AnyNameNameClass extends OpenNameClass {
   public AnyNameNameClass(NameClass except) {
     super(except);
   }
+
+  Object accept(NameClassVisitor visitor) {
+    return visitor.visitAnyName(this);
+  }
 }

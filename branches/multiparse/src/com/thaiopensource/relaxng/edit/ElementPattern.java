@@ -4,4 +4,8 @@ public class ElementPattern extends NameClassedPattern {
   public ElementPattern(NameClass nameClass, Pattern child) {
     super(nameClass, child);
   }
+
+  Object accept(PatternVisitor visitor) {
+    return visitor.visitElement(this);
+  }
 }

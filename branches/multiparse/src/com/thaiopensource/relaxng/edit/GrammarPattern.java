@@ -9,4 +9,8 @@ public class GrammarPattern extends Pattern implements Container {
   public List getComponents() {
     return components;
   }
+
+  Object accept(PatternVisitor visitor) {
+    return visitor.visitGrammar(this);
+  }
 }

@@ -34,4 +34,8 @@ public class DefineComponent extends Component {
   public void setCombine(Combine combine) {
     this.combine = combine;
   }
+
+  Object accept(ComponentVisitor visitor) {
+    return visitor.visitDefine(this);
+  }
 }

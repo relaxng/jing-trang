@@ -9,4 +9,8 @@ public class ChoiceNameClass extends NameClass {
   public List getChildren() {
     return children;
   }
+
+  Object accept(NameClassVisitor visitor) {
+    return visitor.visitChoice(this);
+  }
 }
