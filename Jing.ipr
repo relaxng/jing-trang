@@ -4,7 +4,8 @@
   <component class="com.intellij.ant.AntConfiguration">
     <buildFile url="file://$PROJECT_DIR$/build.xml">
       <useEmacsModeOutput value="true" />
-      <useCustomJdk value="false" />
+      <useCustomJdk value="true" />
+      <customJdkName value="java version &quot;1.4.0&quot;" />
       <useJavaw value="false" />
       <includeProjectClasspath value="true" />
       <maximumHeapSize value="128" />
@@ -78,7 +79,7 @@
     <Commit>
       <option name="NON_RECURSIVE" value="false" />
       <option name="REVISION_TAG" value="" />
-      <option name="LOG_MESSAGE" value="Automated testing framework for non-XML to XML&#10;syntax conversion" />
+      <option name="LOG_MESSAGE" value="JDK 1.4 based implementation of regexes" />
       <option name="ADDITIONAL_OPTIONS" value="" />
     </Commit>
     <Diff>
@@ -140,29 +141,15 @@
     <option name="SHOW_EDITORS_OPTIONS" value="true" />
     <option name="HIDE_UNKNOWN_FILES" value="false" />
     <option name="HIDE_MISSING_FILES" value="false" />
-    <option name="HIDE_UP_TO_DATE_FILES" value="false" />
+    <option name="HIDE_UP_TO_DATE_FILES" value="true" />
   </component>
   <component class="com.intellij.cvsSupport.CvsManager">
     <expanded_paths>
-      <path value="$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact" />
+      <path value="$PROJECT_DIR$" />
     </expanded_paths>
   </component>
   <component class="com.intellij.debugger.Debugger">
-    <line_breakpoints>
-      <breakpoint url="file://nonxml/NonXmlSyntax.java" line="1599">
-        <option name="ENABLED" value="true" />
-        <option name="SUSPEND_VM" value="true" />
-        <option name="COUNT_FILTER_ENABLED" value="false" />
-        <option name="COUNT_FILTER" value="0" />
-        <option name="CONDITION_ENABLED" value="false" />
-        <option name="CONDITION" />
-        <option name="LOG_ENABLED" value="false" />
-        <option name="LOG_EXPRESSION_ENABLED" value="false" />
-        <option name="LOG_MESSAGE" />
-        <option name="CLASS_FILTERS_ENABLED" value="false" />
-        <option name="INVERSE_CLASS_FILLTERS" value="false" />
-      </breakpoint>
-    </line_breakpoints>
+    <line_breakpoints />
     <exception_breakpoints>
       <breakpoint_any>
         <option name="ENABLED" value="false" />
@@ -377,34 +364,34 @@
   </component>
   <component class="com.intellij.ide.desktop.IdeDocumentManager">
     <recent_files>
-      <file_info url="file://$PROJECT_DIR$/trang/src/com/thaiopensource/relaxng/output/resources/Messages.properties" column="64" line="6" />
-      <file_info url="file://$PROJECT_DIR$/trang/doc/trang.html" column="75" line="23" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/CompactParseable.java" column="92" line="34" />
-      <file_info url="file://$PROJECT_DIR$/doc/compact/syntax.html" column="75" line="6" />
-      <file_info url="file://$PROJECT_DIR$/build/src/com/thaiopensource/relaxng/parse/compact/CompactSyntaxTokenManager.java" column="0" line="0" />
-      <file_info url="file://$PROJECT_DIR$/doc/compact/index.html" column="27" line="14" />
-      <file_info url="file://$PROJECT_DIR$/trang/src/com/thaiopensource/relaxng/output/test/CompactTestDriver.java" column="9" line="65" />
-      <file_info url="file://$PROJECT_DIR$/trang/test/compactsplit.xsl" column="60" line="75" />
-      <file_info url="file://$PROJECT_DIR$/trang/build.xml" column="42" line="48" />
-      <file_info url="file://$PROJECT_DIR$/trang/test/compacttest.xml" column="41" line="100" />
-      <file_info url="file://$PROJECT_DIR$/doc/jing-ant.html" column="29" line="47" />
-      <file_info url="file://$PROJECT_DIR$/doc/index.html" column="22" line="28" />
-      <file_info url="file://$PROJECT_DIR$/doc/jing.html" column="29" line="52" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/util/JingTask.java" column="24" line="108" />
-      <file_info url="file://$PROJECT_DIR$/build.xml" column="74" line="274" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/util/Utf16.java" column="0" line="23" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/gen/NamingExceptionsGen.java" column="56" line="0" />
+      <file_info url="file://$PROJECT_DIR$/build/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/NamingExceptions.java" column="6" line="2" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/sax/resources/Messages.properties" column="0" line="0" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/resources/Messages.properties" column="3" line="11" />
+      <file_info url="jar://C:/j2sdk1.4.0/src.zip!/java/util/regex/PatternSyntaxException.java" column="11" line="43" />
+      <file_info url="jar://C:/j2sdk1.4.0/src.zip!/java/util/regex/Pattern.java" column="17" line="1470" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/xerces2/RegexEngineImpl.java" column="25" line="12" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/RegexEngineImpl.java" column="48" line="29" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/DatatypeLibraryImpl.java" column="47" line="124" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/InvalidRegexException.java" column="13" line="2" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/TestDriver.java" column="0" line="143" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/Translator.java" column="0" line="11" />
+      <file_info url="file://$PROJECT_DIR$/build.xml" column="6" line="178" />
+      <file_info url="file://$PROJECT_DIR$/todo.txt" column="42" line="39" />
     </recent_files>
     <open_files>
-      <file_info url="file://$PROJECT_DIR$/build.xml" column="74" line="274" />
-      <active_file url="file://$PROJECT_DIR$/build.xml" />
-      <file_info url="file://$PROJECT_DIR$/doc/compact/index.html" column="27" line="14" />
-      <file_info url="file://$PROJECT_DIR$/doc/index.html" column="22" line="28" />
-      <file_info url="file://$PROJECT_DIR$/doc/jing.html" column="29" line="52" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/util/JingTask.java" column="24" line="108" />
-      <file_info url="file://$PROJECT_DIR$/trang/build.xml" column="42" line="48" />
-      <file_info url="file://$PROJECT_DIR$/trang/test/compacttest.xml" column="41" line="100" />
-      <file_info url="file://$PROJECT_DIR$/trang/src/com/thaiopensource/relaxng/output/test/CompactTestDriver.java" column="9" line="65" />
-      <file_info url="file://$PROJECT_DIR$/doc/jing-ant.html" column="29" line="47" />
-      <file_info url="file://$PROJECT_DIR$/trang/test/compactsplit.xsl" column="60" line="75" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/Translator.java" column="0" line="11" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/RegexEngineImpl.java" column="48" line="29" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/TestDriver.java" column="0" line="143" />
+      <file_info url="file://$PROJECT_DIR$/build.xml" column="6" line="178" />
+      <file_info url="file://$PROJECT_DIR$/todo.txt" column="42" line="39" />
+      <active_file url="file://$PROJECT_DIR$/todo.txt" />
+      <file_info url="jar://C:/j2sdk1.4.0/src.zip!/java/util/regex/PatternSyntaxException.java" column="11" line="43" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/resources/Messages.properties" column="3" line="11" />
+      <file_info url="jar://C:/j2sdk1.4.0/src.zip!/java/util/regex/Pattern.java" column="17" line="1470" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/xerces2/RegexEngineImpl.java" column="25" line="12" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/InvalidRegexException.java" column="13" line="2" />
     </open_files>
   </component>
   <component class="com.intellij.ide.hierarchy.HierarchyBrowserManager">
@@ -416,21 +403,25 @@
   <component class="com.intellij.ide.navigator.impl.ProjectNavigatorSettings">
     <navigator id="ClasspathNavigator" flattenPackages="false" showMembers="false" />
     <navigator id="ProjectNavigator" flattenPackages="true" showMembers="false">
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang/test" />
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang/doc" />
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/doc/compact" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/doc" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang/test" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang/doc" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang" />
     </navigator>
     <navigator id="SourcepathNavigator" flattenPackages="true" showMembers="false">
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/xerces2" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/trang/src/com/thaiopensource/relaxng/output/test" />
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/build/src" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/src" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/resources" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/gen" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/sax/resources" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/trang/src" />
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/util" />
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/util/resources" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/build/src" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/jdk1_4" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex" />
     </navigator>
   </component>
   <component class="com.intellij.ide.structureView.StructureViewFactory">
@@ -460,7 +451,7 @@
     <option name="OPEN_IN_BROWSER" value="false" />
   </component>
   <component class="com.intellij.projectRoots.ProjectRootContainer">
-    <jdk name="java version &quot;1.3.1_02&quot;" />
+    <jdk name="java version &quot;1.4.0&quot;" />
     <root file="file://$PROJECT_DIR$/classes">
       <property name="type" value="outputPath" />
     </root>
