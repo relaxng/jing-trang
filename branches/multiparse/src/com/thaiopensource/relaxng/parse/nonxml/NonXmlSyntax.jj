@@ -117,7 +117,8 @@ public class NonXmlSyntax implements Context {
     doError(localizer.message(key, arg), tok);
   }
 
-   private void doError(String message, Token tok) {
+  private void doError(String message, Token tok) {
+    hadError = true;
     if (eh != null) {
       LocatorImpl loc = new LocatorImpl();
       loc.setLineNumber(tok.beginLine);
@@ -1154,6 +1155,10 @@ void PrefixedAnnotationAttribute(Annotations a, boolean allowUnqualified) :
       error("inherited_annotation_namespace", t);
     else if (ns.length() == 0 && !allowUnqualified)
       error("unqualified_annotation_attribute", t);
+    else if (ns.length() == 0
+             && qn.length() - colon - 1 == 5
+             && qn.regionMatches(colon + 1, "xmlns", 0, 5))
+      error("xmlns_annotation_attribute", t);
     else {
       if (ns.length() == 0)
 	prefix = null;
@@ -1170,7 +1175,10 @@ void UnprefixedAnnotationAttribute(Annotations a) :
 {
   name = UnprefixedName() "=" value = Literal()
   {
-    a.addAttribute("", name.getString(), null, value, name.getLocation());
+    if (name.getString().equals("xmlns"))
+      error("xmlns_annotation_attribute", name.getToken());
+    else
+      a.addAttribute("", name.getString(), null, value, name.getLocation());
   }
 }
 
