@@ -177,7 +177,7 @@ class Analyzer extends AbstractVisitor {
       haveInherit = true;
       return;
     }
-    if (ns.length() == 0)
+    if (ns == null || ns.length() == 0)
       return;
     if (prefix == null)
       prefix = "";
