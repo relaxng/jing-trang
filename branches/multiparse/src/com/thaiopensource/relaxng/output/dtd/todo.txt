@@ -1,29 +1,28 @@
-Avoid warning for content that is data of type string
+Robust handling of attribute choice
+Handle choice involving attributes (perhaps just special case where alphabets are disjoint)
+Bulletproof LocalOutputDirectory.
+Avoid unnecessary parentheses around group members
+Pretty-print content models to avoid excessively long lines
 Recognize #FIXED attributes
 Avoid duplicate namespace declarations for global attributes
-Option to generate namespace declarations only on start elements
 Support duplicate definitions with combine="interleave" for attlists
+Generate comments from a:documentation or dtd:comment elements
+Avoid warning for content that is data of type string
+Option to generate namespace declarations only on start elements
 Generate parameter entities to allow change of namespace prefix
 nested grammars
-a:documentation
 Check for non-deterministic content models
 Option to protect attlist/element declarations with marked section
 allow mixed(repeat(NOT_ALLOWED))
-Avoid unnecessary parentheses around group members
-Pretty-print content models to avoid excessively long lines
 Prettier formatting of ATTLISTs
-Handle DTD compatibility ID/IDREF/IDREFS datatypes
 Order requiredParamEntities by definition order
-Bulletproof LocalOutputDirectory.
-Customizable indentation.
+Customizable indentation
 Make LocalOutputDirectory preserve directory structure
 Approximate <list> by NMTOKENS when possible
 Have a top-level annotation indicating a redefinition point (as in DocBook)
 Recognize definitions being used as INCLUDE/IGNORE (as in TEI)
-Handle choice involving attributes (perhaps just special case where alphabets are disjoint)
 Handle interleave where operand is a zero or more element class
 Give warnings for definitions that had to be expanded
 Closer approximation of choice of datatypes
-Robust handling of attribute choice
 Approximate when single element restriction is violated
 
