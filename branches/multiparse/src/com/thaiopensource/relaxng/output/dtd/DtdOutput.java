@@ -744,7 +744,22 @@ class DtdOutput {
   void outputElement(ElementPattern p) {
     buf.setLength(0);
     Pattern content = p.getChild();
-    if (getContentType(content) != ContentType.EMPTY)
+    ContentType ct = getContentType(content);
+    if (ct == ContentType.EMPTY)
+      ;
+    else if (ct == ContentType.MIXED_ELEMENT_CLASS) {
+      er.warning("mixed_choice_approx", p.getSourceLocation());
+      buf.append("(");
+      content.accept(nestedContentModelOutput);
+      buf.append(")*");
+    }
+    else if (ct.isA(ContentType.SIMPLE_TYPE)) {
+      er.warning("data_content_approx", p.getSourceLocation());
+      buf.append("(#PCDATA)");
+    }
+    else if (ct == ContentType.NOT_ALLOWED)
+      return; // leave it undefined
+    else
       content.accept(topLevelContentModelOutput);
     final String contentModel = buf.length() == 0 ? "EMPTY" : buf.toString();
     buf.setLength(0);

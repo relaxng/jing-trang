@@ -151,11 +151,8 @@ class Analysis {
 
     public Object visitElement(ElementPattern p) {
       Object ret = p.getNameClass().accept(this);
-      if (!seen(p.getChild())) {
-        ContentType t = new Analyzer(p).analyzeContentType(p.getChild());
-        if (!t.isA(ContentType.COMPLEX_TYPE) && t != ContentType.ERROR)
-          er.error("sorry_element_type", p.getSourceLocation());
-      }
+      if (!seen(p.getChild()))
+        new Analyzer(p).analyzeContentType(p.getChild());
       return ret;
     }
 

@@ -1,5 +1,6 @@
 Error for <include> content
 Avoid duplicate element declarations when expanding param entities
+Avoid warning for content that is data of type string
 Check single element type
 Recognize #FIXED attributes
 Avoid duplicate namespace declarations for global attributes
@@ -15,7 +16,6 @@ Avoid unnecessary parentheses around group members
 Pretty-print content models to avoid excessively long lines
 Prettier formatting of ATTLISTs
 Handle DTD compatibility ID/IDREF/IDREFS datatypes
-Approximate data in content by #PCDATA
 Order requiredParamEntities by definition order
 Bulletproof LocalOutputDirectory.
 Customizable indentation.
