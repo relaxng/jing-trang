@@ -878,7 +878,6 @@ class DtdOutput {
   void outputParamEntity(String name, Pattern body) {
     if (doneParamEntities.contains(name))
       return;
-    doneParamEntities.add(name);
     ContentType t = getContentType(body);
     buf.setLength(0);
     if (t.isA(ContentType.MODEL_GROUP) || t.isA(ContentType.NOT_ALLOWED) || t.isA(ContentType.MIXED_ELEMENT_CLASS))
@@ -908,6 +907,7 @@ class DtdOutput {
       }
     }
     else {
+      doneParamEntities.add(name);
       newline();
       write("<!ENTITY % ");
       write(name);
