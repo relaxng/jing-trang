@@ -3,7 +3,7 @@ package com.thaiopensource.relaxng.output.xsd.basic;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
 public class GroupDefinition extends Definition {
-  private final Particle particle;
+  private Particle particle;
 
   public GroupDefinition(SourceLocation location, Schema parentSchema, String name, Particle particle) {
     super(location, parentSchema, name);
@@ -12,6 +12,10 @@ public class GroupDefinition extends Definition {
 
   public Particle getParticle() {
     return particle;
+  }
+
+  public void setParticle(Particle particle) {
+    this.particle = particle;
   }
 
   public void accept(SchemaVisitor visitor) {

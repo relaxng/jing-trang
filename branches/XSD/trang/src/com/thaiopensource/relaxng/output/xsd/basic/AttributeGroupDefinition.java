@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Collections;
 
 public class AttributeGroupDefinition extends Definition {
-  private final List attributeUses;
+  private List attributeUses;
 
   public AttributeGroupDefinition(SourceLocation location, Schema parentSchema, String name, List attributeUses) {
     super(location, parentSchema, name);
@@ -15,6 +15,10 @@ public class AttributeGroupDefinition extends Definition {
 
   public List getAttributeUses() {
     return attributeUses;
+  }
+
+  public void setAttributeUses(List attributeUses) {
+    this.attributeUses = Collections.unmodifiableList(attributeUses);
   }
 
   public void accept(SchemaVisitor visitor) {
