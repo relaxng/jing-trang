@@ -22,6 +22,22 @@ class ChoicePattern extends BinaryPattern {
     return p1.containsChoice(p) || p2.containsChoice(p);
   }
 
+  Pattern combineAfter(PatternBuilder b, AfterPattern p) {
+    Pattern tem = p1.combineAfter(b, p);
+    if (tem != null) {
+      if (tem == p1)
+        return this;
+      return b.makeChoice(tem, p2);
+    }
+    tem = p2.combineAfter(b, p);
+    if (tem != null) {
+      if (tem == p2)
+        return this;
+      return b.makeChoice(p1, tem);
+    }
+    return null;
+  }
+
   void accept(PatternVisitor visitor) {
     visitor.visitChoice(p1, p2);
   }

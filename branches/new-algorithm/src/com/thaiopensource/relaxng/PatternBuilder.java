@@ -154,7 +154,12 @@ final public class PatternBuilder {
       ChoicePattern cp = (ChoicePattern)p1;
       return makeChoice(cp.p1, makeChoice(cp.p2, p2));
     }
-    if (p2.containsChoice(p1))
+    if (p1 instanceof AfterPattern) {
+      Pattern tem = p2.combineAfter(this, (AfterPattern)p1);
+      if (tem != null)
+        return tem;
+    }
+    else if (p2.containsChoice(p1))
       return p2;
     if (false) {
     if (p2 instanceof ChoicePattern) {
