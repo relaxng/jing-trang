@@ -9,7 +9,15 @@ Name classes
 - attribute wildcards
 - element wildcards
 
+Check for single namespace constraint
+
+Allow attribute names with empty namespace or target namespace
+
+Allow local elements with empty namespace
+
 Namespaces
+
+Split files based on namespace
 
 Include
 
@@ -21,4 +29,9 @@ Check for RNG contextual constraints
 
 Approximate <interleave>
 
+NOTATION datatypes
 
+Multiple pattern parameters
+
+Use complexType in place of group: contains attributes/text and sometimes referenced as a complexType, then
+define as complexType
