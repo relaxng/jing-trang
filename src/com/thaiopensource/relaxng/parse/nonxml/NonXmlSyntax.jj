@@ -886,7 +886,7 @@ Annotations Annotations() :
 }
 {
   ("[" { a = sb.makeAnnotations(); }
-       (LOOKAHEAD(2) PrefixedAnnotationAttribute(a) )*
+       (LOOKAHEAD(2) PrefixedAnnotationAttribute(a, false) )*
        ( e = AnnotationElement() { a.addElement(e); } )*
    "]")?
   { return a; }
@@ -895,10 +895,10 @@ Annotations Annotations() :
 void AnnotationAttribute(Annotations a) :
 {}
 {
-  PrefixedAnnotationAttribute(a) | UnprefixedAnnotationAttribute(a)
+  PrefixedAnnotationAttribute(a, true) | UnprefixedAnnotationAttribute(a)
 }
 
-void PrefixedAnnotationAttribute(Annotations a) :
+void PrefixedAnnotationAttribute(Annotations a, boolean allowUnqualified) :
 {
   Token t;
   String value;
@@ -910,7 +910,7 @@ void PrefixedAnnotationAttribute(Annotations a) :
     int colon = qn.indexOf(':');
     String prefix = qn.substring(0, colon);
     String ns = lookupPrefix(prefix, t);
-    if (ns == SchemaBuilder.INHERIT_NS)
+    if (ns.length() == 0 && !allowUnqualified)
       error("unqualified_annotation_attribute", t);
     else
       a.addAttribute(ns, qn.substring(colon + 1), prefix, value, makeLocation(t));
