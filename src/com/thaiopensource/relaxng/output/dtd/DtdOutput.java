@@ -330,7 +330,7 @@ class DtdOutput {
           attributeValueLiteral(dv);
         }
       }
-      if (prefix != null) {
+      if (prefix != null && !prefix.equals("xml")) {
         indent();
         buf.append("xmlns:");
         buf.append(prefix);
