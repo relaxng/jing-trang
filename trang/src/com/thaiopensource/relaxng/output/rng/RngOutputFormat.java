@@ -14,7 +14,6 @@ import java.util.Map;
 
 /*
 Specify indent
-Specify encoding
 Annotations
 */
 public class RngOutputFormat implements OutputFormat {

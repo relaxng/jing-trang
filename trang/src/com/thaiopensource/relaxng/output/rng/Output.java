@@ -77,7 +77,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
     this.xw = xw;
     this.datatypeLibrary = datatypeLibrary;
     this.prefixMap = prefixMap;
-    this.xw = new XmlWriter(od.getLineSeparator(), od.open(sourceUri), getTopLevelAttributes());
+    this.xw = new XmlWriter(od.getLineSeparator(), od.open(sourceUri), getTopLevelAttributes(), od.getEncoding());
   }
 
   String[] getTopLevelAttributes() {
