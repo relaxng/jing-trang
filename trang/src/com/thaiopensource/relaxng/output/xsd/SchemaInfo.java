@@ -24,6 +24,7 @@ import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.edit.TextPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
+import com.thaiopensource.relaxng.edit.ComponentVisitor;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
 
 import java.util.HashMap;
@@ -175,7 +176,7 @@ class SchemaInfo {
     }
   }
 
-  class GrammarVisitor extends AbstractVisitor {
+  class GrammarVisitor implements ComponentVisitor {
     public Object visitDefine(DefineComponent c) {
       if (c.getName() != DefineComponent.START)
         defineMap.put(c.getName(), c.getBody());
@@ -188,7 +189,15 @@ class SchemaInfo {
     }
 
     public Object visitInclude(IncludeComponent c) {
+      c.componentsAccept(new OverrideFinder());
       getSchema(c.getHref()).componentsAccept(this);
+      return null;
+    }
+  }
+
+  class OverrideFinder extends GrammarVisitor {
+    public Object visitDefine(DefineComponent c) {
+      er.error("overrides_not_supported", c.getSourceLocation());
       return null;
     }
   }
