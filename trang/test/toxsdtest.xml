@@ -2068,6 +2068,122 @@ element foo {
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+element foo {
+  xsd:QName "xyzzy"
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:simpleType>
+      <xs:restriction base="xs:QName">
+        <xs:enumeration value="xyzzy"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+default namespace = "http://www.example.com"
+
+element foo {
+  xsd:QName "xyzzy"
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com" xmlns:ns1="http://www.example.com">
+  <xs:element name="foo">
+    <xs:simpleType>
+      <xs:restriction base="xs:QName">
+        <xs:enumeration value="xyzzy" xmlns="http://www.example.com"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+namespace eg = "http://www.example.com"
+
+element foo {
+  xsd:QName "eg:xyzzy"
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:simpleType>
+      <xs:restriction base="xs:QName">
+        <xs:enumeration value="eg:xyzzy" xmlns:eg="http://www.example.com"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+namespace xs = "http://www.example.com"
+
+element foo {
+  xsd:QName "xs:xyzzy"
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xsd:element name="foo">
+    <xsd:simpleType>
+      <xsd:restriction base="xsd:QName">
+        <xsd:enumeration value="xs:xyzzy" xmlns:xs="http://www.example.com"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+  </xsd:element>
+</xsd:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo {
+  xsd:QName "xyzzy"
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:simpleType>
+      <xs:restriction base="xs:QName">
+        <xs:enumeration value="xyzzy"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>

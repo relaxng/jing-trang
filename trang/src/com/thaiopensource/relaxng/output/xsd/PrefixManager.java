@@ -10,6 +10,7 @@ import com.thaiopensource.relaxng.edit.ElementPattern;
 import com.thaiopensource.relaxng.edit.NameNameClass;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.IncludeComponent;
+import com.thaiopensource.relaxng.edit.ValuePattern;
 import com.thaiopensource.relaxng.parse.Context;
 
 import java.util.HashMap;
@@ -25,6 +26,10 @@ public class PrefixManager implements SourceUriGenerator {
 
   private final Map prefixMap = new HashMap();
   private final Set usedPrefixes = new HashSet();
+  /**
+   * Set of prefixes that cannot be used for schema namespace.
+   */
+  private final Set reservedPrefixes;
   private int nextGenIndex = 1;
 
   static class PrefixUsage {
@@ -35,6 +40,7 @@ public class PrefixManager implements SourceUriGenerator {
     private final SchemaInfo si;
     private String inheritedNamespace;
     private final Map namespacePrefixUsageMap = new HashMap();
+    private final Set reservedPrefixes = new HashSet();
 
     PrefixSelector(SchemaInfo si) {
       this.si = si;
@@ -44,7 +50,7 @@ public class PrefixManager implements SourceUriGenerator {
       if (context != null) {
         for (Enumeration enum = context.prefixes(); enum.hasMoreElements();) {
           String prefix = (String)enum.nextElement();
-          notePrefix(prefix, context.resolveNamespacePrefix(prefix));
+          notePrefix(prefix, resolveNamespace(context.resolveNamespacePrefix(prefix)));
         }
       }
     }
@@ -65,15 +71,31 @@ public class PrefixManager implements SourceUriGenerator {
     }
 
     public Object visitName(NameNameClass nc) {
-      notePrefix(nc.getPrefix(), nc.getNamespaceUri());
+      notePrefix(nc.getPrefix(), resolveNamespace(nc.getNamespaceUri()));
       return null;
+    }
+
+    public Object visitValue(ValuePattern p) {
+      for (Iterator iter = p.getPrefixMap().entrySet().iterator(); iter.hasNext();) {
+        Map.Entry entry = (Map.Entry)iter.next();
+        String prefix = (String)entry.getKey();
+        if (prefix != null && !prefix.equals("")) {
+          String ns = resolveNamespace((String)entry.getValue());
+          notePrefix(prefix, ns);
+          if (!ns.equals(BasicOutput.xsURI))
+            reservedPrefixes.add(prefix);
+        }
+      }
+      return null;
+    }
+
+    private String resolveNamespace(String ns) {
+      return ns == NameNameClass.INHERIT_NS ? inheritedNamespace : ns;
     }
 
     private void notePrefix(String prefix, String ns) {
       if (prefix == null || ns == null || ns.equals(""))
         return;
-      if (ns == NameNameClass.INHERIT_NS)
-        ns = inheritedNamespace;
       Map prefixUsageMap = (Map)namespacePrefixUsageMap.get(ns);
       if (prefixUsageMap == null) {
         prefixUsageMap = new HashMap();
@@ -142,27 +164,36 @@ public class PrefixManager implements SourceUriGenerator {
 
   PrefixManager(SchemaInfo si) {
     usePrefix("xml", xmlURI);
-    new PrefixSelector(si).assignPrefixes(prefixMap, usedPrefixes);
+    PrefixSelector ps = new PrefixSelector(si);
+    ps.assignPrefixes(prefixMap, usedPrefixes);
+    this.reservedPrefixes = ps.reservedPrefixes;
   }
 
   static private final String[] xsdPrefixes  = { "xs", "xsd" };
+
   String getPrefix(String namespace) {
     String prefix = (String)prefixMap.get(namespace);
     if (prefix == null && namespace.equals(BasicOutput.xsURI)) {
       for (int i = 0; i < xsdPrefixes.length; i++) {
-        if (!usedPrefixes.contains(xsdPrefixes[i])) {
-          usePrefix(xsdPrefixes[i], BasicOutput.xsURI);
+        if (tryUsePrefix(xsdPrefixes[i], BasicOutput.xsURI))
           return xsdPrefixes[i];
-        }
       }
     }
     if (prefix == null) {
       do {
         prefix = "ns" + Integer.toString(nextGenIndex++);
-      } while (usedPrefixes.contains(prefix));
-      usePrefix(prefix, namespace);
+      } while (!tryUsePrefix(prefix, namespace));
     }
     return prefix;
+  }
+
+  private boolean tryUsePrefix(String prefix, String namespace) {
+    if (usedPrefixes.contains(prefix))
+      return false;
+    if (reservedPrefixes.contains(prefix) && !namespace.equals(BasicOutput.xsURI))
+      return false;
+    usePrefix(prefix, namespace);
+    return true;
   }
 
   private void usePrefix(String prefix, String namespace) {

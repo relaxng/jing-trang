@@ -442,6 +442,10 @@ public class NamespaceManager {
     return lookupSourceUri(schemaUri).targetNamespace;
   }
 
+  boolean isTargetNamespace(String ns) {
+    return targetNamespaceMap.get(ns) != null;
+  }
+
   Set getTargetNamespaces() {
     return targetNamespaceMap.keySet();
   }

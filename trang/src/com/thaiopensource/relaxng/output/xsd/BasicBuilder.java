@@ -66,6 +66,7 @@ import java.util.Iterator;
 import java.util.Collections;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
 
 public class BasicBuilder {
   private static final String XSD_URI = "http://www.w3.org/2001/XMLSchema-datatypes";
@@ -122,7 +123,15 @@ public class BasicBuilder {
       else {
         if (type.equals("NOTATION"))
           type = "QName";
-        facets.add(new Facet(location, "enumeration", p.getValue()));
+        String prefix = null;
+        String namespace = null;
+        Iterator bindings = p.getPrefixMap().entrySet().iterator();
+        if (bindings.hasNext()) {
+          Map.Entry binding = (Map.Entry)bindings.next();
+          prefix = (String)binding.getKey();
+          namespace = resolveNamespace((String)binding.getValue());
+        }
+        facets.add(new Facet(location, "enumeration", p.getValue(), prefix, namespace));
       }
       return new SimpleTypeRestriction(location, type, facets);
     }
