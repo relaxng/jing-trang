@@ -12,8 +12,7 @@ class ContentType {
   static ContentType MIXED_MODEL = new ContentType(COMPLEX_TYPE);
   static ContentType MODEL_GROUP = new ContentType(COMPLEX_TYPE);
   static ContentType ELEMENT_CLASS = new ContentType(MODEL_GROUP);
-  static ContentType DIRECT_MULTI_ELEMENT = new ContentType(ELEMENT_CLASS);
-  static ContentType DIRECT_SINGLE_ELEMENT = new ContentType(DIRECT_MULTI_ELEMENT);
+  static ContentType DIRECT_SINGLE_ELEMENT = new ContentType(ELEMENT_CLASS);
   static ContentType ZERO_OR_MORE_ELEMENT_CLASS = new ContentType(MODEL_GROUP);
   static ContentType ENUM = new ContentType(SIMPLE_TYPE);
   static ContentType ERROR = new ContentType();
@@ -153,7 +152,7 @@ class ContentType {
   }
 
   static ContentType ref(ContentType t) {
-    if (t.isA(DIRECT_MULTI_ELEMENT))
+    if (t.isA(DIRECT_SINGLE_ELEMENT))
       return ELEMENT_CLASS;
     return t;
   }

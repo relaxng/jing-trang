@@ -306,7 +306,7 @@ class Analysis {
       List list = nc.getChildren();
       for (int i = 0, len = list.size(); i < len; i++)
         ((NameClass)list.get(i)).accept(this);
-      return ContentType.DIRECT_MULTI_ELEMENT;
+      return ContentType.ELEMENT_CLASS;
     }
 
     public Object visitAnyName(AnyNameNameClass nc) {
