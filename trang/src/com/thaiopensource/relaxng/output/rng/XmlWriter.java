@@ -13,6 +13,22 @@ class XmlWriter {
   private int level = 0;
   private String[] topLevelAttributes;
 
+  class WrappedException extends RuntimeException {
+    private IOException cause;
+
+    public Throwable getCause() {
+      return cause;
+    }
+
+    IOException getIOException() {
+      return cause;
+    }
+
+    private WrappedException(IOException cause) {
+      this.cause = cause;
+    }
+  }
+
   public XmlWriter(String lineSep, Writer w, String[] topLevelAttributes) {
     this.lineSep = lineSep;
     this.w = w;

@@ -66,8 +66,8 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
       p.accept(out);
       out.xw.close();
     }
-    catch (WrappedException e) {
-      throw (IOException)e.getCause();
+    catch (XmlWriter.WrappedException e) {
+      throw e.getIOException();
     }
   }
 
