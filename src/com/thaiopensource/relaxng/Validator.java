@@ -105,8 +105,8 @@ public class Validator implements ContentHandler {
       if (!setMemo(memo.startAttributeDeriv(attName)))
 	error("impossible_attribute_ignored", atts.getLocalName(i));
       else if (!setMemo(memo.dataDeriv(atts.getValue(i), prefixMapping))) {
-	error("bad_attribute_value", atts.getLocalName(i));
-	memo = memo.recoverAfter();
+        error("bad_attribute_value", atts.getLocalName(i));
+        memo = memo.recoverAfter();
       }
     }
     if (!setMemo(memo.endAttributes())) {
@@ -163,15 +163,16 @@ public class Validator implements ContentHandler {
       error("text_not_allowed");
   }
 
-  public void endDocument() throws SAXException {
-    // XXX
-  }
+  public void endDocument() { }
 
   public void setDocumentLocator(Locator loc) {
     locator = loc;
   }
 
-  public void startDocument() { }
+  public void startDocument() throws SAXException {
+    if (memo.isNotAllowed())
+      error("schema_allows_nothing");
+  }
   public void processingInstruction(String target, String date) { }
   public void skippedEntity(String name) { }
   public void ignorableWhitespace(char[] ch, int start, int len) { }
