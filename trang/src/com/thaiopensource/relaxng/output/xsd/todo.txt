@@ -1,3 +1,5 @@
+Empty in simple types
+
 combine attributes
 - combine="choice" on <start>
 - combine in a single file
@@ -79,7 +81,6 @@ Approximation warnings:
 - mixed text
 - simple type list
 - attribute choice
-- unknown datatypes
 - wildcards
 
 Deal with element type consistent restriction
@@ -115,6 +116,3 @@ which has been assigned a different target namespace, add to list of orphaned el
 the includes of G occured in F
 
 - generate imports to the heads of all target namespaces
-
-
-

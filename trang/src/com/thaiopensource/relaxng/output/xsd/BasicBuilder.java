@@ -91,9 +91,10 @@ public class BasicBuilder {
       String library = p.getDatatypeLibrary();
       String type = p.getType();
       List facets = new Vector();
+      SourceLocation location = p.getSourceLocation();
       if (!library.equals("") && !library.equals(XSD_URI)) {
-        // TODO give an error
         type = "string";
+        er.warning("unsupported_datatype_library", library, location);
       }
       else {
         for (Iterator iter = p.getParams().iterator(); iter.hasNext();) {
@@ -103,19 +104,20 @@ public class BasicBuilder {
                                param.getValue()));
         }
       }
-      return new SimpleTypeRestriction(p.getSourceLocation(), type, facets);
+      return new SimpleTypeRestriction(location, type, facets);
     }
 
     public Object visitValue(ValuePattern p) {
       String library = p.getDatatypeLibrary();
       String type = p.getType();
-      if (!library.equals("") && !library.equals(XSD_URI)) {
-        // TODO give an error
-        type = "string";
-      }
       List facets = new Vector();
       SourceLocation location = p.getSourceLocation();
-      facets.add(new Facet(location, "enumeration", p.getValue()));
+      if (!library.equals("") && !library.equals(XSD_URI)) {
+        type = "string";
+        er.warning("unsupported_datatype_library", library, location);
+      }
+      else
+        facets.add(new Facet(location, "enumeration", p.getValue()));
       return new SimpleTypeRestriction(location, type, facets);
     }
 
