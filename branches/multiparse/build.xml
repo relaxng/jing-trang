@@ -54,7 +54,7 @@
 
 <target name="compile" depends="compile-grammar,gen">
   <mkdir dir="build/classes"/>
-  <javac srcdir="src:build/src" destdir="build/classes" excludes="com/thaiopensource/datatype/xsd/regex/jdk1_4/gen/*.java"/>
+  <javac srcdir="src:build/src" destdir="build/classes" excludes="com/thaiopensource/datatype/xsd/regex/jdk1_4/gen/*.java" target="1.1"/>
 </target>
 
 <target name="jar" depends="compile">
@@ -292,6 +292,7 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
 <target name="dist" depends="jar,exegen,validate,test,javadoc,datatype-sample,doc,trang-dist">
   <zip zipfile="build/jing-src.zip">
     <fileset dir="src" includes="**/*.java,**/*.properties,META-INF/services/*"/>
+    <fileset dir="build/src" includes="**/*.java"/>
   </zip>
   <zip zipfile="build/xhtml-rng.zip">
     <fileset dir="." includes="xhtml/**/*.rng,xhtml/index.html"/>
