@@ -5,6 +5,7 @@ class ContentType {
   static ContentType MIXED_ELEMENT_CLASS = new ContentType();
   static ContentType NOT_ALLOWED = new ContentType();
   static ContentType SIMPLE_TYPE = new ContentType();
+  static ContentType SIMPLE_TYPE_CHOICE = new ContentType(SIMPLE_TYPE);
   static ContentType EMPTY = new ContentType();
   static ContentType TEXT = new ContentType(MIXED_ELEMENT_CLASS);
   static ContentType MIXED_MODEL = new ContentType();
@@ -106,6 +107,8 @@ class ContentType {
     }
     if (t2 == NOT_ALLOWED)
       return choice(t2, t1);
+    if (t1.isA(SIMPLE_TYPE) && t2.isA(SIMPLE_TYPE))
+      return SIMPLE_TYPE_CHOICE;
     if (t1.isA(ELEMENT_CLASS) && t2.isA(ELEMENT_CLASS))
       return ELEMENT_CLASS;
     if (t1.isA(MODEL_GROUP) && t2.isA(MODEL_GROUP))
