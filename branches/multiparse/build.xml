@@ -27,7 +27,7 @@
 </target>
 
 <target name="gen" depends="compile-gen">
-  <mkdir dir="build/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/gen"/>
+  <mkdir dir="build/src/com/thaiopensource/datatype/xsd/regex/jdk1_4"/>
   <java classname="com.thaiopensource.datatype.xsd.regex.jdk1_4.gen.NamingExceptionsGen" fork="yes" failonerror="yes">
     <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.NamingExceptions"/>
     <arg value="build/src"/>
@@ -173,6 +173,20 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
   </jing>
   <java classname="com.thaiopensource.datatype.xsd.regex.TestDriver" fork="yes" failonerror="yes">
     <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.RegexEngineImpl"/>
+    <arg value="test/regextest.xml"/>
+    <classpath>
+      <pathelement location="build/jing.jar"/>
+      <pathelement path="${java.class.path}"/>
+    </classpath>
+  </java>
+</target>
+
+<target name="xerces-regex-test" depends="jar">
+  <jing rngfile="test/regextest.rnc" compactsyntax="true">
+    <fileset dir="test" includes="regextest.xml"/>
+  </jing>
+  <java classname="com.thaiopensource.datatype.xsd.regex.TestDriver" fork="yes" failonerror="yes">
+    <arg value="com.thaiopensource.datatype.xsd.regex.xerces2.RegexEngineImpl"/>
     <arg value="test/regextest.xml"/>
     <classpath>
       <pathelement location="build/jing.jar"/>
