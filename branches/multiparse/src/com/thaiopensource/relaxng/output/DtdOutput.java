@@ -102,7 +102,7 @@ public class DtdOutput {
   static Type DIRECT_TEXT = new Type(TEXT);
   static Type MODEL_GROUP = new Type(COMPLEX_TYPE);
   static Type ELEMENT_CLASS = new Type(MODEL_GROUP);
-  static Type SINGLE_ELEMENT = new Type(ELEMENT_CLASS);
+  static Type DIRECT_SINGLE_ELEMENT = new Type(ELEMENT_CLASS);
   static Type DIRECT_SINGLE_ATTRIBUTE = new Type(ATTRIBUTE_GROUP);
   static Type OPTIONAL_ATTRIBUTE = new Type(ATTRIBUTE_GROUP);
   static Type REPEAT_ELEMENT_CLASS = new Type(MODEL_GROUP);
@@ -177,7 +177,7 @@ public class DtdOutput {
         if (!t.isA(COMPLEX_TYPE) && t != ERROR)
           error("bad_element_type", p.getSourceLocation());
       }
-      return SINGLE_ELEMENT;
+      return DIRECT_SINGLE_ELEMENT;
     }
 
     public Object visitAttribute(AttributePattern p) {
@@ -442,6 +442,8 @@ public class DtdOutput {
       return NOT_ALLOWED;
     if (t == DIRECT_SINGLE_ATTRIBUTE)
       return ATTRIBUTE_GROUP;
+    if (t == DIRECT_SINGLE_ELEMENT)
+      return ELEMENT_CLASS;
     return t;
   }
 
