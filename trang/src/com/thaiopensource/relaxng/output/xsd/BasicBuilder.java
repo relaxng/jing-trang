@@ -27,6 +27,7 @@ import com.thaiopensource.relaxng.edit.DefineComponent;
 import com.thaiopensource.relaxng.edit.DivComponent;
 import com.thaiopensource.relaxng.edit.IncludeComponent;
 import com.thaiopensource.relaxng.edit.GrammarPattern;
+import com.thaiopensource.relaxng.edit.TextPattern;
 import com.thaiopensource.relaxng.output.xsd.basic.Occurs;
 import com.thaiopensource.relaxng.output.xsd.basic.SimpleTypeUnion;
 import com.thaiopensource.relaxng.output.xsd.basic.SimpleTypeRestriction;
@@ -375,8 +376,13 @@ public class BasicBuilder {
           choices.add(att);
       }
       Wildcard wc = WildcardBuilder.createWildcard(p.getNameClass(), inheritedNamespace);
-      if (wc != null)
+      if (wc != null) {
+        if (!allowsAnyString(child))
+          er.warning("wildcard_attribute_value", p.getSourceLocation());
+        if (!isOptional())
+          er.warning("wildcard_attribute_optional", p.getSourceLocation());
         choices.add(new WildcardAttribute(p.getSourceLocation(), wc));
+      }
       if (choices.size() == 1)
         return choices.get(0);
       return new AttributeGroup(p.getSourceLocation(), choices);
@@ -561,4 +567,24 @@ public class BasicBuilder {
       new Wildcard(true, positiveNamespaces, positiveExcludeNames)
     };
   }
+
+  private boolean allowsAnyString(Pattern p) {
+    while (p instanceof RefPattern)
+       p = si.getBody((RefPattern)p);
+    if (p instanceof TextPattern)
+      return true;
+    if (!(p instanceof DataPattern))
+      return false;
+    DataPattern dp = (DataPattern)p;
+    if (dp.getParams().size() != 0)
+      return false;
+    String lib = dp.getDatatypeLibrary();
+    if (lib.equals(""))
+      return true;
+    if (!lib.equals(WellKnownNamespaces.XML_SCHEMA_DATATYPES))
+      return false;
+    String type = dp.getType();
+    return type.equals("string") || type.equals("token") || type.equals("normalizedString");
+  }
+
 }
