@@ -167,7 +167,7 @@ class Analysis {
       else
         er.error("sorry_attribute_name_class", p.getNameClass().getSourceLocation());
       ContentType t = analyzeContentType(p.getChild());
-      if (!t.isA(ContentType.SIMPLE_TYPE) && t != ContentType.DIRECT_TEXT && t != ContentType.ERROR)
+      if (!t.isA(ContentType.SIMPLE_TYPE) && t != ContentType.TEXT && t != ContentType.ERROR)
         er.error("sorry_attribute_type", p.getSourceLocation());
       if (ancestorPattern != null)
         am.noteAttribute(ancestorPattern);
@@ -179,7 +179,7 @@ class Analysis {
     }
 
     public Object visitText(TextPattern p) {
-      return ContentType.DIRECT_TEXT;
+      return ContentType.TEXT;
     }
 
     public Object visitList(ListPattern p) {

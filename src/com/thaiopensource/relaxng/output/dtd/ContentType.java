@@ -9,7 +9,6 @@ class ContentType {
   static ContentType SIMPLE_TYPE = new ContentType();
   static ContentType EMPTY = new ContentType(COMPLEX_TYPE);
   static ContentType TEXT = new ContentType(MIXED_ELEMENT_CLASS, COMPLEX_TYPE);
-  static ContentType DIRECT_TEXT = new ContentType(TEXT);
   static ContentType MIXED_MODEL = new ContentType(COMPLEX_TYPE);
   static ContentType MODEL_GROUP = new ContentType(COMPLEX_TYPE);
   static ContentType ELEMENT_CLASS = new ContentType(MODEL_GROUP);
@@ -154,8 +153,6 @@ class ContentType {
   }
 
   static ContentType ref(ContentType t) {
-    if (t == DIRECT_TEXT)
-      return TEXT;
     if (t.isA(DIRECT_MULTI_ELEMENT))
       return ELEMENT_CLASS;
     if (t == ZERO_OR_MORE_ELEMENT_CLASS)
