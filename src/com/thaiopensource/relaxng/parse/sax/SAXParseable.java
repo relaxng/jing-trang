@@ -45,13 +45,13 @@ public class SAXParseable implements Parseable {
     }
   }
 
-  public void parseInclude(String uri, SchemaBuilder schemaBuilder, IncludedGrammar g)
+  public ParsedPattern parseInclude(String uri, SchemaBuilder schemaBuilder, IncludedGrammar g)
           throws BuildException, IllegalSchemaException {
     try {
       XMLReader xr = xrc.createXMLReader();
       SchemaParser sp = new SchemaParser(xr, eh, schemaBuilder, ncNameDatatype, g, g);
       xr.parse(makeInputSource(xr, uri));
-      sp.getStartPattern();
+      return sp.getStartPattern();
     }
     catch (SAXException e) {
      throw new BuildException(e);

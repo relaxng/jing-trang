@@ -782,10 +782,7 @@ class SchemaParser {
     }
 
     void end() throws SAXException {
-      grammar.endIncludedGrammar(startLocation, null);
-      // need a non-null pattern to avoid error
-      // XXX This is a bit fishy
-      parent.endChild(schemaBuilder.makeEmpty(null, null));
+      parent.endChild(grammar.endIncludedGrammar(startLocation, null));
     }
   }
 
@@ -1196,7 +1193,7 @@ class SchemaParser {
   }
 
   ParsedPattern getStartPattern() throws IllegalSchemaException {
-    if (startPattern == null || hadError)
+    if (hadError)
       throw new IllegalSchemaException();
     return startPattern;
   }

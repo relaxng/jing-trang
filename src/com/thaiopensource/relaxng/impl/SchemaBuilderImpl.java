@@ -408,8 +408,8 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       // nothing to do
     }
 
-    public void endIncludedGrammar(Location loc, Annotations anno) throws BuildException {
-      // nothing to do
+    public ParsedPattern endIncludedGrammar(Location loc, Annotations anno) throws BuildException {
+      return null;
     }
 
     public void define(String name, GrammarSection.Combine combine, ParsedPattern pattern, Location loc, Annotations anno)

@@ -92,11 +92,11 @@ public class NonXmlSyntax implements ValidationContext {
     throw new IllegalSchemaException();
   }
 
-  void parseInclude(IncludedGrammar g) throws IllegalSchemaException {
+  ParsedPattern parseInclude(IncludedGrammar g) throws IllegalSchemaException {
     try {
-      IncludedGrammar(g);
+      ParsedPattern p = IncludedGrammar(g);
       if (!hadError)
-        return;
+        return p;
     }
     catch (ParseException e) {
       error("syntax_error", e.currentToken.next);
@@ -228,7 +228,7 @@ ParsedPattern Input(Scope scope) :
   { return p; }
 }
 
-void IncludedGrammar(IncludedGrammar g) :
+ParsedPattern IncludedGrammar(IncludedGrammar g) :
 {
   Annotations a;
 }
@@ -238,7 +238,7 @@ void IncludedGrammar(IncludedGrammar g) :
   (a = Annotations() (GrammarComponent(g, g))+)
   | ("grammar" a = Annotations() "{" (GrammarComponent(g, g))+ "}")
   <EOF>
-  { g.endIncludedGrammar(sb.makeLocation(sourceUri, 1, 1), a); }
+  { return g.endIncludedGrammar(sb.makeLocation(sourceUri, 1, 1), a); }
 }
 
 ParsedPattern TopLevelGrammar(Scope scope) :
