@@ -97,8 +97,8 @@ public class DtdOutput {
   List elementQueue = new Vector();
   List requiredParamEntities = new Vector();
   Set doneParamEntitySet = new HashSet();
-  HashMap patternTypes = new HashMap();
-  private HashMap seenTable = new HashMap();
+  Map patternTypes = new HashMap();
+  private Map seenTable = new HashMap();
   private Map elementToAttlistMap = new HashMap();
   private Map paramEntityToElementMap = new HashMap();
 
