@@ -27,6 +27,8 @@ public class PatternBuilder {
 
   private Hashtable patternMemoMap = new Hashtable();
 
+  private boolean idTypes;
+
   public PatternBuilder() {
     init();
     table = null;
@@ -60,6 +62,10 @@ public class PatternBuilder {
     textOnlyFunction = new TextOnlyFunction(this);
     recoverAfterFunction = new RecoverAfterFunction(this);
   }    
+
+  public boolean hasIdTypes() {
+    return idTypes;
+  }
 
   Pattern makeEmpty() {
     return empty;
@@ -117,14 +123,17 @@ public class PatternBuilder {
     return text;
   }
   Pattern makeValue(Datatype dt, Object obj) {
+    noteDatatype(dt);
     return intern(new ValuePattern(dt, obj));
   }
 
   Pattern makeData(Datatype dt) {
+    noteDatatype(dt);
     return intern(new DataPattern(dt));
   }
 
   Pattern makeDataExcept(Datatype dt, Pattern except, Locator loc) {
+    noteDatatype(dt);
     return intern(new DataExceptPattern(dt, except, loc));
   }
 
@@ -190,6 +199,11 @@ public class PatternBuilder {
     if (value.isNotAllowed())
       return value;
     return intern(new AttributePattern(nameClass, value, loc));
+  }
+
+  private void noteDatatype(Datatype dt) {
+    if (dt.getIdType() != Datatype.ID_TYPE_NULL)
+      idTypes = true;
   }
 
   private Pattern intern(Pattern p) {

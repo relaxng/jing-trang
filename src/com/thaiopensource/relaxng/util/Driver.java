@@ -35,7 +35,7 @@ class Driver {
     System.exit(new Driver().doMain(args));
   }
 
-  private boolean checkId = false;
+  private boolean checkId = true;
 
   public int doMain(String[] args) {
     long startTime = System.currentTimeMillis();
@@ -45,7 +45,7 @@ class Driver {
       while (op.moveToNextOption()) {
         switch (op.getOptionChar()) {
         case 'i':
-          checkId = true;
+          checkId = false;
           break;
         }
       }

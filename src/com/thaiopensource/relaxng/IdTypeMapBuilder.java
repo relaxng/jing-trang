@@ -271,6 +271,8 @@ public class IdTypeMapBuilder {
   }
 
   public IdTypeMap getIdTypeMap() {
+    if (hadError)
+      return null;
     return idTypeMap;
   }
 }
