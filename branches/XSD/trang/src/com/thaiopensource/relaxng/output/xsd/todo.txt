@@ -19,5 +19,6 @@ Check for ref loops
 
 Check for RNG contextual constraints
 
+Approximate <interleave>
 
 
