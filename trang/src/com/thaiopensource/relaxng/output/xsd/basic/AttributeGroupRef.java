@@ -1,9 +1,12 @@
 package com.thaiopensource.relaxng.output.xsd.basic;
 
+import com.thaiopensource.relaxng.edit.SourceLocation;
+
 public class AttributeGroupRef extends AttributeUse {
   private final String name;
 
-  public AttributeGroupRef(String name) {
+  public AttributeGroupRef(SourceLocation location, String name) {
+    super(location);
     this.name = name;
   }
 

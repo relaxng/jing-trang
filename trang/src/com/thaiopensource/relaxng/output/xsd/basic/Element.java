@@ -1,12 +1,14 @@
 package com.thaiopensource.relaxng.output.xsd.basic;
 
 import com.thaiopensource.relaxng.output.common.Name;
+import com.thaiopensource.relaxng.edit.SourceLocation;
 
 public class Element extends Particle {
   private final Name name;
   private final ComplexType complexType;
 
-  public Element(Name name, ComplexType complexType) {
+  public Element(SourceLocation location, Name name, ComplexType complexType) {
+    super(location);
     this.name = name;
     this.complexType = complexType;
   }

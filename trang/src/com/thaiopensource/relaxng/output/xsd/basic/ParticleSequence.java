@@ -1,12 +1,15 @@
 package com.thaiopensource.relaxng.output.xsd.basic;
 
+import com.thaiopensource.relaxng.edit.SourceLocation;
+
 import java.util.List;
 import java.util.Collections;
 
 public class ParticleSequence extends Particle {
   private final List children;
 
-  public ParticleSequence(List children) {
+  public ParticleSequence(SourceLocation location, List children) {
+    super(location);
     this.children = Collections.unmodifiableList(children);
   }
 
