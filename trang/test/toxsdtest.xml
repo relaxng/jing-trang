@@ -1972,6 +1972,54 @@ element foo {
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+element foo {
+ notAllowed
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo" abstract="true"/>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+namespace eg = "http://www.example.com"
+
+element eg:foo {
+ element bar { notAllowed }
+ | element baz { text }
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com" xmlns:eg="http://www.example.com">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element name="bar" form="unqualified">
+          <xs:complexType>
+            <xs:choice/>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="baz" form="unqualified">
+          <xs:complexType mixed="true"/>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>

@@ -99,6 +99,10 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     return new ComplexTypeSimpleContent(attributeUses, simpleType);
   }
 
+  public Object visitNotAllowedContent(ComplexTypeNotAllowedContent t) {
+    return t;
+  }
+
   public Object visitAttribute(Attribute a) {
     SimpleType type = a.getType();
     if (type != null) {

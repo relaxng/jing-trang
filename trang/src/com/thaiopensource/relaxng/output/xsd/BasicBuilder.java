@@ -54,6 +54,7 @@ import com.thaiopensource.relaxng.output.xsd.basic.AttributeUseChoice;
 import com.thaiopensource.relaxng.output.xsd.basic.Wildcard;
 import com.thaiopensource.relaxng.output.xsd.basic.WildcardAttribute;
 import com.thaiopensource.relaxng.output.xsd.basic.WildcardElement;
+import com.thaiopensource.relaxng.output.xsd.basic.ComplexTypeNotAllowedContent;
 import com.thaiopensource.relaxng.output.common.NameClassSplitter;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
@@ -239,6 +240,8 @@ public class BasicBuilder {
           simpleType = makeUnionWithEmptySimpleType(simpleType, p.getSourceLocation());
         type = new ComplexTypeSimpleContent(attributeUses, simpleType);
       }
+      else if (ct.equals(ChildType.NOT_ALLOWED))
+        type = new ComplexTypeNotAllowedContent();
       else
         type = new ComplexTypeComplexContent(attributeUses, particle, mixed);
       List result = new Vector();

@@ -42,6 +42,8 @@ import com.thaiopensource.relaxng.output.xsd.basic.AbstractAttributeUseVisitor;
 import com.thaiopensource.relaxng.output.xsd.basic.Wildcard;
 import com.thaiopensource.relaxng.output.xsd.basic.WildcardAttribute;
 import com.thaiopensource.relaxng.output.xsd.basic.WildcardElement;
+import com.thaiopensource.relaxng.output.xsd.basic.ComplexTypeNotAllowedContent;
+import com.thaiopensource.relaxng.output.xsd.basic.ComplexType;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
@@ -405,6 +407,14 @@ public class BasicOutput {
       }
       return null;
     }
+
+    public Object visitNotAllowedContent(ComplexTypeNotAllowedContent t) {
+      xw.startElement(xs("complexType"));
+      xw.startElement(xs("choice"));
+      xw.endElement();
+      xw.endElement();
+      return null;
+    }
   }
 
   class AttributeUseOutput extends SchemaWalker {
@@ -483,7 +493,11 @@ public class BasicOutput {
         globalElementsDefined.add(name);
         xw.startElement(xs("element"));
         xw.attribute("name", name.getLocalName());
-        p.getComplexType().accept(complexTypeOutput);
+        ComplexType type = p.getComplexType();
+        if (type instanceof ComplexTypeNotAllowedContent)
+          xw.attribute("abstract", "true");
+        else
+          type.accept(complexTypeOutput);
         xw.endElement();
       }
       return p.getComplexType().accept(this);
@@ -528,6 +542,10 @@ public class BasicOutput {
     }
 
     public Object visitSimpleContent(ComplexTypeSimpleContent t) {
+      return null;
+    }
+
+    public Object visitNotAllowedContent(ComplexTypeNotAllowedContent t) {
       return null;
     }
   }
