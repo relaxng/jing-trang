@@ -56,6 +56,10 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     return new Element(p.getLocation(), p.getName(), ct);
   }
 
+  public Object visitWildcardElement(WildcardElement p) {
+    return p;
+  }
+
   public Object visitSequence(ParticleSequence p) {
     List children = transformParticleList(p.getChildren());
     if (children == p.getChildren())

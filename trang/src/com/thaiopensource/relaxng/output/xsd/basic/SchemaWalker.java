@@ -11,6 +11,10 @@ public abstract class SchemaWalker implements
     return p.getComplexType().accept(this);
   }
 
+  public Object visitWildcardElement(WildcardElement p) {
+    return null;
+  }
+
   public Object visitRepeat(ParticleRepeat p) {
     return p.getChild().accept(this);
   }

@@ -53,6 +53,7 @@ import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroup;
 import com.thaiopensource.relaxng.output.xsd.basic.AttributeUseChoice;
 import com.thaiopensource.relaxng.output.xsd.basic.Wildcard;
 import com.thaiopensource.relaxng.output.xsd.basic.WildcardAttribute;
+import com.thaiopensource.relaxng.output.xsd.basic.WildcardElement;
 import com.thaiopensource.relaxng.output.common.NameClassSplitter;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
@@ -236,6 +237,9 @@ public class BasicBuilder {
       List result = new Vector();
       for (Iterator iter = NameClassSplitter.split(p.getNameClass()).iterator(); iter.hasNext();)
         result.add(new Element(p.getSourceLocation(), makeName((NameNameClass)iter.next()), type));
+      Wildcard wc = WildcardBuilder.createWildcard(p.getNameClass(), inheritedNamespace);
+      if (wc != null)
+        result.add(new WildcardElement(p.getSourceLocation(), wc));
       if (result.size() == 1)
         return result.get(0);
       return new ParticleChoice(p.getSourceLocation(), result);
