@@ -42,7 +42,7 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
 
     DatatypeBase decimalType = new DecimalDatatype();
     typeTable.put("decimal", decimalType);
-    DatatypeBase integerType = new ScaleRestrictDatatype(decimalType, 0);
+    DatatypeBase integerType = new IntegerRestrictDatatype(decimalType);
     typeTable.put("integer", integerType);
     typeTable.put("nonPositiveInteger", restrictMax(integerType, "0"));
     typeTable.put("negativeInteger", restrictMax(integerType, "-1"));
@@ -87,9 +87,9 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
     typeTable.put("ENTITY", entityType);
     typeTable.put("ENTITIES", list(entityType));
 
+    typeTable.put("dateTime", new DateTimeDatatype());
     // Not implemented yet
     typeTable.put("duration", new StringDatatype());
-    typeTable.put("dateTime", new StringDatatype());
     typeTable.put("time", new StringDatatype());
     typeTable.put("date", new StringDatatype());
     typeTable.put("gYearMonth", new StringDatatype());
@@ -141,5 +141,11 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
 
   public Datatype createDatatype(String type) throws DatatypeException {
     return createDatatypeBuilder(type).createDatatype();
+  }
+
+  static public void main(String[] args) throws DatatypeException {
+    System.err.println(new DatatypeLibraryImpl().createDatatype(args[0]).isValid(args[1], null)
+                       ? "valid"
+                       : "invalid");
   }
 }
