@@ -1151,6 +1151,83 @@ element e1:x { element e1:x|e2:y { element e1:x|e2:y { empty } } }
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+start = element foo { bar1 & bar2 & bar3 & bar4 & bar5 }
+bar1 =  element bar1 { empty }
+bar2 =  element bar2 { empty }?
+bar3 =  element bar3 { empty }*
+bar4 =  element bar4 { empty }+
+bar5 = element bar5 { empty }, element bar6 { empty }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="bar1"/>
+        <xs:group ref="bar2"/>
+        <xs:group ref="bar3"/>
+        <xs:group ref="bar4"/>
+        <xs:choice>
+          <xs:element ref="bar5"/>
+          <xs:element ref="bar6"/>
+        </xs:choice>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="bar1">
+    <xs:complexType/>
+  </xs:element>
+  <xs:group name="bar2">
+    <xs:sequence>
+      <xs:sequence minOccurs="0">
+        <xs:element ref="bar2"/>
+      </xs:sequence>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="bar2">
+    <xs:complexType/>
+  </xs:element>
+  <xs:group name="bar3">
+    <xs:sequence>
+      <xs:sequence minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="bar3"/>
+      </xs:sequence>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="bar3">
+    <xs:complexType/>
+  </xs:element>
+  <xs:group name="bar4">
+    <xs:sequence>
+      <xs:sequence maxOccurs="unbounded">
+        <xs:element ref="bar4"/>
+      </xs:sequence>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="bar4">
+    <xs:complexType/>
+  </xs:element>
+  <xs:group name="bar5">
+    <xs:sequence>
+      <xs:element ref="bar5"/>
+      <xs:element ref="bar6"/>
+    </xs:sequence>
+  </xs:group>
+  <xs:element name="bar5">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="bar6">
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>
