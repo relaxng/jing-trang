@@ -97,6 +97,8 @@ class ErrorReporter {
   }
 
   private static SAXParseException makeParseException(String message, SourceLocation loc) {
+    if (loc == null)
+      return new SAXParseException(message, null);
     return new SAXParseException(message,
                                  null,
                                  loc.getUri(),
