@@ -728,6 +728,34 @@ element e1:x {
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+namespace e1 = "http://www.example.com/1"
+namespace e2 = "http://www.example.com/2"
+
+element e1:x { empty } | element e2:y { empty }
+</correct>
+</compact>
+<xsd>
+<resource name="e1.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/2" schemaLocation="c.xsd"/>
+  <xs:element name="x">
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/1" schemaLocation="e1.xsd"/>
+  <xs:element name="y">
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>

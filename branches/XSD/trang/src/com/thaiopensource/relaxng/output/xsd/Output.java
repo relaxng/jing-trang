@@ -626,8 +626,11 @@ class Output {
 
   class GlobalElementOutput extends AbstractVisitor {
     public Object visitElement(ElementPattern p) {
-      if (si.isGlobal(p))
-        declareElement(p);
+      if (si.isGlobal(p)) {
+        String ns = resolveNamespace(((NameNameClass)p.getNameClass()).getNamespaceUri());
+        if (ns.equals(targetNamespace))
+          declareElement(p);
+      }
       p.getChild().accept(this);
       return null;
     }
