@@ -1,6 +1,8 @@
-package com.thaiopensource.datatype.xsd;
+package com.thaiopensource.xml.util;
 
-abstract class Naming {
+public class Naming {
+
+  private Naming() { }
 
   private static final int CT_NAME = 1;
   private static final int CT_NMSTRT = 2;
@@ -104,12 +106,76 @@ abstract class Naming {
     } while (min++ != max);
   }
 
-  public static boolean isNameStartChar(char c) {
+  private static boolean isNameStartChar(char c) {
     return charTypeTable[c >> 8][c & 0xff] == CT_NMSTRT;
   }
 
-  public static boolean isNameChar(char c) {
+  private static boolean isNameStartCharNs(char c) {
+    return isNameStartChar(c) && c != ':';
+  }
+
+  private static boolean isNameChar(char c) {
     return charTypeTable[c >> 8][c & 0xff] != 0;
   }
+
+  private static boolean isNameCharNs(char c) {
+    return isNameChar(c) && c != ':';
+  }
+
+  public static boolean isName(String s) {
+    int len = s.length();
+    if (len == 0)
+      return false;
+    if (!isNameStartChar(s.charAt(0)))
+      return false;
+    for (int i = 1; i < len; i++)
+      if (!isNameChar(s.charAt(i)))
+        return false;
+    return true;
+  }
+
+  public static boolean isNmtoken(String s) {
+    int len = s.length();
+    if (len == 0)
+      return false;
+    for (int i = 0; i < len; i++)
+      if (!isNameChar(s.charAt(i)))
+        return false;
+    return true;
+  }
+
+  public static boolean isNcname(String s) {
+    int len = s.length();
+    if (len == 0)
+      return false;
+    if (!isNameStartCharNs(s.charAt(0)))
+      return false;
+    for (int i = 1; i < len; i++)
+      if (!isNameCharNs(s.charAt(i)))
+        return false;
+    return true;
+  }
+
+  public static boolean isQname(String s) {
+    int len = s.length();
+    if (len == 0)
+      return false;
+    if (!isNameStartCharNs(s.charAt(0)))
+      return false;
+    for (int i = 1; i < len; i++) {
+      char c = s.charAt(i);
+      if (!isNameChar(c)) {
+        if (c == ':' && ++i < len && isNameStartCharNs(s.charAt(i))) {
+          for (++i; i < len; i++)
+            if (!isNameCharNs(s.charAt(i)))
+              return false;
+          return true;
+        }
+        return false;
+      }
+    }
+    return true;
+  }
+
 
 }
