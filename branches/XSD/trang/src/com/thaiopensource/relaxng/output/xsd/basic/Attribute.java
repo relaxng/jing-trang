@@ -2,6 +2,7 @@ package com.thaiopensource.relaxng.output.xsd.basic;
 
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.edit.SourceLocation;
+import com.thaiopensource.util.Equal;
 
 public class Attribute extends SingleAttributeUse implements Structure {
   private final Name name;
@@ -34,20 +35,14 @@ public class Attribute extends SingleAttributeUse implements Structure {
   }
 
   public boolean equals(Object obj) {
-    if (!(obj instanceof Attribute))
+    if (!super.equals(obj))
       return false;
     Attribute other = (Attribute)obj;
-    if (type == null) {
-      if (other.type != null)
-        return false;
-    }
-    else if (!type.equals(other.type))
-      return false;
-    return this.name.equals(other.name);
+    return Equal.equal(this.type, other.type) && this.name.equals(other.name);
   }
 
   public int hashCode() {
-    int hc = name.hashCode();
+    int hc = super.hashCode() ^ name.hashCode();
     if (type != null)
       hc ^= type.hashCode();
     return hc;

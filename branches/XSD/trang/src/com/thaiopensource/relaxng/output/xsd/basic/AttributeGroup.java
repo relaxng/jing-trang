@@ -20,11 +20,11 @@ public class AttributeGroup extends AttributeUse {
   }
 
   public boolean equals(Object obj) {
-    return obj.getClass() == this.getClass() && ((AttributeGroup)obj).children.equals(children);
+    return super.equals(obj) && ((AttributeGroup)obj).children.equals(children);
   }
 
   public int hashCode() {
-    return children.hashCode();
+    return super.hashCode() ^ children.hashCode();
   }
 
   public Object accept(AttributeUseVisitor visitor) {

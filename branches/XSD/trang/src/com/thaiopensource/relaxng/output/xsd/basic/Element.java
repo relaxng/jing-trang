@@ -30,13 +30,13 @@ public class Element extends Particle implements Structure {
   }
 
   public boolean equals(Object obj) {
-    if (!(obj instanceof Element))
+    if (!super.equals(obj))
       return false;
     Element other = (Element)obj;
     return this.name.equals(other.name) && this.complexType.equals(other.complexType);
   }
 
   public int hashCode() {
-    return name.hashCode() ^ complexType.hashCode();
+    return super.hashCode() ^ name.hashCode() ^ complexType.hashCode();
   }
 }

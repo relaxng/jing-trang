@@ -19,10 +19,10 @@ public class AttributeGroupRef extends AttributeUse {
   }
 
   public boolean equals(Object obj) {
-    return obj instanceof AttributeGroupRef && ((AttributeGroupRef)obj).name.equals(name);
+    return super.equals(obj) && ((AttributeGroupRef)obj).name.equals(name);
   }
 
   public int hashCode() {
-    return name.hashCode();
+    return super.hashCode() ^ name.hashCode();
   }
 }

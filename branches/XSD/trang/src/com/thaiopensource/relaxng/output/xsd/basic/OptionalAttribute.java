@@ -30,4 +30,12 @@ public class OptionalAttribute extends SingleAttributeUse {
   public boolean isOptional() {
     return true;
   }
+
+  public boolean equals(Object obj) {
+    return super.equals(obj) && ((OptionalAttribute)obj).attribute.equals(attribute);
+  }
+
+  public int hashCode() {
+    return super.hashCode() ^ attribute.hashCode();
+  }
 }

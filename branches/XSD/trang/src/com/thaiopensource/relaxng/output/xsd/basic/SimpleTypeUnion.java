@@ -22,10 +22,10 @@ public class SimpleTypeUnion extends SimpleType {
   }
 
   public boolean equals(Object obj) {
-    return obj instanceof SimpleTypeUnion && children.equals(((SimpleTypeUnion)obj).children);
+    return super.equals(obj) && children.equals(((SimpleTypeUnion)obj).children);
   }
 
   public int hashCode() {
-    return children.hashCode();
+    return super.hashCode() ^ children.hashCode();
   }
 }

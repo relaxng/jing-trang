@@ -25,13 +25,13 @@ public class ParticleRepeat extends Particle {
   }
 
   public boolean equals(Object obj) {
-    if (!(obj instanceof ParticleRepeat))
+    if (!super.equals(obj))
       return false;
     ParticleRepeat other = (ParticleRepeat)obj;
     return this.child.equals(other.child) && this.occurs.equals(other.occurs);
   }
 
   public int hashCode() {
-    return child.hashCode() ^ occurs.hashCode();
+    return super.hashCode() ^ child.hashCode() ^ occurs.hashCode();
   }
 }

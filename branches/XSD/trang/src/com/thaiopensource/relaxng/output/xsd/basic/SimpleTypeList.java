@@ -25,13 +25,13 @@ public class SimpleTypeList extends SimpleType {
   }
 
   public boolean equals(Object obj) {
-    if (!(obj instanceof SimpleTypeList))
+    if (!super.equals(obj))
       return false;
     SimpleTypeList other = (SimpleTypeList)obj;
     return this.itemType.equals(other.itemType) && this.occurs.equals(other.occurs);
   }
 
   public int hashCode() {
-    return itemType.hashCode() ^ occurs.hashCode();
+    return super.hashCode() ^ itemType.hashCode() ^ occurs.hashCode();
   }
 }
