@@ -210,7 +210,7 @@ public class IdTypeMapBuilder {
     hadError = true;
     if (eh != null)
       try {
-        eh.error(new SAXParseException(Localizer.message(key), locator));
+        eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key), locator));
       }
       catch (SAXException e) {
         throw new WrappedSAXException(e);
@@ -221,9 +221,7 @@ public class IdTypeMapBuilder {
    hadError = true;
    if (eh != null)
      try {
-       eh.error(new SAXParseException(Localizer.message(key,
-                                                        NameFormatter.format(arg1),
-                                                        NameFormatter.format(arg2)),
+       eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key),
                                       locator));
      }
      catch (SAXException e) {

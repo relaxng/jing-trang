@@ -1,6 +1,5 @@
 package com.thaiopensource.relaxng.parse.sax;
 
-import com.thaiopensource.relaxng.impl.Localizer;
 import com.thaiopensource.relaxng.parse.DataPatternBuilder;
 import com.thaiopensource.relaxng.parse.Grammar;
 import com.thaiopensource.relaxng.parse.GrammarSection;
@@ -13,6 +12,7 @@ import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.util.Uri;
+import com.thaiopensource.util.Localizer;
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.ValidationContext;
 import org.xml.sax.Attributes;
@@ -35,6 +35,7 @@ class SchemaParser {
   static final String relaxng10URI = relaxngURIPrefix + "1.0";
   static final String xmlURI = "http://www.w3.org/XML/1998/namespace";
   static final String xsdURI = "http://www.w3.org/2001/XMLSchema-datatypes";
+  static final Localizer localizer = new Localizer(SchemaParser.class);
 
   String relaxngURI;
   XMLReader xr;
@@ -1206,16 +1207,16 @@ class SchemaParser {
   }
 
   void error(String key, Locator loc) throws SAXException {
-    error(new SAXParseException(Localizer.message(key), loc));
+    error(new SAXParseException(localizer.message(key), loc));
   }
 
   void error(String key, String arg, Locator loc) throws SAXException {
-    error(new SAXParseException(Localizer.message(key, arg), loc));
+    error(new SAXParseException(localizer.message(key, arg), loc));
   }
 
   void error(String key, String arg1, String arg2, Locator loc)
     throws SAXException {
-    error(new SAXParseException(Localizer.message(key, arg1, arg2), loc));
+    error(new SAXParseException(localizer.message(key, arg1, arg2), loc));
   }
 
   void error(SAXParseException e) throws SAXException {
@@ -1237,16 +1238,16 @@ class SchemaParser {
   }
 
   void warning(String key, Locator loc) throws SAXException {
-    warning(new SAXParseException(Localizer.message(key), loc));
+    warning(new SAXParseException(localizer.message(key), loc));
   }
 
   void warning(String key, String arg, Locator loc) throws SAXException {
-    warning(new SAXParseException(Localizer.message(key, arg), loc));
+    warning(new SAXParseException(localizer.message(key, arg), loc));
   }
 
   void warning(String key, String arg1, String arg2, Locator loc)
     throws SAXException {
-    warning(new SAXParseException(Localizer.message(key, arg1, arg2), loc));
+    warning(new SAXParseException(localizer.message(key, arg1, arg2), loc));
   }
 
   void warning(SAXParseException e) throws SAXException {
