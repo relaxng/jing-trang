@@ -10,7 +10,7 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.SAXException;
 
-class ErrorHandlerImpl implements ErrorHandler {
+public class ErrorHandlerImpl implements ErrorHandler {
   private PrintWriter err;
   
   private String bundleName
