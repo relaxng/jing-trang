@@ -731,7 +731,7 @@ class Output {
     // TODO deal with name classes
     NameNameClass nc = (NameNameClass)p.getNameClass();
     xw.attribute("name", nc.getLocalName());
-    if (nc.getNamespaceUri().equals("") && !targetNamespace.equals(""))
+    if (resolveNamespace(nc.getNamespaceUri()).equals("") && !targetNamespace.equals(""))
       xw.attribute("form", "unqualified");
     xw.startElement(xs("complexType"));
     Pattern body = p.getChild();
