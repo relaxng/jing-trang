@@ -125,6 +125,14 @@
   </uptodate>
 </target>
 
+<target name="conv-split" depends="init">
+  <delete dir="build/convtest"/>
+  <mkdir dir="build/convtest"/>
+  <style basedir="test" destdir="build/convtest" includes="convtest.xml" extension=".stamp" style="test/split.xsl">
+    <param name="dir" expression="build/convtest"/>
+  </style>
+</target>
+
 <target name="test" depends="jar,split">
   <java classname="com.thaiopensource.relaxng.util.TestDriver" fork="yes" failonerror="yes">
     <arg value="build/test/out.log"/>
