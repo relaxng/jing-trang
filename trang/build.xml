@@ -71,6 +71,8 @@ Class-Path: jing.jar
 <target name="dist" depends="jar,validate,test">
   <zip zipfile="${dist.dir}/trang-src.zip">
     <fileset dir="src" includes="**/*.java,**/*.properties"/>
+    <zipfileset dir="${build.dir}" includes="trang-manifest.txt"
+       fullpath="META-INF/MANIFEST.MF"/>
   </zip>
   <mkdir dir="${build.dir}/doc"/>
   <copy todir="${build.dir}/doc">
