@@ -14,6 +14,8 @@ import java.io.Reader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.PushbackInputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
 public class CompactParseable implements Parseable {
@@ -43,7 +45,8 @@ public class CompactParseable implements Parseable {
     return new CompactSyntax(makeReader(tem), uri, sb, eh).parse(scope);
   }
 
-  private final String DEFAULT_ENCODING = "iso-8859-1";
+  private static final String UTF8 = fixupEncodingName("UTF-8", "UTF8");
+  private static final String UTF16 = fixupEncodingName("UTF-16", "Unicode");
 
   private Reader makeReader(InputSource is) throws BuildException {
     try {
@@ -55,8 +58,11 @@ public class CompactParseable implements Parseable {
           in = new URL(systemId).openStream();
         }
         String encoding = is.getEncoding();
-        if (encoding == null)
-          encoding = DEFAULT_ENCODING;
+        if (encoding == null) {
+          PushbackInputStream pb = new PushbackInputStream(in, 2);
+          encoding = detectEncoding(pb);
+          in = pb;
+        }
         r = new InputStreamReader(in, encoding);
       }
       return r;
@@ -66,5 +72,33 @@ public class CompactParseable implements Parseable {
     }
   }
 
+  static private String detectEncoding(PushbackInputStream in) throws IOException {
+    String encoding = UTF8;
+    int b1 = in.read();
+    if (b1 != -1) {
+      int b2 = in.read();
+      if (b2 != -1) {
+        in.unread(b2);
+        if ((b1 == 0xFF && b2 == 0xFE) || (b1 == 0xFE && b2 == 0xFF))
+          encoding = UTF16;
+      }
+      in.unread(b1);
+    }
+    return encoding;
+  }
+
+  static private String fixupEncodingName(String name, String altName) {
+    try {
+      "x".getBytes(name);
+    }
+    catch (UnsupportedEncodingException e) {
+      try {
+        "x".getBytes(altName);
+        return altName;
+      }
+      catch (UnsupportedEncodingException e2) { }
+    }
+    return name;
+  }
 
 }
