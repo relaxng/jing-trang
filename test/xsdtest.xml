@@ -439,6 +439,11 @@
 </datatype>
 <datatype name="language">
 <valid>en</valid>
+<valid>en-UK</valid>
+<valid>i-cherokee</valid>
+<valid>x-klingon</valid>
+<valid>en-uk-scotland</valid>
+<invalid>en.UK</invalid>
 </datatype>
 <datatype name="Name">
 <valid>foo</valid>
@@ -472,6 +477,8 @@
 </datatype>
 <datatype name="NMTOKENS">
 <valid>foo bar</valid>
+<invalid/>
+<valid>1 2 3 4</valid>
 </datatype>
 <datatype name="ID">
 <valid>foobar</valid>
