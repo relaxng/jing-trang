@@ -5,8 +5,8 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 public class GroupDefinition extends Definition {
   private Particle particle;
 
-  GroupDefinition(SourceLocation location, Schema parentSchema, String name, Particle particle) {
-    super(location, parentSchema, name);
+  public GroupDefinition(SourceLocation location, Annotation annotation, Schema parentSchema, String name, Particle particle) {
+    super(location, annotation, parentSchema, name);
     this.particle = particle;
   }
 

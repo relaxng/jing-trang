@@ -5,8 +5,8 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 public class SimpleTypeRef extends SimpleType {
   private final String name;
 
-  public SimpleTypeRef(SourceLocation location, String name) {
-    super(location);
+  public SimpleTypeRef(SourceLocation location, Annotation annotation, String name) {
+    super(location, annotation);
     this.name = name;
   }
 

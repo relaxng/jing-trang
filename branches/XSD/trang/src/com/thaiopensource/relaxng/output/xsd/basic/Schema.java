@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 
-public class Schema extends Located {
+public class Schema extends Annotated {
   private final String uri;
   private Schema parent;
   private List topLevel = new Vector();
@@ -19,8 +19,8 @@ public class Schema extends Located {
   private Map simpleTypeMap;
   private Set subSchemas;
 
-  public Schema(SourceLocation location, String uri) {
-    super(location);
+  public Schema(SourceLocation location, Annotation annotation, String uri) {
+    super(location, annotation);
     this.uri = uri;
     this.groupMap = new HashMap();
     this.attributeGroupMap = new HashMap();
@@ -29,8 +29,8 @@ public class Schema extends Located {
     this.subSchemas.add(this);
   }
 
-  private Schema(SourceLocation location, String uri, Schema parent) {
-    super(location);
+  private Schema(SourceLocation location, Annotation annotation, String uri, Schema parent) {
+    super(location, annotation);
     this.parent = parent;
     this.uri = uri;
     this.groupMap = parent.groupMap;
@@ -48,31 +48,31 @@ public class Schema extends Located {
     return parent;
   }
 
-  public void defineGroup(String name, Particle particle, SourceLocation location) {
-    GroupDefinition def = new GroupDefinition(location, this, name, particle);
+  public void defineGroup(String name, Particle particle, SourceLocation location, Annotation annotation) {
+    GroupDefinition def = new GroupDefinition(location, annotation, this, name, particle);
     topLevel.add(def);
     groupMap.put(name, def);
   }
 
-  public void defineAttributeGroup(String name, AttributeUse attributeUses, SourceLocation location) {
-    AttributeGroupDefinition def = new AttributeGroupDefinition(location, this, name, attributeUses);
+  public void defineAttributeGroup(String name, AttributeUse attributeUses, SourceLocation location, Annotation annotation) {
+    AttributeGroupDefinition def = new AttributeGroupDefinition(location, annotation, this, name, attributeUses);
     topLevel.add(def);
     attributeGroupMap.put(name, def);
   }
 
-  public void defineSimpleType(String name, SimpleType simpleType, SourceLocation location) {
-    SimpleTypeDefinition def = new SimpleTypeDefinition(location, this, name, simpleType);
+  public void defineSimpleType(String name, SimpleType simpleType, SourceLocation location, Annotation annotation) {
+    SimpleTypeDefinition def = new SimpleTypeDefinition(location, annotation, this, name, simpleType);
     topLevel.add(def);
     simpleTypeMap.put(name, def);
   }
 
-  public void addRoot(Particle particle, SourceLocation location) {
-    topLevel.add(new RootDeclaration(location, this, particle));
+  public void addRoot(Particle particle, SourceLocation location, Annotation annotation) {
+    topLevel.add(new RootDeclaration(location, annotation, this, particle));
   }
 
-  public Schema addInclude(String uri, SourceLocation location) {
-    Schema included = new Schema(location, uri, this);
-    topLevel.add(new Include(location, this, included));
+  public Schema addInclude(String uri, SourceLocation location, Annotation annotation) {
+    Schema included = new Schema(location, annotation, uri, this);
+    topLevel.add(new Include(location, annotation, this, included));
     return included;
   }
 

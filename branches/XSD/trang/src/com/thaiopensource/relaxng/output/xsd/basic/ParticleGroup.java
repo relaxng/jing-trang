@@ -8,8 +8,8 @@ import java.util.Collections;
 public abstract class ParticleGroup extends Particle {
   private final List children;
 
-  public ParticleGroup(SourceLocation location, List children) {
-    super(location);
+  public ParticleGroup(SourceLocation location, Annotation annotation, List children) {
+    super(location, annotation);
     this.children = Collections.unmodifiableList(children);
   }
 

@@ -6,8 +6,8 @@ public class ParticleRepeat extends Particle {
   private final Particle child;
   private final Occurs occurs;
 
-  public ParticleRepeat(SourceLocation location, Particle child, Occurs occurs) {
-    super(location);
+  public ParticleRepeat(SourceLocation location, Annotation annotation, Particle child, Occurs occurs) {
+    super(location, annotation);
     this.child = child;
     this.occurs = occurs;
   }

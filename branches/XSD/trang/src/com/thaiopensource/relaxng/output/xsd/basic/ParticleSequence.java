@@ -5,8 +5,8 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 import java.util.List;
 
 public class ParticleSequence extends ParticleGroup {
-  public ParticleSequence(SourceLocation location, List children) {
-    super(location, children);
+  public ParticleSequence(SourceLocation location, Annotation annotation, List children) {
+    super(location, annotation, children);
   }
 
   public Object accept(ParticleVisitor visitor) {

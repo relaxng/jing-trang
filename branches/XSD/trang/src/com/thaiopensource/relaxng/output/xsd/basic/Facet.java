@@ -3,18 +3,18 @@ package com.thaiopensource.relaxng.output.xsd.basic;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 import com.thaiopensource.util.Equal;
 
-public class Facet extends Located {
+public class Facet extends Annotated {
   private final String name;
   private final String value;
   private final String prefix;
   private final String namespace;
 
-  public Facet(SourceLocation location, String name, String value) {
-    this(location, name, value, null, null);
+  public Facet(SourceLocation location, Annotation annotation, String name, String value) {
+    this(location, annotation, name, value, null, null);
   }
 
-  public Facet(SourceLocation location, String name, String value, String prefix, String namespace) {
-    super(location);
+  public Facet(SourceLocation location, Annotation annotation, String name, String value, String prefix, String namespace) {
+    super(location, annotation);
     this.name = name;
     this.value = value;
     this.prefix = prefix;

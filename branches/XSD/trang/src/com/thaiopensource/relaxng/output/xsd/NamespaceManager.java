@@ -367,7 +367,7 @@ public class NamespaceManager {
         lookupSourceUri(sourceUri).includes.addAll(list);
         lookupSourceUri(sourceUri).targetNamespace = ns;
         ((TargetNamespace)entry.getValue()).rootSchema = sourceUri;
-        schema.addInclude(sourceUri, null);
+        schema.addInclude(sourceUri, null, null);
       }
     }
   }

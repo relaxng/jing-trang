@@ -5,8 +5,8 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 public class AttributeGroupRef extends AttributeUse {
   private final String name;
 
-  public AttributeGroupRef(SourceLocation location, String name) {
-    super(location);
+  public AttributeGroupRef(SourceLocation location, Annotation annotation, String name) {
+    super(location, annotation);
     this.name = name;
   }
 

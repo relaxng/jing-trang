@@ -5,8 +5,8 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 public class WildcardElement extends Particle {
   private final Wildcard wildcard;
 
-  public WildcardElement(SourceLocation location, Wildcard wildcard) {
-    super(location);
+  public WildcardElement(SourceLocation location, Annotation annotation, Wildcard wildcard) {
+    super(location, annotation);
     this.wildcard = wildcard;
   }
 

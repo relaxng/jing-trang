@@ -6,8 +6,8 @@ public class SimpleTypeList extends SimpleType {
   private final SimpleType itemType;
   private final Occurs occurs;
 
-  public SimpleTypeList(SourceLocation location, SimpleType itemType, Occurs occurs) {
-    super(location);
+  public SimpleTypeList(SourceLocation location, Annotation annotation, SimpleType itemType, Occurs occurs) {
+    super(location, annotation);
     this.itemType = itemType;
     this.occurs = occurs;
   }

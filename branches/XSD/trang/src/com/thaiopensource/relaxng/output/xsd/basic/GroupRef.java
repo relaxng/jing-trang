@@ -5,8 +5,8 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 public class GroupRef extends Particle {
   private final String name;
 
-  public GroupRef(SourceLocation location, String name) {
-    super(location);
+  public GroupRef(SourceLocation location, Annotation annotation, String name) {
+    super(location, annotation);
     this.name = name;
   }
 

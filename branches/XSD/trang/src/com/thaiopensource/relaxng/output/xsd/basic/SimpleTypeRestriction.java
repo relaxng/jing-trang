@@ -9,8 +9,8 @@ public class SimpleTypeRestriction extends SimpleType {
   private final String name;
   private final List facets;
 
-  public SimpleTypeRestriction(SourceLocation location, String name, List facets) {
-    super(location);
+  public SimpleTypeRestriction(SourceLocation location, Annotation annotation, String name, List facets) {
+    super(location, annotation);
     this.name = name;
     this.facets = Collections.unmodifiableList(facets);
   }

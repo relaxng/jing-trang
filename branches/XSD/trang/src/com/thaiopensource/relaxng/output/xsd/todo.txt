@@ -70,7 +70,12 @@ Deal with comments
 
 Deal with annotations (provide special support for xs:key/xs:keyRef/xs:unique).
 
-Deal with a:documentation
+Better support for xsd:documentation:
+- copy xsd:documentation annotations
+- copy xml:lang attribute from a:documentation elements
+- allow multiple a:documentation elements
+
+Be more careful about preserving annotations.
 
 Deal with element type consistent restriction
 
