@@ -105,6 +105,10 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     return a;
   }
 
+  public Object visitWildcardAttribute(WildcardAttribute a) {
+    return a;
+  }
+
   public Object visitAttributeGroupRef(AttributeGroupRef a) {
     return a;
   }

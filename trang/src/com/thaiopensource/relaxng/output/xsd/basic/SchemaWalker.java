@@ -69,6 +69,10 @@ public abstract class SchemaWalker implements
     return a.getType().accept(this);
   }
 
+  public Object visitWildcardAttribute(WildcardAttribute a) {
+    return null;
+  }
+
   public Object visitOptionalAttribute(OptionalAttribute a) {
     return a.getAttribute().accept(this);
   }
