@@ -45,6 +45,10 @@ import java.util.Vector;
 class DtdOutput {
   private String sourceUri;
   private Writer writer;
+  private static final int DEFAULT_INDENT = 2;
+  private int indent = DEFAULT_INDENT;
+  private static final int DEFAULT_LINE_LENGTH = 72;
+  private int lineLength = DEFAULT_LINE_LENGTH;
   private final String lineSep;
   StringBuffer buf = new StringBuffer();
   List elementQueue = new Vector();
@@ -416,9 +420,10 @@ class DtdOutput {
         p.accept(this);
     }
 
-    void indent() {
+    void newlineIndent() {
       buf.append(lineSep);
-      buf.append("  ");
+      for (int i = 0; i < indent; i++)
+        buf.append(' ');
     }
 
     public Object visitComposite(CompositePattern p) {
@@ -449,7 +454,7 @@ class DtdOutput {
       ContentType t = getContentType(p);
       if (t.isA(ContentType.EMPTY) && isRequired()) {
         if (analysis.getParamEntityElementName(p.getName()) == null) {
-          indent();
+          newlineIndent();
           paramEntityRef(p);
         }
       }
@@ -467,7 +472,8 @@ class DtdOutput {
       if (len > 1)
         er.warning("attribute_occur_approx", p.getSourceLocation());
       for (int i = 0; i < len; i++) {
-        indent();
+        int start = buf.length();
+        newlineIndent();
         NameNameClass nnc = (NameNameClass)names.get(i);
         String ns = nnc.getNamespaceUri();
         String prefix = null;
@@ -477,16 +483,18 @@ class DtdOutput {
           buf.append(':');
         }
         buf.append(nnc.getLocalName());
-        buf.append(" ");
+        buf.append(' ');
         if (ct == ContentType.VALUE)
           p.getChild().accept(valueOutput);
         else {
+          int typeStart = buf.length();
           if (ct.isA(ContentType.SIMPLE_TYPE) || ct == ContentType.TEXT)
             p.getChild().accept(topLevelSimpleTypeOutput);
           else if (ct == ContentType.EMPTY) {
             er.warning("empty_attribute_approx", p.getSourceLocation());
             buf.append("CDATA");
           }
+          int typeEnd = buf.length();
           if (isRequired() && len == 1)
             buf.append(" #REQUIRED");
           else {
@@ -496,6 +504,18 @@ class DtdOutput {
             else {
               buf.append(' ');
               attributeValueLiteral(dv);
+            }
+          }
+          int lineStart = start + lineSep.length();
+          if (buf.length() - lineStart > lineLength && ct.isA(ContentType.ENUM)) {
+            ModelBreaker breaker = new ModelBreaker(buf.substring(lineStart, typeStart),
+                                                    buf.substring(typeStart, typeEnd),
+                                                    buf.substring(typeEnd),
+                                                    lineLength);
+            buf.setLength(start);
+            while (breaker.hasNextLine()) {
+              buf.append(lineSep);
+              buf.append(breaker.nextLine());
             }
           }
         }
@@ -749,7 +769,7 @@ class DtdOutput {
     write("<?xml encoding=\"");
     write(od.getEncoding());
     write("\"?>");
-    newline();
+    outputNewline();
   }
 
   ContentType getContentType(Pattern p) {
@@ -840,7 +860,7 @@ class DtdOutput {
     outputRequiredComponents();
     outputLeadingComments(inc);
     String entityName = genEntityName(inc);
-    newline();
+    outputNewline();
     write("<!ENTITY % ");
     write(entityName);
     write(" SYSTEM ");
@@ -849,11 +869,11 @@ class DtdOutput {
     write(od.reference(sourceUri, href));
     write('"');
     write('>');
-    newline();
+    outputNewline();
     write('%');
     write(entityName);
     write(';');
-    newline();
+    outputNewline();
     outputFollowingComments(inc);
     doneIncludes.add(href);
     pendingIncludes.remove(href);
@@ -905,16 +925,21 @@ class DtdOutput {
     Pattern body = def.getBody();
     ContentType t = getContentType(body);
     buf.setLength(0);
+    boolean wrap = true;
     if (t.isA(ContentType.MODEL_GROUP) || t.isA(ContentType.NOT_ALLOWED) || t.isA(ContentType.MIXED_ELEMENT_CLASS))
       body.accept(nestedContentModelOutput);
     else if (t == ContentType.MIXED_MODEL)
       body.accept(topLevelContentModelOutput);
-    else if (t.isA(ContentType.EMPTY))
+    else if (t.isA(ContentType.EMPTY)) {
       attributeOutput.output(body);
+      wrap = false;
+    }
     else if (t.isA(ContentType.ENUM))
       body.accept(nestedSimpleTypeOutput);
-    else if (t.isA(ContentType.VALUE))
+    else if (t.isA(ContentType.VALUE)) {
       body.accept(valueOutput);
+      wrap = false;
+    }
     else if (t.isA(ContentType.SIMPLE_TYPE))
       body.accept(topLevelSimpleTypeOutput);
     String replacement = buf.toString();
@@ -923,28 +948,37 @@ class DtdOutput {
     String elementName = analysis.getParamEntityElementName(name);
     if (elementName != null) {
       if (replacement.length() > 0) {
-        newline();
+        outputNewline();
         write("<!ATTLIST ");
         write(elementName);
         outputAttributeNamespaces(body);
         write(replacement);
         write('>');
-        newline();
+        outputNewline();
       }
     }
     else {
       doneParamEntities.add(name);
-      newline();
-      write("<!ENTITY % ");
-      write(name);
-      write(' ');
-      write('"');
-      write(replacement);
-      write('"');
-      write('>');
-      newline();
+      outputNewline();
+      String prefix = "<!ENTITY % " + name + " \"";
+      String suffix = "\">";
+      if (!wrap) {
+        write(prefix);
+        write(replacement);
+        write(suffix);
+        outputNewline();
+      }
+      else
+        outputModelBreak(prefix, replacement, suffix);
     }
     outputFollowingComments(def);
+  }
+
+  private void outputModelBreak(String prefix, String replacement, String suffix) {
+    for (ModelBreaker breaker = new ModelBreaker(prefix, replacement, suffix, lineLength); breaker.hasNextLine();) {
+      write(breaker.nextLine());
+      outputNewline();
+    }
   }
 
   void outputElement(ElementPattern p, Annotated def) {
@@ -989,13 +1023,8 @@ class DtdOutput {
         prefix = analysis.getPrefixForNamespaceUri(ns);
         qName = prefix + ":" + name.getLocalName();
       }
-      newline();
-      write("<!ELEMENT ");
-      write(qName);
-      write(' ');
-      write(contentModel);
-      write('>');
-      newline();
+      outputNewline();
+      outputModelBreak("<!ELEMENT " + qName + " ", contentModel, ">");
       boolean needXmlns;
       if (ns == NameClass.INHERIT_NS)
         needXmlns = false;
@@ -1007,8 +1036,8 @@ class DtdOutput {
         write("<!ATTLIST ");
         write(qName);
         if (needXmlns) {
-          newline();
-          write("  ");
+          outputNewline();
+          outputIndent();
           if (prefix != null) {
             write("xmlns:");
             write(prefix);
@@ -1024,7 +1053,7 @@ class DtdOutput {
           outputAttributeNamespaces(content);
         write(atts);
         write('>');
-        newline();
+        outputNewline();
       }
     }
     if (def != null)
@@ -1036,8 +1065,8 @@ class DtdOutput {
     for (Iterator iter = namespaces.iterator(); iter.hasNext();) {
       String ns = (String)iter.next();
       String prefix = analysis.getPrefixForNamespaceUri(ns);
-      newline();
-      write("  ");
+      outputNewline();
+      outputIndent();
       write("xmlns:");
       write(prefix);
       write(" CDATA #FIXED ");
@@ -1061,7 +1090,7 @@ class DtdOutput {
   }
 
   void outputComment(String value) {
-    newline();
+    outputNewline();
     write("<!--");
     int start = 0;
     for (;;) {
@@ -1073,21 +1102,26 @@ class DtdOutput {
           write(' ');
         }
         else {
-          newline();
+          outputNewline();
           write(value.substring(start));
-          newline();
+          outputNewline();
         }
         break;
       }
-      newline();
+      outputNewline();
       write(value.substring(start, i));
       start = i + 1;
     }
     write("-->");
-    newline();
+    outputNewline();
   }
 
-  void newline() {
+  void outputIndent() {
+    for (int i = 0; i < indent; i++)
+      write(' ');
+  }
+
+  void outputNewline() {
     write(lineSep);
   }
 

@@ -1,5 +1,3 @@
-Pretty-print content models to avoid excessively long lines
-
 Generate comments from a:documentation elements
 Avoid warning for content that is data of type string
 Option to generate namespace declarations only on start elements
@@ -10,7 +8,7 @@ Option to protect attlist/element declarations with marked section
 Allow mixed(repeat(NOT_ALLOWED))
 Prettier formatting of ATTLISTs
 Order requiredParamEntities by definition order
-Customizable indentation
+Customizable indent and line length
 Make LocalOutputDirectory preserve directory structure
 Approximate <list> by NMTOKENS when possible
 Have a top-level annotation indicating a redefinition point (as in DocBook)
@@ -23,5 +21,4 @@ Allow choice of attributes and data
 Try to push namespace declarations down into appropriate attribute groups
 Support for ANY
 <empty/> used as a model-group hook
-
 
