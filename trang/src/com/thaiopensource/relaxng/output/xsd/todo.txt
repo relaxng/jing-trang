@@ -1,4 +1,6 @@
-Attributes
+Avoid duplicate attributes.
+
+Deal with <ref> to attributes inside optional.
 
 <start>
 

@@ -27,6 +27,7 @@ import com.thaiopensource.relaxng.edit.IncludeComponent;
 import com.thaiopensource.relaxng.edit.ElementPattern;
 import com.thaiopensource.relaxng.edit.MixedPattern;
 import com.thaiopensource.relaxng.edit.NameNameClass;
+import com.thaiopensource.relaxng.edit.AttributePattern;
 
 import java.io.IOException;
 import java.util.List;
@@ -46,6 +47,8 @@ class Output {
   private final PatternVisitor groupOutput = new GroupOutput();
   private final PatternVisitor particleOutput = new ParticleOutput();
   private final PatternVisitor typeDefParticleOutput = new TypeDefParticleOutput();
+  private final PatternVisitor attributeOutput = new AttributeOutput();
+  private final PatternVisitor optionalAttributeOutput = new OptionalAttributeOutput();
   private final PatternVisitor occursCalculator = new OccursCalculator();
 
   static void output(SchemaInfo si, OutputDirectory od, ErrorReporter er) throws IOException {
@@ -227,9 +230,12 @@ class Output {
         if (ct.contains(ChildType.TEXT) || ct.contains(ChildType.DATA))
           xw.attribute("mixed", "true");
         body.accept(typeDefParticleOutput);
+        elementAttributes(body);
       }
-      else if (ct.contains(ChildType.TEXT))
+      else if (ct.contains(ChildType.TEXT)) {
         xw.attribute("mixed", "true");
+        elementAttributes(body);
+      }
       else if (ct.contains(ChildType.DATA)) {
         xw.startElement(xs("simpleContent"));
         xw.startElement(xs("restriction"));
@@ -237,14 +243,22 @@ class Output {
         xw.startElement(xs("simpleType"));
         body.accept(simpleTypeOutput);
         xw.endElement();
-        // attributes go here
+        elementAttributes(body);
         xw.endElement();
         xw.endElement();
       }
+      else
+        elementAttributes(body);
       xw.endElement();
       xw.endElement();
       endWrapper();
       return null;
+    }
+
+    void elementAttributes(Pattern body) {
+      if (!si.getChildType(body).contains(ChildType.ATTRIBUTE))
+        return;
+      body.accept(attributeOutput);
     }
   }
 
@@ -506,6 +520,71 @@ class Output {
     }
   }
 
+  /**
+   * Precondition for visitMethods is that the childType contains ATTRIBUTE
+   */
+  class OptionalAttributeOutput extends AbstractVisitor {
+    void useAttribute() { }
+
+    public Object visitAttribute(AttributePattern p) {
+      xw.startElement(xs("attribute"));
+      xw.attribute("name",
+                   ((NameNameClass)p.getNameClass()).getLocalName());
+      useAttribute();
+      Pattern value = p.getChild();
+      ChildType ct = si.getChildType(value);
+      // TODO handle empty
+      if (!ct.contains(ChildType.TEXT) && ct.contains(ChildType.DATA)) {
+        xw.startElement(xs("simpleType"));
+        value.accept(simpleTypeOutput);
+        xw.endElement();
+      }
+      xw.endElement();
+      return null;
+    }
+
+    public Object visitRef(RefPattern p) {
+      // TODO: may need to expand it if it contains required attributes
+      return null;
+    }
+
+    public Object visitOneOrMore(OneOrMorePattern p) {
+      return p.getChild().accept(this);
+    }
+
+    public Object visitZeroOrMore(ZeroOrMorePattern p) {
+      return p.getChild().accept(optionalAttributeOutput);
+    }
+
+    public Object visitOptional(OptionalPattern p) {
+      return p.getChild().accept(optionalAttributeOutput);
+    }
+
+    public Object visitComposite(CompositePattern p) {
+      List patterns = p.getChildren();
+      for (int i = 0, len = patterns.size(); i < len; i++) {
+        Pattern pattern = (Pattern)patterns.get(i);
+        if (si.getChildType(pattern).contains(ChildType.ATTRIBUTE))
+          pattern.accept(this);
+      }
+      return null;
+    }
+
+  }
+
+  class AttributeOutput extends OptionalAttributeOutput {
+    void useAttribute() {
+      xw.attribute("use", "required");
+    }
+
+    public Object visitRef(RefPattern p) {
+      xw.startElement(xs("attributeGroup"));
+      xw.attribute("ref", p.getName());
+      xw.endElement();
+      return null;
+    }
+  }
+
   class TopLevelOutput extends AbstractVisitor {
     public Object visitDefine(DefineComponent c) {
       String name = c.getName();
@@ -527,6 +606,10 @@ class Output {
           xw.endElement();
         }
         if (ct.contains(ChildType.ATTRIBUTE)) {
+          xw.startElement(xs("attributeGroup"));
+          xw.attribute("name", c.getName());
+          body.accept(attributeOutput);
+          xw.endElement();
         }
       }
       return null;
