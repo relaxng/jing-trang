@@ -26,7 +26,7 @@
   <javac srcdir="src" destdir="build/gen" includes="com/thaiopensource/datatype/xsd/regex/jdk1_4/gen/*.java,com/thaiopensource/xml/util/Naming.java"/>
 </target>
 
-<target name="gen" depends="compile-gen">
+<target name="gen" depends="compile-gen,check-gen" unless="gen-ok">
   <mkdir dir="build/src/com/thaiopensource/datatype/xsd/regex/jdk1_4"/>
   <java classname="com.thaiopensource.datatype.xsd.regex.jdk1_4.gen.NamingExceptionsGen" fork="yes" failonerror="yes">
     <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.NamingExceptions"/>
@@ -36,6 +36,14 @@
     </classpath>
   </java>
 </target>
+
+<target name="check-gen">
+  <uptodate property="gen-ok"
+    targetfile="build/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/NamingExceptions.java">
+    <srcfiles dir="build/gen" includes="**/*.class"/>
+  </uptodate>
+</target>
+
 
 <target name="compile" depends="compile-grammar,gen">
   <mkdir dir="build/classes"/>
