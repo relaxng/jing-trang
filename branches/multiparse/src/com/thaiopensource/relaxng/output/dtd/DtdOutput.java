@@ -378,40 +378,46 @@ class DtdOutput {
       ContentType ct = getContentType(p.getChild());
       if (ct == ContentType.NOT_ALLOWED)
         return null;
-      indent();
-      NameNameClass nnc = (NameNameClass)p.getNameClass();
-      String ns = nnc.getNamespaceUri();
-      String prefix = null;
-      if (!ns.equals("") && ns != NameClass.INHERIT_NS) {
-        prefix = analysis.getPrefixForNamespaceUri(ns);
-        buf.append(prefix);
-        buf.append(':');
-      }
-      buf.append(nnc.getLocalName());
-      buf.append(" ");
-      if (ct.isA(ContentType.SIMPLE_TYPE) || ct == ContentType.TEXT)
-        p.getChild().accept(topLevelSimpleTypeOutput);
-      else if (ct == ContentType.EMPTY) {
-        er.warning("empty_attribute_approx", p.getSourceLocation());
-        buf.append("CDATA");
-      }
-      if (isRequired())
-        buf.append(" #REQUIRED");
-      else {
-        String dv = getDefaultValue(p);
-        if (dv == null)
-          buf.append(" #IMPLIED");
-        else {
-          buf.append(' ');
-          attributeValueLiteral(dv);
-        }
-      }
-      if (prefix != null && !prefix.equals("xml")) {
+      List names = NameClassSplitter.split(p.getNameClass());
+      int len = names.size();
+      if (len > 1)
+        er.warning("attribute_occur_approx", p.getSourceLocation());
+      for (int i = 0; i < len; i++) {
         indent();
-        buf.append("xmlns:");
-        buf.append(prefix);
-        buf.append(" CDATA #FIXED ");
-        attributeValueLiteral(ns);
+        NameNameClass nnc = (NameNameClass)names.get(i);
+        String ns = nnc.getNamespaceUri();
+        String prefix = null;
+        if (!ns.equals("") && ns != NameClass.INHERIT_NS) {
+          prefix = analysis.getPrefixForNamespaceUri(ns);
+          buf.append(prefix);
+          buf.append(':');
+        }
+        buf.append(nnc.getLocalName());
+        buf.append(" ");
+        if (ct.isA(ContentType.SIMPLE_TYPE) || ct == ContentType.TEXT)
+          p.getChild().accept(topLevelSimpleTypeOutput);
+        else if (ct == ContentType.EMPTY) {
+          er.warning("empty_attribute_approx", p.getSourceLocation());
+          buf.append("CDATA");
+        }
+        if (isRequired() && len == 1)
+          buf.append(" #REQUIRED");
+        else {
+          String dv = getDefaultValue(p);
+          if (dv == null)
+            buf.append(" #IMPLIED");
+          else {
+            buf.append(' ');
+            attributeValueLiteral(dv);
+          }
+        }
+        if (prefix != null && !prefix.equals("xml")) {
+          indent();
+          buf.append("xmlns:");
+          buf.append(prefix);
+          buf.append(" CDATA #FIXED ");
+          attributeValueLiteral(ns);
+        }
       }
       return null;
     }
@@ -827,14 +833,6 @@ class DtdOutput {
     }
   }
 
-  static class NameClassWalker extends AbstractVisitor {
-     public Object visitChoice(ChoiceNameClass nc) {
-        for (Iterator iter = nc.getChildren().iterator(); iter.hasNext();)
-          ((NameClass)iter.next()).accept(this);
-        return null;
-      }
-  }
-
   void outputElement(ElementPattern p) {
     buf.setLength(0);
     Pattern content = p.getChild();
@@ -855,56 +853,54 @@ class DtdOutput {
       return; // leave it undefined
     else
       content.accept(topLevelContentModelOutput);
-    final String contentModel = buf.length() == 0 ? "EMPTY" : buf.toString();
+    String contentModel = buf.length() == 0 ? "EMPTY" : buf.toString();
     buf.setLength(0);
     attributeOutput.output(content);
-    final String atts = buf.toString();
+    String atts = buf.toString();
     outputRequiredComponents();
-    final NameClass nc = p.getNameClass();
-    nc.accept(new NameClassWalker() {
-      public Object visitName(NameNameClass nc) {
-        String ns = nc.getNamespaceUri();
-        String name;
-        String prefix;
-        if (ns.equals("") || ns.equals(analysis.getDefaultNamespaceUri()) || ns == NameClass.INHERIT_NS) {
-          name = nc.getLocalName();
-          prefix = null;
+    List names = NameClassSplitter.split(p.getNameClass());
+    for (Iterator iter = names.iterator(); iter.hasNext();) {
+      NameNameClass name = (NameNameClass)iter.next();
+      String ns = name.getNamespaceUri();
+      String qName;
+      String prefix;
+      if (ns.equals("") || ns.equals(analysis.getDefaultNamespaceUri()) || ns == NameClass.INHERIT_NS) {
+        qName = name.getLocalName();
+        prefix = null;
+      }
+      else {
+        prefix = analysis.getPrefixForNamespaceUri(ns);
+        qName = prefix + ":" + name.getLocalName();
+      }
+      newline();
+      write("<!ELEMENT ");
+      write(qName);
+      write(' ');
+      write(contentModel);
+      write('>');
+      newline();
+      if (atts.length() != 0 || ns != NameClass.INHERIT_NS) {
+        write("<!ATTLIST ");
+        write(qName);
+        if (ns != NameClass.INHERIT_NS) {
+          newline();
+          write("  ");
+          if (prefix != null) {
+            write("xmlns:");
+            write(prefix);
+          }
+          else
+            write("xmlns");
+          write(" CDATA #FIXED ");
+          buf.setLength(0);
+          attributeValueLiteral(ns);
+          write(buf.toString());
         }
-        else {
-          prefix = analysis.getPrefixForNamespaceUri(ns);
-          name = prefix + ":" + nc.getLocalName();
-        }
-        newline();
-        write("<!ELEMENT ");
-        write(name);
-        write(' ');
-        write(contentModel);
+        write(atts);
         write('>');
         newline();
-        if (atts.length() != 0 || ns != NameClass.INHERIT_NS) {
-          write("<!ATTLIST ");
-          write(name);
-          if (ns != NameClass.INHERIT_NS) {
-            newline();
-            write("  ");
-            if (prefix != null) {
-              write("xmlns:");
-              write(prefix);
-            }
-            else
-              write("xmlns");
-            write(" CDATA #FIXED ");
-            buf.setLength(0);
-            attributeValueLiteral(ns);
-            write(buf.toString());
-          }
-          write(atts);
-          write('>');
-          newline();
-        }
-        return null;
       }
-    });
+    }
   }
 
   void newline() {
