@@ -69,6 +69,7 @@ nested grammars
 a:defaultValue
 a:documentation
 non-deterministic content models
+option to protect element declarations with included section
 */
 public class DtdOutput {
   private ErrorHandler eh;
