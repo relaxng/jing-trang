@@ -7,6 +7,8 @@
 <property name="apidoc.dir" value="${build.dir}/apidoc"/>
 <property name="jar.file" value="${build.dir}/xsdregex.jar"/>
 <property name="UnicodeData.file" value="UnicodeData-3.1.0.txt"/>
+<property name="doc.src.dir" value="doc-src"/>
+<property name="doc.build.dir" value="${build.dir}/doc"/>
 <property name="util.src"
           value="com/thaiopensource/util/Utf16.java,
                  com/thaiopensource/util/Localizer.java,
@@ -138,8 +140,17 @@
     packagenames="com.thaiopensource.datatype.xsd.regex,com.thaiopensource.datatype.xsd.regex.jdk1_4"/>
 </target>
 
-<target name="dist" depends="jar,javadoc,test">
+<target name="doc" depends="init">
+  <mkdir dir="${doc.build.dir}"/>
+  <copy file="${doc.src.dir}/readme.html"
+        todir="${doc.build.dir}"/>
+  <replace file="${doc.build.dir}/readme.html" token="@VERSION@" value="${version}"/>
+</target>
+
+<target name="dist" depends="jar,javadoc,doc,test">
   <zip zipfile="${build.dir}/xsdregex.zip">
+    <zipfileset dir="${doc.build.dir}" prefix="xsdregex-${version}" includes="readme.html"/>
+    <zipfileset dir="${doc.src.dir}" prefix="xsdregex-${version}/doc-src"/>
     <zipfileset prefix="xsdregex-${version}/src" dir="src"
       includes="com/thaiopensource/datatype/xsd/regex/**/*.java,
                 com/thaiopensource/datatype/xsd/regex/**/*.properties,
@@ -148,6 +159,7 @@
                 META-INF/services/com.thaiopensource.datatype.xsd.regex.RegexEngine"/>
     <zipfileset prefix="xsdregex-${version}/test" dir="test"
       includes="regextest.xml,regextest.rnc"/>
+    <zipfileset prefix="xsdregex-${version}" dir="." includes="copying.txt"/>
     <zipfileset dir="." includes="${jar.file}" fullpath="xsdregex-${version}/xsdregex.jar"/>
     <zipfileset dir="." includes="${build.xml}" fullpath="xsdregex-${version}/build.xml"/>
     <zipfileset dir="${apidoc.dir}" prefix="xsdregex-${version}/apidoc"/>
