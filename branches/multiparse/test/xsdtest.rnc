@@ -1,0 +1,18 @@
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+start =
+  element xsdtest {
+    element datatype {
+      attribute name { xsd:NCName },
+      ((param*, (valid|invalid)*)
+       | (valid|invalid|equiv)*)
+    }*
+  }
+
+param = element param { attribute name { xsd:NCName }, string }
+valid = element valid { string }
+invalid = element invalid { string }
+equiv =
+  element equiv {
+    element class { element value { string }+ }+
+  }

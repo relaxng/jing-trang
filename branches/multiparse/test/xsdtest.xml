@@ -1,0 +1,17 @@
+<xsdtest>
+<datatype name="dateTime">
+<valid>2001-12-01T19:45:00</valid>
+<invalid>2001-12-1T19:45:00</invalid>
+<equiv>
+<class>
+  <value>2001-12-01T19:45:00</value>
+  <value>2001-12-01T19:45:00.00</value>
+</class>
+<class>
+  <value>2001-12-01T19:45:00Z</value>
+  <value>2001-12-01T19:45:00.00Z</value>
+  <value>2001-12-01T20:45:00+01:00</value>
+</class>
+</equiv>
+</datatype>
+</xsdtest>
