@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng.output.dtd;
+package com.thaiopensource.relaxng.output.common;
 
 import com.thaiopensource.relaxng.edit.AbstractVisitor;
 import com.thaiopensource.relaxng.edit.NameNameClass;
@@ -8,7 +8,7 @@ import com.thaiopensource.relaxng.edit.NameClass;
 import java.util.List;
 import java.util.Vector;
 
-class NameClassSplitter extends AbstractVisitor {
+public class NameClassSplitter extends AbstractVisitor {
   private List names = new Vector();
 
   static List split(NameClass nc) {
