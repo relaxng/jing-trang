@@ -201,16 +201,26 @@ public class NonXmlSyntax implements Context {
     section.topLevelComment(getComments(null));
   }
 
+  private Token lastCommentSourceToken = null;
+
   private CommentList getComments(CommentList comments) {
-    Token t = token.next.specialToken;
-    if (t == null)
-      return comments;
-    while (t.specialToken != null)
-      t = t.specialToken;
-    if (comments == null)
-      comments = sb.makeCommentList();
-    for (; t != null; t = t.next)
-      comments.addComment(mungeComment(t.image), makeLocation(t));
+    Token nextToken = getToken(1);
+    if (lastCommentSourceToken != nextToken) {
+      if (lastCommentSourceToken == null)
+        lastCommentSourceToken = token;
+      do {
+	lastCommentSourceToken = lastCommentSourceToken.next;
+	Token t = lastCommentSourceToken.specialToken;
+	if (t != null) {
+	  while (t.specialToken != null)
+	    t = t.specialToken;
+	  if (comments == null)
+	    comments = sb.makeCommentList();
+	  for (; t != null; t = t.next)
+	    comments.addComment(mungeComment(t.image), makeLocation(t));
+	}
+      } while (lastCommentSourceToken != nextToken);
+    }
     return comments;
   }
 
@@ -522,7 +532,10 @@ ParsedPattern UnaryExpr(Scope scope, boolean[] hadOccur) :
 {
   p = AnnotatedPrimaryExpr(scope)
   (
-   { if (hadOccur != null) hadOccur[0] = true; }
+   {
+     if (hadOccur != null) hadOccur[0] = true;
+     p = afterComments(p);
+   }
    (t = "+" { p = sb.makeOneOrMore(p, makeLocation(t), null); }
     | t = "?" { p = sb.makeOptional(p, makeLocation(t), null); }
     | t = "*" { p = sb.makeZeroOrMore(p, makeLocation(t), null); })
@@ -948,13 +961,19 @@ String Inherit() :
 ParsedPattern ParentExpr(Scope scope, Annotations a) :
 {
   LocatedString name;
+  CommentList comments;
 }
 {
-  "parent" name = Identifier()
+  "parent" { comments = getComments(); } name = Identifier()
   { 
     if (scope == null) {
       error("no_grammar", name.getToken());
       return sb.makeErrorPattern();
+    }
+    if (comments != null) {
+      if (a == null)
+        a = sb.makeAnnotations(null, getContext());
+      a.addComment(comments);
     }
     return scope.makeParentRef(name.getString(), name.getLocation(), a); 
   }

@@ -1320,6 +1320,14 @@ element foo { empty }
 </bug>
 <bug>
 <nonxml>
+<incorrect><![CDATA[
+foo [ xmlns = "bar" ]
+start = element foo { empty }
+]]></incorrect>
+</nonxml>
+</bug>
+<testCase>
+<nonxml>
 <correct><![CDATA[
 element foo { empty }
 # comment
@@ -1339,8 +1347,8 @@ element foo { empty }
 </choice>
 </correct>
 </xml>
-</bug>
-<bug>
+</testCase>
+<testCase>
 <nonxml>
 <correct><![CDATA[
 element foo { empty }
@@ -1358,7 +1366,7 @@ element foo { empty }
 </zeroOrMore>
 </correct>
 </xml>
-</bug>
+</testCase>
 <testCase>
 <nonxml>
 <correct><![CDATA[
@@ -1376,7 +1384,7 @@ element foo { empty }
 </correct>
 </xml>
 </testCase>
-<bug>
+<testCase>
 <nonxml>
 <correct><![CDATA[
 namespace eg = 
@@ -1393,8 +1401,8 @@ element foo { empty }
 </element>
 </correct>
 </xml>
-</bug>
-<bug>
+</testCase>
+<testCase>
 <nonxml>
 <correct><![CDATA[
 namespace # comment
@@ -1410,7 +1418,7 @@ element foo { empty }
 </element>
 </correct>
 </xml>
-</bug>
+</testCase>
 <testCase>
 <nonxml>
 <correct><![CDATA[
@@ -1429,7 +1437,7 @@ element foo { empty }
 </correct>
 </xml>
 </testCase>
-<bug>
+<testCase>
 <nonxml>
 <correct><![CDATA[
 namespace eg = "http://www.example.com"
@@ -1449,8 +1457,8 @@ element foo { empty }
 </element>
 </correct>
 </xml>
-</bug>
-<bug>
+</testCase>
+<testCase>
 <nonxml>
 <correct><![CDATA[
 element foo # comment
@@ -1465,8 +1473,8 @@ element foo # comment
 </element>
 </correct>
 </xml>
-</bug>
-<bug>
+</testCase>
+<testCase>
 <nonxml>
 <correct><![CDATA[
 start = grammar { start = parent # comment
@@ -1494,7 +1502,7 @@ foo = element foo { empty }
 </grammar>
 </correct>
 </xml>
-</bug>
+</testCase>
 <!--
 <testCase>
 <nonxml>
