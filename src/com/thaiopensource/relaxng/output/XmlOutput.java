@@ -371,7 +371,7 @@ public class XmlOutput  {
           Map.Entry entry = (Map.Entry)iter.next();
           String prefix = (String)entry.getKey();
           String ns = (String)entry.getValue();
-          if (ns == NameClass.INHERIT_NS || !ns.equals(prefixMap.get(prefix)))
+          if (ns != NameClass.INHERIT_NS && !ns.equals(prefixMap.get(prefix)))
             xw.attribute(prefix.length() == 0 ? "ns" : "xmlns:" + prefix,
                          ns);
         }
