@@ -1,7 +1,6 @@
-If expansion of a group causes the group to become unreferenced, then remove the group.
+Choose name of proxy groups and attribute groups better
 
-Use the last component of the namespace URI in selecting prefix when no prefix is used in the
-RELAX NG.
+If expansion of a group causes the group to become unreferenced, then remove the group.
 
 Optimize nested choices in expanding <interleave>.
 
@@ -24,7 +23,8 @@ Choose name of generated schema file better when there was no prefix.
 - use Context to find prefix
 - use last component of namespace URI
 
-Use global attributes for cross-schema references.
+Use the last component of the namespace URI in selecting prefix when no prefix is used in the
+RELAX NG.
 
 Make choice of targetNamespace not depend on order of hash table iteration.
 
@@ -84,8 +84,6 @@ Deal with annotations
 
 Deal with a:documentation
 
-Take advantage of type attribute in output.
-
 Approximation warnings:
 - interleave
 - mixed text
@@ -93,6 +91,15 @@ Approximation warnings:
 - attribute choice
 - unknown datatypes
 
+Deal with element type consistent restriction
+
+Deal with ambiguous content model restriction
+
+Support attribute defaults.
+
+In-scope namespaces for QName.
+
+Avoid redundant imports and redundant namespace declarations.
 -----
 
 Strategy for handling namespaces

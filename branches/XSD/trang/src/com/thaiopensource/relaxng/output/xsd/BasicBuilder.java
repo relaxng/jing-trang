@@ -47,6 +47,8 @@ import com.thaiopensource.relaxng.output.xsd.basic.Element;
 import com.thaiopensource.relaxng.output.xsd.basic.ComplexTypeComplexContent;
 import com.thaiopensource.relaxng.output.xsd.basic.ComplexTypeSimpleContent;
 import com.thaiopensource.relaxng.output.xsd.basic.Schema;
+import com.thaiopensource.relaxng.output.xsd.basic.AttributeUse;
+import com.thaiopensource.relaxng.output.xsd.basic.OptionalAttribute;
 import com.thaiopensource.relaxng.output.common.NameClassSplitter;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
@@ -326,18 +328,21 @@ public class BasicBuilder {
       else
         value = null;
       List names = NameClassSplitter.split(p.getNameClass());
-      Attribute.Use use = names.size() == 1 ? getUse() : Attribute.OPTIONAL;
       List choices = new Vector();
-      for (Iterator iter = names.iterator(); iter.hasNext();)
-        choices.add(new Attribute(location,
-                                  makeName(((NameNameClass)iter.next())),
-                                  value,
-                                  use));
+      for (Iterator iter = names.iterator(); iter.hasNext();) {
+        Attribute att = new Attribute(location,
+                                      makeName(((NameNameClass)iter.next())),
+                                      value);
+        if (names.size() != 1 || isOptional())
+          choices.add(new OptionalAttribute(att.getLocation(), att));
+        else
+          choices.add(att);
+      }
       return choices;
     }
 
-    Attribute.Use getUse() {
-      return Attribute.OPTIONAL;
+    boolean isOptional() {
+      return true;
     }
 
     public Object visitOneOrMore(OneOrMorePattern p) {
@@ -376,8 +381,8 @@ public class BasicBuilder {
   }
 
   class AttributeUseBuilder extends OptionalAttributeUseBuilder {
-    Attribute.Use getUse() {
-      return Attribute.REQUIRED;
+    boolean isOptional() {
+      return false;
     }
   }
 

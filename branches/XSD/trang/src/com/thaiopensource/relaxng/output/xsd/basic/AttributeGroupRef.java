@@ -17,4 +17,12 @@ public class AttributeGroupRef extends AttributeUse {
   public Object accept(AttributeUseVisitor visitor) {
     return visitor.visitAttributeGroupRef(this);
   }
+
+  public boolean equals(Object obj) {
+    return obj instanceof AttributeGroupRef && ((AttributeGroupRef)obj).name.equals(name);
+  }
+
+  public int hashCode() {
+    return name.hashCode();
+  }
 }

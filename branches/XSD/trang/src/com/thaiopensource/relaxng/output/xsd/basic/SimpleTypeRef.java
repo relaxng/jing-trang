@@ -17,4 +17,12 @@ public class SimpleTypeRef extends SimpleType {
   public Object accept(SimpleTypeVisitor visitor) {
     return visitor.visitRef(this);
   }
+
+  public boolean equals(Object obj) {
+    return obj instanceof SimpleTypeRef && ((SimpleTypeRef)obj).name.equals(name);
+  }
+
+  public int hashCode() {
+    return name.hashCode();
+  }
 }

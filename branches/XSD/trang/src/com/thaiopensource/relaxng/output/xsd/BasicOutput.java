@@ -35,6 +35,8 @@ import com.thaiopensource.relaxng.output.xsd.basic.SimpleTypeDefinition;
 import com.thaiopensource.relaxng.output.xsd.basic.RootDeclaration;
 import com.thaiopensource.relaxng.output.xsd.basic.StructureVisitor;
 import com.thaiopensource.relaxng.output.xsd.basic.Structure;
+import com.thaiopensource.relaxng.output.xsd.basic.OptionalAttribute;
+import com.thaiopensource.relaxng.output.xsd.basic.SchemaWalker;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
@@ -46,20 +48,25 @@ import java.io.IOException;
 
 public class BasicOutput {
   private XmlWriter xw;
+  static final String xsURI = "http://www.w3.org/2001/XMLSchema";
   private final Schema schema;
   private final SimpleTypeOutput simpleTypeOutput = new SimpleTypeOutput();
   private final ComplexTypeVisitor complexTypeOutput = new ComplexTypeOutput();
   private final AttributeUseOutput attributeUseOutput = new AttributeUseOutput();
   private final ParticleOutput particleOutput = new ParticleOutput();
   private final ParticleVisitor globalElementOutput = new GlobalElementOutput();
+  private final GlobalAttributeOutput globalAttributeOutput = new GlobalAttributeOutput();
   private final SchemaVisitor schemaOutput = new SchemaOutput();
   private final StructureVisitor movedStructureOutput = new MovedStructureOutput();
+  private final SimpleTypeVisitor simpleTypeNamer = new SimpleTypeNamer();
   private final NamespaceManager nsm;
   private final PrefixManager pm;
   private final String targetNamespace;
   private final OutputDirectory od;
   private final String sourceUri;
   private final Set globalElementsDefined;
+  private final Set globalAttributesDefined;
+  private final String xsPrefix;
 
   class SimpleTypeOutput implements SimpleTypeVisitor {
     public Object visitRestriction(SimpleTypeRestriction t) {
@@ -85,8 +92,22 @@ public class BasicOutput {
 
     public Object visitUnion(SimpleTypeUnion t) {
       xw.startElement(xs("union"));
-      for (Iterator iter = t.getChildren().iterator(); iter.hasNext();)
-        outputWrap((SimpleType)iter.next());
+      StringBuffer buf = new StringBuffer();
+      for (Iterator iter = t.getChildren().iterator(); iter.hasNext();) {
+        String typeName = (String)((SimpleType)iter.next()).accept(simpleTypeNamer);
+        if (typeName != null) {
+          if (buf.length() != 0)
+            buf.append(' ');
+          buf.append(typeName);
+        }
+      }
+      if (buf.length() != 0)
+        xw.attribute("memberTypes", buf.toString());
+      for (Iterator iter = t.getChildren().iterator(); iter.hasNext();) {
+        SimpleType simpleType = (SimpleType)iter.next();
+        if (simpleType.accept(simpleTypeNamer) == null)
+          outputWrap(simpleType);
+      }
       xw.endElement();
       return null;
     }
@@ -98,7 +119,7 @@ public class BasicOutput {
         xw.startElement(xs("simpleType"));
       }
       xw.startElement(xs("list"));
-      outputWrap(t.getItemType());
+      outputWrap(t.getItemType(), "itemType");
       xw.endElement();
       if (!occ.equals(Occurs.ZERO_OR_MORE)) {
         xw.endElement();
@@ -125,13 +146,33 @@ public class BasicOutput {
     }
 
     void outputWrap(SimpleType t) {
-      xw.startElement(xs("simpleType"));
-      t.accept(this);
-      xw.endElement();
+      outputWrap(t, "type");
+    }
+
+    void outputWrap(SimpleType t, String attributeName) {
+      String typeName = (String)t.accept(simpleTypeNamer);
+      if (typeName != null)
+        xw.attribute(attributeName, typeName);
+      else {
+        xw.startElement(xs("simpleType"));
+        t.accept(this);
+        xw.endElement();
+      }
     }
   }
 
-  // TODO deal with different particle output in complexType and namedGroup
+  class SimpleTypeNamer extends SchemaWalker {
+    public Object visitRestriction(SimpleTypeRestriction t) {
+      if (t.getFacets().size() > 0)
+        return null;
+      return xs(t.getName());
+    }
+
+    public Object visitRef(SimpleTypeRef t) {
+      return qualifyRef(schema.getSimpleType(t.getName()).getParentSchema().getUri(),
+                        t.getName());
+    }
+  }
 
   private static final int NORMAL_CONTEXT = 0;
   private static final int COMPLEX_TYPE_CONTEXT = 1;
@@ -273,25 +314,53 @@ public class BasicOutput {
     }
 
     public Object visitSimpleContent(ComplexTypeSimpleContent t) {
-      xw.startElement(xs("complexType"));
-      xw.startElement(xs("simpleContent"));
-      xw.startElement(xs("restriction"));
-      xw.attribute("base", xs("anyType"));
-      simpleTypeOutput.outputWrap(t.getSimpleType());
-      attributeUseOutput.outputList(t.getAttributeUses());
-      xw.endElement();
-      xw.endElement();
-      xw.endElement();
+      List attributeUses = t.getAttributeUses();
+      if (attributeUses.size() == 0)
+        simpleTypeOutput.outputWrap(t.getSimpleType());
+      else {
+        xw.startElement(xs("complexType"));
+        xw.startElement(xs("simpleContent"));
+        String typeName = (String)t.getSimpleType().accept(simpleTypeNamer);
+        if (typeName != null) {
+          xw.startElement(xs("extension"));
+          xw.attribute("base", typeName);
+        }
+        else {
+          xw.startElement(xs("restriction"));
+          xw.attribute("base", xs("anyType"));
+          simpleTypeOutput.outputWrap(t.getSimpleType());
+        }
+        attributeUseOutput.outputList(attributeUses);
+        xw.endElement();
+        xw.endElement();
+        xw.endElement();
+      }
       return null;
     }
   }
 
   class AttributeUseOutput implements AttributeUseVisitor {
+    boolean isOptional = false;
+
+    public Object visitOptionalAttribute(OptionalAttribute a) {
+      isOptional = true;
+      a.getAttribute().accept(this);
+      isOptional = false;
+      return null;
+    }
+
     public Object visitAttribute(Attribute a) {
-      if (namespaceIsLocal(a.getName().getNamespaceUri())) {
+      if (nsm.isGlobal(a)) {
+        xw.startElement(xs("attribute"));
+        xw.attribute("ref", qualifyName(a.getName()));
+        if (!isOptional)
+          xw.attribute("use", "required");
+        xw.endElement();
+      }
+      else if (namespaceIsLocal(a.getName().getNamespaceUri())) {
         xw.startElement(xs("attribute"));
         xw.attribute("name", a.getName().getLocalName());
-        if (a.getUse() == Attribute.REQUIRED)
+        if (!isOptional)
           xw.attribute("use", "required");
         if (!a.getName().getNamespaceUri().equals(""))
           xw.attribute("form", "qualified");
@@ -378,6 +447,36 @@ public class BasicOutput {
     }
   }
 
+  class GlobalAttributeOutput implements AttributeUseVisitor {
+    void outputList(List list) {
+      for (Iterator iter = list.iterator(); iter.hasNext();)
+        ((AttributeUse)iter.next()).accept(this);
+    }
+
+    public Object visitAttribute(Attribute a) {
+      Name name = a.getName();
+      if (nsm.isGlobal(a)
+          && name.getNamespaceUri().equals(targetNamespace)
+          && !globalAttributesDefined.contains(name)) {
+        globalAttributesDefined.add(name);
+        xw.startElement(xs("attribute"));
+        xw.attribute("name", name.getLocalName());
+        if (a.getType() != null)
+          simpleTypeOutput.outputWrap(a.getType());
+        xw.endElement();
+      }
+      return null;
+    }
+
+    public Object visitOptionalAttribute(OptionalAttribute a) {
+      return a.getAttribute().accept(this);
+    }
+
+    public Object visitAttributeGroupRef(AttributeGroupRef a) {
+      return null;
+    }
+  }
+
   class SchemaOutput extends AbstractSchemaVisitor {
     public void visitGroup(GroupDefinition def) {
       Particle particle = def.getParticle();
@@ -403,6 +502,7 @@ public class BasicOutput {
       xw.attribute("name", def.getName());
       attributeUseOutput.outputList(def.getAttributeUses());
       xw.endElement();
+      globalAttributeOutput.outputList(def.getAttributeUses());
     }
 
     public void visitRoot(RootDeclaration decl) {
@@ -424,10 +524,13 @@ public class BasicOutput {
     }
 
     public Object visitAttribute(Attribute attribute) {
-      xw.startElement(xs("attributeGroup"));
-      xw.attribute("name", nsm.getProxyName(attribute));
-      attributeUseOutput.visitAttribute(attribute);
-      xw.endElement();
+      if (!nsm.isGlobal(attribute)) {
+        xw.startElement(xs("attributeGroup"));
+        xw.attribute("name", nsm.getProxyName(attribute));
+        attributeUseOutput.visitAttribute(attribute);
+        xw.endElement();
+      }
+      globalAttributeOutput.visitAttribute(attribute);
       return null;
     }
   }
@@ -435,9 +538,11 @@ public class BasicOutput {
   static void output(Schema schema, PrefixManager pm, OutputDirectory od, ErrorReporter er) throws IOException {
     NamespaceManager nsm = new NamespaceManager(schema, pm);
     Set globalElementsDefined = new HashSet();
+    Set globalAttributesDefined = new HashSet();
     try {
       for (Iterator iter = schema.getSubSchemas().iterator(); iter.hasNext();)
-        new BasicOutput((Schema)iter.next(), er, od, nsm, pm, globalElementsDefined).output();
+        new BasicOutput((Schema)iter.next(), er, od, nsm, pm,
+                        globalElementsDefined, globalAttributesDefined).output();
     }
     catch (XmlWriter.WrappedException e) {
       throw e.getIOException();
@@ -445,14 +550,17 @@ public class BasicOutput {
   }
 
   public BasicOutput(Schema schema, ErrorReporter er, OutputDirectory od,
-                     NamespaceManager nsm, PrefixManager pm, Set globalElementsDefined) throws IOException {
+                     NamespaceManager nsm, PrefixManager pm,
+                     Set globalElementsDefined, Set globalAttributesDefined) throws IOException {
     this.schema = schema;
     this.nsm = nsm;
     this.pm = pm;
     this.globalElementsDefined = globalElementsDefined;
+    this.globalAttributesDefined = globalAttributesDefined;
     this.sourceUri = schema.getUri();
     this.od = od;
     this.targetNamespace = nsm.getTargetNamespace(schema.getUri());
+    this.xsPrefix = pm.getPrefix(xsURI);
     xw = new XmlWriter(od.getLineSeparator(),
                        od.open(schema.getUri()),
                        new String[0],
@@ -461,17 +569,18 @@ public class BasicOutput {
 
   void output() {
    xw.startElement(xs("schema"));
-    // TODO choose xs so as to avoid conflict
-    xw.attribute("xmlns:xs", "http://www.w3.org/2001/XMLSchema");
+    xw.attribute("xmlns:" + xsPrefix, xsURI);
     xw.attribute("elementFormDefault", "qualified");
     xw.attribute("version", "1.0");
     if (!targetNamespace.equals(""))
       xw.attribute("targetNamespace", targetNamespace);
     for (Iterator iter = nsm.getTargetNamespaces().iterator(); iter.hasNext();) {
       String ns = (String)iter.next();
-      // TODO omit xml prefix
-      if (!ns.equals(""))
-        xw.attribute("xmlns:" + pm.getPrefix(ns), ns);
+      if (!ns.equals("")) {
+        String prefix = pm.getPrefix(ns);
+        if (!prefix.equals("xml"))
+          xw.attribute("xmlns:" + pm.getPrefix(ns), ns);
+      }
     }
     for (Iterator iter = nsm.effectiveIncludes(schema.getUri()).iterator(); iter.hasNext();)
       outputInclude((String)iter.next());
@@ -489,7 +598,7 @@ public class BasicOutput {
   }
 
   private String xs(String name) {
-    return "xs:" + name;
+    return xsPrefix + ":" + name;
   }
 
   private boolean namespaceIsLocal(String ns) {

@@ -29,4 +29,14 @@ public class Element extends Particle implements Structure {
     return visitor.visitElement(this);
   }
 
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Element))
+      return false;
+    Element other = (Element)obj;
+    return this.name.equals(other.name) && this.complexType.equals(other.complexType);
+  }
+
+  public int hashCode() {
+    return name.hashCode() ^ complexType.hashCode();
+  }
 }

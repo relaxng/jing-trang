@@ -23,4 +23,15 @@ public class ParticleRepeat extends Particle {
   public Object accept(ParticleVisitor visitor) {
     return visitor.visitRepeat(this);
   }
+
+  public boolean equals(Object obj) {
+    if (!(obj instanceof ParticleRepeat))
+      return false;
+    ParticleRepeat other = (ParticleRepeat)obj;
+    return this.child.equals(other.child) && this.occurs.equals(other.occurs);
+  }
+
+  public int hashCode() {
+    return child.hashCode() ^ occurs.hashCode();
+  }
 }

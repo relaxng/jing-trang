@@ -17,7 +17,7 @@ public class SimpleTypeRestriction extends SimpleType {
 
   /**
    * Name is the name of a builtin simple type.
-   * factes is a list of facets
+   * facets is a list of facets
    */
 
   public String getName() {
@@ -30,5 +30,16 @@ public class SimpleTypeRestriction extends SimpleType {
 
   public Object accept(SimpleTypeVisitor visitor) {
     return visitor.visitRestriction(this);
+  }
+
+  public boolean equals(Object obj) {
+    if (!(obj instanceof SimpleTypeRestriction))
+      return false;
+    SimpleTypeRestriction other = (SimpleTypeRestriction)obj;
+    return this.name.equals(other.name) && this.facets.equals(other.facets);
+  }
+
+  public int hashCode() {
+    return name.hashCode() ^ facets.hashCode();
   }
 }

@@ -19,6 +19,8 @@ import java.util.Set;
 
 public class PrefixManager implements SourceUriGenerator {
 
+  static final private String xmlURI = "http://www.w3.org/XML/1998/namespace";
+
   private final Map prefixMap = new HashMap();
   private final Set usedPrefixes = new HashSet();
   private int nextGenIndex = 1;
@@ -105,7 +107,7 @@ public class PrefixManager implements SourceUriGenerator {
       for (Iterator iter = namespacePrefixUsageMap.entrySet().iterator(); iter.hasNext();) {
         Map.Entry entry = (Map.Entry)iter.next();
         String ns = (String)entry.getKey();
-        if (!ns.equals("")) {
+        if (!ns.equals("") && !ns.equals(xmlURI)) {
           Map prefixUsageMap = (Map)(entry.getValue());
           if (prefixUsageMap != null) {
             Map.Entry best = null;
@@ -128,19 +130,33 @@ public class PrefixManager implements SourceUriGenerator {
   }
 
   PrefixManager(SchemaInfo si) {
+    usePrefix("xml", xmlURI);
     new PrefixSelector(si).assignPrefixes(prefixMap, usedPrefixes);
   }
 
+  static private final String[] xsdPrefixes  = { "xs", "xsd" };
   String getPrefix(String namespace) {
     String prefix = (String)prefixMap.get(namespace);
+    if (prefix == null && namespace.equals(BasicOutput.xsURI)) {
+      for (int i = 0; i < xsdPrefixes.length; i++) {
+        if (!usedPrefixes.contains(xsdPrefixes[i])) {
+          usePrefix(xsdPrefixes[i], BasicOutput.xsURI);
+          return xsdPrefixes[i];
+        }
+      }
+    }
     if (prefix == null) {
       do {
         prefix = "ns" + Integer.toString(nextGenIndex++);
       } while (usedPrefixes.contains(prefix));
-      usedPrefixes.add(prefix);
-      prefixMap.put(namespace, prefix);
+      usePrefix(prefix, namespace);
     }
     return prefix;
+  }
+
+  private void usePrefix(String prefix, String namespace) {
+    usedPrefixes.add(prefix);
+    prefixMap.put(namespace, prefix);
   }
 
   public String generateSourceUri(String ns) {

@@ -23,4 +23,15 @@ public class SimpleTypeList extends SimpleType {
   public Object accept(SimpleTypeVisitor visitor) {
     return visitor.visitList(this);
   }
+
+  public boolean equals(Object obj) {
+    if (!(obj instanceof SimpleTypeList))
+      return false;
+    SimpleTypeList other = (SimpleTypeList)obj;
+    return this.itemType.equals(other.itemType) && this.occurs.equals(other.occurs);
+  }
+
+  public int hashCode() {
+    return itemType.hashCode() ^ occurs.hashCode();
+  }
 }

@@ -23,6 +23,7 @@ import java.util.Iterator;
 public class NamespaceManager {
   private final Schema schema;
   private final Map elementNameMap = new HashMap();
+  private final Map attributeNameMap = new HashMap();
 
   private static final String ANON = "anon";
 
@@ -103,14 +104,6 @@ public class NamespaceManager {
     }
 
     public Object visitElement(Element element) {
-      NameInfo info = lookupElementName(element.getName());
-      int occur = nested ? NameInfo.OCCUR_NESTED : NameInfo.OCCUR_TOP;
-      if (occur > info.occur) {
-        info.occur = occur;
-        info.globalType = element;
-      }
-      else if (occur == info.occur && info.globalType != element)
-        info.globalType = null;
       NamespaceUsage usage = getUsage(element.getName().getNamespaceUri());
       if (!nested)
         usage.elementCount++;
@@ -162,6 +155,40 @@ public class NamespaceManager {
     }
   }
 
+  class GlobalElementSelector extends SchemaWalker {
+    private final boolean absentTargetNamespace;
+    private boolean nested = false;
+
+    GlobalElementSelector(Schema schema) {
+      absentTargetNamespace = getTargetNamespace(schema.getUri()).equals("");
+      schema.accept(this);
+    }
+
+    public Object visitElement(Element element) {
+      Name name = element.getName();
+      String ns = name.getNamespaceUri();
+      if (!name.getNamespaceUri().equals("") || absentTargetNamespace) {
+        NameInfo info = lookupElementName(name);
+        int occur = nested ? NameInfo.OCCUR_NESTED : NameInfo.OCCUR_TOP;
+        if (occur > info.occur) {
+          info.occur = occur;
+          info.globalType = element;
+        }
+        else if (occur == info.occur && !element.equals(info.globalType))
+          info.globalType = null;
+      }
+      boolean saveNested = nested;
+      nested = true;
+      element.getComplexType().accept(this);
+      nested = saveNested;
+      return null;
+    }
+
+    public void visitInclude(Include include) {
+      new GlobalElementSelector(include.getIncludedSchema());
+    }
+  }
+
   class StructureMover extends SchemaWalker {
     private String currentNamespace;
 
@@ -177,24 +204,10 @@ public class NamespaceManager {
     public Object visitElement(Element p) {
       NameInfo info = lookupElementName(p.getName());
       String ns = p.getName().getNamespaceUri();
-      boolean isLocal = ns.equals(currentNamespace) || ns.equals("");
-      if (ns.equals("") && !currentNamespace.equals("") && info.globalType == p) {
-        if (info.occur == NameInfo.OCCUR_ROOT)
-          isLocal = false;
-        else
-          info.globalType = null;
-      }
-      if (!isLocal) {
-        if (info.occur < NameInfo.OCCUR_MOVE) {
-          info.occur = NameInfo.OCCUR_MOVE;
-          info.globalType = p;
-        }
-        else if (info.occur == NameInfo.OCCUR_MOVE && info.globalType != p)
-          info.globalType = null;
-      }
-      if (isLocal)
+      if (ns.equals(currentNamespace) || (ns.equals("") && !p.equals(info.globalType)))
         p.getComplexType().accept(this);
       else {
+        noteMoved(info, p);
         moveStructure(p);
         p.getComplexType().accept(new StructureMover(ns));
       }
@@ -203,9 +216,20 @@ public class NamespaceManager {
 
     public Object visitAttribute(Attribute a) {
       String ns = a.getName().getNamespaceUri();
-      if (!ns.equals("") && !ns.equals(currentNamespace))
+      if (!ns.equals("") && !ns.equals(currentNamespace)) {
+        noteMoved(lookupAttributeName(a.getName()), a);
         moveStructure(a);
+      }
       return null;
+    }
+
+    private void noteMoved(NameInfo info, Structure s) {
+      if (info.occur < NameInfo.OCCUR_MOVE) {
+        info.occur = NameInfo.OCCUR_MOVE;
+        info.globalType = s;
+      }
+      else if (info.occur == NameInfo.OCCUR_MOVE && !s.equals(info.globalType))
+        info.globalType = null;
     }
 
     private void moveStructure(Structure p) {
@@ -226,6 +250,7 @@ public class NamespaceManager {
     new IncludeFinder(schema);
     schema.accept(new RootMarker());
     assignTargetNamespaces();
+    new GlobalElementSelector(schema);
     chooseRootSchemas(sug);
     new StructureMover(schema);
   }
@@ -305,7 +330,7 @@ public class NamespaceManager {
   }
 
   boolean isGlobal(Attribute attribute) {
-    return false;
+    return attribute.equals(lookupAttributeName(attribute.getName()).globalType);
   }
 
   String getProxyName(Structure struct) {
@@ -386,4 +411,14 @@ public class NamespaceManager {
     }
     return info;
   }
+
+  private NameInfo lookupAttributeName(Name name) {
+    NameInfo info = (NameInfo)attributeNameMap.get(name);
+    if (info == null) {
+      info = new NameInfo();
+      attributeNameMap.put(name, info);
+    }
+    return info;
+  }
+
 }
