@@ -6,6 +6,7 @@ class ContentType {
   static ContentType NOT_ALLOWED = new ContentType();
   static ContentType SIMPLE_TYPE = new ContentType();
   static ContentType SIMPLE_TYPE_CHOICE = new ContentType(SIMPLE_TYPE);
+  static ContentType VALUE = new ContentType(SIMPLE_TYPE);
   static ContentType EMPTY = new ContentType();
   static ContentType TEXT = new ContentType(MIXED_ELEMENT_CLASS);
   static ContentType MIXED_MODEL = new ContentType();
