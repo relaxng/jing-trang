@@ -1,28 +1,28 @@
 <testSuite>
 <testCase>
 <correct>
-<element ns="http://www.example.com" xmlns="http://relaxng.org/ns/structure/0.1" name="foo">
+<element ns="http://www.example.com" xmlns="http://relaxng.org/ns/structure/1.0" name="foo">
   <empty/>
 </element>
 </correct>
 </testCase>
 <testCase>
 <correct>
-<element xmlns:x="http://www.example.com" xmlns="http://relaxng.org/ns/structure/0.1" name="x:foo">
+<element xmlns:x="http://www.example.com" xmlns="http://relaxng.org/ns/structure/1.0" name="x:foo">
   <empty/>
 </element>
 </correct>
 </testCase>
 <testCase>
 <correct>
-<element xmlns="http://relaxng.org/ns/structure/0.1" name="foo" ns="">
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="foo" ns="">
   <empty/>
 </element>
 </correct>
 </testCase>
 <testCase>
 <correct>
-<element xmlns="http://relaxng.org/ns/structure/0.1" name="foo" ns="http://www.example.com/1">
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="foo" ns="http://www.example.com/1">
   <element name="bar" ns="http://www.example.com/2">
     <empty/>
   </element>
@@ -31,7 +31,7 @@
 </testCase>
 <testCase>
 <correct>
-<element xmlns="http://relaxng.org/ns/structure/0.1" name="x:foo" xmlns:x="http://www.example.com/1">
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="x:foo" xmlns:x="http://www.example.com/1">
   <element name="x:bar" xmlns:x="http://www.example.com/2">
     <empty/>
   </element>
@@ -40,14 +40,14 @@
 </testCase>
 <testCase>
 <correct>
-<element xmlns="http://relaxng.org/ns/structure/0.1" name="foo">
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="foo">
   <attribute ns="http://www.example.com" name="bar"/>
 </element>
 </correct>
 </testCase>
 <testCase>
 <correct>
-<element xmlns="http://relaxng.org/ns/structure/0.1" name="foo">
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="foo">
   <attribute xmlns:x="http://www.example.com" name="x:bar"/>
 </element>
 </correct>
@@ -425,6 +425,103 @@
 </element>
 </start>
 <define name="v"><value>+</value></define>
+</grammar>
+</correct>
+</testCase>
+<testCase>
+<resource name="x">
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+<start>
+  <element name="foo"><empty/></element>
+</start>
+</grammar>
+</resource>
+<correct>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+<include href="x"/>
+<define name="x"><text/></define>
+</grammar>
+</correct>
+</testCase>
+<testCase>
+<resource name="x">
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+<start>
+  <element name="foo"><empty/></element>
+</start>
+</grammar>
+</resource>
+<correct>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+<include href="x" xmlns:dtd="http://www.thaiopensource.com/ns/relaxng/dtd" dtd:entityName="xyzzy"/>
+<define name="x"><text/></define>
+</grammar>
+</correct>
+</testCase>
+<testCase>
+<correct>
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="foo">
+  <attribute><choice><name>a1</name><name>a2</name></choice></attribute>
+</element>
+</correct>
+</testCase>
+<testCase>
+<resource name="x">
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+<start>
+  <element name="foo"><empty/></element>
+</start>
+</grammar>
+</resource>
+<incorrect>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+<include href="x">
+  <start>
+    <element name="bar"><empty/></element>
+  </start>
+</include>
+</grammar>
+</incorrect>
+</testCase>
+<testCase>
+<incorrect>
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="foo">
+  <element name="foo">
+    <empty/>
+  </element>
+</element>
+</incorrect>
+</testCase>
+<testCase>
+<correct>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <ref name="foo"/>
+  </start>
+  <define name="foo">
+    <element name="foo">
+      <optional>
+         <ref name="foo"/>
+      </optional>
+    </element>
+  </define>
+</grammar>
+</correct>
+</testCase>
+<testCase>
+<correct>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <define name="atts">
+    <attribute name="att2"/>
+  </define>
+  <start>
+    <element name="foo">
+      <ref name="atts"/>
+    </element>
+  </start>
+  <define name="atts" combine="interleave">
+    <attribute name="att1"/>
+  </define>
 </grammar>
 </correct>
 </testCase>
