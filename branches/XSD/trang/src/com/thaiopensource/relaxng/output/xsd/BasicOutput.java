@@ -251,7 +251,7 @@ public class BasicOutput {
     void outputOccurAttributes() {
       if (occ.getMin() != 1)
         xw.attribute("minOccurs", Integer.toString(occ.getMin()));
-      else if (occ.getMax() != 1)
+      if (occ.getMax() != 1)
         xw.attribute("maxOccurs",
                      occ.getMax() == Occurs.UNBOUNDED ? "unbounded" : Integer.toString(occ.getMax()));
       occ = Occurs.EXACTLY_ONE;
