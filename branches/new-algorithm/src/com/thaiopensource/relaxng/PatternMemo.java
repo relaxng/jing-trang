@@ -13,6 +13,7 @@ final class PatternMemo {
   private PatternMemo memoEndTagDeriv;
   private PatternMemo memoMixedTextDeriv;
   private PatternMemo memoIgnoreMissingAttributes;
+  private PatternMemo memoDataDeriv;
   private Hashtable startTagOpenDerivMap;
   private Hashtable startAttributeDerivMap;
 
@@ -145,8 +146,13 @@ final class PatternMemo {
   }
 
   PatternMemo dataDeriv(String str, ValidationContext vc) {
-    // XXX cache it (at least if it doesn't use the string value)
-    return applyForPatternMemo(new DataDerivFunction(str, vc, builder));
+    if (memoDataDeriv != null)
+      return memoDataDeriv;
+    DataDerivFunction df = new DataDerivFunction(str, vc, builder);
+    PatternMemo tem = applyForPatternMemo(df);
+    if (!df.isStringDependent())
+      memoDataDeriv = tem;
+    return tem;
   }
 
   PatternMemo recoverAfter() {

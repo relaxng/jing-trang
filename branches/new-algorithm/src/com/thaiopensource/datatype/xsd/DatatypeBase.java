@@ -7,8 +7,9 @@ import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.ValidationContext;
 import org.relaxng.datatype.DatatypeStreamingValidator;
 import org.relaxng.datatype.helpers.StreamingValidatorImpl;
+import com.thaiopensource.datatype.Datatype2;
 
-abstract class DatatypeBase implements Datatype {
+abstract class DatatypeBase implements Datatype2 {
   abstract boolean lexicallyAllows(String str);
   private final int whiteSpace;
 
@@ -112,6 +113,10 @@ abstract class DatatypeBase implements Datatype {
   }
 
   public boolean isContextDependent() {
+    return false;
+  }
+
+  public boolean alwaysValid() {
     return false;
   }
 

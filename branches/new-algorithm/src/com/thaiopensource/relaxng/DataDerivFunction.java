@@ -8,6 +8,7 @@ class DataDerivFunction extends AbstractPatternFunction {
   private ValidationContext vc;
   private String str;
   private boolean blank;
+  private boolean stringDependent;
 
   DataDerivFunction(String str, ValidationContext vc, PatternBuilder builder) {
     this.str = str;
@@ -37,6 +38,7 @@ class DataDerivFunction extends AbstractPatternFunction {
   }
 
   public Object caseList(ListPattern p) {
+    stringDependent = true;
     int len = str.length();
     int tokenStart = -1;
     Pattern r = p.getOperand();
@@ -70,6 +72,7 @@ class DataDerivFunction extends AbstractPatternFunction {
   }
 
   public Object caseValue(ValuePattern p) {
+    stringDependent = true;
     Datatype dt = p.getDatatype();
     Object value = dt.createValue(str, vc);
     if (value != null && dt.sameValue(p.getValue(), value))
@@ -79,6 +82,9 @@ class DataDerivFunction extends AbstractPatternFunction {
   }
 
   public Object caseData(DataPattern p) {
+    if (p.allowsAnyString())
+      return builder.makeEmpty();
+    stringDependent = true;
     if (p.getDatatype().isValid(str, vc))
       return builder.makeEmpty();
     else
@@ -86,6 +92,7 @@ class DataDerivFunction extends AbstractPatternFunction {
   }
 
   public Object caseDataExcept(DataExceptPattern p) {
+    stringDependent = true;
     if (p.getDatatype().isValid(str, vc)
 	&& !p.getExcept().applyForPattern(this).isNullable())
       return builder.makeEmpty();
@@ -95,10 +102,14 @@ class DataDerivFunction extends AbstractPatternFunction {
 
   public Object caseAfter(AfterPattern p) {
     Pattern p1 = p.getOperand1();
-    if (p1.applyForPattern(this).isNullable() || (blank && p1.isNullable()))
+    if (p1.applyForPattern(this).isNullable())
       return p.getOperand2();
-    else
-      return getPatternBuilder().makeNotAllowed();
+    if (p1.isNullable()) {
+      stringDependent = true;
+      if (blank)
+        return p.getOperand2();
+    }
+    return getPatternBuilder().makeNotAllowed();
   }
 
   public Object caseChoice(ChoicePattern p) {
@@ -133,5 +144,9 @@ class DataDerivFunction extends AbstractPatternFunction {
 
   PatternBuilder getPatternBuilder() {
     return builder;
+  }
+
+  boolean isStringDependent() {
+    return stringDependent;
   }
 }
