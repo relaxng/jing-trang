@@ -360,15 +360,15 @@ class Transformer extends SchemaTransformer {
     }
 
     public Object visitAttribute(Attribute a) {
-      if (!retainNames.contains(a.getName()))
+      if (retainNames != null && !retainNames.contains(a.getName()))
         return AttributeGroup.EMPTY;
-      if (!requiredNames.contains(a.getName()))
+      if (requiredNames != null && !requiredNames.contains(a.getName()))
         return new OptionalAttribute(a.getLocation(), a);
       return a;
     }
 
     public Object visitOptionalAttribute(OptionalAttribute a) {
-      if (!retainNames.contains(a.getName()))
+      if (retainNames != null && !retainNames.contains(a.getName()))
         return AttributeGroup.EMPTY;
       return a;
     }
@@ -381,7 +381,8 @@ class Transformer extends SchemaTransformer {
 
     public Object visitAttributeGroupRef(AttributeGroupRef a) {
       AttributeUse refed = getTransformedAttributeGroup(a.getName());
-      if (isOk(attributeMapper.getAttributeMap(refed)))
+      if (isOk(attributeMapper.getAttributeMap(refed))
+          && (retainWildcard || attributeMapper.getAttributeWildcard(refed) == null))
         return a;
       return refed.accept(this);
     }
@@ -391,9 +392,9 @@ class Transformer extends SchemaTransformer {
         Map.Entry entry = (Map.Entry)iter.next();
         Name name = (Name)entry.getKey();
         SingleAttributeUse use = (SingleAttributeUse)entry.getValue();
-        if (!retainNames.contains(name))
+        if (retainNames != null && !retainNames.contains(name))
           return false;
-        if (!use.isOptional() && !requiredNames.contains(name))
+        if (requiredNames != null && !use.isOptional() && !requiredNames.contains(name))
           return false;
       }
       return true;
