@@ -56,7 +56,6 @@ import java.util.Iterator;
 /*
 
 Tasks:
-Avoid duplicate with <start>
 Order for mixed
 Order param entities
 Check single element type
@@ -646,6 +645,8 @@ public class DtdOutput {
   }
 
   class GrammarOutput extends AbstractVisitor {
+    boolean includeStart;
+
     public void visitContainer(Container c) {
       final List list = c.getComponents();
       for (int i = 0, len = list.size(); i < len; i++)
@@ -659,7 +660,8 @@ public class DtdOutput {
 
     public Object visitDefine(DefineComponent c) {
       if (c.getName() == DefineComponent.START) {
-        c.getBody().accept(nestedContentModelOutput);
+        if (includeStart)
+          c.getBody().accept(nestedContentModelOutput);
       }
       else {
         Pattern body = c.getBody();
@@ -720,7 +722,10 @@ public class DtdOutput {
 
     public Object visitChoice(ChoicePattern p) {
       boolean hadEmpty = false;
-      for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
+      List list = p.getChildren();
+      for (int i = 0, len = list.size(); i < len; i++)
+        list.set(i, ((Pattern)list.get(i)).accept(this));
+      for (Iterator iter = list.iterator(); iter.hasNext();) {
         Pattern child = (Pattern)iter.next();
         if (child instanceof NotAllowedPattern)
           iter.remove();
@@ -729,11 +734,11 @@ public class DtdOutput {
           iter.remove();
         }
       }
-      if (p.getChildren().size() == 0)
+      if (list.size() == 0)
         return copy(new NotAllowedPattern(), p);
       Pattern tem;
-      if (p.getChildren().size() == 1)
-        tem = (Pattern)p.getChildren().get(0);
+      if (list.size() == 1)
+        tem = (Pattern)list.get(0);
       else
         tem = p;
       if (hadEmpty) {
@@ -744,14 +749,17 @@ public class DtdOutput {
     }
 
     public Object visitComposite(CompositePattern p) {
-      for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
+      List list = p.getChildren();
+      for (int i = 0, len = list.size(); i < len; i++)
+        list.set(i, ((Pattern)list.get(i)).accept(this));
+      for (Iterator iter = list.iterator(); iter.hasNext();) {
         Pattern child = (Pattern)iter.next();
         if (child instanceof EmptyPattern)
           iter.remove();
       }
-      if (p.getChildren().size() == 0)
+      if (list.size() == 0)
         return copy(new EmptyPattern(), p);
-      if (p.getChildren().size() == 1)
+      if (list.size() == 1)
         return (Pattern)p.getChildren().get(0);
       return p;
     }
@@ -783,8 +791,13 @@ public class DtdOutput {
     p = (Pattern)p.accept(new Simplifier());
     analyzeType(new Analyzer(), p);
     if (!hadError) {
-      p.accept(nestedContentModelOutput);
-      outputQueuedElements();
+      if (p == grammarPattern)
+        grammarOutput.includeStart = true;
+      else {
+        p.accept(nestedContentModelOutput);
+        outputQueuedElements();
+        grammarOutput.includeStart = false;
+      }
       if (grammarPattern != null)
         grammarOutput.visitContainer(grammarPattern);
     }
