@@ -1276,6 +1276,225 @@ foo = element foo { empty }
 </correct>
 </xml>
 </testCase>
+<testCase>
+<nonxml>
+<incorrect><![CDATA[
+element * - foo - bar { empty }
+]]></incorrect>
+</nonxml>
+</testCase>
+<bug>
+<nonxml>
+<incorrect><![CDATA[
+string - "foo"*
+]]></incorrect>
+</nonxml>
+</bug>
+<bug>
+<nonxml>
+<incorrect><![CDATA[
+namespace eg = "http://www.example.com"
+[ eg:x = "foo" eg:x = "foo" ]
+element foo { empty }
+]]></incorrect>
+</nonxml>
+</bug>
+<bug>
+<nonxml>
+<incorrect><![CDATA[
+namespace eg1 = "http://www.example.com"
+namespace eg2 = "http://www.example.com"
+[ eg1:x = "foo" eg2:x = "foo" ]
+element foo { empty }
+]]></incorrect>
+</nonxml>
+</bug>
+<bug>
+<nonxml>
+<incorrect><![CDATA[
+namespace xmlns = "http://www.example.com"
+[ xmlns:x = "foo" ]
+element foo { empty }
+]]></incorrect>
+</nonxml>
+</bug>
+<bug>
+<nonxml>
+<correct><![CDATA[
+element foo { empty }
+# comment
+| element bar { empty }
+]]></correct>
+</nonxml>
+<xml>
+<correct>
+<choice xmlns="http://relaxng.org/ns/structure/1.0">
+  <element name="foo">
+    <empty/>
+  </element>
+  <!-- comment -->
+  <element name="bar">
+    <empty/>
+  </element>
+</choice>
+</correct>
+</xml>
+</bug>
+<bug>
+<nonxml>
+<correct><![CDATA[
+element foo { empty }
+# comment
+*
+]]></correct>
+</nonxml>
+<xml>
+<correct>
+<zeroOrMore xmlns="http://relaxng.org/ns/structure/1.0">
+  <element name="foo">
+    <empty/>
+  </element>
+  <!-- comment -->
+</zeroOrMore>
+</correct>
+</xml>
+</bug>
+<testCase>
+<nonxml>
+<correct><![CDATA[
+# comment
+namespace eg = ""
+element foo { empty }
+]]></correct>
+</nonxml>
+<xml>
+<correct>
+<!-- comment -->
+<element name="foo"  xmlns="http://relaxng.org/ns/structure/1.0">
+  <empty/>
+</element>
+</correct>
+</xml>
+</testCase>
+<bug>
+<nonxml>
+<correct><![CDATA[
+namespace eg = 
+# comment
+""
+element foo { empty }
+]]></correct>
+</nonxml>
+<xml>
+<correct>
+<!-- comment -->
+<element name="foo"  xmlns="http://relaxng.org/ns/structure/1.0">
+  <empty/>
+</element>
+</correct>
+</xml>
+</bug>
+<bug>
+<nonxml>
+<correct><![CDATA[
+namespace # comment
+eg = ""
+element foo { empty }
+]]></correct>
+</nonxml>
+<xml>
+<correct>
+<!-- comment -->
+<element name="foo"  xmlns="http://relaxng.org/ns/structure/1.0">
+  <empty/>
+</element>
+</correct>
+</xml>
+</bug>
+<testCase>
+<nonxml>
+<correct><![CDATA[
+[
+# comment
+]
+element foo { empty }
+]]></correct>
+</nonxml>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <!-- comment -->
+  <empty/>
+</element>
+</correct>
+</xml>
+</testCase>
+<bug>
+<nonxml>
+<correct><![CDATA[
+namespace eg = "http://www.example.com"
+[
+# comment
+eg:foo = "stuff"
+]
+element foo { empty }
+]]></correct>
+</nonxml>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0"
+  xmlns:eg="http://www.example.com" eg:foo="stuff">
+  <!-- comment -->
+  <empty/>
+</element>
+</correct>
+</xml>
+</bug>
+<bug>
+<nonxml>
+<correct><![CDATA[
+element foo # comment
+{ empty }
+]]></correct>
+</nonxml>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <!-- comment -->
+  <empty/>
+</element>
+</correct>
+</xml>
+</bug>
+<bug>
+<nonxml>
+<correct><![CDATA[
+start = grammar { start = parent # comment
+foo }
+foo = element foo { empty }
+]]></correct>
+</nonxml>
+<xml>
+<correct>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+<start>
+  <grammar xmlns="http://relaxng.org/ns/structure/1.0">
+    <start>
+      <parentRef name="foo">
+	<!-- comment -->
+      </parentRef>
+    </start>
+  </grammar>
+</start>
+<define name="foo">
+  <element name="foo">
+    <empty/>
+  </element>
+</define>
+</grammar>
+</correct>
+</xml>
+</bug>
 <!--
 <testCase>
 <nonxml>
@@ -1286,6 +1505,14 @@ foo = element foo { empty }
 <correct>
 </correct>
 </xml>
+</testCase>
+-->
+<!--
+<testCase>
+<nonxml>
+<incorrect><![CDATA[
+]]></incorrect>
+</nonxml>
 </testCase>
 -->
 </testSuite>
