@@ -12,7 +12,7 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
   static private final String MONTH_PATTERN = "[0-9]{2}";
   static private final String DAY_OF_MONTH_PATTERN = "[0-9]{2}";
   static private final String TIME_PATTERN = "[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]*)?";
-  static private final String TZ_PATTERN = "(Z|[+\\-]([01][0-9]|2[0-3]):[0-5][0-9])?";
+  static private final String TZ_PATTERN = "(Z|[+\\-][0-9][0-9]:[0-5][0-9])?";
 
   private final String template;
 
@@ -157,11 +157,11 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
       }
     }
     boolean hasTimeZone = pos < len;
-    String gmtOffset;
+    int tzOffset;
     if (hasTimeZone && str.charAt(pos) != 'Z')
-      gmtOffset = str.substring(pos);
+      tzOffset = parseTimeZone(str, pos);
     else
-      gmtOffset = "+0";
+      tzOffset = 0;
     int leapMilliseconds;
     if (seconds == 60) {
       leapMilliseconds = milliseconds + 1;
@@ -170,10 +170,13 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
     }
     else
       leapMilliseconds = 0;
-    GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT" + gmtOffset));
+    GregorianCalendar cal = new GregorianCalendar();
     cal.setLenient(false);
     cal.setGregorianChange(new Date(Long.MIN_VALUE));
     cal.clear();
+    // Using a time zone of "GMT+XX:YY" doesn't work with JDK 1.1, so we have to do it like this.
+    cal.set(Calendar.ZONE_OFFSET, tzOffset);
+    cal.set(Calendar.DST_OFFSET, 0);
     cal.set(Calendar.ERA, negative ? GregorianCalendar.BC : GregorianCalendar.AD);
     // months in ISO8601 start with 1; months in Java start with 0
     cal.set(year, month - 1, day, hours, minutes, seconds);
@@ -184,6 +187,11 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
     catch (IllegalArgumentException e) {
       return null;
     }
+  }
+
+  static private int parseTimeZone(String str, int i) {
+    int sign = str.charAt(i) == '-' ? -1 : 1;
+    return (Integer.parseInt(str.substring(i + 1, i + 3))*60 + Integer.parseInt(str.substring(i + 4)))*60*1000*sign;
   }
 
   static private int parse2Digits(String str, int i) {
