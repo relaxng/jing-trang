@@ -1,0 +1,1290 @@
+options {
+  STATIC = false;
+  UNICODE_INPUT = true;
+}
+
+PARSER_BEGIN(NonXmlSyntax)
+
+package com.thaiopensource.relaxng.parse.nonxml;
+
+import com.thaiopensource.relaxng.parse.SchemaBuilder;
+import com.thaiopensource.relaxng.parse.Annotations;
+import com.thaiopensource.relaxng.parse.DataPatternBuilder;
+import com.thaiopensource.relaxng.parse.ParsedPattern;
+import com.thaiopensource.relaxng.parse.ParsedNameClass;
+import com.thaiopensource.relaxng.parse.Scope;
+import com.thaiopensource.relaxng.parse.GrammarSection;
+import com.thaiopensource.relaxng.parse.Grammar;
+import com.thaiopensource.relaxng.parse.Include;
+import com.thaiopensource.relaxng.parse.IllegalSchemaException;
+import com.thaiopensource.relaxng.parse.Location;
+
+import org.relaxng.datatype.ValidationContext;
+
+import java.util.Hashtable;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+public class NonXmlSyntax {
+
+  private static final String xmlUri = "http://www.w3.org/XML/1998/namespace";
+  private String defaultNamespace = SchemaBuilder.INHERIT_NS;
+  private SchemaBuilder sb;
+  private Hashtable namespaceTable = new Hashtable();
+  private Hashtable datatypesTable = new Hashtable();
+  private String sourceUri;
+  private static String unquote(String s) {
+    char quoteChar = s.charAt(0);
+    s = s.substring(1, s.length() - 1);
+    for (int i = 0; (i = s.indexOf(quoteChar, i)) >= 0; i++)
+      s = s.substring(0, i) + s.substring(i + 1);
+    return s;
+  }
+  private Location makeLocation(Token t) {
+    return sb.makeLocation(sourceUri, t.beginLine, t.beginColumn);
+  }
+  private ValidationContext getValidationContext() {
+    return null; // XXX
+  }
+  private String resolve(String str) {
+    try {
+     return new URL(new URL(sourceUri), str).toString();
+    }
+    catch (MalformedURLException e) { }
+    return str;
+  }
+  private static String normalizeNewlines(String str) {
+    int i = str.indexOf('\r');
+    if (i < 0)
+      return str;
+    StringBuffer buf = new StringBuffer();
+    for (i = 0; i < str.length(); i++) {
+      char c = str.charAt(i);
+      if (c == '\r') {
+	buf.append('\n');
+	if (i + 1 < str.length() && str.charAt(i + 1) == '\n')
+	  i++;
+      }
+      else
+	buf.append(c);
+    }
+    return buf.toString();
+  }
+}
+
+PARSER_END(NonXmlSyntax)
+
+ParsedPattern Input(SchemaBuilder sb) throws SyntaxException :
+{
+  ParsedPattern p;
+}
+{
+  { this.sb = sb; }
+  (<BYTE_ORDER_MARK>)?
+  // If it starts with a non-reserved word it must be a grammar,
+  // because there would be no way to define an identifier
+  Preamble()
+  (LOOKAHEAD(1) p = TopLevelGrammar() | p = Expr(null))
+  <EOF>
+  { return p; }
+}
+
+ParsedPattern TopLevelGrammar() throws SyntaxException :
+{
+  Annotations a;
+  Grammar g;
+}
+{
+  a = Annotations()
+  { g = sb.makeGrammar(null); }
+  (GrammarComponent(g, g))+
+  /* XXX make a location */
+  { return g.endGrammar(null, a); }
+}
+
+void Preamble() :
+{}
+{
+  (NamespaceDecl() | DatatypesDecl())*
+  { namespaceTable.put("xml", xmlUri); }
+}
+
+void NamespaceDecl() :
+{
+  LocatedString prefix = null;
+  boolean isDefault = false;
+  String namespaceName;
+}
+{
+  (("namespace" prefix = UnprefixedName())
+    | ("default" { isDefault = true; }
+      "namespace" (prefix = UnprefixedName())?))
+  "="
+  namespaceName = NamespaceName()
+  {
+    if (isDefault)
+      defaultNamespace = namespaceName;
+    if (prefix != null)
+      namespaceTable.put(prefix.getString(), namespaceName);
+  }
+}
+
+String NamespaceName() :
+{
+  String r;
+}
+{
+  (r = Literal() | "inherit" { r = SchemaBuilder.INHERIT_NS; })
+  { return r; }
+}
+
+void DatatypesDecl() :
+{
+  LocatedString prefix;
+  String uri;
+}
+{
+  "datatypes" prefix = UnprefixedName() "=" uri = Literal()
+  {
+    datatypesTable.put(prefix.getString(), uri);
+  }
+}
+
+ParsedPattern PrimaryExpr(Scope scope) throws SyntaxException :
+{
+  ParsedPattern p;
+}
+{
+  (p = ElementExpr(scope)
+   | p = AttributeExpr(scope)
+   | p = GrammarExpr(scope)
+   | p = ExternalRefExpr(scope)
+   | p = ListExpr(scope)
+   | p = MixedExpr(scope)
+   | p = ParenExpr(scope)
+   | p = IdentifierExpr(scope)
+   | p = ParentExpr(scope)
+   | p = DataExpr(scope)
+   | p = ValueExpr()
+   | p = TextExpr()
+   | p = EmptyExpr()
+   | p = NotAllowedExpr())
+  { return p; }
+}
+
+ParsedPattern EmptyExpr() throws SyntaxException :
+{
+  Token t;
+  Annotations a;
+}
+{
+  t = "empty" a = Annotations()
+  { return sb.makeEmpty(makeLocation(t), a); }
+}
+
+ParsedPattern TextExpr() throws SyntaxException :
+{
+  Token t;
+  Annotations a;
+}
+{
+  t = "text" a = Annotations()
+  { return sb.makeText(makeLocation(t), a); }
+}
+
+ParsedPattern NotAllowedExpr() throws SyntaxException :
+{
+  Token t;
+  Annotations a;
+}
+{
+  t = "notAllowed" a = Annotations()
+  { return sb.makeNotAllowed(makeLocation(t), a); }
+}
+
+ParsedPattern Expr(Scope scope) throws SyntaxException :
+{
+  Token t;
+  ParsedPattern p;
+  ParsedPattern p2;
+}
+{
+  p = UnaryExpr(scope)
+  (
+   (t = "|" p2 = UnaryExpr(scope) { p = sb.makeChoice(p, p2, makeLocation(t), null); } )+
+    | (t = "&" p2 = UnaryExpr(scope) { p = sb.makeInterleave(p, p2, makeLocation(t), null); } )+
+    | (t = "," p2 = UnaryExpr(scope) { p = sb.makeGroup(p, p2, makeLocation(t), null); } )+
+  )?
+  { return p; }
+}
+
+ParsedPattern UnaryExpr(Scope scope) throws SyntaxException :
+{
+  ParsedPattern p;
+  Token t;
+}
+{
+  p = PrimaryExpr(scope)
+  (
+   t = "+" { p = sb.makeOneOrMore(p, makeLocation(t), null); }
+   | t = "?" { p = sb.makeOptional(p, makeLocation(t), null); }
+   | t = "*" { p = sb.makeZeroOrMore(p, makeLocation(t), null); }
+  )?
+  { return p; }
+}
+
+ParsedPattern ElementExpr(Scope scope) throws SyntaxException :
+{
+  Token t;
+  ParsedNameClass nc;
+  ParsedPattern p;
+  Annotations a;
+}
+{
+  t = "element" nc = NameClass(false) a = Annotations() "{" p = Expr(scope) "}"
+  { return sb.makeElement(nc, p, makeLocation(t), a); }
+}
+
+ParsedPattern AttributeExpr(Scope scope) throws SyntaxException :
+{
+  Token t;
+  ParsedNameClass nc;
+  ParsedPattern p;
+  Annotations a;
+}
+{
+  t = "attribute" nc = NameClass(true) a = Annotations() "{" p = Expr(scope) "}"
+  { return sb.makeAttribute(nc, p, makeLocation(t), a); }
+}
+
+ParsedNameClass NameClass(boolean inAttribute) throws SyntaxException :
+{
+  ParsedNameClass nc;
+}
+{
+  (nc = PrimaryNameClass(inAttribute) nc = NameClassAlternatives(inAttribute, nc))
+  | nc = AnyNameExceptClass(inAttribute)
+  | nc = NsNameExceptClass(inAttribute)
+  { return nc; }
+}
+
+ParsedNameClass NameClassAlternatives(boolean inAttribute, ParsedNameClass nc) throws SyntaxException :
+{
+  Token t;
+  ParsedNameClass nc2;
+}
+{
+  (t = "|" nc2 = BasicNameClass(inAttribute) { nc = sb.makeChoice(nc, nc2, makeLocation(t), null); })*
+  { return nc; }
+}
+
+ParsedNameClass BasicNameClass(boolean inAttribute) throws SyntaxException :
+{
+  ParsedNameClass nc;
+}
+{
+  (nc = PrimaryNameClass(inAttribute)
+  | nc = OpenNameClass())
+  { return nc; }
+}
+
+ParsedNameClass PrimaryNameClass(boolean inAttribute) throws SyntaxException :
+{
+  ParsedNameClass nc;
+}
+{
+  (nc = UnprefixedNameClass(inAttribute)
+   | nc = PrefixedNameClass() 
+   | nc = ParenNameClass(inAttribute))
+  { return nc; }
+}
+
+ParsedNameClass OpenNameClass() throws SyntaxException :
+{
+  Token t;
+  LocatedString ns;
+}
+{
+  ns = NsName() { return sb.makeNsName(ns.getString(), ns.getLocation(), null); }
+  | t = "*" { return sb.makeAnyName(makeLocation(t), null); }
+}
+
+
+ParsedNameClass UnprefixedNameClass(boolean inAttribute) :
+{
+  LocatedString name;
+}
+{
+  name = UnprefixedName()
+  {
+    String ns;
+    if (inAttribute)
+      ns = "";
+    else
+      ns = defaultNamespace;
+    return sb.makeName(ns, name.getString(), null, name.getLocation(), null);
+  }
+}
+
+ParsedNameClass PrefixedNameClass() throws SyntaxException :
+{
+  Token t;
+}
+{
+  t = <PREFIXED_NAME>
+  {
+    String qn = t.image;
+    int colon = qn.indexOf(':');
+    String prefix = qn.substring(0, colon);
+    String ns = (String)namespaceTable.get(prefix);
+    if (ns == null)
+      throw new UndeclaredPrefixException(prefix, t);
+    return sb.makeName(ns, qn.substring(colon + 1), prefix, makeLocation(t), null);
+  }
+}
+
+ParsedNameClass NsNameExceptClass(boolean inAttribute) throws SyntaxException :
+{
+  LocatedString ns;
+  ParsedNameClass nc;
+}
+{
+  ns = NsName()
+  ((nc = ExceptNameClass(inAttribute) { return sb.makeNsName(ns.getString(), nc, ns.getLocation(), null); })
+    | ({ nc = sb.makeNsName(ns.getString(), ns.getLocation(), null); } 
+         nc = NameClassAlternatives(inAttribute, nc) { return nc; }))
+}
+
+LocatedString NsName() throws SyntaxException :
+{
+  Token t;
+}
+{
+  t = <PREFIX_STAR> 
+  {
+    String qn = t.image;
+    String prefix = qn.substring(0, qn.length() - 2);
+    String ns = (String)namespaceTable.get(prefix);
+    if (ns == null)
+      throw new UndeclaredPrefixException(prefix, t);
+    return new LocatedString(ns, makeLocation(t));
+  }
+}
+
+ParsedNameClass AnyNameExceptClass(boolean inAttribute) throws SyntaxException :
+{
+  Token t;
+  ParsedNameClass nc;
+}
+{
+  t = "*"
+ ((nc = ExceptNameClass(inAttribute) { return sb.makeAnyName(nc, makeLocation(t), null); })
+   | ({ nc = sb.makeAnyName(makeLocation(t), null); } 
+      nc = NameClassAlternatives(inAttribute, nc)
+      { return nc; }))
+}
+
+ParsedNameClass ParenNameClass(boolean inAttribute) throws SyntaxException :
+{
+  ParsedNameClass nc;
+}
+{
+  "(" nc = NameClass(inAttribute) ")"
+  { return nc; }
+}
+
+ParsedNameClass ExceptNameClass(boolean inAttribute) throws SyntaxException :
+{
+  ParsedNameClass nc;
+}
+{
+  "-" nc = BasicNameClass(inAttribute)
+  { return nc; }
+}
+
+ParsedPattern ListExpr(Scope scope) throws SyntaxException :
+{
+  Token t;
+  Annotations a;
+  ParsedPattern p;
+}
+{
+  t = "list" a = Annotations() "{" p = Expr(scope) "}"
+  { return sb.makeList(p, makeLocation(t), a); }
+}
+
+ParsedPattern MixedExpr(Scope scope) throws SyntaxException :
+{
+  Token t;
+  Annotations a;
+  ParsedPattern p;
+}
+{
+  t = "mixed" a = Annotations() "{" p = Expr(scope) "}"
+  { return sb.makeMixed(p, makeLocation(t), a); }
+}
+
+ParsedPattern GrammarExpr(Scope scope) throws SyntaxException :
+{
+  Token t;
+  Grammar g;
+  Annotations a;
+}
+{
+  t = "grammar" a = Annotations() { g = sb.makeGrammar(scope); }
+  "{" (GrammarComponent(g, g))+ "}" { return g.endGrammar(makeLocation(t), a); }
+}
+
+ParsedPattern ParenExpr(Scope scope) throws SyntaxException :
+{
+  Annotations a;
+  ParsedPattern p;
+}
+{
+  "(" a = Annotations() p = Expr(scope) ")"
+  // XXX annotations lost
+  { return p; }
+}
+
+void GrammarComponent(GrammarSection section, Scope scope) throws SyntaxException :
+{}
+{
+  Definition(section, scope) | Include(section, scope)
+}
+
+void Definition(GrammarSection section, Scope scope) throws SyntaxException :
+{}
+{
+  Define(section, scope) | Start(section, scope)
+}
+
+void Start(GrammarSection section, Scope scope) throws SyntaxException :
+{
+  Annotations a;
+  Token t;
+  GrammarSection.Combine combine;
+  ParsedPattern p;
+}
+{
+  t = "start" a = Annotations() (combine = AssignOp()) p = Expr(scope)
+  { section.define(GrammarSection.START, combine, p, makeLocation(t), a); }
+}
+
+void Define(GrammarSection section, Scope scope) throws SyntaxException :
+{
+  LocatedString name;
+  Annotations a;
+  GrammarSection.Combine combine;
+  ParsedPattern p;
+}
+{
+  (name = Identifier()) a = Annotations() (combine = AssignOp()) p = Expr(scope)
+  { section.define(name.getString(), combine, p, name.getLocation(), a); }
+}
+
+GrammarSection.Combine AssignOp() :
+{}
+{
+  "=" { return null; }
+  | "|=" { return GrammarSection.COMBINE_CHOICE; }
+  | "&=" { return GrammarSection.COMBINE_INTERLEAVE; }
+}
+
+void Include(GrammarSection section, Scope scope) throws SyntaxException :
+{
+  Token t;
+  String href;
+  String ns;
+  Annotations a;
+  Include include = section.makeInclude();
+}
+{
+  t = "include" href = Literal()
+  ns = Inherit()
+  a = Annotations()
+  ("{" (Definition(include, scope))* "}")?
+  {
+    try {
+      include.endInclude(resolve(href), ns, makeLocation(t), a);
+    }
+    catch (IllegalSchemaException e) { }
+  }
+}
+
+ParsedPattern ExternalRefExpr(Scope scope) throws SyntaxException :
+{
+  Token t;
+  String href;
+  String ns;
+  Annotations a;
+}
+{
+  t = "externalRef" href = Literal() 
+  ns = Inherit()
+  a = Annotations()
+  { 
+    try {
+      return sb.makeExternalRef(resolve(href), ns, scope, makeLocation(t), a);
+    }
+    catch (IllegalSchemaException e) {
+      return sb.makeErrorPattern();
+    }
+  }
+}
+
+String Inherit() throws SyntaxException :
+{
+  String ns = null;
+}
+{
+  ("inherit" "=" ns = Prefix())?
+  {
+    if (ns == null)
+      ns = defaultNamespace;
+    if (ns == SchemaBuilder.INHERIT_NS)
+      ns = null;
+    return ns;
+  }
+}
+
+ParsedPattern ParentExpr(Scope scope) throws SyntaxException :
+{
+  LocatedString name;
+  Annotations a;
+}
+{
+  "parent" name = Identifier() a = Annotations()
+  /* XXX check for null */
+  { return scope.getParent().makeRef(name.getString(), name.getLocation(), a); }
+}
+
+ParsedPattern IdentifierExpr(Scope scope) throws SyntaxException :
+{
+  LocatedString name;
+  Annotations a;
+}
+{
+  name = Identifier() a = Annotations()
+  /* XXX check for null */
+  { return scope.makeRef(name.getString(), name.getLocation(), a); }
+}
+
+ParsedPattern ValueExpr() throws SyntaxException :
+{
+  LocatedString s;
+  Annotations a;
+}
+{
+  s = LocatedLiteral() a = NoChildAnnotations()
+  { return sb.makeValue("", "token", s.getString(), getValidationContext(), s.getLocation(), a); }
+}
+
+ParsedPattern DataExpr(Scope scope) throws SyntaxException :
+{
+  Token datatypeToken;
+  Location loc;
+  String datatype;
+  String datatypeUri = null;
+  String s = null;
+  Annotations a;
+  ParsedPattern e = null;
+  DataPatternBuilder dpb;
+}
+{
+  datatypeToken = DatatypeName()
+  {
+    datatype = datatypeToken.image;
+    loc = makeLocation(datatypeToken);
+    int colon = datatype.indexOf(':');
+    if (colon < 0)
+      datatypeUri = "";
+    else {
+      String prefix = datatype.substring(0, colon);
+      datatypeUri = (String)datatypesTable.get(prefix);
+      if (datatypeUri == null)
+        throw new UndeclaredPrefixException(prefix, datatypeToken);
+      datatype = datatype.substring(colon + 1);
+    }
+  }
+  ((s = Literal() a = NoChildAnnotations()
+    { return sb.makeValue(datatypeUri, datatype, s, getValidationContext(), loc, a); }
+  )
+  | ( a = Annotations()
+      { dpb = sb.makeDataPatternBuilder(datatypeUri, datatype, loc); }
+      ( (Params(dpb) (e = Except(scope))?)
+        | (e = Except(scope))?)
+      { return e == null ? dpb.makePattern(loc, a) : dpb.makePattern(e, loc, a); }))
+}
+
+Token DatatypeName() :
+{
+  Token t;
+}
+{
+  (t = "string" | t = "token" | t = <PREFIXED_NAME>)
+  { return t; }
+}
+
+LocatedString Identifier() :
+{
+  LocatedString s;
+  Token t;
+}
+{
+  (t = <IDENTIFIER> { s = new LocatedString(t.image, makeLocation(t)); }
+  | t = <ESCAPED_IDENTIFIER> { s = new LocatedString(t.image.substring(1), makeLocation(t)); })
+  { return s; }
+}
+
+String Prefix() throws SyntaxException :
+{
+  Token t;
+  String prefix;
+}
+{
+  (t = <IDENTIFIER> { prefix = t.image; }
+  | t = <ESCAPED_IDENTIFIER> { prefix = t.image.substring(1); }
+  | t = Keyword() { prefix = t.image; })
+  {
+    String ns = (String)namespaceTable.get(prefix);
+    if (ns == null)
+      throw new UndeclaredPrefixException(prefix, t);
+    return ns;
+  }
+}
+
+LocatedString UnprefixedName() :
+{
+  LocatedString s;
+  Token t;
+}
+{
+  (s = Identifier()
+   | t = Keyword() { s = new LocatedString(t.image, makeLocation(t)); })
+  { return s; }
+}
+
+void Params(DataPatternBuilder dpb) throws SyntaxException :
+{}
+{
+  "{" (Param(dpb))* "}"
+}
+
+void Param(DataPatternBuilder dpb) throws SyntaxException :
+{
+  LocatedString name;
+  Annotations a;
+  String value;
+}
+{
+  name = UnprefixedName() a = NoChildAnnotations() "=" value = Literal()
+  { dpb.addParam(name.getString(), value, getValidationContext(), name.getLocation(), a); }
+}
+
+ParsedPattern Except(Scope scope) throws SyntaxException :
+{
+  ParsedPattern p;
+}
+{
+  "-" p = PrimaryExpr(scope)
+  { return p; }
+}
+
+Annotations Annotations() throws SyntaxException :
+{
+  Annotations a = sb.makeAnnotations();
+}
+{
+  ("["( AnnotationAttribute(a) )+ "]")?
+  (ExtensionElement(a))*
+   /* XXX (">>" (ExtensionElement(a))*)? */
+  { return a; }
+}
+
+Annotations NoChildAnnotations() throws SyntaxException :
+{
+  Annotations a = sb.makeAnnotations();
+}
+{
+  ("["( AnnotationAttribute(a) )+ "]")?
+  (">>")? (ExtensionElement(a))*
+  { return a; }
+}
+
+void AnnotationAttribute(Annotations a) throws SyntaxException :
+{
+  Token t;
+  String value;
+}
+{
+  t = <PREFIXED_NAME> "=" value = Literal()
+  {
+    String qn = t.image;
+    int colon = qn.indexOf(':');
+    String prefix = qn.substring(0, colon);
+    String ns = (String)namespaceTable.get(prefix);
+    if (ns == null)
+      throw new UndeclaredPrefixException(prefix, t);
+    if (ns == SchemaBuilder.INHERIT_NS || ns.length() == 0)
+      throw new BadAnnotationPrefixException(prefix, t);
+    a.addAttribute(ns, qn.substring(colon + 1), prefix, value, makeLocation(t));
+  }
+}
+
+void ExtensionElement(Annotations a) throws SyntaxException :
+{
+  StringBuffer buf = new StringBuffer();
+}
+{
+  Element(buf)
+  {
+    String e = buf.toString();
+    e = normalizeNewlines(e);
+    a.addElement(new ElementAnnotationImpl(e));
+  }
+}
+
+void Element(StringBuffer buf) throws SyntaxException :
+{
+  Token t;
+}
+{
+  t = <EMPTY_ELEMENT>
+  { buf.append(t.image); }
+  | (t = <START_TAG> { buf.append(t.image); }
+     (Element(buf))*
+     t = <END_TAG> { buf.append(t.image); })
+}
+
+String Literal() :
+{
+  Token t;
+}
+{
+  t = <LITERAL>
+  {
+    return normalizeNewlines(unquote(t.image));
+  }
+}
+
+LocatedString LocatedLiteral() :
+{
+  Token t;
+}
+{
+  t = <LITERAL>
+  {
+    return new LocatedString(normalizeNewlines(unquote(t.image)), makeLocation(t));
+  }
+}
+
+Token Keyword() :
+{
+  Token t;
+}
+{
+  (t = "element"
+  | t = "attribute"
+  | t = "namespace"
+  | t = "list"
+  | t = "mixed"
+  | t = "grammar"
+  | t = "empty"
+  | t = "text"
+  | t = "parent"
+  | t = "externalRef"
+  | t = "notAllowed"
+  | t = "start"
+  | t = "include"
+  | t = "default"
+  | t = "inherit"
+  | t = "string"
+  | t = "token"
+  | t = "datatypes")
+  { return t; }
+}
+
+
+SKIP: { " " | "\r" | "\n" | "\t" }
+
+SPECIAL_TOKEN:
+{
+  < SINGLE_LINE_COMMENT: "#" (~["\n","\r"])* >
+}
+
+TOKEN :
+{
+  < #BASE_CHAR : [
+    "\u0041" - "\u005a",
+    "\u0061" - "\u007a",
+    "\u00c0" - "\u00d6",
+    "\u00d8" - "\u00f6",
+    "\u00f8" - "\u00ff",
+    "\u0100" - "\u0131",
+    "\u0134" - "\u013e",
+    "\u0141" - "\u0148",
+    "\u014a" - "\u017e",
+    "\u0180" - "\u01c3",
+    "\u01cd" - "\u01f0",
+    "\u01f4" - "\u01f5",
+    "\u01fa" - "\u0217",
+    "\u0250" - "\u02a8",
+    "\u02bb" - "\u02c1",
+    "\u0386",
+    "\u0388" - "\u038a",
+    "\u038c",
+    "\u038e" - "\u03a1",
+    "\u03a3" - "\u03ce",
+    "\u03d0" - "\u03d6",
+    "\u03da",
+    "\u03dc",
+    "\u03de",
+    "\u03e0",
+    "\u03e2" - "\u03f3",
+    "\u0401" - "\u040c",
+    "\u040e" - "\u044f",
+    "\u0451" - "\u045c",
+    "\u045e" - "\u0481",
+    "\u0490" - "\u04c4",
+    "\u04c7" - "\u04c8",
+    "\u04cb" - "\u04cc",
+    "\u04d0" - "\u04eb",
+    "\u04ee" - "\u04f5",
+    "\u04f8" - "\u04f9",
+    "\u0531" - "\u0556",
+    "\u0559",
+    "\u0561" - "\u0586",
+    "\u05d0" - "\u05ea",
+    "\u05f0" - "\u05f2",
+    "\u0621" - "\u063a",
+    "\u0641" - "\u064a",
+    "\u0671" - "\u06b7",
+    "\u06ba" - "\u06be",
+    "\u06c0" - "\u06ce",
+    "\u06d0" - "\u06d3",
+    "\u06d5",
+    "\u06e5" - "\u06e6",
+    "\u0905" - "\u0939",
+    "\u093d",
+    "\u0958" - "\u0961",
+    "\u0985" - "\u098c",
+    "\u098f" - "\u0990",
+    "\u0993" - "\u09a8",
+    "\u09aa" - "\u09b0",
+    "\u09b2",
+    "\u09b6" - "\u09b9",
+    "\u09dc" - "\u09dd",
+    "\u09df" - "\u09e1",
+    "\u09f0" - "\u09f1",
+    "\u0a05" - "\u0a0a",
+    "\u0a0f" - "\u0a10",
+    "\u0a13" - "\u0a28",
+    "\u0a2a" - "\u0a30",
+    "\u0a32" - "\u0a33",
+    "\u0a35" - "\u0a36",
+    "\u0a38" - "\u0a39",
+    "\u0a59" - "\u0a5c",
+    "\u0a5e",
+    "\u0a72" - "\u0a74",
+    "\u0a85" - "\u0a8b",
+    "\u0a8d",
+    "\u0a8f" - "\u0a91",
+    "\u0a93" - "\u0aa8",
+    "\u0aaa" - "\u0ab0",
+    "\u0ab2" - "\u0ab3",
+    "\u0ab5" - "\u0ab9",
+    "\u0abd",
+    "\u0ae0",
+    "\u0b05" - "\u0b0c",
+    "\u0b0f" - "\u0b10",
+    "\u0b13" - "\u0b28",
+    "\u0b2a" - "\u0b30",
+    "\u0b32" - "\u0b33",
+    "\u0b36" - "\u0b39",
+    "\u0b3d",
+    "\u0b5c" - "\u0b5d",
+    "\u0b5f" - "\u0b61",
+    "\u0b85" - "\u0b8a",
+    "\u0b8e" - "\u0b90",
+    "\u0b92" - "\u0b95",
+    "\u0b99" - "\u0b9a",
+    "\u0b9c",
+    "\u0b9e" - "\u0b9f",
+    "\u0ba3" - "\u0ba4",
+    "\u0ba8" - "\u0baa",
+    "\u0bae" - "\u0bb5",
+    "\u0bb7" - "\u0bb9",
+    "\u0c05" - "\u0c0c",
+    "\u0c0e" - "\u0c10",
+    "\u0c12" - "\u0c28",
+    "\u0c2a" - "\u0c33",
+    "\u0c35" - "\u0c39",
+    "\u0c60" - "\u0c61",
+    "\u0c85" - "\u0c8c",
+    "\u0c8e" - "\u0c90",
+    "\u0c92" - "\u0ca8",
+    "\u0caa" - "\u0cb3",
+    "\u0cb5" - "\u0cb9",
+    "\u0cde",
+    "\u0ce0" - "\u0ce1",
+    "\u0d05" - "\u0d0c",
+    "\u0d0e" - "\u0d10",
+    "\u0d12" - "\u0d28",
+    "\u0d2a" - "\u0d39",
+    "\u0d60" - "\u0d61",
+    "\u0e01" - "\u0e2e",
+    "\u0e30",
+    "\u0e32" - "\u0e33",
+    "\u0e40" - "\u0e45",
+    "\u0e81" - "\u0e82",
+    "\u0e84",
+    "\u0e87" - "\u0e88",
+    "\u0e8a",
+    "\u0e8d",
+    "\u0e94" - "\u0e97",
+    "\u0e99" - "\u0e9f",
+    "\u0ea1" - "\u0ea3",
+    "\u0ea5",
+    "\u0ea7",
+    "\u0eaa" - "\u0eab",
+    "\u0ead" - "\u0eae",
+    "\u0eb0",
+    "\u0eb2" - "\u0eb3",
+    "\u0ebd",
+    "\u0ec0" - "\u0ec4",
+    "\u0f40" - "\u0f47",
+    "\u0f49" - "\u0f69",
+    "\u10a0" - "\u10c5",
+    "\u10d0" - "\u10f6",
+    "\u1100",
+    "\u1102" - "\u1103",
+    "\u1105" - "\u1107",
+    "\u1109",
+    "\u110b" - "\u110c",
+    "\u110e" - "\u1112",
+    "\u113c",
+    "\u113e",
+    "\u1140",
+    "\u114c",
+    "\u114e",
+    "\u1150",
+    "\u1154" - "\u1155",
+    "\u1159",
+    "\u115f" - "\u1161",
+    "\u1163",
+    "\u1165",
+    "\u1167",
+    "\u1169",
+    "\u116d" - "\u116e",
+    "\u1172" - "\u1173",
+    "\u1175",
+    "\u119e",
+    "\u11a8",
+    "\u11ab",
+    "\u11ae" - "\u11af",
+    "\u11b7" - "\u11b8",
+    "\u11ba",
+    "\u11bc" - "\u11c2",
+    "\u11eb",
+    "\u11f0",
+    "\u11f9",
+    "\u1e00" - "\u1e9b",
+    "\u1ea0" - "\u1ef9",
+    "\u1f00" - "\u1f15",
+    "\u1f18" - "\u1f1d",
+    "\u1f20" - "\u1f45",
+    "\u1f48" - "\u1f4d",
+    "\u1f50" - "\u1f57",
+    "\u1f59",
+    "\u1f5b",
+    "\u1f5d",
+    "\u1f5f" - "\u1f7d",
+    "\u1f80" - "\u1fb4",
+    "\u1fb6" - "\u1fbc",
+    "\u1fbe",
+    "\u1fc2" - "\u1fc4",
+    "\u1fc6" - "\u1fcc",
+    "\u1fd0" - "\u1fd3",
+    "\u1fd6" - "\u1fdb",
+    "\u1fe0" - "\u1fec",
+    "\u1ff2" - "\u1ff4",
+    "\u1ff6" - "\u1ffc",
+    "\u2126",
+    "\u212a" - "\u212b",
+    "\u212e",
+    "\u2180" - "\u2182",
+    "\u3041" - "\u3094",
+    "\u30a1" - "\u30fa",
+    "\u3105" - "\u312c",
+    "\uac00" - "\ud7a3"
+    ] >
+  | < #IDEOGRAPHIC : [
+    "\u4e00" - "\u9fa5",
+    "\u3007",
+    "\u3021" - "\u3029"
+    ] >
+  | < #LETTER : (<BASE_CHAR> | <IDEOGRAPHIC>) >
+  | < #COMBINING_CHAR : [
+    "\u0300" - "\u0345",
+    "\u0360" - "\u0361",
+    "\u0483" - "\u0486",
+    "\u0591" - "\u05a1",
+    "\u05a3" - "\u05b9",
+    "\u05bb" - "\u05bd",
+    "\u05bf",
+    "\u05c1" - "\u05c2",
+    "\u05c4",
+    "\u064b" - "\u0652",
+    "\u0670",
+    "\u06d6" - "\u06dc",
+    "\u06dd" - "\u06df",
+    "\u06e0" - "\u06e4",
+    "\u06e7" - "\u06e8",
+    "\u06ea" - "\u06ed",
+    "\u0901" - "\u0903",
+    "\u093c",
+    "\u093e" - "\u094c",
+    "\u094d",
+    "\u0951" - "\u0954",
+    "\u0962" - "\u0963",
+    "\u0981" - "\u0983",
+    "\u09bc",
+    "\u09be",
+    "\u09bf",
+    "\u09c0" - "\u09c4",
+    "\u09c7" - "\u09c8",
+    "\u09cb" - "\u09cd",
+    "\u09d7",
+    "\u09e2" - "\u09e3",
+    "\u0a02",
+    "\u0a3c",
+    "\u0a3e",
+    "\u0a3f",
+    "\u0a40" - "\u0a42",
+    "\u0a47" - "\u0a48",
+    "\u0a4b" - "\u0a4d",
+    "\u0a70" - "\u0a71",
+    "\u0a81" - "\u0a83",
+    "\u0abc",
+    "\u0abe" - "\u0ac5",
+    "\u0ac7" - "\u0ac9",
+    "\u0acb" - "\u0acd",
+    "\u0b01" - "\u0b03",
+    "\u0b3c",
+    "\u0b3e" - "\u0b43",
+    "\u0b47" - "\u0b48",
+    "\u0b4b" - "\u0b4d",
+    "\u0b56" - "\u0b57",
+    "\u0b82" - "\u0b83",
+    "\u0bbe" - "\u0bc2",
+    "\u0bc6" - "\u0bc8",
+    "\u0bca" - "\u0bcd",
+    "\u0bd7",
+    "\u0c01" - "\u0c03",
+    "\u0c3e" - "\u0c44",
+    "\u0c46" - "\u0c48",
+    "\u0c4a" - "\u0c4d",
+    "\u0c55" - "\u0c56",
+    "\u0c82" - "\u0c83",
+    "\u0cbe" - "\u0cc4",
+    "\u0cc6" - "\u0cc8",
+    "\u0cca" - "\u0ccd",
+    "\u0cd5" - "\u0cd6",
+    "\u0d02" - "\u0d03",
+    "\u0d3e" - "\u0d43",
+    "\u0d46" - "\u0d48",
+    "\u0d4a" - "\u0d4d",
+    "\u0d57",
+    "\u0e31",
+    "\u0e34" - "\u0e3a",
+    "\u0e47" - "\u0e4e",
+    "\u0eb1",
+    "\u0eb4" - "\u0eb9",
+    "\u0ebb" - "\u0ebc",
+    "\u0ec8" - "\u0ecd",
+    "\u0f18" - "\u0f19",
+    "\u0f35",
+    "\u0f37",
+    "\u0f39",
+    "\u0f3e",
+    "\u0f3f",
+    "\u0f71" - "\u0f84",
+    "\u0f86" - "\u0f8b",
+    "\u0f90" - "\u0f95",
+    "\u0f97",
+    "\u0f99" - "\u0fad",
+    "\u0fb1" - "\u0fb7",
+    "\u0fb9",
+    "\u20d0" - "\u20dc",
+    "\u20e1",
+    "\u302a" - "\u302f",
+    "\u3099",
+    "\u309a"
+    ] >
+  | < #DIGIT : [
+    "\u0030" - "\u0039",
+    "\u0660" - "\u0669",
+    "\u06f0" - "\u06f9",
+    "\u0966" - "\u096f",
+    "\u09e6" - "\u09ef",
+    "\u0a66" - "\u0a6f",
+    "\u0ae6" - "\u0aef",
+    "\u0b66" - "\u0b6f",
+    "\u0be7" - "\u0bef",
+    "\u0c66" - "\u0c6f",
+    "\u0ce6" - "\u0cef",
+    "\u0d66" - "\u0d6f",
+    "\u0e50" - "\u0e59",
+    "\u0ed0" - "\u0ed9",
+    "\u0f20" - "\u0f29"
+    ] >
+  | < #EXTENDER : [
+    "\u00b7",
+    "\u02d0",
+    "\u02d1",
+    "\u0387",
+    "\u0640",
+    "\u0e46",
+    "\u0ec6",
+    "\u3005",
+    "\u3031" - "\u3035",
+    "\u309d" - "\u309e",
+    "\u30fc" - "\u30fe"
+    ] >
+  | < #NMSTART : (<LETTER> | "_") >
+  | < #NMCHAR : (<LETTER> | <COMBINING_CHAR> | <EXTENDER> | <DIGIT> | "." | "-" | "_") >
+  | < #NCNAME: <NMSTART> (<NMCHAR>)* >
+  | < #HIGH_SURROGATE: [ "\ud800" - "\udbff" ]>
+  | < #LOW_SURROGATE: [ "\udc00" - "\udfff" ]>
+  | < #SURROGATE_PAIR: <HIGH_SURROGATE> <LOW_SURROGATE> >
+  | < #CHAR:  ["\t", "\n", "\r", "\u0020" - "\ud7ff", "\ue000" - "\ufffd"]
+              | <SURROGATE_PAIR> >
+  | < #CHAR_NOT_QUOT:  ["\t", "\n", "\r", "\u0020" - "\u0021",
+                        "\u0023" - "\ud7ff", "\ue000" - "\ufffd"]
+                       | <SURROGATE_PAIR> >
+  | < #CHAR_NOT_APOS:  ["\t", "\n", "\r", "\u0020" - "\u0026",
+                        "\u0028" - "\ud7ff", "\ue000" - "\ufffd"]
+                       | <SURROGATE_PAIR> >
+}
+
+TOKEN :
+{
+  < IDENTIFIER: <NCNAME> >
+  | < ESCAPED_IDENTIFIER: "\\" <NCNAME> >
+  | < PREFIX_STAR: <NCNAME> ":*" >
+  | < PREFIXED_NAME: <NCNAME> ":" <NCNAME> >
+  | < LITERAL : ( "\"" (<CHAR_NOT_QUOT> | "\"\"")* "\"")
+                | ("'" (<CHAR_NOT_APOS> | "''")* "'") >
+  | < BYTE_ORDER_MARK : "\ufeff" >
+}
+
+TOKEN :
+{
+  < #QNAME: <NCNAME> (":" <NCNAME>)? >
+  | < #S : (["\t", "\n", "\r", " "])+>
+}
+
+TOKEN_MGR_DECLS :
+{
+  int tagLevel;
+}
+
+<DEFAULT,CONTENT>
+MORE :
+{
+  < "<" <QNAME> > : STAG
+}
+
+<STAG>
+MORE :
+{
+  < #ATT_START: <S> <QNAME> (<S>)? "=" (<S>)? >
+  | < <ATT_START> "\"" > : LIT
+  | < <ATT_START> "'" > : LITA
+}
+
+<LIT>
+MORE :
+{
+  "\"" : STAG
+}
+
+<LITA>
+MORE :
+{
+  "'" : STAG
+}
+
+<LIT, LITA, CONTENT>
+TOKEN :
+{
+  <ILLEGAL_MARKUP_CHAR : ("&" | "<")>
+}
+
+<LIT, LITA, CONTENT>
+MORE :
+{
+  < <CHAR> >
+  | < "&#" ([ "0" - "9"])+ ";" >
+  | < "&#x" ([ "0" - "9", "a" - "f", "A" - "F" ])+ ";" >
+  | < "&" ("amp" | "lt" | "gt" | "quot" | "apos") ";" >
+}
+
+<CONTENT>
+MORE :
+{
+  "<!--" : COMMENT
+}
+
+<CONTENT>
+MORE :
+{
+  < "<?" <NCNAME> (<S> (<CHAR>)*)? "?>" >
+  | < "<![CDATA[" (<CHAR>)* "]]>" >
+}
+
+<CONTENT>
+TOKEN :
+{
+  < ILLEGAL_CONTENT_SEQUENCE : "]]>" >
+}
+
+<COMMENT>
+MORE :
+{
+  "-->" : CONTENT
+}
+
+<COMMENT>
+TOKEN :
+{
+  < ILLEGAL_COMMENT_SEQUENCE : "--" >
+}
+
+<COMMENT>
+MORE :
+{
+  < <CHAR> >
+}
+
+<STAG>
+TOKEN :
+{
+  < EMPTY_ELEMENT : (<S>)? "/>" >
+  { SwitchTo(tagLevel == 0 ? DEFAULT : CONTENT); }
+  | < START_TAG : (<S>)? ">" > { tagLevel++; } : CONTENT
+}
+
+<CONTENT>
+TOKEN :
+{
+  < END_TAG : "</" <QNAME> (<S>)? ">" >
+    { SwitchTo(--tagLevel == 0 ? DEFAULT : CONTENT); }
+}
+
+/* This avoids lexical errors from JavaCC. */
+<*>
+TOKEN :
+{
+  < ILLEGAL_CHAR : [ "\u0000" - "\u0008", "\u000b", "\u000c", "\u000e" - "\uffff" ] >
+}
