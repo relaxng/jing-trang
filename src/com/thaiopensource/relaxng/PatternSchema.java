@@ -12,6 +12,6 @@ class PatternSchema extends AbstractSchema {
   }
 
   public ValidatorHandler createValidator(ErrorHandler eh) {
-    return new Validator(start, new ValidatorPatternBuilder(spb), eh);
+    return new PatternValidatorHandler(start, new ValidatorPatternBuilder(spb), eh);
   }
 }

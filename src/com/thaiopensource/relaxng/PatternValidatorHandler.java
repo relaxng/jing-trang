@@ -12,7 +12,7 @@ import org.relaxng.datatype.ValidationContext;
 
 import java.util.Hashtable;
 
-class Validator implements ValidatorHandler {
+class PatternValidatorHandler implements ValidatorHandler {
   private final ValidatorPatternBuilder builder;
   private final Pattern start;
   private ErrorHandler eh;
@@ -215,7 +215,7 @@ class Validator implements ValidatorHandler {
     prefixMapping = prefixMapping.getPrevious();
   }
 
-  Validator(Pattern pattern, ValidatorPatternBuilder builder, ErrorHandler eh) {
+  PatternValidatorHandler(Pattern pattern, ValidatorPatternBuilder builder, ErrorHandler eh) {
     this.start = pattern;
     this.builder = builder;
     this.eh = eh;
