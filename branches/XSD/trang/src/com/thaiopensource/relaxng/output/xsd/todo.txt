@@ -3,6 +3,7 @@ Use global element declarations
 - when occurs at namespace boundary
 - when multiple elements, but only one occurs as the sole content of a define
 - when there's something we want to use in a subsitution group
+- avoid duplicate global elements with moved patterns
 
 Avoid duplicate attributes.
 
@@ -17,10 +18,6 @@ Nested grammars
 - check and give an error
 - handle some cases
 - expand when necessary
-
-Allow attribute names with empty namespace or target namespace
-
-Allow local elements with empty namespace
 
 Include overrides
 - Check and give error
@@ -88,4 +85,3 @@ the includes of G occured in F
 
 - generate imports to the heads of all target namespaces
 
-Move orphaned elements

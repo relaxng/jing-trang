@@ -47,6 +47,7 @@ class Output {
   private final String sourceUri;
   private final OutputDirectory od;
   private final String targetNamespace;
+  private String inheritedNamespace;
   private final ComponentVisitor topLevelOutput = new TopLevelOutput();
   private final PatternVisitor simpleTypeOutput = new SimpleTypeOutput();
   private final PatternVisitor groupOutput = new GroupOutput();
@@ -55,6 +56,7 @@ class Output {
   private final PatternVisitor attributeOutput = new AttributeOutput();
   private final PatternVisitor optionalAttributeOutput = new OptionalAttributeOutput();
   private final PatternVisitor globalElementOutput = new GlobalElementOutput();
+  private final PatternVisitor movedPatternOutput = new MovedPatternOutput();
   private final PatternVisitor occursCalculator = new OccursCalculator();
 
   static void output(SchemaInfo si, OutputDirectory od, ErrorReporter er) throws IOException {
@@ -98,6 +100,7 @@ class Output {
     xw.attribute("version", "1.0");
     if (!targetNamespace.equals(""))
       xw.attribute("targetNamespace", targetNamespace);
+    inheritedNamespace = si.getInheritedNamespace(sourceUri);
     for (Iterator iter = si.getTargetNamespaces().iterator(); iter.hasNext();) {
       String ns = (String)iter.next();
       // TODO omit xml prefix
@@ -113,6 +116,10 @@ class Output {
     }
     if (grammar != null)
       grammar.componentsAccept(topLevelOutput);
+    for (Iterator iter = si.getMovedPatterns(targetNamespace).iterator(); iter.hasNext();) {
+      Pattern p = (Pattern)iter.next();
+      p.accept(movedPatternOutput);
+    }
     xw.endElement();
     xw.close();
   }
@@ -268,8 +275,16 @@ class Output {
         xw.attribute("ref", si.qualifyName((NameNameClass)p.getNameClass(), sourceUri));
         xw.endElement();
       }
-      else
-        declareElement(p);
+      else {
+        String ns = resolveNamespace(((NameNameClass)p.getNameClass()).getNamespaceUri());
+        if (!ns.equals(targetNamespace) && !ns.equals("")) {
+          xw.startElement(xs("group"));
+          xw.attribute("ref", si.qualifyName(ns, si.getMovedPatternName(p, ns)));
+          xw.endElement();
+        }
+        else
+          declareElement(p);
+      }
       endWrapper();
       return null;
     }
@@ -541,22 +556,29 @@ class Output {
     void useAttribute() { }
 
     public Object visitAttribute(AttributePattern p) {
-      xw.startElement(xs("attribute"));
       NameNameClass nc = (NameNameClass)p.getNameClass();
-      xw.attribute("name",
-                   nc.getLocalName());
-      if (nc.getNamespaceUri().equals(targetNamespace) && !targetNamespace.equals(""))
-        xw.attribute("form", "qualified");
-      useAttribute();
-      Pattern value = p.getChild();
-      ChildType ct = si.getChildType(value);
-      // TODO handle empty
-      if (!ct.contains(ChildType.TEXT) && ct.contains(ChildType.DATA)) {
-        xw.startElement(xs("simpleType"));
-        value.accept(simpleTypeOutput);
+      String ns = resolveNamespace(nc.getNamespaceUri());
+      if (!ns.equals(targetNamespace) && !ns.equals("")) {
+        xw.startElement(xs("attributeGroup"));
+        xw.attribute("ref", si.qualifyName(ns, si.getMovedPatternName(p, ns)));
         xw.endElement();
       }
-      xw.endElement();
+      else {
+        xw.startElement(xs("attribute"));
+        xw.attribute("name", nc.getLocalName());
+        if (!ns.equals(""))
+          xw.attribute("form", "qualified");
+        useAttribute();
+        Pattern value = p.getChild();
+        ChildType ct = si.getChildType(value);
+        // TODO handle empty
+        if (!ct.contains(ChildType.TEXT) && ct.contains(ChildType.DATA)) {
+          xw.startElement(xs("simpleType"));
+          value.accept(simpleTypeOutput);
+          xw.endElement();
+        }
+        xw.endElement();
+      }
       return null;
     }
 
@@ -656,7 +678,29 @@ class Output {
       return null;
     }
 
+  }
 
+  class MovedPatternOutput extends AbstractVisitor {
+    public Object visitElement(ElementPattern p) {
+      inheritedNamespace = si.getMovedPatternInheritedNamespace(p);
+      if (globalElementName(p) == null) {
+        xw.startElement(xs("group"));
+        xw.attribute("name", si.getMovedPatternName(p, targetNamespace));
+        groupOutput.visitElement(p);
+        xw.endElement();
+      }
+      p.accept(globalElementOutput);
+      return null;
+    }
+
+    public Object visitAttribute(AttributePattern p) {
+      inheritedNamespace = si.getMovedPatternInheritedNamespace(p);
+      xw.startElement(xs("attributeGroup"));
+      xw.attribute("name", si.getMovedPatternName(p, targetNamespace));
+      attributeOutput.visitAttribute(p);
+      xw.endElement();
+      return null;
+    }
   }
 
   static boolean canOutputChoiceAsRestriction(ChoicePattern p) {
@@ -750,4 +794,9 @@ class Output {
     xw.attribute("schemaLocation", od.reference(sourceUri, href));
     xw.endElement();
   }
-}
+
+  String resolveNamespace(String ns) {
+    return SchemaInfo.resolveNamespace(ns, inheritedNamespace);
+  }
+
+ }
