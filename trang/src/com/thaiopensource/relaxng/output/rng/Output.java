@@ -477,8 +477,23 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
       else if (child instanceof TextAnnotation)
         xw.text(((TextAnnotation)child).getValue());
       else if (child instanceof Comment)
-        xw.comment(((Comment)child).getValue());
+        xw.comment(fixupComment(((Comment)child).getValue()));
     }
+  }
+
+  static private String fixupComment(String comment) {
+    int i = 0;
+    for (;;) {
+      int j = comment.indexOf('-', i);
+      if (j < 0)
+        break;
+      if (j == comment.length() - 1)
+        return comment + " ";
+      if (comment.charAt(j + 1) == '-')
+        return comment.substring(0, j) + "- " + fixupComment(comment.substring(j + 1));
+      i = j + 1;
+    }
+    return comment;
   }
 
   private void end(Annotated subject) {
