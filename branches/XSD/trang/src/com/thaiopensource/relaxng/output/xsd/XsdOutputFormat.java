@@ -19,7 +19,7 @@ public class XsdOutputFormat implements OutputFormat {
       if (!er.getHadError()) {
         Schema schema = BasicBuilder.buildBasicSchema(si, er);
         if (!er.getHadError()) {
-          new Transformer().transform(schema);
+          new Transformer(schema).transform();
           BasicOutput.output(schema, new PrefixManager(si), od, er);
         }
       }

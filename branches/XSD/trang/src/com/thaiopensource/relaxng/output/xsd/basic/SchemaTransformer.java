@@ -4,14 +4,17 @@ import java.util.List;
 import java.util.Vector;
 
 public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, ComplexTypeVisitor, AttributeUseVisitor, SimpleTypeVisitor {
-  private Schema schema;
+  private final Schema schema;
+
+  public SchemaTransformer(Schema schema) {
+    this.schema = schema;
+  }
 
   public Schema getSchema() {
     return schema;
   }
 
-  public void transform(Schema schema) {
-    this.schema = schema;
+  public void transform() {
     schema.accept(this);
   }
 
