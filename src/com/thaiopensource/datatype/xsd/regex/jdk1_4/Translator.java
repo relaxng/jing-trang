@@ -21,6 +21,7 @@ public class Translator {
   private int pos = 0;
   private int length;
   private char curChar;
+  private boolean eos = false;
   private StringBuffer result = new StringBuffer();
 
   static private final String categories = "LMNPZSC";
@@ -204,7 +205,11 @@ public class Translator {
 
   /**
    * Translates a regular expression in the syntax of XML Schemas Part 2 into a regular
-   * expression in the syntax of <code>java.util.regex.Pattern</code>.
+   * expression in the syntax of <code>java.util.regex.Pattern</code>.  The translation
+   * assumes that the string to be matched against the regex uses surrogate pairs correctly.
+   * If the string comes from XML content, a conforming XML parser will automatically
+   * check this; if the string comes from elsewhere, it may be necessary to check
+   * surrogate usage before matching.
    *
    * @param regexp a String containing a regular expression in the syntax of XML Schemas Part 2
    * @return a String containing a regular expression in the syntax of java.util.regex.Pattern
@@ -225,12 +230,13 @@ public class Translator {
     else {
       pos++;
       curChar = EOS;
+      eos = true;
     }
   }
 
   private void translateTop() throws RegexSyntaxException {
     translateRegExp();
-    if (curChar != EOS)
+    if (!eos)
       throw makeException("expected_eos");
   }
 
@@ -314,7 +320,7 @@ public class Translator {
 
   static final String SURROGATES1_CLASS = "[\uD800-\uDBFF]";
   static final String SURROGATES2_CLASS = "[\uDC00-\uDFFF]";
-  static final String NOT_ALLOWED_CLASS = "\u0000";
+  static final String NOT_ALLOWED_CLASS = "[\u0000&&[^\u0000]]";
 
   static final class Range implements Comparable {
     private final int min;
@@ -860,6 +866,9 @@ public class Translator {
   private boolean translateAtom() throws RegexSyntaxException {
     switch (curChar) {
     case EOS:
+      if (!eos)
+        break;
+      // fall through
     case '?':
     case '*':
     case '+':
@@ -868,7 +877,7 @@ public class Translator {
     case '}':
     case '|':
     case ']':
-      break;
+      return false;
     case '(':
       copyCurChar();
       translateRegExp();
@@ -890,12 +899,10 @@ public class Translator {
     case '$':
     case '^':
       result.append('\\');
-      // fall through
-    default:
-      copyCurChar();
-      return true;
+      break;
     }
-    return false;
+    copyCurChar();
+    return true;
   }
 
 
@@ -1112,7 +1119,8 @@ public class Translator {
   private CharClass parseCharClassEscOrXmlChar() throws RegexSyntaxException {
     switch (curChar) {
     case EOS:
-      expect(']');
+      if (eos)
+        expect(']');
       break;
     case '\\':
       advance();
