@@ -22,4 +22,5 @@ Closer approximation of choice of datatypes
 Approximate when single element restriction is violated
 Allow choice of attributes and data
 Try to push namespace declarations down into appropriate attribute groups
+Support for ANY
 
