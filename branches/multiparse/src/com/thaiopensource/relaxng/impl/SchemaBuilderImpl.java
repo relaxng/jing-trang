@@ -667,8 +667,8 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
   }
 
   private void error(String key, String arg1, String arg2, Locator loc) throws BuildException {
-     error(new SAXParseException(Localizer.message(key, arg1, arg2), loc));
-   }
+    error(new SAXParseException(Localizer.message(key, arg1, arg2), loc));
+  }
 
   private void noteError() {
     if (!hadError && parent != null)
