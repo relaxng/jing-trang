@@ -14,6 +14,7 @@ import com.thaiopensource.relaxng.XMLReaderCreator;
 import com.thaiopensource.relaxng.util.Jaxp11XMLReaderCreator;
 import com.thaiopensource.util.UriOrFile;
 import com.thaiopensource.util.Service;
+import com.thaiopensource.util.Utf16;
 import com.thaiopensource.datatype.xsd.Regex;
 import com.thaiopensource.datatype.xsd.RegexEngine;
 import com.thaiopensource.datatype.xsd.InvalidRegexException;
@@ -98,7 +99,7 @@ public class TestDriver extends DefaultHandler {
       regex = engine.compile(str);
     }
     catch (InvalidRegexException e) {
-      error("unexpected error: " + e.getMessage() + ": " + display(str));
+      error("unexpected error: " + e.getMessage() + ": " + display(str, e.getPosition()));
     }
   }
 
@@ -107,7 +108,7 @@ public class TestDriver extends DefaultHandler {
     regex = null;
     try {
       engine.compile(str);
-      error("failed to detect error in regex: " + display(str));
+      error("failed to detect error in regex: " + display(str, -1));
     }
     catch (InvalidRegexException e) { }
   }
@@ -117,7 +118,7 @@ public class TestDriver extends DefaultHandler {
       return;
     nTests++;
     if (!regex.matches(str))
-      error("match failed for string: " + display(str));
+      error("match failed for string: " + display(str, -1));
   }
 
   private void invalid(String str) {
@@ -125,7 +126,7 @@ public class TestDriver extends DefaultHandler {
       return;
     nTests++;
     if (regex.matches(str))
-      error("match incorrectly succeeded for string: " + display(str));
+      error("match incorrectly succeeded for string: " + display(str, -1));
   }
 
   private void error(String str) {
@@ -138,8 +139,26 @@ public class TestDriver extends DefaultHandler {
     nFail++;
   }
 
-  static String display(String str) {
-    return str;
+  static final private String ERROR_MARKER = ">>>>";
+
+  static String display(String str, int pos) {
+    StringBuffer buf = new StringBuffer();
+    for (int i = 0, len = str.length(); i < len; i++) {
+      if (i == pos)
+        buf.append(ERROR_MARKER);
+      char c = str.charAt(i);
+      if (Utf16.isSurrogate1(c))
+        buf.append("&#x" + Integer.toHexString(Utf16.scalarValue(c, str.charAt(++i))) + ";");
+      else if (c < ' ' || c >= 0x7F)
+        buf.append("&#x" + Integer.toHexString(c) + ";");
+      else if (c == '&')
+        buf.append("&amp;");
+      else
+        buf.append(c);
+    }
+    if (str.length() == pos)
+      buf.append(ERROR_MARKER);
+    return buf.toString();
   }
 
 }
