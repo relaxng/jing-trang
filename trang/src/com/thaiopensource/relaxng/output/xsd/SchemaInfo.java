@@ -45,12 +45,27 @@ class SchemaInfo {
   private final ErrorReporter er;
   private final Map childTypeMap = new HashMap();
   private final Map defineMap = new HashMap();
-  // maps each sourceUri to list of sourceUris that it includes
-  private final Map includeMap = new HashMap();
-  // maps each sourceUri to the selected targetNamespace
-  private final Map targetNamespaceMap = new HashMap();
+  private final Map whereDefinedMap = new HashMap();
   private final Set rootElements = new HashSet();
   private final PatternVisitor childTypeVisitor = new ChildTypeVisitor();
+  private final List generatedSourceUris = new Vector();
+
+  static class SourceUri {
+    String targetNamespace;
+    String inheritedNamespace;
+    // list of strings giving included URIs
+    List includes = new Vector();
+  }
+
+  static class TargetNamespace {
+    String rootSchema;
+    String prefix;
+  }
+
+  // Maps sourceUri to SourceUri
+  private final Map sourceUriMap = new HashMap();
+  // Maps targetNamespace to TargetNamespace
+  private final Map targetNamespaceMap = new HashMap();
 
   abstract class PatternAnalysisVisitor extends AbstractVisitor {
     abstract Object get(Pattern p);
@@ -190,14 +205,18 @@ class SchemaInfo {
 
   class GrammarVisitor extends AbstractVisitor {
     private final String sourceUri;
-    GrammarVisitor(String sourceUri) {
+    private final String inheritedNamespace;
+    GrammarVisitor(String sourceUri, String inheritedNamespace) {
       this.sourceUri = sourceUri;
+      this.inheritedNamespace = inheritedNamespace;
       // TODO detect multiple inclusions
-      includeMap.put(sourceUri, new Vector());
+      lookupSourceUri(sourceUri).inheritedNamespace = inheritedNamespace;
     }
     public Object visitDefine(DefineComponent c) {
-      if (c.getName() != DefineComponent.START)
+      if (c.getName() != DefineComponent.START) {
         defineMap.put(c.getName(), c.getBody());
+        whereDefinedMap.put(c.getName(), sourceUri);
+      }
       return null;
     }
 
@@ -208,8 +227,8 @@ class SchemaInfo {
 
     public Object visitInclude(IncludeComponent c) {
       String href = c.getHref();
-      ((List)includeMap.get(sourceUri)).add(href);
-      getSchema(href).componentsAccept(new GrammarVisitor(href));
+      lookupSourceUri(sourceUri).includes.add(href);
+      getSchema(href).componentsAccept(new GrammarVisitor(href, resolveNamespace(c.getNs(), inheritedNamespace)));
       return null;
     }
   }
@@ -266,17 +285,21 @@ class SchemaInfo {
 
   class TargetNamespaceSelector extends AbstractVisitor {
     private boolean isElement;
+    private boolean isRoot;
+    private String inheritedNamespace;
     private final Map namespaceUsageMap = new HashMap();
     private final Map namespacePrefixUsageMap = new HashMap();
 
     public Object visitElement(ElementPattern p) {
       isElement = true;
+      isRoot = rootElements.contains(p);
       return p.getNameClass().accept(this);
       // don't visit the content
     }
 
     public Object visitAttribute(AttributePattern p) {
       isElement = false;
+      isRoot = false;
       return p.getNameClass().accept(this);
     }
 
@@ -286,23 +309,25 @@ class SchemaInfo {
     }
 
     public Object visitName(NameNameClass nc) {
-      String ns = nc.getNamespaceUri();
+      String ns = resolveNamespace(nc.getNamespaceUri(), inheritedNamespace);
       NamespaceUsage usage = (NamespaceUsage)namespaceUsageMap.get(ns);
       if (usage == null) {
         usage = new NamespaceUsage();
         namespaceUsageMap.put(ns, usage);
+        if (!ns.equals("") || isRoot)
+          lookupTargetNamespace(ns);
       }
       if (isElement)
         usage.elementCount++;
       else
         usage.attributeCount++;
-      Map prefixUsageMap = (Map)namespacePrefixUsageMap.get(ns);
-      if (prefixUsageMap == null) {
-        prefixUsageMap = new HashMap();
-        namespacePrefixUsageMap.put(ns, prefixUsageMap);
-      }
       String prefix = nc.getPrefix();
       if (prefix != null) {
+        Map prefixUsageMap = (Map)namespacePrefixUsageMap.get(ns);
+        if (prefixUsageMap == null) {
+          prefixUsageMap = new HashMap();
+          namespacePrefixUsageMap.put(ns, prefixUsageMap);
+        }
         PrefixUsage prefixUsage = (PrefixUsage)prefixUsageMap.get(prefix);
         if (prefixUsage == null) {
           prefixUsage = new PrefixUsage();
@@ -332,24 +357,67 @@ class SchemaInfo {
       return null;
     }
 
-    String selectTargetNamespace(GrammarPattern p) {
-      targetNamespaceMap.clear();
+    String selectTargetNamespace(GrammarPattern p, String ns) {
+      this.inheritedNamespace = ns;
       p.componentsAccept(this);
       Map.Entry best = null;
       for (Iterator iter = namespaceUsageMap.entrySet().iterator(); iter.hasNext();) {
         Map.Entry tem = (Map.Entry)iter.next();
         if (best == null
             || NamespaceUsage.isBetter((NamespaceUsage)tem.getValue(),
-                                        (NamespaceUsage)best.getValue()))
+                                       (NamespaceUsage)best.getValue()))
           best = tem;
       }
+      namespaceUsageMap.clear();
       if (best == null)
-        return "";  // TODO maybe better to use targetNamespace of included schemas
-      return (String)best.getKey();
+        return null;
+      String targetNamespace = (String)best.getKey();
+      // for "" case
+      lookupTargetNamespace(targetNamespace);
+      return targetNamespace;
     }
 
-    // map target namespace to prefixes; must contain all non-local target namespaces
-    void assignNamespacePrefixes(Map prefixMap) {
+    void assignPrefixes() {
+      Set usedPrefixes = new HashSet();
+      for (Iterator iter = targetNamespaceMap.entrySet().iterator(); iter.hasNext();) {
+        Map.Entry entry = (Map.Entry)iter.next();
+        String ns = (String)entry.getKey();
+        if (!ns.equals("")) {
+          Map prefixUsageMap = (Map)namespacePrefixUsageMap.get(ns);
+          if (prefixUsageMap != null) {
+            Map.Entry best = null;
+            for (Iterator entryIter = prefixUsageMap.entrySet().iterator(); entryIter.hasNext();) {
+              Map.Entry tem = (Map.Entry)entryIter.next();
+              if (best == null
+                      || ((PrefixUsage)tem.getValue()).count > ((PrefixUsage)best.getValue()).count
+                      && !usedPrefixes.contains(tem.getKey()))
+                best = tem;
+            }
+            if (best != null) {
+              String prefix = (String)best.getKey();
+              ((TargetNamespace)entry.getValue()).prefix = prefix;
+              usedPrefixes.add(prefix);
+            }
+          }
+        }
+      }
+      int n = 1;
+      for (Iterator iter = targetNamespaceMap.entrySet().iterator(); iter.hasNext();) {
+        Map.Entry entry = (Map.Entry)iter.next();
+        String ns = (String)entry.getKey();
+        if (!ns.equals("")) {
+          if (lookupTargetNamespace(ns).prefix == null) {
+            for (;;) {
+              String prefix = "ns" + Integer.toString(n++);
+              if (!usedPrefixes.contains(prefix)) {
+                usedPrefixes.add(prefix);
+                ((TargetNamespace)entry.getValue()).prefix = prefix;
+                break;
+              }
+            }
+          }
+        }
+      }
     }
 
   }
@@ -359,9 +427,10 @@ class SchemaInfo {
     this.er = er;
     forceGrammar();
     grammar = (GrammarPattern)sc.getMainSchema();
-    grammar.componentsAccept(new GrammarVisitor(OutputDirectory.MAIN));
+    grammar.componentsAccept(new GrammarVisitor(OutputDirectory.MAIN, ""));
     grammar.componentsAccept(new RootMarker());
     assignTargetNamespaces();
+    chooseRootSchemas();
   }
 
   void forceGrammar() {
@@ -371,14 +440,118 @@ class SchemaInfo {
 
   void assignTargetNamespaces() {
     TargetNamespaceSelector selector = new TargetNamespaceSelector();
-    targetNamespaceMap.put(OutputDirectory.MAIN,
-                           selector.selectTargetNamespace(grammar));
+    lookupSourceUri(OutputDirectory.MAIN).targetNamespace
+            = selector.selectTargetNamespace(grammar, getInheritedNamespace(OutputDirectory.MAIN));
     for (Iterator iter = getSourceUris().iterator(); iter.hasNext();) {
       String sourceUri = (String)iter.next();
       GrammarPattern p = getSchema(sourceUri);
-      targetNamespaceMap.put(sourceUri,
-                             selector.selectTargetNamespace(p));
+      lookupSourceUri(sourceUri).targetNamespace
+        = selector.selectTargetNamespace(p, getInheritedNamespace(sourceUri));
     }
+    // TODO maybe use info from <start> to select which targetNamespace of included schemas to use
+    String ns = filterUpTargetNamespace(OutputDirectory.MAIN);
+    if (ns == null) {
+      lookupTargetNamespace("");
+      lookupSourceUri(OutputDirectory.MAIN).targetNamespace = "";
+      ns = "";
+    }
+    inheritDownTargetNamespace(OutputDirectory.MAIN, ns);
+    selector.assignPrefixes();
+  }
+
+  private String filterUpTargetNamespace(String sourceUri) {
+    String ns = getTargetNamespace(sourceUri);
+    if (ns != null)
+      return ns;
+    List includes = lookupSourceUri(sourceUri).includes;
+    if (includes.size() == 0)
+      return null;
+    Map occurMap = new HashMap();
+    for (Iterator iter = includes.iterator(); iter.hasNext();) {
+      String tem = filterUpTargetNamespace((String)iter.next());
+      if (tem != null) {
+        Integer count = (Integer)occurMap.get(tem);
+        occurMap.put(tem, new Integer(count == null ? 1 : count.intValue() + 1));
+      }
+    }
+    Map.Entry best = null;
+    for (Iterator iter = occurMap.entrySet().iterator(); iter.hasNext();) {
+      Map.Entry tem = (Map.Entry)iter.next();
+      if (best == null || ((Integer)tem.getValue()).intValue() > ((Integer)best.getValue()).intValue())
+        best = tem;
+    }
+    if (best == null)
+      return null;
+    ns = (String)best.getKey();
+    lookupSourceUri(sourceUri).targetNamespace = ns;
+    return ns;
+  }
+
+  private void inheritDownTargetNamespace(String sourceUri, String targetNamespace) {
+    for (Iterator iter = lookupSourceUri(sourceUri).includes.iterator(); iter.hasNext();) {
+      String uri = (String)iter.next();
+      String ns = lookupSourceUri(uri).targetNamespace;
+      if (ns == null) {
+        ns = targetNamespace;
+        lookupSourceUri(uri).targetNamespace = ns;
+      }
+      inheritDownTargetNamespace(uri, ns);
+    }
+  }
+
+  String getInheritedNamespace(String sourceUri) {
+    return lookupSourceUri(sourceUri).inheritedNamespace;
+  }
+
+  private void chooseRootSchemas() {
+    for (Iterator iter = targetNamespaceMap.entrySet().iterator(); iter.hasNext();) {
+      Map.Entry entry = (Map.Entry)iter.next();
+      String ns = (String)entry.getKey();;
+      List list = new Vector();
+      findRootSchemas(OutputDirectory.MAIN, ns, list);
+      if (list.size() == 1)
+        ((TargetNamespace)entry.getValue()).rootSchema = (String)list.get(0);
+      else {
+        String sourceUri = generateSourceUri(ns);
+        lookupSourceUri(sourceUri).includes.addAll(list);
+        lookupSourceUri(sourceUri).targetNamespace = ns;
+        ((TargetNamespace)entry.getValue()).rootSchema = sourceUri;
+        generatedSourceUris.add(sourceUri);
+      }
+    }
+  }
+
+  private String generateSourceUri(String ns) {
+    // TODO add method to OutputDirectory to do this properly
+    if (ns.equals(""))
+      return "local";
+    else
+      return "/" + getPrefix(ns);
+  }
+
+  private void findRootSchemas(String sourceUri, String ns, List list) {
+    if (getTargetNamespace(sourceUri).equals(ns))
+      list.add(sourceUri);
+    else {
+      for (Iterator iter = lookupSourceUri(sourceUri).includes.iterator(); iter.hasNext();)
+        findRootSchemas((String)iter.next(), ns, list);
+    }
+  }
+
+  String getRootSchema(String targetNamespace) {
+    return lookupTargetNamespace(targetNamespace).rootSchema;
+  }
+
+  List effectiveIncludes(String sourceUri) {
+    String ns = getTargetNamespace(sourceUri);
+    List list = new Vector();
+    for (Iterator iter = lookupSourceUri(sourceUri).includes.iterator(); iter.hasNext();)
+      findRootSchemas((String)iter.next(), ns, list);
+    return list;
+  }
+
+  List getGeneratedSourceUris() {
+    return generatedSourceUris;
   }
 
   GrammarPattern convertToGrammar(Pattern p) {
@@ -401,7 +574,7 @@ class SchemaInfo {
   }
 
   String getTargetNamespace(String sourceUri) {
-    return (String)targetNamespaceMap.get(sourceUri);
+    return lookupSourceUri(sourceUri).targetNamespace;
   }
 
   Set getSourceUris() {
@@ -421,7 +594,55 @@ class SchemaInfo {
     return (Pattern)defineMap.get(p.getName());
   }
 
+  String qualifyName(RefPattern p) {
+    String name = p.getName();
+    return qualifyName(getTargetNamespace((String)whereDefinedMap.get(name)), name);
+  }
+
+  String qualifyName(NameNameClass nc, String sourceUri) {
+    return qualifyName(resolveNamespace(nc.getNamespaceUri(), getInheritedNamespace(sourceUri)),
+                       nc.getLocalName());
+  }
+
+  String qualifyName(String ns, String localName) {
+    if (ns.equals(""))
+      return localName;
+    return getPrefix(ns) + ":" + localName;
+  }
+
   boolean isGlobal(ElementPattern p) {
     return rootElements.contains(p);
+  }
+
+  Set getTargetNamespaces() {
+    return targetNamespaceMap.keySet();
+  }
+
+  String getPrefix(String targetNamespace) {
+    return lookupTargetNamespace(targetNamespace).prefix;
+  }
+
+  static String resolveNamespace(String ns, String inheritedNamespace) {
+    if (ns == NameNameClass.INHERIT_NS)
+      return inheritedNamespace;
+    return ns;
+  }
+
+  private SourceUri lookupSourceUri(String uri) {
+    SourceUri s = (SourceUri)sourceUriMap.get(uri);
+    if (s == null) {
+      s = new SourceUri();
+      sourceUriMap.put(uri, s);
+    }
+    return s;
+  }
+
+  private TargetNamespace lookupTargetNamespace(String ns) {
+    TargetNamespace t = (TargetNamespace)targetNamespaceMap.get(ns);
+    if (t == null) {
+      t = new TargetNamespace();
+      targetNamespaceMap.put(ns, t);
+    }
+    return t;
   }
 }

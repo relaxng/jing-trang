@@ -1,5 +1,6 @@
 Use global element declarations
 - when only one element of particular name
+- when occurs at namespace boundary
 - when multiple elements, but only one occurs as the sole content of a define
 - when there's something we want to use in a subsitution group
 
@@ -20,12 +21,6 @@ Nested grammars
 Allow attribute names with empty namespace or target namespace
 
 Allow local elements with empty namespace
-
-Namespaces
-- check for single namespace
-- allow multiple namespaces but not mixed in a file
-- split files based on namespace
-- Need to deal with inherited namespace
 
 Include overrides
 - Check and give error
@@ -93,6 +88,4 @@ the includes of G occured in F
 
 - generate imports to the heads of all target namespaces
 
-
-
-
+Move orphaned elements
