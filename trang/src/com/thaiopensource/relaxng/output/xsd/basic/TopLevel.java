@@ -2,10 +2,11 @@ package com.thaiopensource.relaxng.output.xsd.basic;
 
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
-public abstract class TopLevel extends Located {
+public abstract class TopLevel extends Annotated {
   private final Schema parentSchema;
-  TopLevel(SourceLocation location, Schema parentSchema) {
-    super(location);
+
+  public TopLevel(SourceLocation location, Annotation annotation, Schema parentSchema) {
+    super(location, annotation);
     this.parentSchema = parentSchema;
   }
 

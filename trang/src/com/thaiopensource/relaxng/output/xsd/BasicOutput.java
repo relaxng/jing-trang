@@ -44,6 +44,8 @@ import com.thaiopensource.relaxng.output.xsd.basic.WildcardAttribute;
 import com.thaiopensource.relaxng.output.xsd.basic.WildcardElement;
 import com.thaiopensource.relaxng.output.xsd.basic.ComplexTypeNotAllowedContent;
 import com.thaiopensource.relaxng.output.xsd.basic.ComplexType;
+import com.thaiopensource.relaxng.output.xsd.basic.Annotated;
+import com.thaiopensource.relaxng.output.xsd.basic.Annotation;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
@@ -58,7 +60,7 @@ public class BasicOutput {
   private XmlWriter xw;
   private final Schema schema;
   private final SimpleTypeOutput simpleTypeOutput = new SimpleTypeOutput();
-  private final ComplexTypeVisitor complexTypeOutput = new ComplexTypeOutput();
+  private final ComplexTypeOutput complexTypeOutput = new ComplexTypeOutput();
   private final AttributeUseOutput attributeUseOutput = new AttributeUseOutput();
   private final AttributeUseVisitor attributeWildcardOutput = new AttributeWildcardOutput();
   private final ParticleOutput particleOutput = new ParticleOutput();
@@ -127,6 +129,7 @@ public class BasicOutput {
       String prefix = facet.getPrefix();
       if (prefix != null && !prefix.equals(topLevelPrefix(facet.getNamespace())))
         xw.attribute(prefix.equals("") ? "xmlns" : "xmlns:" + prefix, facet.getNamespace());
+      outputAnnotation(facet);
       xw.endElement();
     }
 
@@ -152,10 +155,11 @@ public class BasicOutput {
       }
       if (buf.length() != 0)
         xw.attribute("memberTypes", buf.toString());
+      outputAnnotation(t);
       for (Iterator iter = t.getChildren().iterator(); iter.hasNext();) {
         SimpleType simpleType = (SimpleType)iter.next();
         if (simpleType.accept(simpleTypeNamer) == null)
-          outputWrap(simpleType);
+          outputWrap(simpleType, null);
       }
       xw.endElement();
       return null;
@@ -168,7 +172,7 @@ public class BasicOutput {
         xw.startElement(xs("simpleType"));
       }
       xw.startElement(xs("list"));
-      outputWrap(t.getItemType(), "itemType");
+      outputWrap(t.getItemType(), "itemType", t);
       xw.endElement();
       if (!occ.equals(Occurs.ZERO_OR_MORE)) {
         xw.endElement();
@@ -194,15 +198,20 @@ public class BasicOutput {
       return null;
     }
 
-    void outputWrap(SimpleType t) {
-      outputWrap(t, "type");
+    void outputWrap(SimpleType t, Annotated parent) {
+      outputWrap(t, "type", parent);
     }
 
-    void outputWrap(SimpleType t, String attributeName) {
+    void outputWrap(SimpleType t, String attributeName, Annotated parent) {
       String typeName = (String)t.accept(simpleTypeNamer);
-      if (typeName != null)
+      if (typeName != null) {
         xw.attribute(attributeName, typeName);
+        if (parent != null)
+          outputAnnotation(parent);
+      }
       else {
+        if (parent != null)
+          outputAnnotation(parent);
         xw.startElement(xs("simpleType"));
         t.accept(this);
         xw.endElement();
@@ -214,10 +223,14 @@ public class BasicOutput {
     public Object visitRestriction(SimpleTypeRestriction t) {
       if (t.getFacets().size() > 0)
         return null;
+      if (t.getAnnotation() != null)
+        return null;
       return xs(t.getName());
     }
 
     public Object visitRef(SimpleTypeRef t) {
+      if (t.getAnnotation() != null)
+        return null;
       return qualifyRef(schema.getSimpleType(t.getName()).getParentSchema().getUri(),
                         t.getName());
     }
@@ -293,6 +306,7 @@ public class BasicOutput {
         xw.attribute("name", p.getName().getLocalName());
         if (!p.getName().getNamespaceUri().equals(targetNamespace))
           xw.attribute("form", "unqualified");
+        complexTypeOutput.parent = p;
         p.getComplexType().accept(complexTypeOutput);
       }
       endWrapper(usedWrapper);
@@ -310,6 +324,7 @@ public class BasicOutput {
         usedWrapper = startWrapperForAny();
         namespaceAttribute(p.getWildcard());
         xw.attribute("processContents", "skip");
+        outputAnnotation(p);
       }
       endWrapper(usedWrapper);
       return null;
@@ -323,6 +338,7 @@ public class BasicOutput {
 
     public Object visitSequence(ParticleSequence p) {
       boolean usedWrapper = startWrapperForGroup("sequence");
+      outputAnnotation(p);
       outputParticles(p.getChildren());
       endWrapper(usedWrapper);
       return null;
@@ -330,6 +346,7 @@ public class BasicOutput {
 
     public Object visitChoice(ParticleChoice p) {
       boolean usedWrapper = startWrapperForGroup("choice");
+      outputAnnotation(p);
       outputParticles(p.getChildren());
       endWrapper(usedWrapper);
       return null;
@@ -337,6 +354,7 @@ public class BasicOutput {
 
     public Object visitAll(ParticleAll p) {
       boolean usedWrapper = startWrapperForGroup("all");
+      outputAnnotation(p);
       outputParticles(p.getChildren());
       endWrapper(usedWrapper);
       return null;
@@ -360,6 +378,7 @@ public class BasicOutput {
         usedWrapper = startWrapperForGroupRef();
         xw.attribute("ref", qualifyRef(def.getParentSchema().getUri(), name));
       }
+      outputAnnotation(p);
       endWrapper(usedWrapper);
       return null;
     }
@@ -375,13 +394,15 @@ public class BasicOutput {
   }
 
   class ComplexTypeOutput implements ComplexTypeVisitor {
+    Annotated parent;
+
     public Object visitComplexContent(ComplexTypeComplexContent t) {
-      outputComplexTypeComplexContent(complexTypeSelector.transformComplexContent(t), null);
+      outputComplexTypeComplexContent(complexTypeSelector.transformComplexContent(t), null, parent);
       return null;
     }
 
     public Object visitSimpleContent(ComplexTypeSimpleContent t) {
-      outputComplexTypeSimpleContent(complexTypeSelector.transformSimpleContent(t), null);
+      outputComplexTypeSimpleContent(complexTypeSelector.transformSimpleContent(t), null, parent);
       return null;
     }
 
@@ -420,7 +441,9 @@ public class BasicOutput {
         if (!a.getName().getNamespaceUri().equals(""))
           xw.attribute("form", "qualified");
         if (a.getType() != null)
-          simpleTypeOutput.outputWrap(a.getType());
+          simpleTypeOutput.outputWrap(a.getType(), a);
+        else
+          outputAnnotation(a);
         xw.endElement();
       }
       else {
@@ -473,8 +496,10 @@ public class BasicOutput {
         ComplexType type = p.getComplexType();
         if (type instanceof ComplexTypeNotAllowedContent)
           xw.attribute("abstract", "true");
-        else
+        else {
+          complexTypeOutput.parent = p;
           type.accept(complexTypeOutput);
+        }
         xw.endElement();
       }
       return p.getComplexType().accept(this);
@@ -543,7 +568,7 @@ public class BasicOutput {
         xw.startElement(xs("attribute"));
         xw.attribute("name", name.getLocalName());
         if (a.getType() != null)
-          simpleTypeOutput.outputWrap(a.getType());
+          simpleTypeOutput.outputWrap(a.getType(), a);
         xw.endElement();
       }
       return null;
@@ -567,11 +592,12 @@ public class BasicOutput {
       Particle particle = def.getParticle();
       ComplexTypeComplexContentExtension ct = complexTypeSelector.createComplexTypeForGroup(def.getName());
       if (ct != null)
-        outputComplexTypeComplexContent(ct, def.getName());
+        outputComplexTypeComplexContent(ct, def.getName(), def);
       else {
         if (!(particle instanceof Element) || !nsm.isGlobal((Element)particle)) {
           xw.startElement(xs("group"));
           xw.attribute("name", def.getName());
+          outputAnnotation(def);
           particleOutput.context = NAMED_GROUP_CONTEXT;
           particle.accept(particleOutput);
           xw.endElement();
@@ -583,10 +609,11 @@ public class BasicOutput {
     public void visitSimpleType(SimpleTypeDefinition def) {
       ComplexTypeSimpleContentExtension ct = complexTypeSelector.createComplexTypeForSimpleType(def.getName());
       if (ct != null)
-        outputComplexTypeSimpleContent(ct, def.getName());
+        outputComplexTypeSimpleContent(ct, def.getName(), def);
       else {
         xw.startElement(xs("simpleType"));
         xw.attribute("name", def.getName());
+        outputAnnotation(def);
         def.getSimpleType().accept(simpleTypeOutput);
         xw.endElement();
       }
@@ -597,6 +624,7 @@ public class BasicOutput {
         return;
       xw.startElement(xs("attributeGroup"));
       xw.attribute("name", def.getName());
+      outputAnnotation(def);
       outputAttributeUse(def.getAttributeUses());
       xw.endElement();
       def.getAttributeUses().accept(globalAttributeOutput);
@@ -794,7 +822,7 @@ public class BasicOutput {
     xw.endElement();
   }
 
-  void outputComplexTypeComplexContent(ComplexTypeComplexContentExtension t, String name) {
+  void outputComplexTypeComplexContent(ComplexTypeComplexContentExtension t, String name, Annotated parent) {
     String base = t.getBase();
     if (base != null) {
       base = qualifyRef(schema.getGroup(base).getParentSchema().getUri(), base);
@@ -803,14 +831,20 @@ public class BasicOutput {
           && !t.isMixed()
           && t.getAttributeUses().equals(AttributeGroup.EMPTY)) {
         xw.attribute("type", base);
+        if (parent != null)
+          outputAnnotation(parent);
         return;
       }
     }
+    if (name == null && parent != null)
+      outputAnnotation(parent);
     xw.startElement(xs("complexType"));
     if (name != null)
       xw.attribute("name", name);
     if (t.isMixed())
       xw.attribute("mixed", "true");
+    if (name != null && parent != null)
+      outputAnnotation(parent);
     if (base != null) {
       xw.startElement(xs("complexContent"));
       xw.startElement(xs("extension"));
@@ -828,23 +862,29 @@ public class BasicOutput {
     xw.endElement();
   }
 
-  void outputComplexTypeSimpleContent(ComplexTypeSimpleContentExtension t, String name) {
+  void outputComplexTypeSimpleContent(ComplexTypeSimpleContentExtension t, String name, Annotated parent) {
     String base = t.getBase();
     AttributeUse attributeUses = t.getAttributeUses();
     if (base != null) {
       base = qualifyRef(schema.getSimpleType(base).getParentSchema().getUri(), base);
       if (name == null && attributeUses.equals(AttributeGroup.EMPTY)) {
         xw.attribute("type", base);
+        if (parent != null)
+          outputAnnotation(parent);
         return;
       }
     }
     else if (attributeUses.equals(AttributeGroup.EMPTY)) {
-      simpleTypeOutput.outputWrap(t.getSimpleType());
+      simpleTypeOutput.outputWrap(t.getSimpleType(), parent);
       return;
     }
+    if (name == null && parent != null)
+      outputAnnotation(parent);
     xw.startElement(xs("complexType"));
     if (name != null)
       xw.attribute("name", name);
+    if (name != null && parent != null)
+      outputAnnotation(parent);
     xw.startElement(xs("simpleContent"));
     if (base == null)
       base = (String)t.getSimpleType().accept(simpleTypeNamer);
@@ -855,11 +895,25 @@ public class BasicOutput {
     else {
       xw.startElement(xs("restriction"));
       xw.attribute("base", xs("anyType"));
-      simpleTypeOutput.outputWrap(t.getSimpleType());
+      simpleTypeOutput.outputWrap(t.getSimpleType(), null);
     }
     outputAttributeUse(attributeUses);
     xw.endElement();
     xw.endElement();
+    xw.endElement();
+  }
+
+  void outputAnnotation(Annotated annotated) {
+    Annotation annotation = annotated.getAnnotation();
+    if (annotation == null)
+      return;
+    xw.startElement(xs("annotation"));
+    String documentation = annotation.getDocumentation();
+    if (documentation != null) {
+      xw.startElement(xs("documentation"));
+      xw.text(documentation);
+      xw.endElement();
+    }
     xw.endElement();
   }
 

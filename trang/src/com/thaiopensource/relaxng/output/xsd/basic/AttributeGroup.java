@@ -8,10 +8,10 @@ import java.util.Collections;
 public class AttributeGroup extends AttributeUse {
   private final List children;
 
-  public static final AttributeGroup EMPTY = new AttributeGroup(null, Collections.EMPTY_LIST);
+  public static final AttributeGroup EMPTY = new AttributeGroup(null, null, Collections.EMPTY_LIST);
 
-  public AttributeGroup(SourceLocation location, List children) {
-    super(location);
+  public AttributeGroup(SourceLocation location, Annotation annotation, List children) {
+    super(location, annotation);
     this.children = Collections.unmodifiableList(children);
   }
 

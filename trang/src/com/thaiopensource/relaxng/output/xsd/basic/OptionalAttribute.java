@@ -6,8 +6,8 @@ import com.thaiopensource.relaxng.output.common.Name;
 public class OptionalAttribute extends SingleAttributeUse {
   private final Attribute attribute;
 
-  public OptionalAttribute(SourceLocation location, Attribute attribute) {
-    super(location);
+  public OptionalAttribute(SourceLocation location, Annotation annotation, Attribute attribute) {
+    super(location, annotation);
     this.attribute = attribute;
   }
 

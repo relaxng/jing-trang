@@ -55,7 +55,7 @@ class Transformer extends SchemaTransformer {
     SimpleType combined = combineEnumeration(t, list);
     if (combined != null)
       return combined;
-    return new SimpleTypeUnion(t.getLocation(), list);
+    return new SimpleTypeUnion(t.getLocation(), t.getAnnotation(), list);
   }
 
   private SimpleType combineEnumeration(SimpleTypeUnion orig, List transformedChildren) {
@@ -82,7 +82,7 @@ class Transformer extends SchemaTransformer {
         facets.add(facet);
       }
     }
-    return new SimpleTypeRestriction(orig.getLocation(), builtinTypeName, facets);
+    return new SimpleTypeRestriction(orig.getLocation(), orig.getAnnotation(), builtinTypeName, facets);
   }
 
   class SequenceDetector implements ParticleVisitor {
@@ -130,7 +130,7 @@ class Transformer extends SchemaTransformer {
     }
 
     public Object visitSequence(ParticleSequence p) {
-      return new ParticleChoice(p.getLocation(), transformParticleList(p.getChildren()));
+      return new ParticleChoice(p.getLocation(), p.getAnnotation(), transformParticleList(p.getChildren()));
     }
 
     public Object visitRepeat(ParticleRepeat p) {
@@ -141,7 +141,9 @@ class Transformer extends SchemaTransformer {
 
   public Object visitAll(ParticleAll p) {
     return new ParticleRepeat(p.getLocation(),
+                              p.getAnnotation(),
                               new ParticleChoice(p.getLocation(),
+                                                 null,
                                                  new AllBodyTransformer(getSchema()).transformParticleList(transformParticleList(p.getChildren()))),
                               Occurs.ZERO_OR_MORE);
 
@@ -184,7 +186,7 @@ class Transformer extends SchemaTransformer {
     if (wildcard == null || !multipleWildcards) {
       if (children == a.getChildren())
         return a;
-      return new AttributeGroup(a.getLocation(), children);
+      return new AttributeGroup(a.getLocation(), a.getAnnotation(), children);
     }
     List newChildren = new Vector();
     for (int i = 0; i < removeWildcard.length; i++) {
@@ -194,8 +196,8 @@ class Transformer extends SchemaTransformer {
       newChildren.add(att);
     }
     if (wildcard != null && wildcardUseIndex == -1)
-      newChildren.add(new WildcardAttribute(a.getLocation(), wildcard));
-    return new AttributeGroup(a.getLocation(), newChildren);
+      newChildren.add(new WildcardAttribute(a.getLocation(), null, wildcard));
+    return new AttributeGroup(a.getLocation(), a.getAnnotation(), newChildren);
   }
 
   public Object visitAttributeUseChoice(AttributeUseChoice a) {
@@ -256,12 +258,13 @@ class Transformer extends SchemaTransformer {
           for (int i = 0; i < uses.length; i++)
             choices.add(uses[i].getType());
           Attribute tem = new Attribute(a.getLocation(),
+                                        null,
                                         name,
-                                        (SimpleType)new SimpleTypeUnion(a.getLocation(), choices).accept(this));
+                                        (SimpleType)new SimpleTypeUnion(a.getLocation(), null, choices).accept(this));
           if (common.contains(name))
             newChildren.add(tem);
           else
-            newChildren.add(new OptionalAttribute(a.getLocation(), tem));
+            newChildren.add(new OptionalAttribute(a.getLocation(), null, tem));
         }
       }
     }
@@ -273,8 +276,8 @@ class Transformer extends SchemaTransformer {
         newChildren.add(tem);
     }
     if (wildcard != null && wildcardUseIndex == -1)
-      newChildren.add(new WildcardAttribute(a.getLocation(), wildcard));
-    return new AttributeGroup(a.getLocation(), newChildren);
+      newChildren.add(new WildcardAttribute(a.getLocation(), null, wildcard));
+    return new AttributeGroup(a.getLocation(), a.getAnnotation(), newChildren);
   }
 
   private int chooseUseIndex(SingleAttributeUse[] uses) {
@@ -371,7 +374,7 @@ class Transformer extends SchemaTransformer {
       if (retainNames != null && !retainNames.contains(a.getName()))
         return AttributeGroup.EMPTY;
       if (requiredNames != null && !requiredNames.contains(a.getName()))
-        return new OptionalAttribute(a.getLocation(), a);
+        return new OptionalAttribute(a.getLocation(), null, a);
       return a;
     }
 
@@ -427,7 +430,7 @@ class Transformer extends SchemaTransformer {
       }
       if (transformedChildren == null)
         return a;
-      return new AttributeGroup(a.getLocation(), transformedChildren);
+      return new AttributeGroup(a.getLocation(), a.getAnnotation(), transformedChildren);
     }
   }
 

@@ -7,8 +7,8 @@ public class Element extends Particle implements Structure {
   private final Name name;
   private final ComplexType complexType;
 
-  public Element(SourceLocation location, Name name, ComplexType complexType) {
-    super(location);
+  public Element(SourceLocation location, Annotation annotation, Name name, ComplexType complexType) {
+    super(location, annotation);
     this.name = name;
     this.complexType = complexType;
   }

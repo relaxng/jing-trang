@@ -8,8 +8,8 @@ import java.util.Collections;
 public class SimpleTypeUnion extends SimpleType {
   private final List children;
 
-  public SimpleTypeUnion(SourceLocation location, List children) {
-    super(location);
+  public SimpleTypeUnion(SourceLocation location, Annotation annotation, List children) {
+    super(location, annotation);
     this.children = Collections.unmodifiableList(children);
   }
 

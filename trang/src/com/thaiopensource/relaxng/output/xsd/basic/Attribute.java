@@ -7,11 +7,12 @@ public class Attribute extends SingleAttributeUse implements Structure {
   private final Name name;
   private final SimpleType type;
 
-  /**
+   /**
    * type may be null, indicating any type
    */
-  public Attribute(SourceLocation location, Name name, SimpleType type) {
-    super(location);
+
+   public Attribute(SourceLocation location, Annotation annotation, Name name, SimpleType type) {
+    super(location, annotation);
     this.name = name;
     this.type = type;
   }

@@ -3217,6 +3217,107 @@ element foo { (attribute bar { text }, attribute baz { text })? }
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+## This is a foo.
+element foo { empty }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:annotation>
+      <xs:documentation>This is a foo.</xs:documentation>
+    </xs:annotation>
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo { 
+## This is a bar.
+attribute bar { text }
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:attribute name="bar" use="required">
+        <xs:annotation>
+          <xs:documentation>This is a bar.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo { 
+## The third random name.
+"baz"
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:enumeration value="baz">
+          <xs:annotation>
+            <xs:documentation>The third random name.</xs:documentation>
+          </xs:annotation>
+        </xs:enumeration>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+## An x.
+x = element foo|bar { empty }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:group name="x">
+    <xs:annotation>
+      <xs:documentation>An x.</xs:documentation>
+    </xs:annotation>
+    <xs:choice>
+      <xs:element ref="foo"/>
+      <xs:element ref="bar"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="foo">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="bar">
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>

@@ -5,8 +5,8 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 public class WildcardAttribute extends AttributeUse {
   private final Wildcard wildcard;
 
-  public WildcardAttribute(SourceLocation location, Wildcard wildcard) {
-    super(location);
+  public WildcardAttribute(SourceLocation location, Annotation annotation, Wildcard wildcard) {
+    super(location, annotation);
     this.wildcard = wildcard;
   }
 
