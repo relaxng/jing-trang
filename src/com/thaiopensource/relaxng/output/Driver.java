@@ -60,6 +60,8 @@ public class Driver {
       of.output(sc, od, eh);
       return 0;
     }
+    catch (OutputFailedException e) {
+    }
     catch (IncorrectSchemaException e) {
     }
     catch (IOException e) {

@@ -7,5 +7,5 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 
 public interface OutputFormat {
-  void output(SchemaCollection sc, OutputDirectory od, ErrorHandler eh) throws SAXException, IOException;
+  void output(SchemaCollection sc, OutputDirectory od, ErrorHandler eh) throws SAXException, IOException, OutputFailedException;
 }
