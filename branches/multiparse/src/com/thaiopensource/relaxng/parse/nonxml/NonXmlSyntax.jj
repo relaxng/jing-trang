@@ -139,6 +139,16 @@ public class NonXmlSyntax implements ValidationContext {
     return sb.makeLocation(sourceUri, t.beginLine, t.beginColumn);
   }
 
+  private static ParsedPattern[] addPattern(ParsedPattern[] patterns, int i, ParsedPattern p) {
+    if (i >= patterns.length) {
+      ParsedPattern[] oldPatterns = patterns;
+      patterns = new ParsedPattern[oldPatterns.length*2];
+      System.arraycopy(oldPatterns, 0, patterns, 0, oldPatterns.length);
+    }
+    patterns[i] = p;
+    return patterns;
+  }
+
   public String resolveNamespacePrefix(String prefix) {
     if (prefix.length() == 0)
       return defaultNamespace;
@@ -214,7 +224,7 @@ ParsedPattern Input(Scope scope) :
   // If it starts with a non-reserved word it must be a grammar,
   // because there would be no way to define an identifier
   Preamble()
-  (LOOKAHEAD(1) p = TopLevelGrammar(scope) | p = Expr(scope) <EOF>)
+  (LOOKAHEAD(1) p = TopLevelGrammar(scope) | p = Expr(scope, null, null) <EOF>)
   { return p; }
 }
 
@@ -355,20 +365,28 @@ ParsedPattern NotAllowedExpr() :
   { return sb.makeNotAllowed(makeLocation(t), a); }
 }
 
-ParsedPattern Expr(Scope scope) :
+ParsedPattern Expr(Scope scope, Token t, Annotations a) :
 {
-  Token t;
   ParsedPattern p;
-  ParsedPattern p2;
+  ParsedPattern[] patterns = new ParsedPattern[2];
+  int nPatterns = 1;
 }
 {
   p = UnaryExpr(scope)
+  { patterns[0] = p; }
   (
-   (t = "|" p2 = UnaryExpr(scope) { p = sb.makeChoice(p, p2, makeLocation(t)); } )+
-    | (t = "&" p2 = UnaryExpr(scope) { p = sb.makeInterleave(p, p2, makeLocation(t)); } )+
-    | (t = "," p2 = UnaryExpr(scope) { p = sb.makeGroup(p, p2, makeLocation(t)); } )+
+   (t = "|" p = UnaryExpr(scope) { patterns = addPattern(patterns, nPatterns++, p); } )+
+    { p = sb.makeChoice(patterns, nPatterns, makeLocation(t), a); }
+    | (t = "&" p = UnaryExpr(scope) { patterns = addPattern(patterns, nPatterns++, p); } )+
+    { p = sb.makeInterleave(patterns, nPatterns, makeLocation(t), a); }
+    | (t = "," p = UnaryExpr(scope) { patterns = addPattern(patterns, nPatterns++, p); } )+
+    { p = sb.makeGroup(patterns, nPatterns, makeLocation(t), a); }
   )?
-  { return p; }
+  {
+    if (nPatterns == 1 && a != null)
+      p = sb.makeGroup(patterns, nPatterns, makeLocation(t), a);
+    return p;
+  }
 }
 
 ParsedPattern UnaryExpr(Scope scope) :
@@ -397,7 +415,7 @@ ParsedPattern ElementExpr(Scope scope) :
   Annotations a;
 }
 {
-  t = "element" nc = NameClass(false) a = Annotations() "{" p = Expr(scope) "}"
+  t = "element" nc = NameClass(false) a = Annotations() "{" p = Expr(scope, null, null) "}"
   { return sb.makeElement(nc, p, makeLocation(t), a); }
 }
 
@@ -409,7 +427,7 @@ ParsedPattern AttributeExpr(Scope scope) :
   Annotations a;
 }
 {
-  t = "attribute" nc = NameClass(true) a = Annotations() "{" p = Expr(scope) "}"
+  t = "attribute" nc = NameClass(true) a = Annotations() "{" p = Expr(scope, null, null) "}"
   { return sb.makeAttribute(nc, p, makeLocation(t), a); }
 }
 
@@ -427,10 +445,27 @@ ParsedNameClass NameClass(boolean inAttribute) :
 ParsedNameClass NameClassAlternatives(boolean inAttribute, ParsedNameClass nc) :
 {
   Token t;
-  ParsedNameClass nc2;
+  ParsedNameClass[] nameClasses;
+  int nNameClasses;
 }
 {
-  (t = "|" nc2 = BasicNameClass(inAttribute) { nc = sb.makeChoice(nc, nc2, makeLocation(t)); })*
+  (
+    {
+      nameClasses = new ParsedNameClass[2];
+      nameClasses[0] = nc;
+      nNameClasses = 1;
+    }
+    (t = "|" nc = BasicNameClass(inAttribute)
+    {
+      if (nNameClasses >= nameClasses.length) {
+	ParsedNameClass[] oldNameClasses = nameClasses;
+	nameClasses = new ParsedNameClass[oldNameClasses.length*2];
+	System.arraycopy(oldNameClasses, 0, nameClasses, 0, oldNameClasses.length);
+      }
+      nameClasses[nNameClasses++] = nc;
+    })+
+    { nc = sb.makeChoice(nameClasses, nNameClasses, makeLocation(t), null); }
+  )?
   { return nc; }
 }
 
@@ -559,7 +594,7 @@ ParsedPattern ListExpr(Scope scope) :
   ParsedPattern p;
 }
 {
-  t = "list" a = Annotations() "{" p = Expr(scope) "}"
+  t = "list" a = Annotations() "{" p = Expr(scope, null, null) "}"
   { return sb.makeList(p, makeLocation(t), a); }
 }
 
@@ -570,7 +605,7 @@ ParsedPattern MixedExpr(Scope scope) :
   ParsedPattern p;
 }
 {
-  t = "mixed" a = Annotations() "{" p = Expr(scope) "}"
+  t = "mixed" a = Annotations() "{" p = Expr(scope, null, null) "}"
   { return sb.makeMixed(p, makeLocation(t), a); }
 }
 
@@ -587,12 +622,13 @@ ParsedPattern GrammarExpr(Scope scope) :
 
 ParsedPattern ParenExpr(Scope scope) :
 {
+  Token t;
   Annotations a;
   ParsedPattern p;
 }
 {
-  "(" a = Annotations() p = Expr(scope) ")"
-  { return sb.annotateMulti(p, a); }
+  t = "(" a = Annotations() p = Expr(scope, t, a) ")"
+  { return p; }
 }
 
 void GrammarComponent(GrammarSection section, Scope scope) :
@@ -618,7 +654,7 @@ void Start(GrammarSection section, Scope scope) :
   ParsedPattern p;
 }
 {
-  t = "start" a = Annotations() (combine = AssignOp()) p = Expr(scope)
+  t = "start" a = Annotations() (combine = AssignOp()) p = Expr(scope, null, null)
   { section.define(GrammarSection.START, combine, p, makeLocation(t), a); }
 }
 
@@ -630,7 +666,7 @@ void Define(GrammarSection section, Scope scope) :
   ParsedPattern p;
 }
 {
-  (name = Identifier()) a = Annotations() (combine = AssignOp()) p = Expr(scope)
+  (name = Identifier()) a = Annotations() (combine = AssignOp()) p = Expr(scope, null, null)
   { section.define(name.getString(), combine, p, name.getLocation(), a); }
 }
 

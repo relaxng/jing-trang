@@ -135,19 +135,34 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     this.openIncludes = new OpenIncludes(uri, parent.openIncludes);
   }
 
-  public ParsedPattern makeChoice(ParsedPattern p1, ParsedPattern p2, Location loc)
+  public ParsedPattern makeChoice(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno)
           throws BuildException {
-    return pb.makeChoice((Pattern)p1, (Pattern)p2);
+    if (nPatterns <= 0)
+      throw new IllegalArgumentException();
+    Pattern result = (Pattern)patterns[0];
+    for (int i = 1; i < nPatterns; i++)
+      result = pb.makeChoice(result, (Pattern)patterns[i]);
+    return result;
   }
 
-  public ParsedPattern makeInterleave(ParsedPattern p1, ParsedPattern p2, Location loc)
+  public ParsedPattern makeInterleave(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno)
           throws BuildException {
-    return pb.makeInterleave((Pattern)p1, (Pattern)p2);
+    if (nPatterns <= 0)
+      throw new IllegalArgumentException();
+    Pattern result = (Pattern)patterns[0];
+    for (int i = 1; i < nPatterns; i++)
+      result = pb.makeInterleave(result, (Pattern)patterns[i]);
+    return result;
   }
 
-  public ParsedPattern makeGroup(ParsedPattern p1, ParsedPattern p2, Location loc)
+  public ParsedPattern makeGroup(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno)
           throws BuildException {
-    return pb.makeGroup((Pattern)p1, (Pattern)p2);
+    if (nPatterns <= 0)
+      throw new IllegalArgumentException();
+    Pattern result = (Pattern)patterns[0];
+    for (int i = 1; i < nPatterns; i++)
+      result = pb.makeGroup(result, (Pattern)patterns[i]);
+    return result;
   }
 
   public ParsedPattern makeOneOrMore(ParsedPattern p, Location loc, Annotations anno)
@@ -569,14 +584,6 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     return new GrammarImpl(this, parent);
   }
 
-  public ParsedPattern annotateMulti(ParsedPattern p, Annotations a) throws BuildException {
-    return p;
-  }
-
-  public ParsedNameClass annotateMulti(ParsedNameClass nc, Annotations a) throws BuildException {
-    return nc;
-  }
-
   public ParsedPattern annotateAfter(ParsedPattern p, ElementAnnotation e) throws BuildException {
     return p;
   }
@@ -605,8 +612,13 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     }
   }
 
-  public ParsedNameClass makeChoice(ParsedNameClass nc1, ParsedNameClass nc2, Location loc) {
-    return new ChoiceNameClass((NameClass)nc1, (NameClass)nc2);
+  public ParsedNameClass makeChoice(ParsedNameClass[] nameClasses, int nNameClasses, Location loc, Annotations anno) {
+    if (nNameClasses <= 0)
+      throw new IllegalArgumentException();
+    NameClass result = (NameClass)nameClasses[0];
+    for (int i = 1; i < nNameClasses; i++)
+      result = new ChoiceNameClass(result, (NameClass)nameClasses[i]);
+    return result;
   }
 
   public ParsedNameClass makeName(String ns, String localName, String prefix, Location loc, Annotations anno) {
