@@ -40,9 +40,6 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-/*
-XXX Avoid losing any comments
-*/
 public class NonXmlSyntax implements Context {
 
   private static final String xmlUri = "http://www.w3.org/XML/1998/namespace";
