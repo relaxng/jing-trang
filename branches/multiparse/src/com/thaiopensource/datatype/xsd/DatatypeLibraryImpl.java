@@ -31,7 +31,8 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
   static private final String UNSIGNED_INT_MAX = "4294967295";
   static private final String UNSIGNED_SHORT_MAX = "65535";
   static private final String UNSIGNED_BYTE_MAX = "255";
-  static private final String LANGUAGE_PATTERN = "([a-zA-Z]{8}|[iI]-[a-zA-Z]+|[xX]-[a-zA-Z]{1,8})(-[a-zA-Z]{1,8})*";
+  // Follow RFC 3066 syntax.
+  static private final String LANGUAGE_PATTERN = "[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*";
 
   public DatatypeLibraryImpl() {
     this.regexEngine = findRegexEngine();
