@@ -52,14 +52,14 @@
 
 <xsl:template match="compact//incorrect">
   <xsl:param name="base"/>
-  <saxon:output href="{$base}/{$incorrectSchemaName}{$compactSuffix}" method="text">
+  <saxon:output href="{$base}/{$incorrectSchemaName}{$compactSuffix}" method="text" encoding="utf-8">
     <xsl:value-of select="."/>
   </saxon:output>
 </xsl:template>
 
 <xsl:template match="compact//correct">
   <xsl:param name="base"/>
-  <saxon:output href="{$base}/{$correctSchemaName}{$compactSuffix}" method="text">
+  <saxon:output href="{$base}/{$correctSchemaName}{$compactSuffix}" method="text" encoding="utf-8">
     <xsl:value-of select="."/>
   </saxon:output>
 </xsl:template>
