@@ -1416,6 +1416,51 @@ bar2 = attribute bar { xsd:float }, attribute baz2 { text }?
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct><![CDATA[element foo {
+  xsd:string { pattern = "[a-zA-Z]+" }
+}
+| element bar {
+  xsd:string {
+    pattern = "[a-zA-Z]+"
+    pattern = "[^zZ]*"
+    pattern = "[^aA]*"
+  }
+}
+]]></correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+        <xs:pattern value="[a-zA-Z]+"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="bar">
+    <xs:simpleType>
+      <xs:restriction>
+        <xs:simpleType>
+          <xs:restriction>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="[a-zA-Z]+"/>
+              </xs:restriction>
+            </xs:simpleType>
+            <xs:pattern value="[^zZ]*"/>
+          </xs:restriction>
+        </xs:simpleType>
+        <xs:pattern value="[^aA]*"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>
