@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 class NamespaceManager {
-  static private final String xmlURI = "http://www.w3.org/XML/1998/namespace";
+  static final String xmlURI = "http://www.w3.org/XML/1998/namespace";
 
   // map namespace URIs to non-empty prefix
   private Map namespaceUriMap = new HashMap();
