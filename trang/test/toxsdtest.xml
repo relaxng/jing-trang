@@ -346,18 +346,9 @@ foo = attribute foo { xsd:double } | element foo { xsd:double }
   </xs:element>
   <xs:group name="foo">
     <xs:sequence>
-      <xs:choice minOccurs="0">
-        <xs:element ref="foo"/>
-      </xs:choice>
+      <xs:element ref="foo" minOccurs="0"/>
     </xs:sequence>
   </xs:group>
-  <xs:attributeGroup name="foo">
-    <xs:attribute name="foo" use="required">
-      <xs:simpleType>
-        <xs:restriction base="xs:double"/>
-      </xs:simpleType>
-    </xs:attribute>
-  </xs:attributeGroup>
   <xs:element name="foo">
     <xs:complexType>
       <xs:simpleContent>
@@ -369,6 +360,13 @@ foo = attribute foo { xsd:double } | element foo { xsd:double }
       </xs:simpleContent>
     </xs:complexType>
   </xs:element>
+  <xs:attributeGroup name="foo">
+    <xs:attribute name="foo" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:double"/>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
 </xs:schema>
 </correct>
 </xsd>
@@ -735,8 +733,8 @@ y = element e2:y { x? }
   <xs:import namespace="http://www.example.com/2" schemaLocation="c.xsd"/>
   <xs:element name="x">
     <xs:complexType>
-      <xs:sequence minOccurs="0">
-        <xs:element ref="e2:y"/>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="e2:y"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -747,8 +745,8 @@ y = element e2:y { x? }
   <xs:import namespace="http://www.example.com/1" schemaLocation="e1.xsd"/>
   <xs:element name="y">
     <xs:complexType>
-      <xs:sequence minOccurs="0">
-        <xs:element ref="e1:x"/>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="e1:x"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -822,7 +820,9 @@ include "example.rnc"
   <xs:import schemaLocation="c.xsd"/>
   <xs:element name="y">
     <xs:complexType>
-      <xs:element ref="x"/>
+      <xs:sequence>
+        <xs:element ref="x"/>
+      </xs:sequence>
     </xs:complexType>
   </xs:element>
 </xs:schema>
@@ -976,12 +976,10 @@ element e1:x { element e2:y|e2:z { element e2:y { empty } } }
   <xs:import namespace="http://www.example.com/2" schemaLocation="e2.xsd"/>
   <xs:element name="x">
     <xs:complexType>
-      <xs:sequence>
-        <xs:choice>
-          <xs:element ref="e2:y"/>
-          <xs:element ref="e2:z"/>
-        </xs:choice>
-      </xs:sequence>
+      <xs:choice>
+        <xs:element ref="e2:y"/>
+        <xs:element ref="e2:z"/>
+      </xs:choice>
     </xs:complexType>
   </xs:element>
 </xs:schema>
@@ -1005,25 +1003,23 @@ element e1:x { element e2:y|e3:z { element e1:x|e1:v { empty } } }
   <xs:import namespace="http://www.example.com/3" schemaLocation="e3.xsd"/>
   <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
   <xs:group name="anon0">
-    <xs:choice>
+    <xs:sequence>
       <xs:element name="y">
         <xs:complexType>
-          <xs:sequence>
-            <xs:choice>
-              <xs:group ref="e1:anon0"/>
-              <xs:element ref="e1:v"/>
-            </xs:choice>
-          </xs:sequence>
+	  <xs:choice>
+	    <xs:group ref="e1:anon0"/>
+	    <xs:element ref="e1:v"/>
+	  </xs:choice>
         </xs:complexType>
       </xs:element>
-    </xs:choice>
+    </xs:sequence>
   </xs:group>
   <xs:group name="anon1">
-    <xs:choice>
+    <xs:sequence>
       <xs:element name="y">
         <xs:complexType mixed="true"/>
       </xs:element>
-    </xs:choice>
+    </xs:sequence>
   </xs:group>
 </xs:schema>
 </resource>
@@ -1033,12 +1029,10 @@ element e1:x { element e2:y|e3:z { element e1:x|e1:v { empty } } }
   <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
   <xs:element name="z">
     <xs:complexType>
-      <xs:sequence>
-        <xs:choice>
-          <xs:group ref="e1:anon0"/>
-          <xs:element ref="e1:v"/>
-        </xs:choice>
-      </xs:sequence>
+      <xs:choice>
+	<xs:group ref="e1:anon0"/>
+	<xs:element ref="e1:v"/>
+      </xs:choice>
     </xs:complexType>
   </xs:element>
 </xs:schema>
@@ -1049,12 +1043,10 @@ element e1:x { element e2:y|e3:z { element e1:x|e1:v { empty } } }
   <xs:import namespace="http://www.example.com/2" schemaLocation="e2.xsd"/>
   <xs:element name="x">
     <xs:complexType>
-      <xs:sequence>
-        <xs:choice>
-          <xs:group ref="e2:anon0"/>
-          <xs:element ref="e3:z"/>
-        </xs:choice>
-      </xs:sequence>
+      <xs:choice>
+	<xs:group ref="e2:anon0"/>
+	<xs:element ref="e3:z"/>
+      </xs:choice>
     </xs:complexType>
   </xs:element>
   <xs:element name="v">
@@ -1062,17 +1054,15 @@ element e1:x { element e2:y|e3:z { element e1:x|e1:v { empty } } }
   </xs:element>
   <xs:element name="w">
     <xs:complexType>
-      <xs:sequence>
-        <xs:group ref="e2:anon1"/>
-      </xs:sequence>
+      <xs:group ref="e2:anon1"/>
     </xs:complexType>
   </xs:element>
   <xs:group name="anon0">
-    <xs:choice>
+    <xs:sequence>
       <xs:element name="x">
         <xs:complexType/>
       </xs:element>
-    </xs:choice>
+    </xs:sequence>
   </xs:group>
 </xs:schema>
 </correct>
@@ -1091,28 +1081,26 @@ element e1:x { element e1:x|e2:y { element e1:x|e2:y { empty } } }
 <resource name="e2.xsd">
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
   <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
-  <xs:group name="anon1">
-    <xs:choice>
-      <xs:element name="y">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:choice>
-              <xs:group ref="e1:anon0"/>
-              <xs:element name="y">
-                <xs:complexType/>
-              </xs:element>
-            </xs:choice>
-          </xs:sequence>
-        </xs:complexType>
-      </xs:element>
-    </xs:choice>
-  </xs:group>
   <xs:group name="anon0">
-    <xs:choice>
+    <xs:sequence>
       <xs:element name="y">
         <xs:complexType/>
       </xs:element>
-    </xs:choice>
+    </xs:sequence>
+  </xs:group>
+  <xs:group name="anon1">
+    <xs:sequence>
+      <xs:element name="y">
+        <xs:complexType>
+	  <xs:choice>
+	    <xs:group ref="e1:anon0"/>
+	    <xs:element name="y">
+	      <xs:complexType/>
+	    </xs:element>
+	  </xs:choice>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
   </xs:group>
 </xs:schema>
 </resource>
@@ -1121,31 +1109,27 @@ element e1:x { element e1:x|e2:y { element e1:x|e2:y { empty } } }
   <xs:import namespace="http://www.example.com/2" schemaLocation="e2.xsd"/>
   <xs:element name="x">
     <xs:complexType>
-      <xs:sequence>
-        <xs:choice>
-          <xs:element name="x">
-            <xs:complexType>
-              <xs:sequence>
-                <xs:choice>
-                  <xs:element name="x">
-                    <xs:complexType/>
-                  </xs:element>
-                  <xs:group ref="e2:anon0"/>
-                </xs:choice>
-              </xs:sequence>
-            </xs:complexType>
-          </xs:element>
-          <xs:group ref="e2:anon1"/>
-        </xs:choice>
-      </xs:sequence>
+      <xs:choice>
+	<xs:element name="x">
+	  <xs:complexType>
+	    <xs:choice>
+	      <xs:element name="x">
+		<xs:complexType/>
+	      </xs:element>
+	      <xs:group ref="e2:anon0"/>
+	    </xs:choice>
+	  </xs:complexType>
+	</xs:element>
+	<xs:group ref="e2:anon1"/>
+      </xs:choice>
     </xs:complexType>
   </xs:element>
   <xs:group name="anon0">
-    <xs:choice>
+    <xs:sequence>
       <xs:element name="x">
         <xs:complexType/>
       </xs:element>
-    </xs:choice>
+    </xs:sequence>
   </xs:group>
 </xs:schema>
 </correct>
@@ -1184,9 +1168,7 @@ bar5 = element bar5 { empty }, element bar6 { empty }
   </xs:element>
   <xs:group name="bar2">
     <xs:sequence>
-      <xs:sequence minOccurs="0">
-        <xs:element ref="bar2"/>
-      </xs:sequence>
+       <xs:element minOccurs="0" ref="bar2"/>
     </xs:sequence>
   </xs:group>
   <xs:element name="bar2">
@@ -1194,9 +1176,7 @@ bar5 = element bar5 { empty }, element bar6 { empty }
   </xs:element>
   <xs:group name="bar3">
     <xs:sequence>
-      <xs:sequence minOccurs="0" maxOccurs="unbounded">
-        <xs:element ref="bar3"/>
-      </xs:sequence>
+      <xs:element ref="bar3" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:group>
   <xs:element name="bar3">
@@ -1204,9 +1184,7 @@ bar5 = element bar5 { empty }, element bar6 { empty }
   </xs:element>
   <xs:group name="bar4">
     <xs:sequence>
-      <xs:sequence maxOccurs="unbounded">
-        <xs:element ref="bar4"/>
-      </xs:sequence>
+      <xs:element ref="bar4" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:group>
   <xs:element name="bar4">
@@ -1247,8 +1225,8 @@ bar = element bar { bar* }
   </xs:element>
   <xs:element name="bar">
     <xs:complexType>
-      <xs:sequence minOccurs="0" maxOccurs="unbounded">
-        <xs:element ref="bar"/>
+      <xs:sequence>
+        <xs:element ref="bar" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
