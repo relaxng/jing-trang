@@ -1,47 +1,52 @@
 package com.thaiopensource.relaxng.output;
 
+import com.thaiopensource.relaxng.IncorrectSchemaException;
+import com.thaiopensource.relaxng.edit.AnyNameNameClass;
+import com.thaiopensource.relaxng.edit.AttributePattern;
+import com.thaiopensource.relaxng.edit.ChoiceNameClass;
+import com.thaiopensource.relaxng.edit.ChoicePattern;
+import com.thaiopensource.relaxng.edit.Component;
+import com.thaiopensource.relaxng.edit.ComponentVisitor;
+import com.thaiopensource.relaxng.edit.Container;
+import com.thaiopensource.relaxng.edit.DataPattern;
+import com.thaiopensource.relaxng.edit.DefineComponent;
+import com.thaiopensource.relaxng.edit.DivComponent;
+import com.thaiopensource.relaxng.edit.ElementPattern;
+import com.thaiopensource.relaxng.edit.EmptyPattern;
+import com.thaiopensource.relaxng.edit.ExternalRefPattern;
+import com.thaiopensource.relaxng.edit.GrammarPattern;
+import com.thaiopensource.relaxng.edit.GroupPattern;
+import com.thaiopensource.relaxng.edit.IncludeComponent;
+import com.thaiopensource.relaxng.edit.InterleavePattern;
+import com.thaiopensource.relaxng.edit.ListPattern;
+import com.thaiopensource.relaxng.edit.MixedPattern;
+import com.thaiopensource.relaxng.edit.NameClass;
+import com.thaiopensource.relaxng.edit.NameClassVisitor;
+import com.thaiopensource.relaxng.edit.NameNameClass;
+import com.thaiopensource.relaxng.edit.NotAllowedPattern;
+import com.thaiopensource.relaxng.edit.NsNameNameClass;
+import com.thaiopensource.relaxng.edit.OneOrMorePattern;
+import com.thaiopensource.relaxng.edit.OptionalPattern;
+import com.thaiopensource.relaxng.edit.ParentRefPattern;
+import com.thaiopensource.relaxng.edit.Pattern;
+import com.thaiopensource.relaxng.edit.PatternVisitor;
+import com.thaiopensource.relaxng.edit.RefPattern;
+import com.thaiopensource.relaxng.edit.SchemaBuilderImpl;
+import com.thaiopensource.relaxng.edit.SchemaCollection;
+import com.thaiopensource.relaxng.edit.SourceLocation;
+import com.thaiopensource.relaxng.edit.TextPattern;
+import com.thaiopensource.relaxng.edit.ValuePattern;
+import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
+import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
+import com.thaiopensource.relaxng.util.DraconianErrorHandler;
+import com.thaiopensource.relaxng.util.ValidationEngine;
+import org.relaxng.datatype.helpers.DatatypeLibraryLoader;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
-import org.relaxng.datatype.helpers.DatatypeLibraryLoader;
-import com.thaiopensource.relaxng.edit.PatternVisitor;
-import com.thaiopensource.relaxng.edit.EmptyPattern;
-import com.thaiopensource.relaxng.edit.ElementPattern;
-import com.thaiopensource.relaxng.edit.NotAllowedPattern;
-import com.thaiopensource.relaxng.edit.AttributePattern;
-import com.thaiopensource.relaxng.edit.TextPattern;
-import com.thaiopensource.relaxng.edit.DataPattern;
-import com.thaiopensource.relaxng.edit.ValuePattern;
-import com.thaiopensource.relaxng.edit.ListPattern;
-import com.thaiopensource.relaxng.edit.SourceLocation;
-import com.thaiopensource.relaxng.edit.OneOrMorePattern;
-import com.thaiopensource.relaxng.edit.Pattern;
-import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
-import com.thaiopensource.relaxng.edit.ChoicePattern;
-import com.thaiopensource.relaxng.edit.InterleavePattern;
-import com.thaiopensource.relaxng.edit.GroupPattern;
-import com.thaiopensource.relaxng.edit.RefPattern;
-import com.thaiopensource.relaxng.edit.ParentRefPattern;
-import com.thaiopensource.relaxng.edit.OptionalPattern;
-import com.thaiopensource.relaxng.edit.GrammarPattern;
-import com.thaiopensource.relaxng.edit.ExternalRefPattern;
-import com.thaiopensource.relaxng.edit.MixedPattern;
-import com.thaiopensource.relaxng.edit.ComponentVisitor;
-import com.thaiopensource.relaxng.edit.DivComponent;
-import com.thaiopensource.relaxng.edit.DefineComponent;
-import com.thaiopensource.relaxng.edit.Container;
-import com.thaiopensource.relaxng.edit.IncludeComponent;
-import com.thaiopensource.relaxng.edit.Component;
-import com.thaiopensource.relaxng.edit.SchemaCollection;
-import com.thaiopensource.relaxng.edit.SchemaBuilderImpl;
-import com.thaiopensource.relaxng.IncorrectSchemaException;
-import com.thaiopensource.relaxng.util.ValidationEngine;
-import com.thaiopensource.relaxng.util.DraconianErrorHandler;
-import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.HashMap;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 /*
 
 Tasks:
@@ -55,6 +60,7 @@ nested grammars
 */
 public class DtdOutput {
   private ErrorHandler eh;
+  private boolean hadError = false;
 
   public DtdOutput(ErrorHandler eh) {
     this.eh = eh;
@@ -145,7 +151,7 @@ public class DtdOutput {
     }
   }
 
-  class Analyzer implements PatternVisitor, ComponentVisitor {
+  class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
     private final Grammar grammar;
     private Type startType = ERROR;
 
@@ -172,6 +178,7 @@ public class DtdOutput {
     }
 
     public Object visitElement(ElementPattern p) {
+      p.getNameClass().accept(this);
       if (!seen(p.getChild())) {
         Type t = analyzeType(this, p.getChild());
         if (!t.isA(COMPLEX_TYPE) && t != ERROR)
@@ -181,6 +188,7 @@ public class DtdOutput {
     }
 
     public Object visitAttribute(AttributePattern p) {
+      p.getNameClass().accept(this);
       Type t = analyzeType(this, p.getChild());
       if (!t.isA(ATTRIBUTE_TYPE) && t != DIRECT_TEXT && t != ERROR)
         error("sorry_attribute_type", p.getSourceLocation());
@@ -296,12 +304,36 @@ public class DtdOutput {
     public Object visitInclude(IncludeComponent c) {
       return null;
     }
+
+    public Object visitChoice(ChoiceNameClass nc) {
+      error("sorry_choice_name_class", nc.getSourceLocation());
+      return null;
+    }
+
+    public Object visitAnyName(AnyNameNameClass nc) {
+      error("sorry_wildcard", nc.getSourceLocation());
+      return null;
+    }
+
+    public Object visitNsName(NsNameNameClass nc) {
+      error("sorry_wildcard", nc.getSourceLocation());
+      return null;
+    }
+
+    public Object visitName(NameNameClass nc) {
+      String ns = nc.getNamespaceUri();
+      if (ns != NameClass.INHERIT_NS && ns.length() != 0)
+        error("sorry_namespace", nc.getSourceLocation());
+      return null;
+    }
   }
 
   HashMap patternTypes = new HashMap();
 
   void analyze(Pattern p) {
     analyzeType(new Analyzer(), p);
+    if (!hadError)
+      System.err.println("OK");
   }
 
   HashMap seenTable = new HashMap();
@@ -448,6 +480,7 @@ public class DtdOutput {
   }
 
   void error(String key, SourceLocation loc) {
+    hadError = true;
     System.err.println(loc.getLineNumber() + ":" + key);
   }
 
