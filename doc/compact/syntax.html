@@ -138,10 +138,14 @@ keyword ::=
 
 CName ::= NCName ":" NCName
 escapedIdentifier ::= "\" NCName
-literal ::= '"' ([^"] | '""')* '"' | "'" ([^'] | "''")* "'"
+literal ::= literalSegment+
+literalSegment ::= '"' [^"]* '"' | "'" [^']* "'"
 nsName ::= NCName ":*"
 anyName ::= "*"
 </pre>
+
+<p>The contents of consecutive <code>literalSegment</code>s in a
+<code>literal</code> are concatenated.</p>
 
 <p>Comments start with a <code>#</code> and continue to the end of the
 line.</p>
