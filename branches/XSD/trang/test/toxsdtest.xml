@@ -2954,7 +2954,78 @@ baz = element baz { bar, element xyzzy { text }* }
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<incorrect>
+foo = attribute foo { attribute bar { text } }
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect>
+foo = element foo { empty }, xsd:float
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect><![CDATA[
+foo = xsd:int & xsd:float
+]]></incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect>
+start = attribute foo { text }
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect>
+start = element foo { text }?
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect>
+element foo { xsd:float, xsd:float }
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect>
+element foo { xsd:float* }
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<correct>
+foo = xsd:float*
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:simpleType name="foo">
+    <xs:restriction base="xs:float"/>
+  </xs:simpleType>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
+<testCase>
+<compact>
+<incorrect>
+</incorrect>
+</compact>
+</testCase>
 <testCase>
 <compact>
 <correct>
