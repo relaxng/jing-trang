@@ -68,10 +68,21 @@ class Analysis {
     "NMTOKENS"
   };
 
-  static private final String[] stringTypes = {
-    "anyURI",
-    "normalizedString",
-    "base64Binary"
+  // The numeric types aren't included here because they can have a leading +
+  static private final String[] nmtokenTypes = {
+    "boolean",
+    "hexBinary",
+    "QName",
+    "NOTATION",
+    "duration",
+    "dateTime",
+    "time",
+    "date",
+    "gYearMonth",
+    "gYear",
+    "gMonthDay",
+    "gMonth",
+    "gDay"
   };
 
   private class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
@@ -102,19 +113,19 @@ class Analysis {
         for (int i = 0; i < compatibleTypes.length; i++)
           if (type.equals(compatibleTypes[i]))
             return Type.ATTRIBUTE_TYPE;
-        for (int i = 0; i < stringTypes.length; i++)
-          if (type.equals(stringTypes[i])) {
-            p.setType("string");
+        for (int i = 0; i < nmtokenTypes.length; i++)
+          if (type.equals(nmtokenTypes[i])) {
+            p.setType("NMTOKEN");
+            // XXX give a warning
             return Type.ATTRIBUTE_TYPE;
           }
-        if (!type.equals("string"))
-          p.setType("NMTOKEN");
+        // XXX give a warning if not normalizedString or token or string
+        p.setType("string");
       }
       else if (!lib.equals("")) {
         er.error("unrecognized_datatype_library", p.getSourceLocation());
         return Type.ERROR;
       }
-      // XXX check datatypes
       return Type.ATTRIBUTE_TYPE;
     }
 

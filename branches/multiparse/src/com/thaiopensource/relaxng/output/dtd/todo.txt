@@ -28,4 +28,3 @@ Have a top-level annotation indicating a redefinition point (as in DocBook)
 Recognize definitions being used as INCLUDE/IGNORE (as in TEI)
 Handle choice involving attributes (perhaps just special case where alphabets are disjoint)
 Handle interleave where operand is a zero or more element class
-xsd:double etc is not an NMTOKEN because it allows leading +
