@@ -115,6 +115,7 @@ public class CategoriesGen {
     w.write(lineSep);
     w.write(INDENT);
     w.write("static final int[][] CATEGORY_RANGES = {");
+    w.write(lineSep);
 
     for (Iterator iter = set.iterator(); iter.hasNext();) {
       Map.Entry entry = (Map.Entry)iter.next();
