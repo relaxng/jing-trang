@@ -23,4 +23,6 @@ Approximate when single element restriction is violated
 Allow choice of attributes and data
 Try to push namespace declarations down into appropriate attribute groups
 Support for ANY
+<empty/> used as a model-group hook
+
 
