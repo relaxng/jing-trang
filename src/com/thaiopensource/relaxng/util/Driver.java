@@ -17,6 +17,7 @@ import org.xml.sax.ErrorHandler;
 
 import com.thaiopensource.relaxng.XMLReaderCreator;
 import com.thaiopensource.util.OptionParser;
+import com.thaiopensource.util.Version;
 
 class Driver {
 
@@ -35,10 +36,11 @@ class Driver {
   private boolean checkId = true;
   private boolean nonXmlSyntax = false;
   private boolean timing = false;
+  private String encoding = null;
 
   public int doMain(String[] args) {
     ErrorHandlerImpl eh = new ErrorHandlerImpl(System.out);
-    OptionParser op = new OptionParser("itn", args);
+    OptionParser op = new OptionParser("itne:", args);
     try {
       while (op.moveToNextOption()) {
         switch (op.getOptionChar()) {
@@ -50,6 +52,9 @@ class Driver {
           break;
         case 't':
           timing = true;
+          break;
+        case 'e':
+          encoding = op.getOptionArg();
           break;
         }
       }
@@ -66,7 +71,7 @@ class Driver {
     }
     args = op.getRemainingArgs();
     if (args.length < 1) {
-      eh.print(eh.format(usageKey, new Object[]{ getVersion() }));
+      eh.print(eh.format(usageKey, new Object[]{ Version.getVersion(Driver.class) }));
       return 2;
     }
     long startTime = System.currentTimeMillis();
@@ -74,7 +79,10 @@ class Driver {
     boolean hadError = false;
     try {
       ValidationEngine engine = new ValidationEngine(createXMLReaderCreator(), eh, checkId, nonXmlSyntax);
-      if (engine.loadSchema(ValidationEngine.uriOrFileInputSource(args[0]))) {
+      InputSource in = ValidationEngine.uriOrFileInputSource(args[0]);
+      if (encoding != null)
+        in.setEncoding(encoding);
+      if (engine.loadSchema(in)) {
         loadedPatternTime = System.currentTimeMillis();
 	for (int i = 1; i < args.length; i++) {
 	  if (!engine.validate(ValidationEngine.uriOrFileInputSource(args[i])))
@@ -127,22 +135,5 @@ class Driver {
       return new Sax2XMLReaderCreator(className);
     else
       return new Sax1XMLReaderCreator(className);
-  }
-
-  static private String getVersion() {
-    InputStream in = Driver.class.getResourceAsStream("resources/Version.properties");
-    if (in != null) {
-      Properties props = new Properties();
-      try {
-	props.load(in);
-	String version = props.getProperty("version");
-	if (version != null)
-	  return version;
-      }
-      catch (IOException e) { }
-    }
-    throw new MissingResourceException("no version property",
-				       Driver.class.getName(),
-				       "version");
   }
 }
