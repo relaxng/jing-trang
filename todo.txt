@@ -1,11 +1,18 @@
+Make SAX-based parser preserve element annotations.
+
+SAXParser and comment formatting.
+
+Put location information in error messages into a standard format
+understandable by Emacs/Intellij.
+
+More helpful syntax error messages with non-XML syntax parser.
+
+Namespace declarations in element annotations (also issue for TC).
+
 Support for IDREF checking via JARV.
 
 In a big choice or interleave or attribute group, memoization for each
 binary pattern is inefficient.
-
-Distinguish error for unknown datatype library and unknown datatype.
-
-Use Crimson in jing.exe (but maybe not JDK 1.1 compatible).
 
 Option to recover from unknown datatype libraries.
 
@@ -23,11 +30,13 @@ Support DTD compatibility use of default values.
 
 Option to do XInclude before validation.
 
-Integrate the non-XML syntax.
-
 Maybe introduce a variant of the element pattern that has a mapping
 from names to content models.
 
 Better error message for wrong namespace URI.
 
 Option to be verbose.
+
+Provide regex impl based on JDK 1.4 regexes.
+
+On output, using character escapes for things outside repertoire of character encoding.

@@ -20,8 +20,9 @@ public class PatternValidatorHandler implements ValidatorHandler {
   private boolean complete;
   private boolean collectingCharacters;
   private StringBuffer charBuf = new StringBuffer();
-  private PrefixMapping prefixMapping = new PrefixMapping("xml", PatternReader.xmlURI, null);
+  private PrefixMapping prefixMapping = new PrefixMapping("xml", xmlURI, null);
   private Locator locator;
+  private static final String xmlURI = "http://www.w3.org/XML/1998/namespace";
 
   static private final class PrefixMapping implements ValidationContext {
     private final String prefix;
@@ -226,7 +227,7 @@ public class PatternValidatorHandler implements ValidatorHandler {
     collectingCharacters = false;
     locator = null;
     memo = builder.getPatternMemo(start);
-    prefixMapping = new PrefixMapping("xml", PatternReader.xmlURI, null);
+    prefixMapping = new PrefixMapping("xml", xmlURI, null);
   }
 
   public boolean isValidSoFar() {
@@ -242,7 +243,7 @@ public class PatternValidatorHandler implements ValidatorHandler {
       return;
     hadError = true;
     if (eh != null)
-      eh.error(new SAXParseException(Localizer.message(key), locator));
+      eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key), locator));
   }
 
   private void error(String key, Name arg) throws SAXException {
@@ -254,7 +255,7 @@ public class PatternValidatorHandler implements ValidatorHandler {
       return;
     hadError = true;
     if (eh != null)
-      eh.error(new SAXParseException(Localizer.message(key, arg), locator));
+      eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key, arg), locator));
   }
 
   /* Return false if m is notAllowed. */

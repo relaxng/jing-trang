@@ -3,6 +3,7 @@ package com.thaiopensource.relaxng.util;
 import java.io.IOException;
 import java.io.File;
 import java.net.URL;
+import java.net.MalformedURLException;
 
 import org.xml.sax.SAXException;
 import org.xml.sax.ErrorHandler;
@@ -15,6 +16,7 @@ import com.thaiopensource.relaxng.SchemaFactory;
 import com.thaiopensource.relaxng.ValidatorHandler;
 import com.thaiopensource.relaxng.Schema;
 import com.thaiopensource.relaxng.IncorrectSchemaException;
+import com.thaiopensource.util.UriOrFile;
 
 /**
  * Provides a simplified API for validating XML documents against RELAX NG schemas.
@@ -64,6 +66,25 @@ public class ValidationEngine {
     this.eh = eh;
     factory.setErrorHandler(eh);
     factory.setCheckIdIdref(checkIdIdref);
+  }
+
+  /**
+   * Constructs a <code>ValidationEngine</code>.
+   *
+   * @param xrc the <code>XMLReaderCreator</code> to be used for constructing <code>XMLReader</code>s;
+   * if <code>null</code> uses <code>Sax2XMLReaderCreator</code>
+   * @param eh the <code>ErrorHandler</code> to be used for reporting errors; if <code>null</code>
+   * uses <code>DraconianErrorHandler</code>
+   * @param checkIdIdref <code>true</code> if ID/IDREF/IDREFS should be checked; <code>false</code> otherwise
+   * @throws NullPointerException if <code>xrc</code> is <code>null</code>
+   * @param compactSyntax <code>true</code> if the compact syntax should be used to parse the schema;
+   * <code>false</code> if the XML syntax should be used
+   * @see DraconianErrorHandler
+   * @see Sax2XMLReaderCreator
+   */
+  public ValidationEngine(XMLReaderCreator xrc, ErrorHandler eh, boolean checkIdIdref, boolean compactSyntax) {
+    this(xrc, eh, checkIdIdref);
+    factory.setCompactSyntax(compactSyntax);
   }
 
   /**
@@ -120,7 +141,7 @@ public class ValidationEngine {
    * @param filename a String specifying the filename
    * @return an <code>InputSource</code> for the filename
    */
-  static public InputSource fileInputSource(String filename) {
+  static public InputSource fileInputSource(String filename) throws MalformedURLException {
     return fileInputSource(new File(filename));
   }
 
@@ -130,30 +151,20 @@ public class ValidationEngine {
    * @param file the <code>File</code>
    * @return an <code>InputSource</code> for the filename
    */
-  static public InputSource fileInputSource(File file) {
-    return new InputSource(fileToURL(file).toString());
+  static public InputSource fileInputSource(File file) throws MalformedURLException {
+    return new InputSource(UriOrFile.fileToUri(file));
   }
 
   /**
-   * Converts a <code>File</code> to a <code>URL</code>.
+   * Returns an <code>InputSource</code> for a string that represents either a file
+   * or an absolute URI. If the string looks like an absolute URI, it will be
+   * treated as an absolute URI, otherwise it will be treated as a filename.
    *
-   * @param file the <code>File</code> to convert
-   * @return a <code>URL</code> locating the specified <code>File</code>.
+   * @param uriOrFile a <code>String</code> representing either a file or an absolute URI
+   * @return an <code>InputSource</code> for the file or absolute URI
    */
-  static private URL fileToURL(File file) {
-    String path = file.getAbsolutePath();
-    String fSep = System.getProperty("file.separator");
-    if (fSep != null && fSep.length() == 1)
-      path = path.replace(fSep.charAt(0), '/');
-    if (path.length() > 0 && path.charAt(0) != '/')
-      path = '/' + path;
-    try {
-      return new URL("file", "", path);
-    }
-    catch (java.net.MalformedURLException e) {
-      /* According to the spec this could only happen if the file
-	 protocol were not recognized. */
-      throw new Error("unexpected MalformedURLException");
-    }
+  static public InputSource uriOrFileInputSource(String uriOrFile) throws MalformedURLException {
+    return new InputSource(UriOrFile.toUri(uriOrFile));
   }
+
 }
