@@ -42,13 +42,19 @@ import com.thaiopensource.relaxng.edit.CompositePattern;
 import com.thaiopensource.relaxng.edit.Annotated;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
+import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 import com.thaiopensource.relaxng.util.DraconianErrorHandler;
 import com.thaiopensource.relaxng.util.ValidationEngine;
+import com.thaiopensource.relaxng.util.Jaxp11XMLReaderCreator;
 import org.relaxng.datatype.helpers.DatatypeLibraryLoader;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.io.Writer;
+import java.io.FileOutputStream;
+import java.io.BufferedOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -68,16 +74,21 @@ a:documentation
 non-deterministic content models
 option to protect element declarations with included section
 allow mixed(repeat(NOT_ALLOWED))
+Avoid unnecessary parentheses around group members
+Pretty-print content models to avoid excessively long lines
 */
 public class DtdOutput {
   private ErrorHandler eh;
+  private Writer writer;
+  private final String lineSep = System.getProperty("line.separator");
   private boolean hadError = false;
   private Grammar grammar = null;
   private GrammarPattern grammarPattern;
   private Type startType = ERROR;
 
-  public DtdOutput(ErrorHandler eh) {
+  public DtdOutput(ErrorHandler eh, Writer writer) {
     this.eh = eh;
+    this.writer = writer;
   }
 
   static class Type {
@@ -117,7 +128,9 @@ public class DtdOutput {
   static Type EMPTY = new Type(ATTRIBUTE_GROUP);
   static Type TEXT = new Type(MIXED_ELEMENT_CLASS, COMPLEX_TYPE);
   static Type DIRECT_TEXT = new Type(TEXT);
-  static Type MODEL_GROUP = new Type(COMPLEX_TYPE);
+  // an attribute group plus a model group
+  static Type COMPLEX_TYPE_MODEL_GROUP = new Type(COMPLEX_TYPE);
+  static Type MODEL_GROUP = new Type(COMPLEX_TYPE_MODEL_GROUP);
   static Type ELEMENT_CLASS = new Type(MODEL_GROUP);
   static Type DIRECT_SINGLE_ELEMENT = new Type(ELEMENT_CLASS);
   static Type DIRECT_SINGLE_ATTRIBUTE = new Type(ATTRIBUTE_GROUP);
@@ -296,7 +309,7 @@ public class DtdOutput {
         startType = t;
       }
       else {
-        if (t == COMPLEX_TYPE)
+        if (t == COMPLEX_TYPE || t == COMPLEX_TYPE_MODEL_GROUP)
           error("sorry_complex_type_define", c.getSourceLocation());
       }
       return null;
@@ -523,7 +536,8 @@ public class DtdOutput {
 
   class AttributeOutput extends AbstractVisitor {
     void indent() {
-      buf.append("\n  ");
+      buf.append(lineSep);
+      buf.append("  ");
     }
 
     public Object visitComposite(CompositePattern p) {
@@ -824,20 +838,26 @@ public class DtdOutput {
 
   HashMap patternTypes = new HashMap();
 
-  void output(Pattern p) {
-    p = (Pattern)p.accept(new Simplifier());
-    analyzeType(new Analyzer(), p);
-    if (!hadError) {
-      if (p == grammarPattern)
-        grammarOutput.includeStart = true;
-      else {
-        p.accept(nestedContentModelOutput);
-        outputQueuedElements();
-        grammarOutput.includeStart = false;
+  void output(Pattern p) throws IOException {
+    try {
+      p = (Pattern)p.accept(new Simplifier());
+      analyzeType(new Analyzer(), p);
+      if (!hadError) {
+        if (p == grammarPattern)
+          grammarOutput.includeStart = true;
+        else {
+          p.accept(nestedContentModelOutput);
+          outputQueuedElements();
+          grammarOutput.includeStart = false;
+        }
+        if (grammarPattern != null)
+          grammarOutput.visitContainer(grammarPattern);
       }
-      if (grammarPattern != null)
-        grammarOutput.visitContainer(grammarPattern);
     }
+    catch (WrappedIOException e) {
+      throw e.cause;
+    }
+    writer.flush();
   }
 
   HashMap seenTable = new HashMap();
@@ -898,15 +918,37 @@ public class DtdOutput {
   }
 
   void newline() {
-    System.out.println();
+    write(lineSep);
+  }
+
+  static class WrappedIOException extends RuntimeException {
+    IOException cause;
+
+    WrappedIOException(IOException cause) {
+      this.cause = cause;
+    }
+
+    Throwable getCause() {
+      return cause;
+    }
   }
 
   void write(String s) {
-    System.out.print(s);
+    try {
+      writer.write(s);
+    }
+    catch (IOException e) {
+      throw new WrappedIOException(e);
+    }
   }
 
   void write(char c) {
-    System.out.print(c);
+    try {
+      writer.write(c);
+    }
+    catch (IOException e) {
+      throw new WrappedIOException(e);
+    }
   }
 
   private static Type zeroOrMore(Type t) {
@@ -930,10 +972,15 @@ public class DtdOutput {
       return ERROR;
     if (t1.isA(MODEL_GROUP) && t2.isA(MODEL_GROUP))
       return MODEL_GROUP;
+    if (t1.isA(COMPLEX_TYPE_MODEL_GROUP) && t2.isA(COMPLEX_TYPE_MODEL_GROUP))
+      return COMPLEX_TYPE_MODEL_GROUP;
     if (t1.isA(EMPTY) && t2.isA(EMPTY))
       return EMPTY;
     if (t1.isA(ATTRIBUTE_GROUP) && t2.isA(ATTRIBUTE_GROUP))
       return ATTRIBUTE_GROUP;
+    if ((t1.isA(COMPLEX_TYPE_MODEL_GROUP) && t2.isA(ATTRIBUTE_GROUP))
+            || t2.isA(COMPLEX_TYPE_MODEL_GROUP) && t1.isA(ATTRIBUTE_GROUP))
+      return COMPLEX_TYPE_MODEL_GROUP;
     if ((t1.isA(COMPLEX_TYPE) && t2.isA(ATTRIBUTE_GROUP))
             || t2.isA(COMPLEX_TYPE) && t1.isA(ATTRIBUTE_GROUP))
       return COMPLEX_TYPE;
@@ -953,6 +1000,9 @@ public class DtdOutput {
       return EMPTY;
     if (t1.isA(ATTRIBUTE_GROUP) && t2.isA(ATTRIBUTE_GROUP))
       return ATTRIBUTE_GROUP;
+    if ((t1.isA(COMPLEX_TYPE_MODEL_GROUP) && t2.isA(ATTRIBUTE_GROUP))
+            || t2.isA(COMPLEX_TYPE_MODEL_GROUP) && t1.isA(ATTRIBUTE_GROUP))
+      return COMPLEX_TYPE_MODEL_GROUP;
     if ((t1.isA(COMPLEX_TYPE) && t2.isA(ATTRIBUTE_GROUP))
             || t2.isA(COMPLEX_TYPE) && t1.isA(ATTRIBUTE_GROUP))
       return COMPLEX_TYPE;
@@ -1027,10 +1077,13 @@ public class DtdOutput {
 
   static public void main(String[] args) throws IncorrectSchemaException, SAXException, IOException {
     SchemaCollection sc = new SchemaCollection();
-    Pattern p = SchemaBuilderImpl.parse(new NonXmlParseable(ValidationEngine.fileInputSource(args[0]),
-                                                            new DraconianErrorHandler()),
+    Pattern p = SchemaBuilderImpl.parse(new SAXParseable(new Jaxp11XMLReaderCreator(),
+                                                         ValidationEngine.fileInputSource(args[0]),
+                                                          new DraconianErrorHandler()),
                                         sc,
                                         new DatatypeLibraryLoader());
-    new DtdOutput(null).output(p);
+
+    new DtdOutput(null, new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(args[1])))).output(p);
+
   }
 }
