@@ -41,7 +41,7 @@ Include overrides
 combine attributes
 - combine="choice" on <start>
 - combine in a single file
-- combine="interleave"
+- combine="interleave" (if only referenced once, expand?)
 - others
 
 externalRef
@@ -81,6 +81,13 @@ Deal with a:documentation
 Take advantage of type attribute in output.
 
 Push minOccurs down onto single child.
+
+Approximation warnings:
+- interleave
+- mixed text
+- simple type list
+- attribute choice
+- unknown datatypes
 
 -----
 
