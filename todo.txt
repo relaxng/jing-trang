@@ -1,5 +1,3 @@
-Add design.html into build file; add pointer in index.html.
-
 Finish trang.html.
 
 Make SAX-based parser preserve element annotations.

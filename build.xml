@@ -116,7 +116,10 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
     <fileset dir="eg" includes="relaxng.rng"/>
   </jing>
   <jing rngfile="eg/xslt.rng">
-     <fileset dir="convert" includes="*.xsl"/>
+    <fileset dir="convert" includes="*.xsl"/>
+  </jing>
+  <jing rngfile="doc/design.rng">
+    <fileset dir="doc" includes="design.xml"/>
   </jing>
 </target>
 
@@ -184,6 +187,8 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
 <target name="doc">
   <style basedir="doc" destdir="build" includes="derivative.xml"
          style="doc/derivative.xsl"/>
+  <style basedir="doc" destdir="build" includes="design.xml"
+         style="doc/design.xsl"/>
 </target>
 
 <target name="trang-jar" depends="compile">
