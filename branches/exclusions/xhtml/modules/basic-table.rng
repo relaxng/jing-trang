@@ -55,7 +55,10 @@
 <define name="th">
   <element name="th">
     <ref name="th.attlist"/>
-    <ref name="Flow.model"/>
+    <ref name="Flow.model">
+      <x:exclude name="table"
+        xmlns:x="http://www.thaiopensource.com/relaxng/xhtml/exclude"/>
+    </ref>
   </element>
 </define>
 
@@ -66,7 +69,10 @@
 <define name="td">
   <element name="td">
     <ref name="td.attlist"/>
-    <ref name="Flow.model"/>
+    <ref name="Flow.model">
+      <x:exclude name="table"
+        xmlns:x="http://www.thaiopensource.com/relaxng/xhtml/exclude"/>
+    </ref>
   </element>
 </define>
 

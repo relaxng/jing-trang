@@ -8,7 +8,10 @@
     <!-- Don't use Block.model, because this gets redefined by the
 	 legacy module. -->
     <oneOrMore>
-      <ref name="Block.class"/>
+      <ref name="Block.class">
+	<x:exclude name="Form.class"
+	  xmlns:x="http://www.thaiopensource.com/relaxng/xhtml/exclude"/>
+      </ref>
     </oneOrMore>
   </element>
 </define>
@@ -36,7 +39,10 @@
 <define name="label">
   <element name="label">
     <ref name="label.attlist"/>
-    <ref name="Inline.model"/>
+    <ref name="Inline.model">
+      <x:exclude name="label"
+         xmlns:x="http://www.thaiopensource.com/relaxng/xhtml/exclude"/>
+    </ref>
   </element>
 </define>
 
