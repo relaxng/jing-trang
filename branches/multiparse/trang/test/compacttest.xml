@@ -1706,6 +1706,63 @@ element foo { "\x{10300}" }
 </correct>
 </xml>
 </testCase>
+<testCase>
+<compact>
+<correct>
+element foo { "z
+" }
+</correct>
+</compact>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <value>z&#xA;</value>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo { "z\x{A}" }
+</correct>
+</compact>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <value>z&#xA;</value>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo { "z\x{D}" }
+</correct>
+</compact>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <value>z&#xD;</value>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo { "z\x{D}\x{A}" }
+</correct>
+</compact>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <value>z&#xD;&#xA;</value>
+</element>
+</correct>
+</xml>
+</testCase>
 <!--
 <testCase>
 <compact>

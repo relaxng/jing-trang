@@ -79,7 +79,7 @@
     <Commit>
       <option name="NON_RECURSIVE" value="false" />
       <option name="REVISION_TAG" value="" />
-      <option name="LOG_MESSAGE" value="Implement \x in the compact syntax" />
+      <option name="LOG_MESSAGE" value="Implement \x in compact syntax" />
       <option name="ADDITIONAL_OPTIONS" value="" />
     </Commit>
     <Diff>
@@ -145,7 +145,7 @@
   </component>
   <component class="com.intellij.cvsSupport.CvsManager">
     <expanded_paths>
-      <path value="$PROJECT_DIR$/trang/test" />
+      <path value="$PROJECT_DIR$" />
     </expanded_paths>
   </component>
   <component class="com.intellij.debugger.Debugger">
@@ -397,7 +397,6 @@
   </component>
   <component class="com.intellij.ide.desktop.IdeDocumentManager">
     <recent_files>
-      <file_info url="file://$PROJECT_DIR$/build/src/com/thaiopensource/relaxng/parse/compact/CompactSyntaxConstants.java" column="48" line="5" />
       <file_info url="file://$PROJECT_DIR$/trang/src/com/thaiopensource/relaxng/edit/ValuePattern.java" column="0" line="35" />
       <file_info url="file://$PROJECT_DIR$/build/src/com/thaiopensource/relaxng/parse/compact/ParseException.java" column="121" line="41" />
       <file_info url="file://$PROJECT_DIR$/build/src/com/thaiopensource/relaxng/parse/compact/CompactSyntaxTokenManager.java" column="54" line="1476" />
@@ -405,24 +404,25 @@
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/CompactParseable.java" column="62" line="42" />
       <file_info url="file://$PROJECT_DIR$/build/src/com/thaiopensource/relaxng/parse/compact/CompactSyntax.java" column="26" line="127" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/BuildException.java" column="9" line="4" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/EOFException.java" column="37" line="2" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/EscapeSyntaxException.java" column="109" line="3" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/EscapeSyntaxException.java" column="27" line="3" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/resources/Messages.properties" column="0" line="16" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/UCode_UCodeESC_CharStream.java" column="0" line="0" />
-      <file_info url="file://$PROJECT_DIR$/todo.txt" column="0" line="0" />
       <file_info url="file://$PROJECT_DIR$/trang/test/compacttest.xml" column="0" line="0" />
-      <file_info url="file://$PROJECT_DIR$/test/regextest.xml" column="21" line="195" />
+      <file_info url="file://$PROJECT_DIR$/test/regextest.xml" column="21" line="202" />
+      <file_info url="file://$PROJECT_DIR$/todo.txt" column="0" line="0" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/UCode_UCodeESC_CharStream.java" column="17" line="255" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/EOFException.java" column="37" line="2" />
+      <file_info url="file://$PROJECT_DIR$/trang/src/com/thaiopensource/relaxng/output/test/Compare.java" column="26" line="187" />
     </recent_files>
     <open_files>
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/EOFException.java" column="37" line="2" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/UCode_UCodeESC_CharStream.java" column="0" line="0" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/UCode_UCodeESC_CharStream.java" column="17" line="255" />
+      <file_info url="file://$PROJECT_DIR$/trang/src/com/thaiopensource/relaxng/output/test/Compare.java" column="26" line="187" />
+      <active_file url="file://$PROJECT_DIR$/trang/src/com/thaiopensource/relaxng/output/test/Compare.java" />
       <file_info url="file://$PROJECT_DIR$/todo.txt" column="0" line="0" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/resources/Messages.properties" column="0" line="16" />
       <file_info url="file://$PROJECT_DIR$/trang/test/compacttest.xml" column="0" line="0" />
-      <file_info url="file://$PROJECT_DIR$/test/regextest.xml" column="21" line="195" />
-      <active_file url="file://$PROJECT_DIR$/test/regextest.xml" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/EscapeSyntaxException.java" column="109" line="3" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/CompactParseable.java" column="62" line="42" />
+      <file_info url="file://$PROJECT_DIR$/test/regextest.xml" column="21" line="202" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/EscapeSyntaxException.java" column="27" line="3" />
       <file_info url="file://$PROJECT_DIR$/build/src/com/thaiopensource/relaxng/parse/compact/CompactSyntax.java" column="26" line="127" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/BuildException.java" column="9" line="4" />
     </open_files>
@@ -437,17 +437,19 @@
     <navigator id="ClasspathNavigator" flattenPackages="false" showMembers="false" />
     <navigator id="ProjectNavigator" flattenPackages="true" showMembers="false">
       <expanded_node type="directory" url="file://$PROJECT_DIR$" />
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang/doc" />
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/trang/test" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang/doc" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/test" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang" />
     </navigator>
     <navigator id="SourcepathNavigator" flattenPackages="true" showMembers="false">
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/resources" />
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/build/src/com/thaiopensource/relaxng/parse/compact" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/src" />
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang/src/com/thaiopensource/relaxng/output/test" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/build/src" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/trang/src" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/build/src/com/thaiopensource/relaxng/parse/compact" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/compact/resources" />
     </navigator>
   </component>
   <component class="com.intellij.ide.structureView.StructureViewFactory">

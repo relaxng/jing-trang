@@ -275,7 +275,7 @@ public class CompactSyntax implements Context {
         c = image.charAt(i);
       }
       for (;;) {
-        if (c == '\r' || c == '\n')
+        if (c == '\n')
           break;
         buf.append(c);
         if (++i == len)
@@ -337,23 +337,6 @@ public class CompactSyntax implements Context {
     }
     catch (MalformedURLException e) { }
     return str;
-  }
-  private static String normalizeNewlines(String str) {
-    int i = str.indexOf('\r');
-    if (i < 0)
-      return str;
-    StringBuffer buf = new StringBuffer();
-    for (i = 0; i < str.length(); i++) {
-      char c = str.charAt(i);
-      if (c == '\r') {
-	buf.append('\n');
-	if (i + 1 < str.length() && str.charAt(i + 1) == '\n')
-	  i++;
-      }
-      else
-	buf.append(c);
-    }
-    return buf.toString();
   }
 }
 
@@ -1351,7 +1334,7 @@ String Literal() :
 {
   t = <LITERAL>
   {
-    return normalizeNewlines(unquote(t.image));
+    return unquote(t.image);
   }
 }
 
@@ -1362,7 +1345,7 @@ LocatedString LocatedLiteral() :
 {
   t = <LITERAL>
   {
-    return new LocatedString(normalizeNewlines(unquote(t.image)), t);
+    return new LocatedString(unquote(t.image), t);
   }
 }
 
@@ -1393,12 +1376,12 @@ Token Keyword() :
 }
 
 
-SKIP: { " " | "\r" | "\n" | "\t" }
+SKIP: { " " | "\n" | "\r" | "\t" }
 
 SPECIAL_TOKEN:
 {
   < SINGLE_LINE_COMMENT:
-    "#" (~["\n","\r"])* ((("\r" ("\n")?) | "\n") ([" ", "\t"])* "#" (~["\n","\r"])*)* >
+    "#" (~["\n"])* ("\n" ([" ", "\t"])* "#" (~["\n"])*)* >
 }
 
 TOKEN :
