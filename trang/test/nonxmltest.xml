@@ -1283,13 +1283,27 @@ element * - foo - bar { empty }
 ]]></incorrect>
 </nonxml>
 </testCase>
-<bug>
+<testCase>
 <nonxml>
 <incorrect><![CDATA[
 string - "foo"*
 ]]></incorrect>
 </nonxml>
-</bug>
+</testCase>
+<testCase>
+<nonxml>
+<incorrect><![CDATA[
+string - "foo" | string - "bar"
+]]></incorrect>
+</nonxml>
+</testCase>
+<testCase>
+<nonxml>
+<incorrect><![CDATA[
+string - string - "foo"
+]]></incorrect>
+</nonxml>
+</testCase>
 <testCase>
 <nonxml>
 <incorrect><![CDATA[
