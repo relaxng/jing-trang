@@ -36,16 +36,19 @@ class Driver {
   }
 
   private boolean checkId = true;
+  private boolean timing = false;
 
   public int doMain(String[] args) {
-    long startTime = System.currentTimeMillis();
     ErrorHandlerImpl eh = new ErrorHandlerImpl(System.out);
-    OptionParser op = new OptionParser("i", args);
+    OptionParser op = new OptionParser("it", args);
     try {
       while (op.moveToNextOption()) {
         switch (op.getOptionChar()) {
         case 'i':
           checkId = false;
+          break;
+        case 't':
+          timing = true;
           break;
         }
       }
@@ -65,6 +68,8 @@ class Driver {
       eh.print(eh.format(usageKey, new Object[]{ getVersion() }));
       return 2;
     }
+    long startTime = System.currentTimeMillis();
+    long loadedPatternTime = -1;
     boolean hadError = false;
     try {
       ValidationEngine engine = new ValidationEngine();
@@ -73,6 +78,7 @@ class Driver {
       engine.setDatatypeLibraryFactory(new DatatypeLibraryLoader());
       engine.setCheckId(checkId);
       if (engine.loadPattern(fileInputSource(args[0]))) {
+        loadedPatternTime = System.currentTimeMillis();
 	for (int i = 1; i < args.length; i++) {
 	  if (!engine.validate(fileInputSource(args[i])))
 	    hadError = true;
@@ -89,9 +95,17 @@ class Driver {
       hadError = true;
       eh.printException(e);
     }
-    eh.print(eh.format("elapsed_time",
-		       new Object[] { new Long(System.currentTimeMillis()
-					       - startTime) }));
+    if (timing) {
+      long endTime = System.currentTimeMillis();
+      if (loadedPatternTime < 0)
+        loadedPatternTime = endTime;
+      eh.print(eh.format("elapsed_time",
+		       new Object[] {
+                         new Long(loadedPatternTime - startTime),
+                         new Long(endTime - loadedPatternTime),
+                         new Long(endTime - startTime)
+                       }));
+    }
     if (hadError)
       return 1;
     return 0;
