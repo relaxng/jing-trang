@@ -1,3 +1,5 @@
+Doesn't work simply to expand refs in <interleave> because it may interfere with pattern moving.
+
 Map
 
   foo = element bar|baz { xyzzy }
