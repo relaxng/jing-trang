@@ -388,6 +388,73 @@ foo = attribute foo { xsd:double } | element foo { xsd:double }
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+start = foo
+foo = element foo { empty }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified" version="1.0">
+<xs:element name="foo">
+  <xs:complexType/>
+</xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+start = root
+root = foo|bar
+foo = element foo { empty }
+bar = element bar { empty }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified" version="1.0">
+<xs:group name="root">
+  <xs:choice>
+    <xs:element ref="foo"/>
+    <xs:element ref="bar"/>
+  </xs:choice>
+</xs:group>
+<xs:element name="foo">
+  <xs:complexType/>
+</xs:element>
+<xs:element name="bar">
+  <xs:complexType/>
+</xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+ element foo { empty } | element bar { empty }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified" version="1.0">
+<xs:element name="foo">
+  <xs:complexType/>
+</xs:element>
+<xs:element name="bar">
+  <xs:complexType/>
+</xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>
@@ -396,7 +463,9 @@ foo = attribute foo { xsd:double } | element foo { xsd:double }
 </compact>
 <xsd>
 <correct>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0"></xs:schema>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified" version="1.0">
+</xs:schema>
 </correct>
 </xsd>
 </testCase>
