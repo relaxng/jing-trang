@@ -215,7 +215,7 @@
     <fileset dir="eg" includes="testSuite.rng"/>
   </zip>
   <tar tarfile="build/relaxng.tar" basedir="build"
-    includes="jing.jar,jing.exe,jing-src.zip,copying.txt,*.html,*.xsl,*.rng,xhtml/**,datatype-sample.zip,testSuite.zip,jing-api.zip,api/**",nonxml/**/>
+    includes="jing.jar,jing.exe,jing-src.zip,copying.txt,*.html,*.xsl,*.rng,xhtml/**,datatype-sample.zip,testSuite.zip,jing-api.zip,api/**,nonxml/**"/>
 
   <gzip zipfile="build/relaxng.tar.gz" src="build/relaxng.tar"/>
 
