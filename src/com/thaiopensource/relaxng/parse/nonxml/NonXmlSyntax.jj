@@ -43,6 +43,7 @@ import java.net.URL;
 public class NonXmlSyntax implements Context {
 
   private static final String xmlUri = "http://www.w3.org/XML/1998/namespace";
+  private static final String xmlnsUri = "http://www.w3.org/2000/xmlns";
   private String defaultNamespace = SchemaBuilder.INHERIT_NS;
   private SchemaBuilder sb;
   private String sourceUri;
@@ -1196,6 +1197,8 @@ void PrefixedAnnotationAttribute(Annotations a, boolean allowUnqualified) :
              && qn.length() - colon - 1 == 5
              && qn.regionMatches(colon + 1, "xmlns", 0, 5))
       error("xmlns_annotation_attribute", t);
+    else if (ns.equals(xmlnsUri))
+      error("xmlns_annotation_attribute_uri", t);
     else {
       if (ns.length() == 0)
 	prefix = null;

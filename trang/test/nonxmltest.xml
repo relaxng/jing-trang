@@ -1335,6 +1335,15 @@ element foo { empty }
 <testCase>
 <nonxml>
 <incorrect><![CDATA[
+namespace xns = "http://www.w3.org/2000/xmlns"
+[ xns:x = "foo" ]
+element foo { empty }
+]]></incorrect>
+</nonxml>
+</testCase>
+<testCase>
+<nonxml>
+<incorrect><![CDATA[
 foo [ xmlns = "bar" ]
 start = element foo { empty }
 ]]></incorrect>
