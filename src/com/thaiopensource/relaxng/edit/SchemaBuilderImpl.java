@@ -33,8 +33,6 @@ import java.util.List;
 import java.util.Vector;
 import java.util.Map;
 
-/* Need to change handling of parentRef */
-
 public class SchemaBuilderImpl implements SchemaBuilder {
   private final Parseable parseable;
   private final Map schemas;
@@ -196,22 +194,12 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     return finishNameClass(new AnyNameNameClass((NameClass)except), loc, anno);
   }
 
-  private static class ParentScope implements Scope {
-    public ParsedPattern makeRef(String name, Location loc, Annotations anno) throws BuildException {
-      return finishPattern(new ParentRefPattern(name), loc, anno);
-    }
-    public Scope getParent() {
-      return null;
-    }
-  }
-
   private static class ScopeImpl implements Scope {
     public ParsedPattern makeRef(String name, Location loc, Annotations anno) throws BuildException {
       return finishPattern(new RefPattern(name), loc, anno);
     }
-
-    public Scope getParent() {
-      return new ParentScope();
+    public ParsedPattern makeParentRef(String name, Location loc, Annotations anno) throws BuildException {
+      return finishPattern(new ParentRefPattern(name), loc, anno);
     }
   }
 

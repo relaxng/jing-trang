@@ -743,11 +743,11 @@ ParsedPattern ParentExpr(Scope scope) :
 {
   "parent" name = Identifier() a = Annotations()
   { 
-    if (scope == null || scope.getParent() == null) {
-      error(scope == null ? "no_grammar" : "no_parent_grammar", name.getToken());
+    if (scope == null) {
+      error("no_grammar", name.getToken());
       return sb.makeErrorPattern();
     }
-    return scope.getParent().makeRef(name.getString(), name.getLocation(), a); 
+    return scope.makeParentRef(name.getString(), name.getLocation(), a); 
   }
 }
 

@@ -458,10 +458,6 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       }
     }
 
-    public Scope getParent() {
-      return parent;
-    }
-
     public void topLevelAnnotation(ParsedElementAnnotation ea) throws BuildException {
     }
 
@@ -485,6 +481,14 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       if (p.getRefLocator() == null && loc != null)
         p.setRefLocator((Locator)loc);
       return p;
+    }
+
+    public ParsedPattern makeParentRef(String name, Location loc, Annotations anno) throws BuildException {
+      if (parent == null) {
+        sb.error("parent_ref_outside_grammar", (Locator)loc);
+        return sb.makeErrorPattern();
+      }
+      return parent.makeRef(name, loc, anno);
     }
 
     public Div makeDiv() {
