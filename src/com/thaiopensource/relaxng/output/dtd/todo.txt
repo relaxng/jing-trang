@@ -1,6 +1,5 @@
 Bulletproof LocalOutputDirectory
 Pretty-print content models to avoid excessively long lines
-Output comments
 
 Generate comments from a:documentation elements
 Avoid warning for content that is data of type string
