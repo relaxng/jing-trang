@@ -91,7 +91,7 @@ public class DtdOutput {
   private boolean hadError = false;
   private Grammar grammar = null;
   private GrammarPattern grammarPattern;
-  private Type startType = ERROR;
+  private Type startType = Type.ERROR;
 
   static private final String XSD = "http://www.w3.org/2001/XMLSchema-datatypes";
   static private final String COMPATIBILITY_ANNOTATIONS = "http://relaxng.org/ns/compatibility/annotations/1.0";
@@ -100,56 +100,6 @@ public class DtdOutput {
     this.eh = eh;
     this.writer = writer;
   }
-
-  static class Type {
-    private final Type parent1;
-    private final Type parent2;
-    private Type() {
-      this.parent1 = null;
-      this.parent2 = null;
-    }
-
-    public Type(Type parent1) {
-      this.parent1 = parent1;
-      this.parent2 = null;
-    }
-
-    public Type(Type parent1, Type parent2) {
-      this.parent1 = parent1;
-      this.parent2 = parent2;
-    }
-
-    boolean isA(Type t) {
-      if (this == t)
-        return true;
-      if (parent1 != null && parent1.isA(t))
-        return true;
-      if (parent2 != null && parent2.isA(t))
-        return true;
-      return false;
-    }
-  }
-
-  static Type COMPLEX_TYPE = new Type();
-  static Type MIXED_ELEMENT_CLASS = new Type();
-  static Type NOT_ALLOWED = new Type();
-  static Type ATTRIBUTE_TYPE = new Type();
-  static Type ATTRIBUTE_GROUP = new Type(COMPLEX_TYPE);
-  static Type EMPTY = new Type(ATTRIBUTE_GROUP);
-  static Type TEXT = new Type(MIXED_ELEMENT_CLASS, COMPLEX_TYPE);
-  static Type DIRECT_TEXT = new Type(TEXT);
-  // an attribute group plus a model group
-  static Type COMPLEX_TYPE_MODEL_GROUP = new Type(COMPLEX_TYPE);
-  static Type MIXED_MODEL = new Type(COMPLEX_TYPE);
-  static Type MODEL_GROUP = new Type(COMPLEX_TYPE_MODEL_GROUP);
-  static Type ELEMENT_CLASS = new Type(MODEL_GROUP);
-  static Type DIRECT_MULTI_ELEMENT = new Type(ELEMENT_CLASS);
-  static Type DIRECT_SINGLE_ELEMENT = new Type(DIRECT_MULTI_ELEMENT);
-  static Type DIRECT_SINGLE_ATTRIBUTE = new Type(ATTRIBUTE_GROUP);
-  static Type OPTIONAL_ATTRIBUTE = new Type(ATTRIBUTE_GROUP);
-  static Type ZERO_OR_MORE_ELEMENT_CLASS = new Type(MODEL_GROUP);
-  static Type ENUM = new Type(ATTRIBUTE_TYPE);
-  static Type ERROR = new Type();
 
   class Grammar implements ComponentVisitor {
     private HashMap defines = new HashMap();
@@ -214,7 +164,7 @@ public class DtdOutput {
     }
 
     public Object visitEmpty(EmptyPattern p) {
-      return EMPTY;
+      return Type.EMPTY;
     }
 
     public Object visitData(DataPattern p) {
@@ -223,75 +173,75 @@ public class DtdOutput {
         String type = p.getType();
         for (int i = 0; i < compatibleTypes.length; i++)
           if (type.equals(compatibleTypes[i]))
-            return ATTRIBUTE_TYPE;
+            return Type.ATTRIBUTE_TYPE;
         for (int i = 0; i < stringTypes.length; i++)
           if (type.equals(stringTypes[i])) {
             p.setType("string");
-            return ATTRIBUTE_TYPE;
+            return Type.ATTRIBUTE_TYPE;
           }
         if (!type.equals("string"))
           p.setType("NMTOKEN");
       }
       else if (!lib.equals("")) {
         error("unrecognized_datatype_library", p.getSourceLocation());
-        return ERROR;
+        return Type.ERROR;
       }
       // XXX check datatypes
-      return ATTRIBUTE_TYPE;
+      return Type.ATTRIBUTE_TYPE;
     }
 
     public Object visitValue(ValuePattern p) {
       // XXX check that NMTOKENS
-      return ENUM;
+      return Type.ENUM;
     }
 
     public Object visitElement(ElementPattern p) {
       Object ret = p.getNameClass().accept(this);
       if (!seen(p.getChild())) {
         Type t = analyzeType(new Analyzer(p), p.getChild());
-        if (!t.isA(COMPLEX_TYPE) && t != ERROR)
+        if (!t.isA(Type.COMPLEX_TYPE) && t != Type.ERROR)
           error("bad_element_type", p.getSourceLocation());
       }
       return ret;
     }
 
     public Object visitAttribute(AttributePattern p) {
-      if (p.getNameClass().accept(this) == DIRECT_MULTI_ELEMENT)
+      if (p.getNameClass().accept(this) == Type.DIRECT_MULTI_ELEMENT)
         error("sorry_attribute_choice_name_class", p.getNameClass().getSourceLocation());
       Type t = analyzeType(this, p.getChild());
-      if (!t.isA(ATTRIBUTE_TYPE) && t != DIRECT_TEXT && t != ERROR)
+      if (!t.isA(Type.ATTRIBUTE_TYPE) && t != Type.DIRECT_TEXT && t != Type.ERROR)
         error("sorry_attribute_type", p.getSourceLocation());
       if (ancestorPattern != null)
         noteAttribute(ancestorPattern);
-      return DIRECT_SINGLE_ATTRIBUTE;
+      return Type.DIRECT_SINGLE_ATTRIBUTE;
     }
 
     public Object visitNotAllowed(NotAllowedPattern p) {
-      return NOT_ALLOWED;
+      return Type.NOT_ALLOWED;
     }
 
     public Object visitText(TextPattern p) {
-      return DIRECT_TEXT;
+      return Type.DIRECT_TEXT;
     }
 
     public Object visitList(ListPattern p) {
       error("sorry_list", p.getSourceLocation());
-      return ATTRIBUTE_TYPE;
+      return Type.ATTRIBUTE_TYPE;
     }
 
     public Object visitOneOrMore(OneOrMorePattern p) {
-      return checkType("sorry_one_or_more", oneOrMore(analyzeType(this, p.getChild())), p);
+      return checkType("sorry_one_or_more", Type.oneOrMore(analyzeType(this, p.getChild())), p);
     }
 
     public Object visitZeroOrMore(ZeroOrMorePattern p) {
-      return checkType("sorry_zero_or_more", zeroOrMore(analyzeType(this, p.getChild())), p);
+      return checkType("sorry_zero_or_more", Type.zeroOrMore(analyzeType(this, p.getChild())), p);
     }
 
     public Object visitChoice(ChoicePattern p) {
       List children = p.getChildren();
       Type tem = analyzeType(this, (Pattern)children.get(0));
       for (int i = 1, len = children.size(); i < len; i++)
-        tem = checkType("sorry_choice", choice(tem, analyzeType(this, (Pattern)children.get(i))), p);
+        tem = checkType("sorry_choice", Type.choice(tem, analyzeType(this, (Pattern)children.get(i))), p);
       return tem;
     }
 
@@ -299,7 +249,7 @@ public class DtdOutput {
       List children = p.getChildren();
       Type tem = analyzeType(this, (Pattern)children.get(0));
       for (int i = 1, len = children.size(); i < len; i++)
-        tem = checkType("sorry_interleave", interleave(tem, analyzeType(this, (Pattern)children.get(i))), p);
+        tem = checkType("sorry_interleave", Type.interleave(tem, analyzeType(this, (Pattern)children.get(i))), p);
       return tem;
     }
 
@@ -307,7 +257,7 @@ public class DtdOutput {
       List children = p.getChildren();
       Type tem = analyzeType(this, (Pattern)children.get(0));
       for (int i = 1, len = children.size(); i < len; i++)
-        tem = checkType("sorry_group", group(tem, analyzeType(this, (Pattern)children.get(i))), p);
+        tem = checkType("sorry_group", Type.group(tem, analyzeType(this, (Pattern)children.get(i))), p);
       return tem;
     }
 
@@ -315,12 +265,12 @@ public class DtdOutput {
       Pattern def = grammar.getBody(p.getName());
       if (def == null) {
         error("undefined_ref", p.getSourceLocation());
-        return ERROR;
+        return Type.ERROR;
       }
-      Type t = ref(analyzeType(new Analyzer(null), def));
-      if (t.isA(ATTRIBUTE_GROUP))
+      Type t = Type.ref(analyzeType(new Analyzer(null), def));
+      if (t.isA(Type.ATTRIBUTE_GROUP))
         noteAttributeGroupRef(ancestorPattern, p.getName());
-      return ref(t);
+      return Type.ref(t);
     }
 
     public Object visitParentRef(ParentRefPattern p) {
@@ -331,7 +281,7 @@ public class DtdOutput {
     public Object visitGrammar(GrammarPattern p) {
       if (grammar != null) {
         error("sorry_nested_grammar", p.getSourceLocation());
-        return ERROR;
+        return Type.ERROR;
       }
       grammar = new Grammar(p);
       grammarPattern = p;
@@ -345,11 +295,11 @@ public class DtdOutput {
     }
 
     public Object visitMixed(MixedPattern p) {
-      return checkType("sorry_mixed", mixed(analyzeType(this, p.getChild())), p);
+      return checkType("sorry_mixed", Type.mixed(analyzeType(this, p.getChild())), p);
     }
 
     public Object visitOptional(OptionalPattern p) {
-      return checkType("sorry_optional", optional(analyzeType(this, p.getChild())), p);
+      return checkType("sorry_optional", Type.optional(analyzeType(this, p.getChild())), p);
     }
 
     public Object visitContainer(Container c) {
@@ -369,7 +319,7 @@ public class DtdOutput {
       }
       else {
         Type t = analyzeType(new Analyzer(), c.getBody());
-        if (t == COMPLEX_TYPE || t == COMPLEX_TYPE_MODEL_GROUP)
+        if (t == Type.COMPLEX_TYPE || t == Type.COMPLEX_TYPE_MODEL_GROUP)
           error("sorry_complex_type_define", c.getSourceLocation());
       }
       return null;
@@ -383,24 +333,24 @@ public class DtdOutput {
       List list = nc.getChildren();
       for (int i = 0, len = list.size(); i < len; i++)
         ((NameClass)list.get(i)).accept(this);
-      return DIRECT_MULTI_ELEMENT;
+      return Type.DIRECT_MULTI_ELEMENT;
     }
 
     public Object visitAnyName(AnyNameNameClass nc) {
       error("sorry_wildcard", nc.getSourceLocation());
-      return ERROR;
+      return Type.ERROR;
     }
 
     public Object visitNsName(NsNameNameClass nc) {
       error("sorry_wildcard", nc.getSourceLocation());
-      return ERROR;
+      return Type.ERROR;
     }
 
     public Object visitName(NameNameClass nc) {
       String ns = nc.getNamespaceUri();
       if (ns != NameClass.INHERIT_NS && ns.length() != 0)
         error("sorry_namespace", nc.getSourceLocation());
-      return DIRECT_SINGLE_ELEMENT;
+      return Type.DIRECT_SINGLE_ELEMENT;
     }
   }
 
@@ -444,7 +394,7 @@ public class DtdOutput {
 
     public Object visitRef(RefPattern p) {
       Pattern def = grammar.getBody(p.getName());
-      if (getType(def) == DIRECT_SINGLE_ELEMENT)
+      if (getType(def) == Type.DIRECT_SINGLE_ELEMENT)
         ((ElementPattern)def).getNameClass().accept(this);
       else
         paramEntityRef(p);
@@ -487,7 +437,7 @@ public class DtdOutput {
       for (int i = 0; i < len; i++) {
         Pattern member = (Pattern)list.get(i);
         Type t = getType(member);
-        if (!t.isA(ATTRIBUTE_GROUP)) {
+        if (!t.isA(Type.ATTRIBUTE_GROUP)) {
           if (needSep)
             buf.append(',');
           else
@@ -505,7 +455,7 @@ public class DtdOutput {
       for (int i = 0, len = list.size(); i < len; i++) {
         Pattern member = (Pattern)list.get(i);
         Type t = getType(member);
-        if (!t.isA(ATTRIBUTE_GROUP))
+        if (!t.isA(Type.ATTRIBUTE_GROUP))
           member.accept(this);
       }
       return null;
@@ -515,10 +465,10 @@ public class DtdOutput {
       List list = p.getChildren();
       boolean needSep = false;
       final int len = list.size();
-      if (getType(p) == MIXED_ELEMENT_CLASS) {
+      if (getType(p) == Type.MIXED_ELEMENT_CLASS) {
         for (int i = 0; i < len; i++) {
           Pattern member = (Pattern)list.get(i);
-          if (getType(member).isA(MIXED_ELEMENT_CLASS)) {
+          if (getType(member).isA(Type.MIXED_ELEMENT_CLASS)) {
             member.accept(nestedContentModelOutput);
             needSep = true;
             break;
@@ -528,12 +478,12 @@ public class DtdOutput {
       for (int i = 0; i < len; i++) {
         Pattern member = (Pattern)list.get(i);
         Type t = getType(member);
-        if (t != NOT_ALLOWED && !t.isA(MIXED_ELEMENT_CLASS)) {
+        if (t != Type.NOT_ALLOWED && !t.isA(Type.MIXED_ELEMENT_CLASS)) {
           if (needSep)
             buf.append('|');
           else
             needSep = true;
-          boolean needParen = !t.isA(ELEMENT_CLASS);
+          boolean needParen = !t.isA(Type.ELEMENT_CLASS);
           if (needParen)
             buf.append('(');
           member.accept(nestedContentModelOutput);
@@ -544,7 +494,7 @@ public class DtdOutput {
       for (int i = 0; i < len; i++) {
         Pattern member = (Pattern)list.get(i);
         Type t = getType(member);
-        if (t == NOT_ALLOWED) {
+        if (t == Type.NOT_ALLOWED) {
           if (needSep)
             buf.append(' ');
           else
@@ -569,7 +519,7 @@ public class DtdOutput {
     }
 
     public Object visitRef(RefPattern p) {
-      if (getType(p) == MIXED_MODEL)
+      if (getType(p) == Type.MIXED_MODEL)
         super.visitRef(p);
       else {
         buf.append('(');
@@ -607,7 +557,7 @@ public class DtdOutput {
       Pattern main = null;
       for (int i = 0, len = list.size(); i < len; i++) {
         Pattern member = (Pattern)list.get(i);
-        if (!getType(member).isA(ATTRIBUTE_GROUP)) {
+        if (!getType(member).isA(Type.ATTRIBUTE_GROUP)) {
           if (main == null)
             main = member;
           else {
@@ -638,7 +588,7 @@ public class DtdOutput {
     }
 
     public Object visitRef(RefPattern p) {
-      if (getType(p).isA(ATTRIBUTE_GROUP) && getParamEntityElementName(p.getName()) == null) {
+      if (getType(p).isA(Type.ATTRIBUTE_GROUP) && getParamEntityElementName(p.getName()) == null) {
         indent();
         paramEntityRef(p);
       }
@@ -690,7 +640,7 @@ public class DtdOutput {
     }
 
     public Object visitChoice(CompositePattern p) {
-      if (getType(p) == OPTIONAL_ATTRIBUTE)
+      if (getType(p) == Type.OPTIONAL_ATTRIBUTE)
         optionalAttributeOutput.visitComposite(p);
       else
         visitPattern(p);
@@ -740,7 +690,7 @@ public class DtdOutput {
       for (int i = 0; i < len; i++) {
         Pattern member = (Pattern)list.get(i);
         Type t = getType(member);
-        if (t != NOT_ALLOWED) {
+        if (t != Type.NOT_ALLOWED) {
           if (needSep)
             buf.append('|');
           else
@@ -751,7 +701,7 @@ public class DtdOutput {
       for (int i = 0; i < len; i++) {
         Pattern member = (Pattern)list.get(i);
         Type t = getType(member);
-        if (t == NOT_ALLOWED) {
+        if (t == Type.NOT_ALLOWED) {
           if (needSep)
             buf.append(' ');
           else
@@ -773,7 +723,7 @@ public class DtdOutput {
     }
 
     public Object visitChoice(ChoicePattern p) {
-      if (getType(p) == ENUM) {
+      if (getType(p) == Type.ENUM) {
         buf.append('(');
         nestedAttributeTypeOutput.visitChoice(p);
         buf.append(')');
@@ -784,7 +734,7 @@ public class DtdOutput {
     }
 
     public Object visitRef(RefPattern p) {
-      if (getType(p) == ENUM) {
+      if (getType(p) == Type.ENUM) {
         buf.append('(');
         super.visitRef(p);
         buf.append(')');
@@ -816,7 +766,7 @@ public class DtdOutput {
           c.getBody().accept(nestedContentModelOutput);
       }
       else {
-        if (getType(c.getBody()) == DIRECT_SINGLE_ELEMENT)
+        if (getType(c.getBody()) == Type.DIRECT_SINGLE_ELEMENT)
           outputElement((ElementPattern)c.getBody());
         else
           outputParamEntity(c.getName(), c.getBody());
@@ -981,7 +931,7 @@ public class DtdOutput {
     if (t != null)
       return t;
     error(key, p.getSourceLocation());
-    return ERROR;
+    return Type.ERROR;
   }
 
   Type getType(Pattern p) {
@@ -1044,15 +994,15 @@ public class DtdOutput {
     doneParamEntitySet.add(name);
     Type t = getType(body);
     buf.setLength(0);
-    if (t.isA(MODEL_GROUP) || t.isA(NOT_ALLOWED) || t.isA(MIXED_ELEMENT_CLASS))
+    if (t.isA(Type.MODEL_GROUP) || t.isA(Type.NOT_ALLOWED) || t.isA(Type.MIXED_ELEMENT_CLASS))
       body.accept(nestedContentModelOutput);
-    else if (t == MIXED_MODEL)
+    else if (t == Type.MIXED_MODEL)
       body.accept(topLevelContentModelOutput);
-    else if (t.isA(ATTRIBUTE_GROUP))
+    else if (t.isA(Type.ATTRIBUTE_GROUP))
       body.accept(attributeOutput);
-    else if (t.isA(ENUM))
+    else if (t.isA(Type.ENUM))
       body.accept(nestedAttributeTypeOutput);
-    else if (t.isA(ATTRIBUTE_TYPE))
+    else if (t.isA(Type.ATTRIBUTE_TYPE))
       body.accept(topLevelAttributeTypeOutput);
     String replacement = buf.toString();
     outputRequiredParamEntities();
@@ -1086,7 +1036,7 @@ public class DtdOutput {
   void outputElement(ElementPattern p) {
     buf.setLength(0);
     Pattern content = p.getChild();
-    if (!getType(content).isA(ATTRIBUTE_GROUP))
+    if (!getType(content).isA(Type.ATTRIBUTE_GROUP))
      content.accept(topLevelContentModelOutput);
     final String contentModel = buf.length() == 0 ? "EMPTY" : buf.toString();
     buf.setLength(0);
@@ -1148,124 +1098,6 @@ public class DtdOutput {
     }
   }
 
-  private static Type zeroOrMore(Type t) {
-    if (t.isA(ELEMENT_CLASS))
-      return ZERO_OR_MORE_ELEMENT_CLASS;
-    if (t.isA(MIXED_ELEMENT_CLASS))
-      return MIXED_MODEL;
-    return oneOrMore(t);
-  }
-
-  private static Type oneOrMore(Type t) {
-    if (t == ERROR)
-      return ERROR;
-    if (t.isA(MODEL_GROUP))
-      return MODEL_GROUP;
-    return null;
-  }
-
-  private static Type group(Type t1, Type t2) {
-    if (t1 == ERROR || t2 == ERROR)
-      return ERROR;
-    if (t1.isA(MODEL_GROUP) && t2.isA(MODEL_GROUP))
-      return MODEL_GROUP;
-    if (t1.isA(COMPLEX_TYPE_MODEL_GROUP) && t2.isA(COMPLEX_TYPE_MODEL_GROUP))
-      return COMPLEX_TYPE_MODEL_GROUP;
-    if (t1.isA(EMPTY) && t2.isA(EMPTY))
-      return EMPTY;
-    if (t1.isA(ATTRIBUTE_GROUP) && t2.isA(ATTRIBUTE_GROUP))
-      return ATTRIBUTE_GROUP;
-    if ((t1.isA(COMPLEX_TYPE_MODEL_GROUP) && t2.isA(ATTRIBUTE_GROUP))
-            || t2.isA(COMPLEX_TYPE_MODEL_GROUP) && t1.isA(ATTRIBUTE_GROUP))
-      return COMPLEX_TYPE_MODEL_GROUP;
-    if ((t1.isA(COMPLEX_TYPE) && t2.isA(ATTRIBUTE_GROUP))
-            || t2.isA(COMPLEX_TYPE) && t1.isA(ATTRIBUTE_GROUP))
-      return COMPLEX_TYPE;
-    return null;
-  }
-
-  private static Type mixed(Type t) {
-    if (t.isA(ZERO_OR_MORE_ELEMENT_CLASS))
-      return MIXED_MODEL;
-    return null;
-  }
-
-  private static Type interleave(Type t1, Type t2) {
-    if (t1 == ERROR || t2 == ERROR)
-      return ERROR;
-    if (t1.isA(EMPTY) && t2.isA(EMPTY))
-      return EMPTY;
-    if (t1.isA(ATTRIBUTE_GROUP) && t2.isA(ATTRIBUTE_GROUP))
-      return ATTRIBUTE_GROUP;
-    if ((t1.isA(COMPLEX_TYPE_MODEL_GROUP) && t2.isA(ATTRIBUTE_GROUP))
-            || t2.isA(COMPLEX_TYPE_MODEL_GROUP) && t1.isA(ATTRIBUTE_GROUP))
-      return COMPLEX_TYPE_MODEL_GROUP;
-    if ((t1.isA(COMPLEX_TYPE) && t2.isA(ATTRIBUTE_GROUP))
-            || t2.isA(COMPLEX_TYPE) && t1.isA(ATTRIBUTE_GROUP))
-      return COMPLEX_TYPE;
-    return null;
-  }
-
-  private static Type optional(Type t) {
-    if (t == ERROR)
-      return ERROR;
-    if (t == DIRECT_SINGLE_ATTRIBUTE)
-      return OPTIONAL_ATTRIBUTE;
-    if (t == OPTIONAL_ATTRIBUTE)
-      return OPTIONAL_ATTRIBUTE;
-    if (t.isA(MODEL_GROUP))
-      return MODEL_GROUP;
-    if (t.isA(MIXED_ELEMENT_CLASS))
-      return MIXED_ELEMENT_CLASS;
-    if (t == NOT_ALLOWED)
-      return MODEL_GROUP;
-    return null;
-  }
-
-
-  private static Type choice(Type t1, Type t2) {
-    if (t1 == ERROR || t2 == ERROR)
-      return ERROR;
-    if (t1 == NOT_ALLOWED) {
-      if (t2 == NOT_ALLOWED)
-        return NOT_ALLOWED;
-      if (t2.isA(ELEMENT_CLASS))
-        return ELEMENT_CLASS;
-      if (t2.isA(MIXED_ELEMENT_CLASS))
-        return MIXED_ELEMENT_CLASS;
-      if (t2.isA(MODEL_GROUP))
-        return MODEL_GROUP;
-      if (t2.isA(ENUM))
-        return ENUM;
-      return null;
-    }
-    if (t2 == NOT_ALLOWED)
-      return choice(t2, t1);
-    if (t1.isA(ELEMENT_CLASS) && t2.isA(ELEMENT_CLASS))
-      return ELEMENT_CLASS;
-    if (t1.isA(MODEL_GROUP) && t2.isA(MODEL_GROUP))
-      return MODEL_GROUP;
-    if ((t1.isA(MIXED_ELEMENT_CLASS) && t2.isA(ELEMENT_CLASS))
-            || (t1.isA(ELEMENT_CLASS) && t2.isA(MIXED_ELEMENT_CLASS)))
-      return MIXED_ELEMENT_CLASS;
-    if (t1.isA(ENUM) && t2.isA(ENUM))
-      return ENUM;
-    return null;
-  }
-
-  private static Type ref(Type t) {
-    if (t == DIRECT_TEXT)
-      return TEXT;
-    if (t == DIRECT_SINGLE_ATTRIBUTE)
-      return ATTRIBUTE_GROUP;
-    if (t.isA(DIRECT_MULTI_ELEMENT))
-      return ELEMENT_CLASS;
-    if (t == ZERO_OR_MORE_ELEMENT_CLASS)
-      return MODEL_GROUP;
-    if (t == COMPLEX_TYPE)
-      return ERROR;
-    return t;
-  }
 
   void error(String key, SourceLocation loc) {
     hadError = true;
