@@ -35,9 +35,7 @@ file must not depend on the other files.</li>
 <pre>
 topLevel ::= decl* topLevelBody
 
-topLevelBody ::=
-  pattern
-  | prefixedAnnotationAttribute* grammar
+topLevelBody ::= pattern | grammar
 
 decl ::=
   "namespace" identifier "=" (literal | "inherit")
@@ -589,12 +587,6 @@ annotation elements in square brackets; the annotation elements are
 equivalent to initial child elements in the XML syntax; however, when
 applied to RELAX NG elements that cannot have child elements, they are
 equivalent to following sibling elements</li>
-
-<li>annotation attributes are allowed in a top-level grammar between
-the preamble (containing the namespace and datatype library
-declarations) and the definitions (putting the attribute annotations
-in square brackets would cause them to be attached to the first
-definition rather than the grammar)</li>
 
 <li>a pattern or a name class can be followed by <code>&gt;&gt;</code> and
 then an element annotation; this is equivalent to a following sibling

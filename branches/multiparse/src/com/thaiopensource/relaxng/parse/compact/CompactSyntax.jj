@@ -302,6 +302,13 @@ public class CompactSyntax implements Context {
     return sb.makeAnnotations(comments, getContext());
   }
 
+  private Annotations getTopLevelCommentsAsAnnotations() {
+    CommentList comments = getTopLevelComments();
+    if (comments == null)
+      return null;
+    return sb.makeAnnotations(comments, getContext());
+  }
+
   private void clearAttributeList() {
     attributeNameTable.clear();
   }
@@ -392,8 +399,8 @@ ParsedPattern IncludedGrammar(IncludedGrammar g) :
 {
   (<BYTE_ORDER_MARK>)?
   Preamble()
-  (LOOKAHEAD(TopLevelLookahead()) a = TopLevelAnnotations() GrammarBody(g, g, a)
-   | a = Annotations() "grammar" "{" GrammarBody(g, g, a) { topLevelComments(g); } "}")
+  (LOOKAHEAD(TopLevelLookahead()) a = GrammarBody(g, g, getTopLevelCommentsAsAnnotations())
+   | a = Annotations() "grammar" "{" a = GrammarBody(g, g, a) { topLevelComments(g); } "}")
   { p = afterComments(g.endIncludedGrammar(sb.makeLocation(sourceUri, 1, 1), a)); }
   <EOF>
   { return p; }
@@ -401,27 +408,16 @@ ParsedPattern IncludedGrammar(IncludedGrammar g) :
 
 ParsedPattern TopLevelGrammar(Scope scope) :
 {
-  Annotations a;
+  Annotations a = getTopLevelCommentsAsAnnotations();
   Grammar g;
   ParsedPattern p;
 }
 {
-  a = TopLevelAnnotations()
   { g = sb.makeGrammar(scope); }
-  GrammarBody(g, g, a)
+  a = GrammarBody(g, g, a)
   { p = afterComments(g.endGrammar(sb.makeLocation(sourceUri, 1, 1), a)); }
   <EOF>
   { return p; }
-}
-
-Annotations TopLevelAnnotations() :
-{
-  Annotations a = sb.makeAnnotations(getTopLevelComments(), getContext());
-}
-{
-  { clearAttributeList(); }
-  (LOOKAHEAD(2) PrefixedAnnotationAttribute(a, false))*
-  { return a; }
 }
 
 void Preamble() :
@@ -863,7 +859,7 @@ ParsedPattern GrammarExpr(Scope scope, Annotations a) :
 }
 {
   t = "grammar" { g = sb.makeGrammar(scope); }
-  "{" GrammarBody(g, g, a) { topLevelComments(g); } "}" 
+  "{" a = GrammarBody(g, g, a) { topLevelComments(g); } "}" 
   { return g.endGrammar(makeLocation(t), a); }
 }
 
@@ -877,13 +873,15 @@ ParsedPattern ParenExpr(Scope scope, Annotations a) :
   { return p; }
 }
 
-void GrammarBody(GrammarSection section, Scope scope, Annotations a) :
+Annotations GrammarBody(GrammarSection section, Scope scope, Annotations a) :
 {
   ParsedElementAnnotation e;
 }
 {
-  (LOOKAHEAD(2) e = AnnotationElementNotKeyword() { a.addElement(e); })*
+  (LOOKAHEAD(2) e = AnnotationElementNotKeyword()
+   { if (a == null) a = sb.makeAnnotations(null, getContext()); a.addElement(e); })*
   (GrammarComponent(section, scope))*
+  { return a; }
 }
 
 void GrammarComponent(GrammarSection section, Scope scope) :
