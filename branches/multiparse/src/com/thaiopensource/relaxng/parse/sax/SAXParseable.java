@@ -19,6 +19,7 @@ import org.relaxng.datatype.Datatype;
 import java.io.IOException;
 
 public class SAXParseable implements Parseable {
+  static public final String URI = SchemaParser.relaxng10URI;
   private XMLReaderCreator xrc;
   private InputSource in;
   private ErrorHandler eh;
