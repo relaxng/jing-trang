@@ -1248,6 +1248,34 @@ head =		element head {
 </correct>
 </xml>
 </testCase>
+<testCase>
+<nonxml>
+<resource name="x.rnx">
+foo
+</resource>
+<correct><![CDATA[
+start = externalRef "x.rnx"
+foo = element foo { empty }
+]]></correct>
+</nonxml>
+<xml>
+<resource name="x.rng">
+<ref name="foo" xmlns="http://relaxng.org/ns/structure/1.0"/>
+</resource>
+<correct>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <externalRef href="x.rng"/>
+  </start>
+  <define name="foo">
+    <element name="foo">
+      <empty/>
+    </element>
+  </define>
+</grammar>
+</correct>
+</xml>
+</testCase>
 <!--
 <testCase>
 <nonxml>
