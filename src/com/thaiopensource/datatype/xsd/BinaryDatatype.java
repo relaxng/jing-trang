@@ -28,4 +28,8 @@ abstract class BinaryDatatype extends DatatypeBase implements Measure {
   public int getLength(Object obj) {
     return ((byte[])obj).length;
   }
+
+  Measure getMeasure() {
+    return this;
+  }
 }
