@@ -1,4 +1,4 @@
-For group with no attributes, sufficient if at least one reference that can be a type attribute,
+For group with no attributes, sufficient if at least one reference that can be a type attribute?
 
 Bug in SQC with import of xml namespace.
 
@@ -67,7 +67,7 @@ Make use of element substitution groups; may affect which elements are global.
 
 Deal with comments
 
-Deal with annotations
+Deal with annotations (provide special support for xs:key/xs:keyRef/xs:unique).
 
 Deal with a:documentation
 
