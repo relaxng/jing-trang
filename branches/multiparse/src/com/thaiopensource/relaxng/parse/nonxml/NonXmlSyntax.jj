@@ -202,8 +202,7 @@ ParsedPattern Input(Scope scope) :
   // If it starts with a non-reserved word it must be a grammar,
   // because there would be no way to define an identifier
   Preamble()
-  (LOOKAHEAD(1) p = TopLevelGrammar(scope) | p = Expr(scope))
-  <EOF>
+  (LOOKAHEAD(1) p = TopLevelGrammar(scope) | p = Expr(scope) <EOF>)
   { return p; }
 }
 
@@ -228,7 +227,7 @@ ParsedPattern TopLevelGrammar(Scope scope) :
 {
   a = Annotations()
   { g = sb.makeGrammar(scope); }
-  (GrammarComponent(g, g))+
+  (GrammarComponent(g, g))+ <EOF>
   { return g.endGrammar(sb.makeLocation(sourceUri, 1, 1), a); }
 }
 
