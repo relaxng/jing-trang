@@ -24,7 +24,9 @@
 </target>
 
 <target name="regex-gen">
-  <ant antfile="regex-build.xml" target="gen"/>
+  <ant antfile="regex-build.xml" target="gen">
+    <property name="UnicodeData.file" value="lib/UnicodeData-3.1.0.txt"/>
+  </ant>
 </target>
 
 <target name="compile" depends="compile-grammar,regex-gen">
@@ -238,7 +240,7 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
          style="doc/design.xsl"/>
 </target>
 
-<target name="trang-jar" depends="compile">
+<target name="trang-jar" depends="jar">
   <ant dir="trang" target="jar">
     <property name="build.dir" value="../build/trang"/>
     <property name="dist.dir" value="../build"/>

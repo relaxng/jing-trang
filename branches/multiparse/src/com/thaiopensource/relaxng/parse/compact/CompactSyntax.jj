@@ -45,7 +45,10 @@ public class CompactSyntax implements Context {
 
   private static final String xmlUri = "http://www.w3.org/XML/1998/namespace";
   private static final String xmlnsUri = "http://www.w3.org/2000/xmlns";
+  private static final String compatibilityUri = "http://relaxng.org/ns/compatibility/annotations/1.0";
+
   private String defaultNamespace = SchemaBuilder.INHERIT_NS;
+  private String compatibilityPrefix = null;
   private SchemaBuilder sb;
   private String sourceUri;
   private ErrorHandler eh;
@@ -176,6 +179,15 @@ public class CompactSyntax implements Context {
     return patterns;
   }
 
+  String getCompatibilityPrefix() {
+    if (compatibilityPrefix == null) {
+      compatibilityPrefix = "a";
+      while (namespaceTable.get(compatibilityPrefix) != null)
+        compatibilityPrefix = compatibilityPrefix + "a";
+    }
+    return compatibilityPrefix;
+  }
+
   public String resolveNamespacePrefix(String prefix) {
     String result = (String)namespaceTable.get(prefix);
     if (result.length() == 0)
@@ -238,8 +250,22 @@ public class CompactSyntax implements Context {
 	    t = t.specialToken;
 	  if (comments == null)
 	    comments = sb.makeCommentList();
-	  for (; t != null; t = t.next)
-	    comments.addComment(mungeComment(t.image), makeLocation(t));
+	  for (; t != null; t = t.next) {
+            String s = mungeComment(t.image);
+            Location loc = makeLocation(t);
+            if (t.next != null
+                && t.next.kind == CompactSyntaxConstants.SINGLE_LINE_COMMENT_CONTINUE) {
+              StringBuffer buf = new StringBuffer(s);
+              do {
+                t = t.next;
+                buf.append('\n');
+                buf.append(mungeComment(t.image));
+              } while (t.next != null 
+                       && t.next.kind == CompactSyntaxConstants.SINGLE_LINE_COMMENT_CONTINUE);
+              s = buf.toString();
+            }
+	    comments.addComment(s, loc);
+          }
 	}
       } while (lastCommentSourceToken != nextToken);
     }
@@ -261,28 +287,12 @@ public class CompactSyntax implements Context {
   }
 
   private String mungeComment(String image) {
-    StringBuffer buf = new StringBuffer();
-  loop:
-    for (int i = 0, len = image.length(); ++i < len;) {
-      char c = image.charAt(i);
-      if (c == ' ') {
-        if (++i == len)
-          break;
-        c = image.charAt(i);
-      }
-      for (;;) {
-        if (c == '\n')
-          break;
-        buf.append(c);
-        if (++i == len)
-          break loop;
-        c = image.charAt(i);
-      }
-      buf.append('\n');
-      while (image.charAt(++i) != '#')
-	;
-    }
-    return buf.toString();
+    int i = image.indexOf('#');
+    if (i + 1 < image.length() && image.charAt(i + 1) == '#')
+      i++;
+    if (i + 1 < image.length() && image.charAt(i + 1) == ' ')
+      i++;
+    return image.substring(i + 1);
   }
 
   private Annotations getCommentsAsAnnotations() {
@@ -355,7 +365,14 @@ void TopLevelLookahead() :
 {
   (Identifier() | <PREFIXED_NAME>) ("=" | "[")
   | LookaheadBody() ("start" | Identifier() "=")
+  | LookaheadDocumentation() (LookaheadBody())? ("start" | Identifier() "=")
   | "start" "="
+}
+
+void LookaheadDocumentation() :
+{}
+{
+  ((<DOCUMENTATION> | <DOCUMENTATION_AFTER_SINGLE_LINE_COMMENT>) (<DOCUMENTATION_CONTINUE>)*)+
 }
 
 void LookaheadBody() :
@@ -439,8 +456,11 @@ void NamespaceDecl() :
       }
       else if (namespaceName.equals(xmlUri))
         error("xml_uri_bad_prefix", prefix.getToken());
-      else
+      else {
+        if (namespaceName.equals(compatibilityUri))
+          compatibilityPrefix = prefix.getString();
         namespaceTable.put(prefix.getString(), namespaceName);
+      }
     }
   }
 }
@@ -1151,6 +1171,28 @@ ParsedPattern Except(Scope scope, Token[] except) :
   }
 }
 
+ParsedElementAnnotation Documentation() :
+{
+  CommentList comments = getComments();
+  ElementAnnotationBuilder eab;
+  Token t;
+  String s;
+}
+{
+  (t = <DOCUMENTATION> | t = <DOCUMENTATION_AFTER_SINGLE_LINE_COMMENT>)
+  { 
+    eab = sb.makeElementAnnotationBuilder(compatibilityUri,
+                                          "documentation",
+                                          getCompatibilityPrefix(),
+                                          makeLocation(t),
+                                          comments,
+                                          getContext());
+    eab.addText(mungeComment(t.image), makeLocation(t));
+  }
+  (t = <DOCUMENTATION_CONTINUE> { eab.addText("\n" + mungeComment(t.image), makeLocation(t)); })*
+  { return eab.makeElementAnnotation(); }
+}
+
 Annotations Annotations() :
 {
   CommentList comments = getComments();
@@ -1158,7 +1200,15 @@ Annotations Annotations() :
   ParsedElementAnnotation e;
 }
 {
-  ("[" { a = sb.makeAnnotations(comments, getContext()); clearAttributeList(); }
+  ( { a = sb.makeAnnotations(comments, getContext()); }
+    (e = Documentation() { a.addElement(e); })+
+    {
+      comments = getComments();
+      if (comments != null)
+        a.addLeadingComment(comments);
+    }
+  )?
+  ("[" { if (a == null) a = sb.makeAnnotations(comments, getContext()); clearAttributeList(); }
        (LOOKAHEAD(2) PrefixedAnnotationAttribute(a, false) )*
        ( e = AnnotationElement() { a.addElement(e); } )*
        { a.addComment(getComments()); }
@@ -1381,13 +1431,37 @@ Token Keyword() :
   { return t; }
 }
 
+<*>
+SKIP: {
+  < WS: ([ " ", "\n", "\r", "\t" ])+ > : DEFAULT
+}
 
-SKIP: { " " | "\n" | "\r" | "\t" }
+TOKEN :
+{
+  < DOCUMENTATION: "##" (~["\n"])* > : AFTER_DOCUMENTATION
+}
+
+<AFTER_DOCUMENTATION>
+TOKEN :
+{
+  < DOCUMENTATION_CONTINUE: "\n" ([" ", "\t"])* <DOCUMENTATION> >
+}
 
 SPECIAL_TOKEN:
 {
-  < SINGLE_LINE_COMMENT:
-    "#" (~["\n"])* ("\n" ([" ", "\t"])* "#" (~["\n"])*)* >
+  < SINGLE_LINE_COMMENT: "#" (~["\n"])* > : AFTER_SINGLE_LINE_COMMENT
+}
+
+<AFTER_SINGLE_LINE_COMMENT>
+TOKEN :
+{
+  < DOCUMENTATION_AFTER_SINGLE_LINE_COMMENT: "\n" ([" ", "\t"])* <DOCUMENTATION> > : AFTER_DOCUMENTATION
+}
+
+<AFTER_SINGLE_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  < SINGLE_LINE_COMMENT_CONTINUE: "\n" ([" ", "\t"])* <SINGLE_LINE_COMMENT> >
 }
 
 TOKEN :
