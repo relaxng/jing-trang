@@ -1,6 +1,7 @@
 package com.thaiopensource.relaxng.output.xsd.basic;
 
 import com.thaiopensource.relaxng.output.common.Name;
+import com.thaiopensource.relaxng.edit.SourceLocation;
 
 public class Attribute extends AttributeUse {
   private final Name name;
@@ -18,7 +19,8 @@ public class Attribute extends AttributeUse {
   static public final Use OPTIONAL = new Use("OPTIONAL");
   static public final Use PROHIBITED = new Use("PROHIBITED");
 
-  public Attribute(Name name, SimpleType type, Use use) {
+  public Attribute(SourceLocation location, Name name, SimpleType type, Use use) {
+    super(location);
     this.name = name;
     this.type = type;
     this.use = use;

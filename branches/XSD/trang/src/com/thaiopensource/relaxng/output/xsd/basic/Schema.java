@@ -1,12 +1,15 @@
 package com.thaiopensource.relaxng.output.xsd.basic;
 
+import com.thaiopensource.relaxng.edit.SourceLocation;
+
 import java.util.List;
 
-public class Schema {
+public class Schema extends Located {
   private final String uri;
   private Schema parent;
 
-  public Schema(String uri) {
+  public Schema(SourceLocation location, String uri) {
+    super(location);
     this.uri = uri;
   }
 
@@ -18,19 +21,19 @@ public class Schema {
     return parent;
   }
 
-  public void defineSimpleType(String name, SimpleType simpleType) {
+  public void defineSimpleType(String name, SimpleType simpleType, SourceLocation location) {
   }
 
-  public void defineGroup(String name, Particle particle) {
+  public void defineGroup(String name, Particle particle, SourceLocation location) {
   }
 
-  public void defineAttributeGroup(String name, List attributeUses) {
+  public void defineAttributeGroup(String name, List attributeUses, SourceLocation location) {
   }
 
-  public void addRoot(Particle particle) {
+  public void addRoot(Particle particle, SourceLocation location) {
   }
 
-  public Schema addInclude(String uri) {
+  public Schema addInclude(String uri, SourceLocation location) {
     return null;
   }
 
