@@ -832,7 +832,6 @@ class Translator {
   boolean translateAtom() throws InvalidRegexException {
     switch (curChar) {
     case EOS:
-    case '^':
     case '?':
     case '*':
     case '+':
@@ -861,6 +860,7 @@ class Translator {
       advance();
       return true;
     case '$':
+    case '^':
       result.append('\\');
       // fall through
     default:

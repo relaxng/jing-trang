@@ -72,7 +72,8 @@
 <valid>g</valid>
 </testCase>
 <testCase>
-<incorrect>^</incorrect>
+<correct>^</correct>
+<valid>^</valid>
 </testCase>
 <testCase>
 <incorrect>\</incorrect>
