@@ -21,7 +21,7 @@ Bulletproof LocalOutputDirectory.
 Customizable indentation.
 Make LocalOutputDirectory preserve directory structure
 Bulletproof genEntityName
-Support <list>
+Approximate <list> by NMTOKENS when possible
 Have a top-level annotation indicating a redefinition point (as in DocBook)
 Recognize definitions being used as INCLUDE/IGNORE (as in TEI)
 Handle choice involving attributes (perhaps just special case where alphabets are disjoint)
