@@ -112,6 +112,54 @@
 </datatype>
 <datatype name="base64Binary">
 <valid>AAAA</valid>
+<valid>abcd efgh ijkl mnop qrst uvwx yzAB CDEF GHIJ KLMN OPQR
+STUV WXYZ 0123 4567 89+/</valid>
+<valid>BA==</valid>
+<valid></valid>
+<valid>BA==</valid>
+<valid>BQ==</valid>
+<valid>Bg==</valid>
+<valid>Bw==</valid>
+<valid>BBA=</valid>
+<valid>BBA=</valid>
+<valid>BBE=</valid>
+<valid>BBI=</valid>
+<valid>BBM=</valid>
+<valid>BBQ=</valid>
+<valid>BBU=</valid>
+<valid>BBY=</valid>
+<valid>BBc=</valid>
+<valid>BBg=</valid>
+<valid>BBk=</valid>
+<valid>BBo=</valid>
+<valid>BBs=</valid>
+<valid>BBw=</valid>
+<valid>BB0=</valid>
+<valid>BB4=</valid>
+<valid>BB8=</valid>
+<invalid>====</invalid>
+<invalid>BB==</invalid>
+<invalid>BBB=</invalid>
+<invalid>B===</invalid>
+<invalid>B</invalid>
+<equiv>
+<class>
+<value>deadbeef</value>
+<value>d&#xA;&#xD;&#x9;e a d
+b eef </value>
+</class>
+<class>
+<value>DEADBEEF</value>
+<value>D&#xA;&#xD;&#x9;E A D
+B EEF </value>
+</class>
+</equiv>
+<length value="0"></length>
+<length value="6">deadbeef</length>
+<length value="1">BA==</length>
+<length value="2">BBA=</length>
+<length value="3">dead</length>
+<length value="4">deadBA==</length>
 </datatype>
 <datatype name="hexBinary">
 <valid>deadbeef</valid>
