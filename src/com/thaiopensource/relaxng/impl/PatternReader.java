@@ -1,6 +1,7 @@
 package com.thaiopensource.relaxng.impl;
 
 import com.thaiopensource.relaxng.XMLReaderCreator;
+import com.thaiopensource.relaxng.parse.sax.XmlBaseHandler;
 import com.thaiopensource.util.Uri;
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.DatatypeBuilder;

@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng.impl;
+package com.thaiopensource.relaxng.parse.sax;
 
 import com.thaiopensource.util.Uri;
 import org.xml.sax.Locator;
