@@ -1,4 +1,4 @@
-Localize NonXmlParser properly.
+More helpful syntax error messages with non-XML syntax parser.
 
 Implement >> annotations.
 
