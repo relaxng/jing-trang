@@ -42,7 +42,7 @@ Class-Path: jing.jar
 </target>
 
 <target name="validate" depends="jar">
-  <jing rngfile="../xhtml/xhtml-basic.rng">
+  <jing rngfile="../xhtml/xhtml.rng">
     <fileset dir="doc" includes="*.html"/>
   </jing>
 </target>
