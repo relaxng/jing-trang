@@ -1,5 +1,6 @@
 Use global element declarations
 - when only one element of particular name
+- when multiple elements, but only one occurs as the sole content of a define
 
 Avoid duplicate attributes.
 
