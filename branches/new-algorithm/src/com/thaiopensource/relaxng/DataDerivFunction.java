@@ -32,11 +32,11 @@ class DataDerivFunction extends AbstractPatternFunction {
     return true;
   }
 
-  public Pattern caseText(TextPattern p) {
+  public Object caseText(TextPattern p) {
     return p;
   }
 
-  public Pattern caseList(ListPattern p) {
+  public Object caseList(ListPattern p) {
     int len = str.length();
     int tokenStart = -1;
     Pattern r = p.getOperand();
@@ -66,10 +66,10 @@ class DataDerivFunction extends AbstractPatternFunction {
   }
 
   private Pattern tokenDeriv(Pattern p, int i, int j) {
-    return p.apply(new DataDerivFunction(str.substring(i, j), vc, builder));
+    return p.applyForPattern(new DataDerivFunction(str.substring(i, j), vc, builder));
   }
 
-  public Pattern caseValue(ValuePattern p) {
+  public Object caseValue(ValuePattern p) {
     Datatype dt = p.getDatatype();
     Object value = dt.createValue(str, vc);
     if (value != null && dt.sameValue(p.getValue(), value))
@@ -78,56 +78,56 @@ class DataDerivFunction extends AbstractPatternFunction {
       return builder.makeNotAllowed();
   }
 
-  public Pattern caseData(DataPattern p) {
+  public Object caseData(DataPattern p) {
     if (p.getDatatype().isValid(str, vc))
       return builder.makeEmpty();
     else
       return builder.makeNotAllowed();
   }
 
-  public Pattern caseDataExcept(DataExceptPattern p) {
+  public Object caseDataExcept(DataExceptPattern p) {
     if (p.getDatatype().isValid(str, vc)
-	&& !p.getExcept().apply(this).isNullable())
+	&& !p.getExcept().applyForPattern(this).isNullable())
       return builder.makeEmpty();
     else
       return builder.makeNotAllowed();
   }
 
-  public Pattern caseAfter(AfterPattern p) {
+  public Object caseAfter(AfterPattern p) {
     Pattern p1 = p.getOperand1();
-    if (p1.apply(this).isNullable() || (blank && p1.isNullable()))
+    if (p1.applyForPattern(this).isNullable() || (blank && p1.isNullable()))
       return p.getOperand2();
     else
       return getPatternBuilder().makeNotAllowed();
   }
 
-  public Pattern caseChoice(ChoicePattern p) {
-    return builder.makeChoice(p.getOperand1().apply(this),
-			      p.getOperand2().apply(this));
+  public Object caseChoice(ChoicePattern p) {
+    return builder.makeChoice(p.getOperand1().applyForPattern(this),
+			      p.getOperand2().applyForPattern(this));
   }
   
-  public Pattern caseGroup(GroupPattern p) {
+  public Object caseGroup(GroupPattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
-    Pattern tem = builder.makeGroup(p1.apply(this), p2);
+    Pattern tem = builder.makeGroup(p1.applyForPattern(this), p2);
     if (!p1.isNullable())
       return tem;
-    return builder.makeChoice(tem, p2.apply(this));
+    return builder.makeChoice(tem, p2.applyForPattern(this));
   }
 
-  public Pattern caseInterleave(InterleavePattern p) {
+  public Object caseInterleave(InterleavePattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
-    return builder.makeChoice(builder.makeInterleave(p1.apply(this), p2),
-			      builder.makeInterleave(p1, p2.apply(this)));
+    return builder.makeChoice(builder.makeInterleave(p1.applyForPattern(this), p2),
+			      builder.makeInterleave(p1, p2.applyForPattern(this)));
   }
 
-  public Pattern caseOneOrMore(OneOrMorePattern p) {
-    return builder.makeGroup(p.getOperand().apply(this),
+  public Object caseOneOrMore(OneOrMorePattern p) {
+    return builder.makeGroup(p.getOperand().applyForPattern(this),
 			     builder.makeOptional(p));
   }
 
-  public Pattern caseOther(Pattern p) {
+  public Object caseOther(Pattern p) {
     return builder.makeNotAllowed();
   }
 

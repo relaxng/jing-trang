@@ -54,7 +54,7 @@ class OneOrMorePattern extends Pattern {
     visitor.visitOneOrMore(p);
   }
 
-  Pattern apply(PatternFunction f) {
+  Object apply(PatternFunction f) {
     return f.caseOneOrMore(this);
   }
 

@@ -10,7 +10,7 @@ class EmptyPattern extends Pattern {
   void accept(PatternVisitor visitor) {
     visitor.visitEmpty();
   }
-  Pattern apply(PatternFunction f) {
+  Object apply(PatternFunction f) {
     return f.caseEmpty(this);
   }
   void checkRestrictions(int context, DuplicateAttributeDetector dad, Alphabet alpha)

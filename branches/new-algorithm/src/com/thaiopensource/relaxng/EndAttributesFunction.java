@@ -7,11 +7,11 @@ class EndAttributesFunction extends AbstractPatternFunction {
     this.builder = builder;
   }
 
-  public Pattern caseOther(Pattern p) {
+  public Object caseOther(Pattern p) {
     return p;
   }
 
-  public Pattern caseGroup(GroupPattern p) {
+  public Object caseGroup(GroupPattern p) {
     Pattern p1 = p.getOperand1();
     Pattern p2 = p.getOperand2();
     Pattern q1 = memoApply(p1);
@@ -21,7 +21,7 @@ class EndAttributesFunction extends AbstractPatternFunction {
     return builder.makeGroup(q1, q2);
   }
 
-  public Pattern caseInterleave(InterleavePattern p) {
+  public Object caseInterleave(InterleavePattern p) {
     Pattern p1 = p.getOperand1();
     Pattern p2 = p.getOperand2();
     Pattern q1 = memoApply(p1);
@@ -31,7 +31,7 @@ class EndAttributesFunction extends AbstractPatternFunction {
     return builder.makeInterleave(q1, q2);
   }
 
-  public Pattern caseChoice(ChoicePattern p) {
+  public Object caseChoice(ChoicePattern p) {
     Pattern p1 = p.getOperand1();
     Pattern p2 = p.getOperand2();
     Pattern q1 = memoApply(p1);
@@ -41,7 +41,7 @@ class EndAttributesFunction extends AbstractPatternFunction {
     return builder.makeChoice(q1, q2);
   }
 
-  public Pattern caseOneOrMore(OneOrMorePattern p) {
+  public Object caseOneOrMore(OneOrMorePattern p) {
     Pattern p1 = p.getOperand();
     Pattern q1 = memoApply(p1);
     if (p1 == q1)
@@ -49,7 +49,7 @@ class EndAttributesFunction extends AbstractPatternFunction {
     return builder.makeOneOrMore(p1);
   }
 
-  public Pattern caseAfter(AfterPattern p) {
+  public Object caseAfter(AfterPattern p) {
     Pattern p1 = p.getOperand1();
     Pattern q1 = memoApply(p1);
     if (p1 == q1)
@@ -57,7 +57,7 @@ class EndAttributesFunction extends AbstractPatternFunction {
     return builder.makeAfter(q1, p.getOperand2());
   }
 
-  public Pattern caseAttribute(AttributePattern p) {
+  public Object caseAttribute(AttributePattern p) {
     return builder.makeNotAllowed();
   }
 

@@ -73,7 +73,7 @@ class AttributePattern extends Pattern {
     visitor.visitAttribute(nameClass, p);
   }
 
-  Pattern apply(PatternFunction f) {
+  Object apply(PatternFunction f) {
     return f.caseAttribute(this);
   }
 

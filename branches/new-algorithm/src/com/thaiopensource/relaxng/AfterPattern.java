@@ -7,7 +7,7 @@ class AfterPattern extends BinaryPattern {
 	  p1,
 	  p2);
   }
-  Pattern apply(PatternFunction f) {
+  Object apply(PatternFunction f) {
     return f.caseAfter(this);
   }
   void accept(PatternVisitor visitor) {

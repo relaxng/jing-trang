@@ -10,7 +10,7 @@ class ErrorPattern extends Pattern {
   void accept(PatternVisitor visitor) {
     visitor.visitError();
   }
-  Pattern apply(PatternFunction f) {
+  Object apply(PatternFunction f) {
     return f.caseError(this);
   }
 }

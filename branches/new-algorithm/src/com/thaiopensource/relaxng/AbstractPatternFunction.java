@@ -1,61 +1,61 @@
 package com.thaiopensource.relaxng;
 
 abstract class AbstractPatternFunction implements PatternFunction {
-  public Pattern caseEmpty(EmptyPattern p) {
+  public Object caseEmpty(EmptyPattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseNotAllowed(NotAllowedPattern p) {
+  public Object caseNotAllowed(NotAllowedPattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseError(ErrorPattern p) {
+  public Object caseError(ErrorPattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseGroup(GroupPattern p) {
+  public Object caseGroup(GroupPattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseInterleave(InterleavePattern p) {
+  public Object caseInterleave(InterleavePattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseChoice(ChoicePattern p) {
+  public Object caseChoice(ChoicePattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseOneOrMore(OneOrMorePattern p) {
+  public Object caseOneOrMore(OneOrMorePattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseElement(ElementPattern p) {
+  public Object caseElement(ElementPattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseAttribute(AttributePattern p) {
+  public Object caseAttribute(AttributePattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseData(DataPattern p) {
+  public Object caseData(DataPattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseDataExcept(DataExceptPattern p) {
+  public Object caseDataExcept(DataExceptPattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseValue(ValuePattern p) {
+  public Object caseValue(ValuePattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseText(TextPattern p) {
+  public Object caseText(TextPattern p) {
     return caseOther(p);
   }
 
-  public Pattern caseList(ListPattern p) {
+  public Object caseList(ListPattern p) {
     return caseOther(p);
   }
 
-  public abstract Pattern caseOther(Pattern p);
+  public abstract Object caseOther(Pattern p);
 }

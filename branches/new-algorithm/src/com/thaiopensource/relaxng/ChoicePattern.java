@@ -26,7 +26,7 @@ class ChoicePattern extends BinaryPattern {
     visitor.visitChoice(p1, p2);
   }
 
-  Pattern apply(PatternFunction f) {
+  Object apply(PatternFunction f) {
     return f.caseChoice(this);
   }
 
