@@ -15,7 +15,7 @@ import org.relaxng.datatype.ValidationContext;
 public class Validator implements ContentHandler {
   private final PatternBuilder b;
   private Locator locator;
-  private XMLReader xr;
+  private final XMLReader xr;
   private PatternMemo memo;
   private boolean hadError = false;
   private boolean collectingCharacters = false;
@@ -26,7 +26,7 @@ public class Validator implements ContentHandler {
     private final String prefix;
     private final String namespaceURI;
     private final PrefixMapping prev;
-    
+
     PrefixMapping(String prefix, String namespaceURI, PrefixMapping prev) {
       this.prefix = prefix;
       this.namespaceURI = namespaceURI;
@@ -39,7 +39,7 @@ public class Validator implements ContentHandler {
 
     public String resolveNamespacePrefix(String prefix) {
       PrefixMapping tem = this;
-      do { 
+      do {
 	if (tem.prefix.equals(prefix))
 	  return tem.namespaceURI;
 	tem = tem.prev;
@@ -50,7 +50,7 @@ public class Validator implements ContentHandler {
     public String getBaseUri() {
       return null;
     }
-    
+
     public boolean isUnparsedEntity(String name) {
       return false;
     }
@@ -91,7 +91,7 @@ public class Validator implements ContentHandler {
 			   Attributes atts) throws SAXException {
     if (collectingCharacters)
       flushCharacters();
-    
+
     Name name = new Name(namespaceURI, localName);
     if (!setMemo(memo.startTagOpenDeriv(name))) {
       error("impossible_element", localName);
@@ -101,7 +101,7 @@ public class Validator implements ContentHandler {
     int len = atts.getLength();
     for (int i = 0; i < len; i++) {
       Name attName = new Name(atts.getURI(i), atts.getLocalName(i));
-      
+
       if (!setMemo(memo.startAttributeDeriv(attName)))
 	error("impossible_attribute_ignored", atts.getLocalName(i));
       else if (!setMemo(memo.dataDeriv(atts.getValue(i), prefixMapping))) {
