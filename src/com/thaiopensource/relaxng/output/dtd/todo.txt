@@ -1,4 +1,5 @@
 Error for <include> content
+Avoid duplicate element declarations when expanding param entities
 Check single element type
 Recognize #FIXED attributes
 Avoid duplicate namespace declarations for global attributes

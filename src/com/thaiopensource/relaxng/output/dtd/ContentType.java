@@ -155,8 +155,6 @@ class ContentType {
   static ContentType ref(ContentType t) {
     if (t.isA(DIRECT_MULTI_ELEMENT))
       return ELEMENT_CLASS;
-    if (t == ZERO_OR_MORE_ELEMENT_CLASS)
-      return MODEL_GROUP;
     return t;
   }
 }

@@ -55,6 +55,7 @@ class DtdOutput {
 
   PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
   PatternVisitor nestedContentModelOutput = new ContentModelOutput();
+  PatternVisitor innerElementClassOutput = new InnerElementClassOutput();
   AttributeOutput attributeOutput = new AttributeOutput();
   AttributeOutput optionalAttributeOutput = new OptionalAttributeOutput();
   PatternVisitor topLevelSimpleTypeOutput = new TopLevelSimpleTypeOutput();
@@ -261,18 +262,7 @@ class DtdOutput {
         buf.append("#PCDATA)");
       else {
         buf.append("#PCDATA|");
-        Pattern child = p.getChild();
-        while (child instanceof CompositePattern) {
-          List list = ((CompositePattern)child).getChildren();
-          for (int i = 0, len = list.size(); i < len; i++) {
-            Pattern member = (Pattern)list.get(i);
-            if (getContentType(member) != ContentType.EMPTY) {
-              child = member;
-              break;
-            }
-          }
-        }
-        ((ZeroOrMorePattern)child).getChild().accept(nestedContentModelOutput);
+        p.getChild().accept(innerElementClassOutput);
         buf.append(')');
         buf.append('*');
       }
@@ -297,6 +287,30 @@ class DtdOutput {
       }
       if (main != null)
         main.accept(this);
+      return null;
+    }
+  }
+
+  class InnerElementClassOutput extends AbstractVisitor {
+    public Object visitRef(RefPattern p) {
+      getBody(p.getName()).accept(this);
+      return null;
+    }
+
+    public Object visitComposite(CompositePattern p) {
+      List list = p.getChildren();
+      for (int i = 0, len = list.size(); i < len; i++) {
+        Pattern member = (Pattern)list.get(i);
+        if (getContentType(member) != ContentType.EMPTY) {
+          member.accept(this);
+          break;
+        }
+      }
+      return null;
+    }
+
+    public Object visitZeroOrMore(ZeroOrMorePattern p) {
+      p.getChild().accept(nestedContentModelOutput);
       return null;
     }
   }
