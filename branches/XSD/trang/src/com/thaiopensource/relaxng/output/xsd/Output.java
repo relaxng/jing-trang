@@ -3,6 +3,7 @@ package com.thaiopensource.relaxng.output.xsd;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
 import com.thaiopensource.relaxng.output.common.XmlWriter;
+import com.thaiopensource.relaxng.output.common.NameClassSplitter;
 import com.thaiopensource.relaxng.edit.Pattern;
 import com.thaiopensource.relaxng.edit.GrammarPattern;
 import com.thaiopensource.relaxng.edit.AbstractVisitor;
@@ -31,12 +32,14 @@ import com.thaiopensource.relaxng.edit.AttributePattern;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.NameClass;
 import com.thaiopensource.relaxng.edit.DivComponent;
+import com.thaiopensource.relaxng.edit.ChoiceNameClass;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.HashSet;
 
 class Output {
   private static final String XSD_URI = "http://www.w3.org/2001/XMLSchema-datatypes";
@@ -269,23 +272,38 @@ class Output {
     }
 
     public Object visitElement(ElementPattern p) {
-      startWrapper();
-      if (si.isGlobal(p)) {
-        xw.startElement(xs("element"));
-        xw.attribute("ref", qualifyName((NameNameClass)p.getNameClass()));
-        xw.endElement();
-      }
-      else {
-        String ns = resolveNamespace(((NameNameClass)p.getNameClass()).getNamespaceUri());
-        if (!ns.equals(targetNamespace) && !ns.equals("")) {
-          xw.startElement(xs("group"));
-          xw.attribute("ref", si.qualifyName(ns, si.getMovedPatternName(p, ns)));
+      List names = NameClassSplitter.split(p.getNameClass());
+      boolean needChoice = names.size() != 1;
+      // TODO unnecessary <choice> if all name classes are from same moved namespace
+      if (needChoice)
+        xw.startElement(xs("choice"));
+      else
+        startWrapper();
+      Pattern body = p.getChild();
+      Set movedNamespaces = new HashSet();
+      for (Iterator iter = names.iterator(); iter.hasNext();) {
+        NameNameClass name = (NameNameClass)iter.next();
+        if (si.isGlobal(p)) {
+          xw.startElement(xs("element"));
+          xw.attribute("ref", qualifyName(name));
           xw.endElement();
         }
-        else
-          declareElement(p);
+        else {
+          String ns = resolveNamespace(name.getNamespaceUri());
+          if (!ns.equals(targetNamespace) && !ns.equals("") && !movedNamespaces.contains(ns)) {
+            movedNamespaces.add(ns);
+            xw.startElement(xs("group"));
+            xw.attribute("ref", si.qualifyName(ns, si.getMovedPatternName(p, ns)));
+            xw.endElement();
+          }
+          else
+            declareElement(name, body);
+        }
       }
-      endWrapper();
+      if (needChoice)
+        xw.endElement();
+      else
+        endWrapper();
       return null;
     }
 
@@ -556,28 +574,34 @@ class Output {
     void useAttribute() { }
 
     public Object visitAttribute(AttributePattern p) {
-      NameNameClass nc = (NameNameClass)p.getNameClass();
-      String ns = resolveNamespace(nc.getNamespaceUri());
-      if (!ns.equals(targetNamespace) && !ns.equals("")) {
-        xw.startElement(xs("attributeGroup"));
-        xw.attribute("ref", si.qualifyName(ns, si.getMovedPatternName(p, ns)));
-        xw.endElement();
-      }
-      else {
-        xw.startElement(xs("attribute"));
-        xw.attribute("name", nc.getLocalName());
-        if (!ns.equals(""))
-          xw.attribute("form", "qualified");
-        useAttribute();
-        Pattern value = p.getChild();
-        ChildType ct = si.getChildType(value);
-        // TODO handle empty
-        if (!ct.contains(ChildType.TEXT) && ct.contains(ChildType.DATA)) {
-          xw.startElement(xs("simpleType"));
-          value.accept(simpleTypeOutput);
+      List names = NameClassSplitter.split(p.getNameClass());
+      Set movedNamespaces = new HashSet();
+      for (Iterator iter = names.iterator(); iter.hasNext();) {
+        NameNameClass nc = (NameNameClass)iter.next();
+        String ns = resolveNamespace(nc.getNamespaceUri());
+        if (!ns.equals(targetNamespace) && !ns.equals("") && !movedNamespaces.contains(ns)) {
+          movedNamespaces.add(ns);
+          xw.startElement(xs("attributeGroup"));
+          xw.attribute("ref", si.qualifyName(ns, si.getMovedPatternName(p, ns)));
           xw.endElement();
         }
-        xw.endElement();
+        else {
+          xw.startElement(xs("attribute"));
+          xw.attribute("name", nc.getLocalName());
+          if (!ns.equals(""))
+            xw.attribute("form", "qualified");
+          if (names.size() == 1)
+            useAttribute();
+          Pattern value = p.getChild();
+          ChildType ct = si.getChildType(value);
+          // TODO handle empty
+          if (!ct.contains(ChildType.TEXT) && ct.contains(ChildType.DATA)) {
+            xw.startElement(xs("simpleType"));
+            value.accept(simpleTypeOutput);
+            xw.endElement();
+          }
+          xw.endElement();
+        }
       }
       return null;
     }
@@ -626,14 +650,20 @@ class Output {
 
   class GlobalElementOutput extends AbstractVisitor {
     public Object visitElement(ElementPattern p) {
+      List names = NameClassSplitter.split(p.getNameClass());
+      Pattern body = p.getChild();
       if (si.isGlobal(p)) {
-        String ns = resolveNamespace(((NameNameClass)p.getNameClass()).getNamespaceUri());
-        if (ns.equals(targetNamespace))
-          declareElement(p);
+        for (Iterator iter = names.iterator(); iter.hasNext();) {
+          NameNameClass nc = (NameNameClass)iter.next();
+          String ns = resolveNamespace(nc.getNamespaceUri());
+          if (ns.equals(targetNamespace))
+            declareElement(nc, body);
+        }
       }
-      p.getChild().accept(this);
+      body.accept(this);
       return null;
     }
+
 
     public Object visitComposite(CompositePattern p) {
       p.childrenAccept(this);
@@ -729,15 +759,12 @@ class Output {
     return true;
   }
 
-  void declareElement(ElementPattern p) {
+  void declareElement(NameNameClass nc, Pattern body) {
     xw.startElement(xs("element"));
-    // TODO deal with name classes
-    NameNameClass nc = (NameNameClass)p.getNameClass();
     xw.attribute("name", nc.getLocalName());
     if (resolveNamespace(nc.getNamespaceUri()).equals("") && !targetNamespace.equals(""))
       xw.attribute("form", "unqualified");
     xw.startElement(xs("complexType"));
-    Pattern body = p.getChild();
     ChildType ct = si.getChildType(body);
     if (ct.contains(ChildType.ELEMENT)) {
       if (ct.contains(ChildType.TEXT) || ct.contains(ChildType.DATA))
