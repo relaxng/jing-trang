@@ -111,9 +111,7 @@ public class Translator {
     "YiSyllables",
     "YiRadicals",
     "HangulSyllables",
-    "HighSurrogates",
-    "HighPrivateUseSurrogates",
-    "LowSurrogates",
+    // surrogates excluded because there are never any *characters* with codes in surrogate range
     // "PrivateUse", excluded because 3.1 adds non-BMP ranges
     "CJKCompatibilityIdeographs",
     "AlphabeticPresentationForms",
@@ -141,7 +139,10 @@ public class Translator {
     "CJKUnifiedIdeographsExtensionB",
     "CJKCompatibilityIdeographsSupplement",
     "Tags",
-    "PrivateUse"
+    "PrivateUse",
+    "HighSurrogates",
+    "HighPrivateUseSurrogates",
+    "LowSurrogates",
   };
 
   /**
@@ -161,7 +162,10 @@ public class Translator {
       new CharRange(0xE000, 0xF8FF),
       new CharRange(0xF0000, 0xFFFFD),
       new CharRange(0x100000, 0x10FFFD)
-    })
+    }),
+    Empty.getInstance(),
+    Empty.getInstance(),
+    Empty.getInstance()
   };
 
   static private final CharClass DOT = new Complement(new Union(new CharClass[] { new SingleChar('\n'), new SingleChar('\r') }));
@@ -616,6 +620,22 @@ public class Translator {
     void addNonBmpRanges(List ranges) {
       ranges.add(new Range(c, c));
     }
+  }
+
+  static class Empty extends SimpleCharClass {
+    static private final Empty instance = new Empty();
+    private Empty() {
+      super(NONE, NONE);
+    }
+
+    static Empty getInstance() {
+      return instance;
+    }
+
+    void inClassOutputBmp(StringBuffer buf) {
+      throw new RuntimeException("BMP output botch");
+    }
+
   }
 
   static class CharRange extends SimpleCharClass {
