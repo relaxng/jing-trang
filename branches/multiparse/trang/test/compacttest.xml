@@ -1,10 +1,10 @@
 <testSuite>
 <testCase>
-<nonxml>
+<compact>
 <correct>
 element foo { empty }
 </correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
@@ -14,11 +14,11 @@ element foo { empty }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct>
 element foo { text }
 </correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
@@ -28,9 +28,9 @@ element foo { text }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
-# RELAX NG syntax expressed in non-XML syntax.
+# RELAX NG syntax expressed in compact syntax.
 
 default namespace rng = "http://relaxng.org/ns/structure/1.0"
 namespace local = ""
@@ -95,10 +95,10 @@ anyElement = element * { (anyAttribute | text | anyElement)* }
 anyAttribute = attribute * { text }
 
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
-<!-- RELAX NG syntax expressed in non-XML syntax. -->
+<!-- RELAX NG syntax expressed in compact syntax. -->
 <grammar xmlns:rng="http://relaxng.org/ns/structure/1.0" ns="http://relaxng.org/ns/structure/1.0" xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
   <start>
     <ref name="pattern"/>
@@ -414,7 +414,7 @@ anyAttribute = attribute * { text }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 # Based on http://www.w3.org/TR/2001/WD-rdf-syntax-grammar-20010906/
 
@@ -468,7 +468,7 @@ IDsymbol = xsd:NMTOKEN
 literal = any
 any = mixed { element * { attribute * { text }*, any }* }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <!-- Based on http://www.w3.org/TR/2001/WD-rdf-syntax-grammar-20010906/ -->
@@ -713,7 +713,7 @@ any = mixed { element * { attribute * { text }*, any }* }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 #	ibtwsh.dtd
 #	This is the Itsy Bitsy Teeny Weeny Simple Hypertext DTD.
@@ -867,7 +867,7 @@ head =		element head {
 
 
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <!--
@@ -1249,7 +1249,7 @@ head =		element head {
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <resource name="x.rnx">
 foo
 </resource>
@@ -1257,7 +1257,7 @@ foo
 start = externalRef "x.rnx"
 foo = element foo { empty }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <resource name="x.rng">
 <ref name="foo" xmlns="http://relaxng.org/ns/structure/1.0"/>
@@ -1277,96 +1277,96 @@ foo = element foo { empty }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 element * - foo - bar { empty }
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 string - "foo"*
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 string - "foo" | string - "bar"
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 string - string - "foo"
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 namespace eg = "http://www.example.com"
 [ eg:x = "foo" eg:x = "foo" ]
 element foo { empty }
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 namespace eg1 = "http://www.example.com"
 namespace eg2 = "http://www.example.com"
 [ eg1:x = "foo" eg2:x = "foo" ]
 element foo { empty }
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 namespace xmlns = "http://www.example.com"
 [ xmlns:x = "foo" ]
 element foo { empty }
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 namespace xns = "http://www.w3.org/2000/xmlns"
 [ xns:x = "foo" ]
 element foo { empty }
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 namespace xml = "http://www.example.com"
 [ xml:space = "default" ]
 element foo { empty }
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 namespace xm = "http://www.w3.org/XML/1998/namespace"
 [ xm:space = "default" ]
 element foo { empty }
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 namespace xml = "http://www.w3.org/XML/1998/namespace"
 [ xml:space = "default" ]
 element foo { empty }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <element name="foo" xmlns="http://relaxng.org/ns/structure/1.0" xml:space="default">
@@ -1376,30 +1376,30 @@ element foo { empty }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 foo [ xmlns = "bar" ]
 start = element foo { empty }
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 namespace local = ""
 foo [ local:xmlns = "bar" ]
 start = element foo { empty }
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 element foo { empty }
 # comment
 | element bar { empty }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <choice xmlns="http://relaxng.org/ns/structure/1.0">
@@ -1415,13 +1415,13 @@ element foo { empty }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 element foo { empty }
 # comment
 *
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <zeroOrMore xmlns="http://relaxng.org/ns/structure/1.0">
@@ -1434,13 +1434,13 @@ element foo { empty }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 # comment
 namespace eg = ""
 element foo { empty }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <!-- comment -->
@@ -1451,14 +1451,14 @@ element foo { empty }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 namespace eg = 
 # comment
 ""
 element foo { empty }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <!-- comment -->
@@ -1469,13 +1469,13 @@ element foo { empty }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 namespace # comment
 eg = ""
 element foo { empty }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <!-- comment -->
@@ -1486,14 +1486,14 @@ element foo { empty }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 [
 # comment
 ]
 element foo { empty }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
@@ -1504,7 +1504,7 @@ element foo { empty }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 namespace eg = "http://www.example.com"
 [
@@ -1513,7 +1513,7 @@ eg:foo = "stuff"
 ]
 element foo { empty }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <element name="foo" xmlns="http://relaxng.org/ns/structure/1.0"
@@ -1525,12 +1525,12 @@ element foo { empty }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 element foo # comment
 { empty }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
@@ -1541,13 +1541,13 @@ element foo # comment
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 start = grammar { start = parent # comment
 foo }
 foo = element foo { empty }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <grammar xmlns="http://relaxng.org/ns/structure/1.0">
@@ -1571,10 +1571,10 @@ foo = element foo { empty }
 </testCase>
 <!--
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 </correct>
@@ -1583,10 +1583,10 @@ foo = element foo { empty }
 -->
 <!--
 <testCase>
-<nonxml>
+<compact>
 <incorrect><![CDATA[
 ]]></incorrect>
-</nonxml>
+</compact>
 </testCase>
 -->
 </testSuite>

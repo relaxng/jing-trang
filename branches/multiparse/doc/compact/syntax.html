@@ -1,15 +1,17 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>A Non-XML Syntax for RELAX NG</title>
+<title>Compact Syntax for RELAX NG</title>
 </head>
 <body>
-<h1>A Non-XML Syntax for RELAX NG</h1>
+<h1>Compact Syntax for RELAX NG</h1>
 
-<p>This document describes a non-XML syntax for <a
+<p>This document describes the Compact Syntax for <a
 href="http://relaxng.org">RELAX NG</a> (a schema language for XML).
 The design goals of this syntax are:</p>
 
 <ul>
+
+<li>Non-XML syntax.</li>
 
 <li>Maximize readability.</li>
 
@@ -17,7 +19,7 @@ The design goals of this syntax are:</p>
 
 <li>Support separate translation.  A RELAX NG schema may be spread
 amongst multiple files.  It must be possible to represent each of the
-files separately in the non-XML syntax. The representation of each
+files separately in the compact syntax. The representation of each
 file must not depend on the other files.</li>
 
 </ul>
@@ -45,7 +47,7 @@ decl ::=
 pattern ::=
   particle
   | particle ("|" particle)+
-  | particle ("," particle)+ 
+  | particle ("," particle)+
   | particle ("&amp;" particle)+
   | exceptParticle
 
@@ -83,7 +85,7 @@ basicNameClass ::=
   | annotations? "(" nameClass ")"
 
 openNameClass ::= annotations? (nsName | anyName)
-   
+
 ref ::= identifierNotKeyword
 
 datatypeName ::= CName | "string" | "token"
@@ -130,9 +132,9 @@ identifier ::= NCName | escapedIdentifier
 
 keyword ::=
   "attribute" | "default" | "datatypes" | "element" | "empty"
-  | "externalRef" | "grammar" | "include" | "inherit" | "list" 
+  | "externalRef" | "grammar" | "include" | "inherit" | "list"
   | "mixed" | "namespace" | "notAllowed" | "parent" | "start"
-  | "string" | "text" | "token" 
+  | "string" | "text" | "token"
 
 CName ::= NCName ":" NCName
 escapedIdentifier ::= "\" NCName
@@ -157,14 +159,14 @@ element, attribute or datatype parameter.</p>
 
 <h2>Mapping to RELAX NG Syntax</h2>
 
-<p>The correspondence between the non-XML syntax and RELAX NG's XML
+<p>The correspondence between the compact syntax and RELAX NG's XML
 syntax is shown by the following tables.</p>
 
 <h3>Patterns</h3>
 
 <table border="1">
 <tr>
-<th>Non-XML Syntax</th>
+<th>Compact Syntax</th>
 <th>RELAX NG Syntax</th>
 </tr>
 <tr>
@@ -326,7 +328,7 @@ datatypeLibrary="<var>uri</var>">
 
 <table border="1">
 <tr>
-<th>Non-XML Syntax</th>
+<th>Compact Syntax</th>
 <th>RELAX NG Syntax</th>
 </tr>
 <tr>
@@ -367,7 +369,7 @@ datatypeLibrary="<var>uri</var>">
 
 <table border="1">
 <tr>
-<th>Non-XML Syntax</th>
+<th>Compact Syntax</th>
 <th>RELAX NG Syntax</th>
 </tr>
 <tr>
@@ -380,7 +382,7 @@ datatypeLibrary="<var>uri</var>">
 
 <table border="1">
 <tr>
-<th>Non-XML Syntax</th>
+<th>Compact Syntax</th>
 <th>RELAX NG Syntax</th>
 </tr>
 <tr>
@@ -554,7 +556,7 @@ default namespace = inherit
 <h2>Annotations</h2>
 
 <p>RELAX NG supports two kinds of annotation: element annotations and
-attribute annotations.  In this non-XML syntax, attribute annotations
+attribute annotations.  In the compact syntax, attribute annotations
 are written in a similar way to the XML syntax.  For example,
 <code>xml:lang = "en"</code>.  Element annotations are written
 using the syntax</p>
@@ -689,7 +691,7 @@ start =
 &lt;/element>
 </pre>
 
-<p>into the non-XML syntax. Although this can be translated, for
+<p>into the compact syntax. Although this can be translated, for
 example, into</p>
 
 <pre>

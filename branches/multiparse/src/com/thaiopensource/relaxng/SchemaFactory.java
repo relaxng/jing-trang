@@ -9,7 +9,7 @@ import com.thaiopensource.relaxng.impl.PatternSchema;
 import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
 import com.thaiopensource.relaxng.impl.SchemaBuilderImpl;
 import com.thaiopensource.relaxng.parse.Parseable;
-import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
+import com.thaiopensource.relaxng.parse.compact.CompactParseable;
 import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 import org.xml.sax.ErrorHandler;
@@ -36,7 +36,7 @@ public class SchemaFactory {
   private ErrorHandler eh = null;
   private DatatypeLibraryFactory dlf = null;
   private boolean checkIdIdref = false;
-  private boolean nonXmlSyntax = false;
+  private boolean compactSyntax = false;
 
   /**
    * Constructs a schema factory.
@@ -74,8 +74,8 @@ public class SchemaFactory {
     SchemaPatternBuilder spb = new SchemaPatternBuilder();
 
     Parseable parseable;
-    if (nonXmlSyntax)
-      parseable = new NonXmlParseable(in, eh);
+    if (compactSyntax)
+      parseable = new CompactParseable(in, eh);
     else
       parseable = new SAXParseable(xrc, in, eh);
     Pattern start = SchemaBuilderImpl.parse(parseable, eh, dlf, spb);
@@ -196,11 +196,25 @@ public class SchemaFactory {
     return checkIdIdref;
   }
 
-  public void setNonXmlSyntax(boolean nonXmlSyntax) {
-    this.nonXmlSyntax = nonXmlSyntax;
+  /**
+   * Specifies whether to use the compact syntax to parse the RELAX NG schema rather than the normal XML syntax.
+   *
+   * @param compactSyntax <code>true</code> if the compact syntax should be used; <code>false</code>
+   * if the XML syntax should be used
+   * @see #getCompactSyntax
+   */
+  public void setCompactSyntax(boolean compactSyntax) {
+    this.compactSyntax = compactSyntax;
   }
 
-  public boolean getNonXmlSyntax() {
-    return nonXmlSyntax;
+  /**
+   * Indicates whether the compact syntax will be used to parse the RELAX NG schema rather than
+   * the normal XML syntax.
+   *
+   * @return <code>true</code> if the compact syntax will be used; <code>false</code> if the XML
+   * syntax will be used
+   */
+  public boolean getCompactSyntax() {
+    return compactSyntax;
   }
 }

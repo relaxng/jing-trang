@@ -68,9 +68,23 @@ public class ValidationEngine {
     factory.setCheckIdIdref(checkIdIdref);
   }
 
-  public ValidationEngine(XMLReaderCreator xrc, ErrorHandler eh, boolean checkIdIdref, boolean nonXmlSyntax) {
+  /**
+   * Constructs a <code>ValidationEngine</code>.
+   *
+   * @param xrc the <code>XMLReaderCreator</code> to be used for constructing <code>XMLReader</code>s;
+   * if <code>null</code> uses <code>Sax2XMLReaderCreator</code>
+   * @param eh the <code>ErrorHandler</code> to be used for reporting errors; if <code>null</code>
+   * uses <code>DraconianErrorHandler</code>
+   * @param checkIdIdref <code>true</code> if ID/IDREF/IDREFS should be checked; <code>false</code> otherwise
+   * @throws NullPointerException if <code>xrc</code> is <code>null</code>
+   * @param compactSyntax <code>true</code> if the compact syntax should be used to parse the schema;
+   * <code>false</code> if the XML syntax should be used
+   * @see DraconianErrorHandler
+   * @see Sax2XMLReaderCreator
+   */
+  public ValidationEngine(XMLReaderCreator xrc, ErrorHandler eh, boolean checkIdIdref, boolean compactSyntax) {
     this(xrc, eh, checkIdIdref);
-    factory.setNonXmlSyntax(nonXmlSyntax);
+    factory.setCompactSyntax(compactSyntax);
   }
 
   /**

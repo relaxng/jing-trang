@@ -10,13 +10,13 @@
 </target>
 
 <target name="compile-grammar" depends="init">
- <mkdir dir="build/src/com/thaiopensource/relaxng/parse/nonxml"/>
- <javacc target="src/com/thaiopensource/relaxng/parse/nonxml/NonXmlSyntax.jj"
-         outputdirectory="build/src/com/thaiopensource/relaxng/parse/nonxml"
+ <mkdir dir="build/src/com/thaiopensource/relaxng/parse/compact"/>
+ <javacc target="src/com/thaiopensource/relaxng/parse/compact/CompactSyntax.jj"
+         outputdirectory="build/src/com/thaiopensource/relaxng/parse/compact"
          javacchome="lib"
          />
  <delete quiet="true">
-  <fileset dir="build/src/com/thaiopensource/relaxng/parse/nonxml"
+  <fileset dir="build/src/com/thaiopensource/relaxng/parse/compact"
            includes="UCode_CharStream.java"/>
  </delete>
 </target>
@@ -106,13 +106,13 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
     <fileset dir="test" includes="index.html"/>
   </jing>
   <jing rngfile="xhtml/xhtml.rng">
-    <fileset dir="doc/nonxml" includes="*.html"/>
+    <fileset dir="doc/compact" includes="*.html"/>
   </jing>
   <jing rngfile="eg/relaxng.rng">
     <fileset dir="eg" includes="*.rng"/>
     <fileset dir="xhtml" includes="**/*.rng"/>
   </jing>
-  <jing rngfile="doc/nonxml/relaxng.rnx" nonxmlsyntax="true">
+  <jing rngfile="doc/compact/relaxng.rnc" compactsyntax="true">
     <fileset dir="eg" includes="relaxng.rng"/>
   </jing>
   <jing rngfile="eg/xslt.rng">
@@ -231,12 +231,12 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
     <fileset dir="convert" includes="from-relax.xsl,simplify.xsl"/>
     <fileset dir="eg" includes="relaxng.rng,xslt.rng,relaxCore.rng,relaxCoreDatatypes.rng"/>
   </copy>
-  <mkdir dir="build/nonxml"/>
-  <copy todir="build/nonxml">
-    <fileset dir="doc/nonxml" includes="*.html"/>
+  <mkdir dir="build/compact"/>
+  <copy todir="build/compact">
+    <fileset dir="doc/compact" includes="*.html"/>
   </copy>
-  <copy file="doc/nonxml/relaxng.rnx"
-        tofile="build/nonxml/relaxng.rnx.txt"/>
+  <copy file="doc/compact/relaxng.rnc"
+        tofile="build/compact/relaxng.rnc.txt"/>
   <replace file="build/jing.html" token="@VERSION@" value="${version}"/>
   <mkdir dir="build/jing-win32-bin"/>
   <copy todir="build/jing-win32-bin">
@@ -272,7 +272,7 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
     <fileset dir="eg" includes="testSuite.rng"/>
   </zip>
   <tar tarfile="build/relaxng.tar" basedir="build"
-    includes="*.zip,copying.txt,*.html,*.xsl,*.rng,xhtml/**,api/**,nonxml/**"/>
+    includes="*.zip,copying.txt,*.html,*.xsl,*.rng,xhtml/**,api/**,compact/**"/>
   <gzip zipfile="build/relaxng.tar.gz" src="build/relaxng.tar"/>
 </target>
 
