@@ -1,6 +1,5 @@
 Error for <include> content
 Check single element type
-Warning when approximating datatypes
 Avoid duplicate namespace declarations for global attributes
 Option to generate namespace declarations only on start elements
 Recognize #FIXED attributes
