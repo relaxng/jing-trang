@@ -66,7 +66,7 @@ import java.util.HashSet;
 /*
 
 Tasks:
-Catch bad recursion
+Check for bad recursion
 Check single element type
 Warning when approximating datatypes
 Non-local namespaces
@@ -76,7 +76,7 @@ Support duplicate definitions with combine="interleave" for attlists
 Generate parameter entities to allow change of namespace prefix
 nested grammars
 a:documentation
-non-deterministic content models
+Check for non-deterministic content models
 option to protect element declarations with included section
 allow mixed(repeat(NOT_ALLOWED))
 Avoid unnecessary parentheses around group members
