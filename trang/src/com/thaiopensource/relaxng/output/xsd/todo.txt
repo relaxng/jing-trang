@@ -25,10 +25,19 @@ Namespaces
 Split files based on namespace
 
 Include
+- Check and give error
+- Handle without overrides
+- Handle overrides
+
+combine attributes
+- combine="choice" on <start>
+- others
 
 externalRef
 
 Check for ref loops
+
+Check for undefined refs
 
 Check for RNG contextual constraints
 
