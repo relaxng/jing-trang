@@ -29,11 +29,11 @@ public class NonXmlParseable implements Parseable {
     return new NonXmlSyntax(makeReader(in), in.getSystemId(), sb, eh).parse(null);
   }
 
-  public void parseInclude(String uri, SchemaBuilder sb, IncludedGrammar g)
+  public ParsedPattern parseInclude(String uri, SchemaBuilder sb, IncludedGrammar g)
           throws BuildException, IllegalSchemaException {
     InputSource tem = new InputSource(uri);
     tem.setEncoding(in.getEncoding());
-    new NonXmlSyntax(makeReader(tem), uri, sb, eh).parseInclude(g);
+    return new NonXmlSyntax(makeReader(tem), uri, sb, eh).parseInclude(g);
   }
 
   public ParsedPattern parseExternal(String uri, SchemaBuilder sb, Scope scope)

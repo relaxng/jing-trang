@@ -16,6 +16,7 @@ import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
 import com.thaiopensource.relaxng.parse.Parseable;
+import com.thaiopensource.relaxng.parse.IncludedGrammar;
 import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
 import com.thaiopensource.relaxng.util.DraconianErrorHandler;
@@ -34,10 +35,15 @@ import java.util.Map;
 
 /* Need to change handling of parentRef */
 /* Need to deal with inheritNs */
+
 public class SchemaBuilderImpl implements SchemaBuilder {
+  private final Parseable parseable;
+  private final Map schemas;
   private final DatatypeLibraryFactory dlf;
 
-  private SchemaBuilderImpl(DatatypeLibraryFactory dlf) {
+  private SchemaBuilderImpl(Parseable parseable, Map schemas, DatatypeLibraryFactory dlf) {
+    this.parseable = parseable;
+    this.schemas = schemas;
     this.dlf = dlf;
   }
 
@@ -146,9 +152,14 @@ public class SchemaBuilderImpl implements SchemaBuilder {
 
   public ParsedPattern makeExternalRef(String uri, String ns, Scope scope,
                                        Location loc, Annotations anno) throws BuildException, IllegalSchemaException {
-    ExternalRefPattern p = new ExternalRefPattern(uri);
-    p.setNs(mapInheritNs(ns));
-    return finishPattern(p, loc, anno);
+    ExternalRefPattern erp = new ExternalRefPattern(uri);
+    erp.setNs(mapInheritNs(ns));
+    finishPattern(erp, loc, anno);
+    if (schemas.get(uri) == null) {
+      schemas.put(uri, new Object()); // avoid possibility of infinite loop
+      schemas.put(uri, parseable.parseExternal(uri, this, scope));
+    }
+    return erp;
   }
 
   static private ParsedPattern finishPattern(Pattern p, Location loc, Annotations anno) {
@@ -205,7 +216,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     }
   }
 
-  private static class GrammarSectionImpl extends ScopeImpl implements Grammar, Div, Include {
+  private class GrammarSectionImpl extends ScopeImpl implements Grammar, Div, Include, IncludedGrammar {
     private Annotated subject;
     private List components;
     Component lastComponent;
@@ -257,9 +268,19 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       ic.setHref(uri);
       ic.setNs(mapInheritNs(ns));
       finishAnnotated(ic, loc, anno);
+      if (schemas.get(uri) == null) {
+        schemas.put(uri, new Object()); // avoid possibility of infinite loop
+        GrammarPattern g = new GrammarPattern();
+        schemas.put(uri, parseable.parseInclude(uri, SchemaBuilderImpl.this, new GrammarSectionImpl(g, g)));
+      }
     }
 
     public ParsedPattern endGrammar(Location loc, Annotations anno) throws BuildException {
+      finishAnnotated(subject, loc, anno);
+      return (ParsedPattern)subject;
+    }
+
+    public ParsedPattern endIncludedGrammar(Location loc, Annotations anno) throws BuildException {
       finishAnnotated(subject, loc, anno);
       return (ParsedPattern)subject;
     }
@@ -414,16 +435,18 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     return ns;
   }
 
-  static public Pattern parse(Parseable parseable, DatatypeLibraryFactory dlf) throws IllegalSchemaException {
-    return (Pattern)parseable.parse(new SchemaBuilderImpl(dlf));
+  static public Pattern parse(Parseable parseable, SchemaCollection sc, DatatypeLibraryFactory dlf) throws IllegalSchemaException {
+    return (Pattern)parseable.parse(new SchemaBuilderImpl(parseable, sc.getSchemas(), dlf));
   }
 
   static public void main(String[] args) throws IllegalSchemaException {
+    SchemaCollection sc = new SchemaCollection();
     Pattern p = parse(new SAXParseable(new Jaxp11XMLReaderCreator(), new InputSource(args[0]), new DraconianErrorHandler()),
+                      sc,
                       new DatatypeLibraryLoader());
-    dump(p);
+    dump(p, sc);
   }
 
-  static public void dump(Pattern p) {
+  static public void dump(Pattern p, SchemaCollection sc) {
   }
 }
