@@ -5,7 +5,7 @@ import java.util.Hashtable;
 
 import org.relaxng.datatype.Datatype;
 
-public class PatternBuilder {
+final public class PatternBuilder {
   
   private static final int INIT_SIZE = 256;
   private static final float LOAD_FACTOR = 0.3f;
@@ -242,11 +242,11 @@ public class PatternBuilder {
     return p;
   }
 
-  private final int firstIndex(Pattern p) {
+  private int firstIndex(Pattern p) {
     return p.patternHashCode() & (table.length - 1);
   }
 
-  private final int nextIndex(int i) {
+  private int nextIndex(int i) {
     return i == 0 ? table.length - 1 : i - 1;
   }
 
