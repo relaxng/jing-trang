@@ -5,7 +5,7 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 public class RootDeclaration extends TopLevel {
   private Particle particle;
 
-  public RootDeclaration(SourceLocation location, Schema parentSchema, Particle particle) {
+  RootDeclaration(SourceLocation location, Schema parentSchema, Particle particle) {
     super(location, parentSchema);
     this.particle = particle;
   }

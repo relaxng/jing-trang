@@ -5,7 +5,7 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 public class Include extends TopLevel {
   private final Schema includedSchema;
 
-  public Include(SourceLocation location, Schema parentSchema, Schema includedSchema) {
+  Include(SourceLocation location, Schema parentSchema, Schema includedSchema) {
     super(location, parentSchema);
     this.includedSchema = includedSchema;
   }
