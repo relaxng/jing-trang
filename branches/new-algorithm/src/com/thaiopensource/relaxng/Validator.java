@@ -13,7 +13,7 @@ import org.xml.sax.helpers.LocatorImpl;
 import org.relaxng.datatype.ValidationContext;
 
 public class Validator implements ContentHandler {
-  private PatternBuilder b;
+  private final PatternBuilder b;
   private Locator locator;
   private XMLReader xr;
   private PatternMemo memo;
