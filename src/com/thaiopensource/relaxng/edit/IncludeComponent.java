@@ -9,6 +9,9 @@ public class IncludeComponent extends Component implements Container {
   private String baseUri;
   private final List components = new Vector();
 
+  public IncludeComponent() {
+  }
+
   public IncludeComponent(String href) {
     this.href = href;
   }
