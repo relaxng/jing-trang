@@ -1,8 +1,7 @@
 Provide implementation of JARV interface.
 
-Recovery for bad start tag.
-
-Memoize dataDeriv with <value>: hashTable based on converted Object.
+In a big choice or interleave or attribute group, memoization for each binary pattern is
+inefficient.
 
 Distinguish error for unknown datatype library and unknown datatype.
 
@@ -26,5 +25,4 @@ Option to do XInclude before validation.
 
 Integrate the non-XML syntax.
 
-Choice pattern with multiple operands, or maybe a variant of element that has
-a mapping from names to content models.
+Maybe introduce a variant of the element pattern that has a mapping from names to content models.
