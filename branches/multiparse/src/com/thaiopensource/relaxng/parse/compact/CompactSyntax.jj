@@ -360,7 +360,6 @@ ParsedPattern Input(Scope scope) :
   ParsedPattern p;
 }
 {
-  (<BYTE_ORDER_MARK>)?
   Preamble()
   (LOOKAHEAD(TopLevelLookahead()) p = TopLevelGrammar(scope)
    | p = Expr(scope, null, null) { p = afterComments(p); } <EOF>)
@@ -397,7 +396,6 @@ ParsedPattern IncludedGrammar(IncludedGrammar g) :
   ParsedPattern p;
 }
 {
-  (<BYTE_ORDER_MARK>)?
   Preamble()
   (LOOKAHEAD(TopLevelLookahead()) a = GrammarBody(g, g, getTopLevelCommentsAsAnnotations())
    | a = Annotations() "grammar" "{" a = GrammarBody(g, g, a) { topLevelComments(g); } "}")
@@ -1825,7 +1823,6 @@ TOKEN :
   | < PREFIXED_NAME: <NCNAME> ":" <NCNAME> >
   | < LITERAL : ( "\"" (<CHAR_NOT_QUOT>)* "\"")
                 | ("'" (<CHAR_NOT_APOS>)* "'") >
-  | < BYTE_ORDER_MARK : "\ufeff" >
   | < FANNOTATE : ">>" >
 }
 
