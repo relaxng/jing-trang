@@ -20,8 +20,9 @@ public class PatternValidatorHandler implements ValidatorHandler {
   private boolean complete;
   private boolean collectingCharacters;
   private StringBuffer charBuf = new StringBuffer();
-  private PrefixMapping prefixMapping = new PrefixMapping("xml", PatternReader.xmlURI, null);
+  private PrefixMapping prefixMapping = new PrefixMapping("xml", xmlURI, null);
   private Locator locator;
+  private static final String xmlURI = "http://www.w3.org/XML/1998/namespace";
 
   static private final class PrefixMapping implements ValidationContext {
     private final String prefix;
@@ -226,7 +227,7 @@ public class PatternValidatorHandler implements ValidatorHandler {
     collectingCharacters = false;
     locator = null;
     memo = builder.getPatternMemo(start);
-    prefixMapping = new PrefixMapping("xml", PatternReader.xmlURI, null);
+    prefixMapping = new PrefixMapping("xml", xmlURI, null);
   }
 
   public boolean isValidSoFar() {
