@@ -46,6 +46,7 @@ import com.thaiopensource.relaxng.output.xsd.basic.ComplexTypeNotAllowedContent;
 import com.thaiopensource.relaxng.output.xsd.basic.ComplexType;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.edit.SourceLocation;
+import com.thaiopensource.xml.util.WellKnownNamespaces;
 
 import java.util.Iterator;
 import java.util.List;
@@ -55,7 +56,6 @@ import java.io.IOException;
 
 public class BasicOutput {
   private XmlWriter xw;
-  static final String xsURI = "http://www.w3.org/2001/XMLSchema";
   private final Schema schema;
   private final SimpleTypeOutput simpleTypeOutput = new SimpleTypeOutput();
   private final ComplexTypeVisitor complexTypeOutput = new ComplexTypeOutput();
@@ -672,7 +672,7 @@ public class BasicOutput {
     this.sourceUri = schema.getUri();
     this.od = od;
     this.targetNamespace = nsm.getTargetNamespace(schema.getUri());
-    this.xsPrefix = pm.getPrefix(xsURI);
+    this.xsPrefix = pm.getPrefix(WellKnownNamespaces.XML_SCHEMA);
     xw = new XmlWriter(od.getLineSeparator(),
                        od.open(schema.getUri()),
                        new String[0],
@@ -689,7 +689,7 @@ public class BasicOutput {
 
   void output() {
     xw.startElement(xs("schema"));
-    xw.attribute("xmlns:" + xsPrefix, xsURI);
+    xw.attribute("xmlns:" + xsPrefix, WellKnownNamespaces.XML_SCHEMA);
     xw.attribute("elementFormDefault", "qualified");
     xw.attribute("version", "1.0");
     if (!targetNamespace.equals(""))

@@ -59,6 +59,7 @@ import com.thaiopensource.relaxng.output.common.NameClassSplitter;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
 import com.thaiopensource.relaxng.output.OutputDirectory;
+import com.thaiopensource.xml.util.WellKnownNamespaces;
 
 import java.util.List;
 import java.util.Vector;
@@ -69,7 +70,6 @@ import java.util.HashSet;
 import java.util.Map;
 
 public class BasicBuilder {
-  private static final String XSD_URI = "http://www.w3.org/2001/XMLSchema-datatypes";
   private final PatternVisitor simpleTypeBuilder = new SimpleTypeBuilder();
   private final PatternVisitor attributeUseBuilder = new AttributeUseBuilder();
   private final PatternVisitor optionalAttributeUseBuilder = new OptionalAttributeUseBuilder();
@@ -94,7 +94,7 @@ public class BasicBuilder {
       String type = p.getType();
       List facets = new Vector();
       SourceLocation location = p.getSourceLocation();
-      if (!library.equals("") && !library.equals(XSD_URI)) {
+      if (!library.equals("") && !library.equals(WellKnownNamespaces.XML_SCHEMA_DATATYPES)) {
         type = "string";
         er.warning("unsupported_datatype_library", library, location);
       }
@@ -116,7 +116,7 @@ public class BasicBuilder {
       String type = p.getType();
       List facets = new Vector();
       SourceLocation location = p.getSourceLocation();
-      if (!library.equals("") && !library.equals(XSD_URI)) {
+      if (!library.equals("") && !library.equals(WellKnownNamespaces.XML_SCHEMA_DATATYPES)) {
         type = "string";
         er.warning("unsupported_datatype_library", library, location);
       }
