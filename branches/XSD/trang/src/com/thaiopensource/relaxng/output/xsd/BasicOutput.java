@@ -72,6 +72,7 @@ public class BasicOutput {
   private final String targetNamespace;
   private final OutputDirectory od;
   private final String sourceUri;
+  private final ComplexTypeSelector complexTypeSelector;
   private final Set globalElementsDefined;
   private final Set globalAttributesDefined;
   private final String xsPrefix;
@@ -375,40 +376,12 @@ public class BasicOutput {
 
   class ComplexTypeOutput implements ComplexTypeVisitor {
     public Object visitComplexContent(ComplexTypeComplexContent t) {
-      xw.startElement(xs("complexType"));
-      if (t.isMixed())
-        xw.attribute("mixed", "true");
-      if (t.getParticle() != null) {
-        particleOutput.context = COMPLEX_TYPE_CONTEXT;
-        t.getParticle().accept(particleOutput);
-      }
-      outputAttributeUse(t.getAttributeUses());
-      xw.endElement();
+      outputComplexTypeComplexContent(complexTypeSelector.transformComplexContent(t), null);
       return null;
     }
 
     public Object visitSimpleContent(ComplexTypeSimpleContent t) {
-      AttributeUse attributeUses = t.getAttributeUses();
-      if (attributeUses.equals(AttributeGroup.EMPTY))
-        simpleTypeOutput.outputWrap(t.getSimpleType());
-      else {
-        xw.startElement(xs("complexType"));
-        xw.startElement(xs("simpleContent"));
-        String typeName = (String)t.getSimpleType().accept(simpleTypeNamer);
-        if (typeName != null) {
-          xw.startElement(xs("extension"));
-          xw.attribute("base", typeName);
-        }
-        else {
-          xw.startElement(xs("restriction"));
-          xw.attribute("base", xs("anyType"));
-          simpleTypeOutput.outputWrap(t.getSimpleType());
-        }
-        outputAttributeUse(attributeUses);
-        xw.endElement();
-        xw.endElement();
-        xw.endElement();
-      }
+      outputComplexTypeSimpleContent(complexTypeSelector.transformSimpleContent(t), null);
       return null;
     }
 
@@ -592,24 +565,36 @@ public class BasicOutput {
   class SchemaOutput extends AbstractSchemaVisitor {
     public void visitGroup(GroupDefinition def) {
       Particle particle = def.getParticle();
-      if (!(particle instanceof Element) || !nsm.isGlobal((Element)particle)) {
-        xw.startElement(xs("group"));
-        xw.attribute("name", def.getName());
-        particleOutput.context = NAMED_GROUP_CONTEXT;
-        particle.accept(particleOutput);
-        xw.endElement();
+      ComplexTypeComplexContentExtension ct = complexTypeSelector.createComplexTypeForGroup(def.getName());
+      if (ct != null)
+        outputComplexTypeComplexContent(ct, def.getName());
+      else {
+        if (!(particle instanceof Element) || !nsm.isGlobal((Element)particle)) {
+          xw.startElement(xs("group"));
+          xw.attribute("name", def.getName());
+          particleOutput.context = NAMED_GROUP_CONTEXT;
+          particle.accept(particleOutput);
+          xw.endElement();
+        }
       }
       particle.accept(globalElementOutput);
     }
 
     public void visitSimpleType(SimpleTypeDefinition def) {
-      xw.startElement(xs("simpleType"));
-      xw.attribute("name", def.getName());
-      def.getSimpleType().accept(simpleTypeOutput);
-      xw.endElement();
+      ComplexTypeSimpleContentExtension ct = complexTypeSelector.createComplexTypeForSimpleType(def.getName());
+      if (ct != null)
+        outputComplexTypeSimpleContent(ct, def.getName());
+      else {
+        xw.startElement(xs("simpleType"));
+        xw.attribute("name", def.getName());
+        def.getSimpleType().accept(simpleTypeOutput);
+        xw.endElement();
+      }
     }
 
     public void visitAttributeGroup(AttributeGroupDefinition def) {
+      if (complexTypeSelector.attributeGroupBelongsToComplexType(def.getName()))
+        return;
       xw.startElement(xs("attributeGroup"));
       xw.attribute("name", def.getName());
       outputAttributeUse(def.getAttributeUses());
@@ -649,11 +634,12 @@ public class BasicOutput {
 
   static void output(Schema schema, PrefixManager pm, OutputDirectory od, ErrorReporter er) throws IOException {
     NamespaceManager nsm = new NamespaceManager(schema, pm);
+    ComplexTypeSelector cts = new ComplexTypeSelector(schema);
     Set globalElementsDefined = new HashSet();
     Set globalAttributesDefined = new HashSet();
     try {
       for (Iterator iter = schema.getSubSchemas().iterator(); iter.hasNext();)
-        new BasicOutput((Schema)iter.next(), er, od, nsm, pm,
+        new BasicOutput((Schema)iter.next(), er, od, nsm, pm, cts,
                         globalElementsDefined, globalAttributesDefined).output();
     }
     catch (XmlWriter.WrappedException e) {
@@ -662,11 +648,12 @@ public class BasicOutput {
   }
 
   public BasicOutput(Schema schema, ErrorReporter er, OutputDirectory od,
-                     NamespaceManager nsm, PrefixManager pm,
+                     NamespaceManager nsm, PrefixManager pm, ComplexTypeSelector complexTypeSelector,
                      Set globalElementsDefined, Set globalAttributesDefined) throws IOException {
     this.schema = schema;
     this.nsm = nsm;
     this.pm = pm;
+    this.complexTypeSelector = complexTypeSelector;
     this.globalElementsDefined = globalElementsDefined;
     this.globalAttributesDefined = globalAttributesDefined;
     this.sourceUri = schema.getUri();
@@ -806,4 +793,74 @@ public class BasicOutput {
     xw.attribute("schemaLocation", od.reference(sourceUri, href));
     xw.endElement();
   }
+
+  void outputComplexTypeComplexContent(ComplexTypeComplexContentExtension t, String name) {
+    String base = t.getBase();
+    if (base != null) {
+      base = qualifyRef(schema.getGroup(base).getParentSchema().getUri(), base);
+      if (name == null
+          && t.getParticle() == null
+          && !t.isMixed()
+          && t.getAttributeUses().equals(AttributeGroup.EMPTY)) {
+        xw.attribute("type", base);
+        return;
+      }
+    }
+    xw.startElement(xs("complexType"));
+    if (name != null)
+      xw.attribute("name", name);
+    if (t.isMixed())
+      xw.attribute("mixed", "true");
+    if (base != null) {
+      xw.startElement(xs("complexContent"));
+      xw.startElement(xs("extension"));
+      xw.attribute("base", base);
+    }
+    if (t.getParticle() != null) {
+      particleOutput.context = COMPLEX_TYPE_CONTEXT;
+      t.getParticle().accept(particleOutput);
+    }
+    outputAttributeUse(t.getAttributeUses());
+    if (base != null) {
+      xw.endElement();
+      xw.endElement();
+    }
+    xw.endElement();
+  }
+
+  void outputComplexTypeSimpleContent(ComplexTypeSimpleContentExtension t, String name) {
+    String base = t.getBase();
+    AttributeUse attributeUses = t.getAttributeUses();
+    if (base != null) {
+      base = qualifyRef(schema.getSimpleType(base).getParentSchema().getUri(), base);
+      if (name == null && attributeUses.equals(AttributeGroup.EMPTY)) {
+        xw.attribute("type", base);
+        return;
+      }
+    }
+    else if (attributeUses.equals(AttributeGroup.EMPTY)) {
+      simpleTypeOutput.outputWrap(t.getSimpleType());
+      return;
+    }
+    xw.startElement(xs("complexType"));
+    if (name != null)
+      xw.attribute("name", name);
+    xw.startElement(xs("simpleContent"));
+    if (base == null)
+      base = (String)t.getSimpleType().accept(simpleTypeNamer);
+    if (base != null) {
+      xw.startElement(xs("extension"));
+      xw.attribute("base", base);
+    }
+    else {
+      xw.startElement(xs("restriction"));
+      xw.attribute("base", xs("anyType"));
+      simpleTypeOutput.outputWrap(t.getSimpleType());
+    }
+    outputAttributeUse(attributeUses);
+    xw.endElement();
+    xw.endElement();
+    xw.endElement();
+  }
+
 }

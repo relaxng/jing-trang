@@ -295,21 +295,14 @@ foo = attribute foo { xsd:double } | element foo { xsd:double }
 <xsd>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
-  <xs:element name="bar">
-    <xs:complexType>
-      <xs:group ref="foo"/>
-      <xs:attributeGroup ref="foo"/>
-    </xs:complexType>
-  </xs:element>
-  <xs:group name="foo">
+  <xs:element name="bar" type="foo"/>
+  <xs:complexType name="foo">
     <xs:sequence>
-      <xs:element ref="foo" minOccurs="0"/>
+      <xs:element minOccurs="0" ref="foo"/>
     </xs:sequence>
-  </xs:group>
-  <xs:element name="foo" type="xs:double"/>
-  <xs:attributeGroup name="foo">
     <xs:attribute name="foo" type="xs:double"/>
-  </xs:attributeGroup>
+  </xs:complexType>
+  <xs:element name="foo" type="xs:double"/>
 </xs:schema>
 </correct>
 </xsd>
@@ -761,18 +754,17 @@ include "example.rnc"
 <resource name="example.xsd">
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com" xmlns:eg="http://www.example.com">
   <xs:import schemaLocation="c.xsd"/>
-  <xs:element name="y">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element ref="x"/>
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
+  <xs:element name="y" type="x"/>
 </xs:schema>
 </resource>
 <correct>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" xmlns:eg="http://www.example.com">
   <xs:import namespace="http://www.example.com" schemaLocation="example.xsd"/>
+  <xs:complexType name="x">
+    <xs:sequence>
+      <xs:element ref="x"/>
+    </xs:sequence>
+  </xs:complexType>
   <xs:element name="x">
     <xs:complexType/>
   </xs:element>
@@ -1723,22 +1715,18 @@ start = element foo1 { bar } | foo2
 <resource name="eg1.xsd">
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:e2="http://www.example.com/2" xmlns:ns1="http://www.example.com/1">
   <xs:import namespace="http://www.example.com/2" schemaLocation="eg2.xsd"/>
-  <xs:element name="foo2">
-    <xs:complexType>
-      <xs:group ref="e2:bar"/>
-    </xs:complexType>
-  </xs:element>
+  <xs:element name="foo2" type="e2:bar"/>
 </xs:schema>
 </resource>
 <resource name="eg2.xsd">
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:e2="http://www.example.com/2" xmlns:ns1="http://www.example.com/1">
   <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
-  <xs:group name="bar">
+  <xs:complexType name="bar">
     <xs:choice>
       <xs:element ref="e2:bar1"/>
       <xs:element ref="e2:bar2"/>
     </xs:choice>
-  </xs:group>
+  </xs:complexType>
   <xs:element name="bar1">
     <xs:complexType>
       <xs:group ref="ns1:baz"/>
@@ -1755,11 +1743,7 @@ start = element foo1 { bar } | foo2
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:e2="http://www.example.com/2" xmlns:ns1="http://www.example.com/1">
   <xs:include schemaLocation="eg1.xsd"/>
   <xs:import namespace="http://www.example.com/2" schemaLocation="eg2.xsd"/>
-  <xs:element name="foo1">
-    <xs:complexType>
-      <xs:group ref="e2:bar"/>
-    </xs:complexType>
-  </xs:element>
+  <xs:element name="foo1" type="e2:bar"/>
   <xs:group name="baz">
     <xs:sequence>
       <xs:element name="baz">
@@ -2425,6 +2409,512 @@ include "foo.rnc"
 include "foo.rnc"
 </incorrect>
 </compact>
+</testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+#	ibtwsh.dtd
+#	This is the Itsy Bitsy Teeny Weeny Simple Hypertext DTD.
+#	Its public identifier is -//XML-DEV List//DTD IBTWSH 6.0//EN
+#	The contents are dedicated to the public domain by
+#		the author, John Cowan <cowan@ccil.org>, except that
+#		John Cowan retains the moral right to be known as the author.
+#	This is draft 6.2
+#	Diff from 6.1: rel|rel now rel|rev, th|td@headers now IDREFS,
+#		table width no longer an integer, non-basic table attrs gone,
+#		rowspan and colspan must be non-negative
+#	Diff from 6.0: added attributes to ul, comment about img, new meta
+
+# This is a RELAX NG schema which describes a subset of XHTML Basic for
+# use within other schemas.  It is by intention equivalent
+# (within its scope) to -//W3C//DTD XHTML 1.1//EN, but is
+# not a derived work in the copyright sense.
+
+# It is often convenient for XML documents to have a bit of
+# documentation somewhere in them.  In the absence of a schema like
+# this one, that documentation winds up being <text/> only, which is
+# a pity, because rich text adds measurably to the readability of
+# documents.  By incorporating this schema by reference (as an
+# external parameter entity) into another schema, that schema inherits
+# the capabilities of this one.  Using HTML-compatible elements
+# and attributes allows the documentation to be passed straight
+# through to HTML renderers.
+
+# Current HTML renderers can cope with most XML tags, but empty
+# tags require special treatment.  Inserting a space before the
+# terminating "/>" usually makes the "/" (which is not HTML)
+# invisible.  Using "<tag></tag>" is not as effective, as the
+# latter is often misinterpreted as a second "<tag>".
+
+# Note that since the elements of this schema are intended to be
+# used within domain-specific elements of the surrounding DTD,
+# it is not necessary that every fragment begin with an "html"
+# element, as in HTML.  Recommended <define>s for elements
+# containing documentation are "horiz.model" for simple
+# text fragments and "struct.model" for documents in extenso.
+
+# Declarations
+
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+
+# Common attributes
+
+# All elements (except full-document elements) can have these attributes
+
+all =		attribute id {xsd:ID}?,
+		attribute class {token}?,
+		attribute title {text}?
+
+# All non-empty elements can have these attributes
+
+i18n =		attribute xml:lang {text}?,
+		attribute dir {"ltr" | "rtl"}?
+
+basic =		all, i18n
+
+
+# Models
+
+t = text
+horiz.model =	basic & t & horiz*
+vert.model =	basic & t & (horiz|vert)*
+struct.model = 	basic & vert*
+
+
+# Horizontal formatting elements
+
+horiz =		a | br | horiz.other
+
+a =		element a {
+			attribute href {xsd:anyURI}?,
+			attribute name {text}?,
+			attribute rel | rev {xsd:anyURI}?,
+			horiz.model
+			}
+
+br =		element br {all, empty}
+
+horiz.other =	element abbr | acronym | cite | code |
+			dfn | em | img | kbd | q | samp | span |
+			strong | var {horiz.model}
+
+
+# Vertical formatting elements
+
+vert	=	header | List | table | vert.other
+
+header = 	element h1 | h2 | h3 {horiz.model}
+
+
+List =		element dl {basic, element dt | dd {horiz.model}+ } |
+		element ol|ul {basic, element li {horiz.model}+ }
+
+aligns = 	attribute align {"left" | "center" | "right" | "justified"}?,
+		attribute valign {"top" | "middle" | "bottom" | "baseline"}?
+
+table = 	element table {
+			basic,
+			attribute summary {text}?,
+			element caption {horiz.model}?,
+			element tr {
+				basic,
+				aligns,
+				tabledata+}+
+			}
+
+tabledata =	element th | td {
+			aligns,
+			attribute abbr {text}?,
+			attribute axis {text}?,
+			attribute colspan {xsd:nonNegativeInteger}?,
+			attribute headers {xsd:IDREFS}?,
+			attribute rowspan {xsd:nonNegativeInteger}?,
+			attribute scope {"row" | "col" | "rowgroup" | "colgroup"}?,
+			vert.model
+			}
+
+vert.other =	element address {horiz.model} |
+		element blockquote {attribute cite {xsd:anyURI}?, struct.model} |
+		element div {struct.model} |
+		element p {horiz.model} |
+		element pre {horiz.model}
+
+
+# Support for complete HTML documents
+
+start = 	element html {
+			i18n,
+			attribute xml:base {xsd:anyURI}?,
+			attribute xml:space {"preserve" | "default"}?,
+			head,
+			element body {basic, vert*}
+			}
+
+head =		element head {
+			i18n,
+			element title {i18n, text},
+			element meta {
+				attribute name|http-equiv {token}?,
+				attribute content {text},
+				empty
+				}*
+			}
+
+# END OF ibtwsh.rnc
+]]></correct>
+</compact>
+<xsd>
+<resource name="xml.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.w3.org/XML/1998/namespace">
+  <xs:import schemaLocation="c.xsd"/>
+  <xs:attribute name="lang"/>
+  <xs:attribute name="base" type="xs:anyURI"/>
+  <xs:attribute name="space">
+    <xs:simpleType>
+      <xs:restriction base="xs:token">
+        <xs:enumeration value="preserve"/>
+        <xs:enumeration value="default"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:attribute>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
+  <xs:attributeGroup name="all">
+    <xs:attribute name="id" type="xs:ID"/>
+    <xs:attribute name="class" type="xs:token"/>
+    <xs:attribute name="title"/>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="i18n">
+    <xs:attribute ref="xml:lang"/>
+    <xs:attribute name="dir">
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="ltr"/>
+          <xs:enumeration value="rtl"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="basic">
+    <xs:attributeGroup ref="all"/>
+    <xs:attributeGroup ref="i18n"/>
+  </xs:attributeGroup>
+  <xs:complexType name="horiz.model" mixed="true">
+    <xs:group minOccurs="0" maxOccurs="unbounded" ref="horiz"/>
+    <xs:attributeGroup ref="basic"/>
+  </xs:complexType>
+  <xs:complexType name="vert.model" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:group ref="horiz"/>
+      <xs:group ref="vert"/>
+    </xs:choice>
+    <xs:attributeGroup ref="basic"/>
+  </xs:complexType>
+  <xs:complexType name="struct.model">
+    <xs:group minOccurs="0" maxOccurs="unbounded" ref="vert"/>
+    <xs:attributeGroup ref="basic"/>
+  </xs:complexType>
+  <xs:group name="horiz">
+    <xs:choice>
+      <xs:element ref="a"/>
+      <xs:element ref="br"/>
+      <xs:group ref="horiz.other"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="a">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="horiz.model">
+          <xs:attribute name="href" type="xs:anyURI"/>
+          <xs:attribute name="name"/>
+          <xs:attribute name="rel" type="xs:anyURI"/>
+          <xs:attribute name="rev" type="xs:anyURI"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="br">
+    <xs:complexType>
+      <xs:attributeGroup ref="all"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="horiz.other">
+    <xs:choice>
+      <xs:element ref="abbr"/>
+      <xs:element ref="acronym"/>
+      <xs:element ref="cite"/>
+      <xs:element ref="code"/>
+      <xs:element ref="dfn"/>
+      <xs:element ref="em"/>
+      <xs:element ref="img"/>
+      <xs:element ref="kbd"/>
+      <xs:element ref="q"/>
+      <xs:element ref="samp"/>
+      <xs:element ref="span"/>
+      <xs:element ref="strong"/>
+      <xs:element ref="var"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="abbr" type="horiz.model"/>
+  <xs:element name="acronym" type="horiz.model"/>
+  <xs:element name="cite" type="horiz.model"/>
+  <xs:element name="code" type="horiz.model"/>
+  <xs:element name="dfn" type="horiz.model"/>
+  <xs:element name="em" type="horiz.model"/>
+  <xs:element name="img" type="horiz.model"/>
+  <xs:element name="kbd" type="horiz.model"/>
+  <xs:element name="q" type="horiz.model"/>
+  <xs:element name="samp" type="horiz.model"/>
+  <xs:element name="span" type="horiz.model"/>
+  <xs:element name="strong" type="horiz.model"/>
+  <xs:element name="var" type="horiz.model"/>
+  <xs:group name="vert">
+    <xs:choice>
+      <xs:group ref="header"/>
+      <xs:group ref="List"/>
+      <xs:element ref="table"/>
+      <xs:group ref="vert.other"/>
+    </xs:choice>
+  </xs:group>
+  <xs:group name="header">
+    <xs:choice>
+      <xs:element ref="h1"/>
+      <xs:element ref="h2"/>
+      <xs:element ref="h3"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="h1" type="horiz.model"/>
+  <xs:element name="h2" type="horiz.model"/>
+  <xs:element name="h3" type="horiz.model"/>
+  <xs:group name="List">
+    <xs:choice>
+      <xs:element ref="dl"/>
+      <xs:choice>
+        <xs:element ref="ol"/>
+        <xs:element ref="ul"/>
+      </xs:choice>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="dl">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element ref="dt"/>
+        <xs:element ref="dd"/>
+      </xs:choice>
+      <xs:attributeGroup ref="basic"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="dt" type="horiz.model"/>
+  <xs:element name="dd" type="horiz.model"/>
+  <xs:element name="ol">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="li"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="basic"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="li" type="horiz.model"/>
+  <xs:element name="ul">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="li"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="basic"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:attributeGroup name="aligns">
+    <xs:attribute name="align">
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="left"/>
+          <xs:enumeration value="center"/>
+          <xs:enumeration value="right"/>
+          <xs:enumeration value="justified"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="valign">
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="top"/>
+          <xs:enumeration value="middle"/>
+          <xs:enumeration value="bottom"/>
+          <xs:enumeration value="baseline"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:element name="table">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="caption"/>
+        <xs:element maxOccurs="unbounded" ref="tr"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="basic"/>
+      <xs:attribute name="summary"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="caption" type="horiz.model"/>
+  <xs:element name="tr">
+    <xs:complexType>
+      <xs:group maxOccurs="unbounded" ref="tabledata"/>
+      <xs:attributeGroup ref="basic"/>
+      <xs:attributeGroup ref="aligns"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="tabledata">
+    <xs:choice>
+      <xs:element ref="th"/>
+      <xs:element ref="td"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="th">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="vert.model">
+          <xs:attributeGroup ref="aligns"/>
+          <xs:attribute name="abbr"/>
+          <xs:attribute name="axis"/>
+          <xs:attribute name="colspan" type="xs:nonNegativeInteger"/>
+          <xs:attribute name="headers" type="xs:IDREFS"/>
+          <xs:attribute name="rowspan" type="xs:nonNegativeInteger"/>
+          <xs:attribute name="scope">
+            <xs:simpleType>
+              <xs:restriction base="xs:token">
+                <xs:enumeration value="row"/>
+                <xs:enumeration value="col"/>
+                <xs:enumeration value="rowgroup"/>
+                <xs:enumeration value="colgroup"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="td">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="vert.model">
+          <xs:attributeGroup ref="aligns"/>
+          <xs:attribute name="abbr"/>
+          <xs:attribute name="axis"/>
+          <xs:attribute name="colspan" type="xs:nonNegativeInteger"/>
+          <xs:attribute name="headers" type="xs:IDREFS"/>
+          <xs:attribute name="rowspan" type="xs:nonNegativeInteger"/>
+          <xs:attribute name="scope">
+            <xs:simpleType>
+              <xs:restriction base="xs:token">
+                <xs:enumeration value="row"/>
+                <xs:enumeration value="col"/>
+                <xs:enumeration value="rowgroup"/>
+                <xs:enumeration value="colgroup"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="vert.other">
+    <xs:choice>
+      <xs:element ref="address"/>
+      <xs:element ref="blockquote"/>
+      <xs:element ref="div"/>
+      <xs:element ref="p"/>
+      <xs:element ref="pre"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="address" type="horiz.model"/>
+  <xs:element name="blockquote">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="struct.model">
+          <xs:attribute name="cite" type="xs:anyURI"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="div" type="struct.model"/>
+  <xs:element name="p" type="horiz.model"/>
+  <xs:element name="pre" type="horiz.model"/>
+  <xs:element name="html">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="head"/>
+        <xs:element ref="body"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="i18n"/>
+      <xs:attribute ref="xml:base"/>
+      <xs:attribute ref="xml:space"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="body">
+    <xs:complexType>
+      <xs:group minOccurs="0" maxOccurs="unbounded" ref="vert"/>
+      <xs:attributeGroup ref="basic"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="head">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="title"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="meta"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="i18n"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="title">
+    <xs:complexType mixed="true">
+      <xs:attributeGroup ref="i18n"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="meta">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:token"/>
+      <xs:attribute name="http-equiv" type="xs:token"/>
+      <xs:attribute name="content" use="required"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+start = element foo { t } | element bar { t, attribute baz { text }? }
+t = attribute x { text }, xsd:float
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo" type="t"/>
+  <xs:element name="bar">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="t">
+          <xs:attribute name="baz"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="t">
+    <xs:simpleContent>
+      <xs:extension base="xs:float">
+        <xs:attribute name="x" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+</xs:schema>
+</correct>
+</xsd>
 </testCase>
 <!--
 <testCase>
