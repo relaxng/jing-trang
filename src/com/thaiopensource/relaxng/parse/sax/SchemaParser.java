@@ -292,7 +292,7 @@ class SchemaParser {
     }
 
     ParsedPattern combinePattern(ParsedPattern p1, ParsedPattern p2) {
-      return schemaBuilder.makeGroup(p1, p2, startLocation, null);
+      return schemaBuilder.makeGroup(p1, p2, startLocation);
     }
 
     ParsedPattern wrapPattern(ParsedPattern p) throws SAXException {
@@ -366,7 +366,7 @@ class SchemaParser {
       return new ChoiceState();
     }
     ParsedPattern combinePattern(ParsedPattern p1, ParsedPattern p2) {
-      return schemaBuilder.makeChoice(p1, p2, startLocation, null);
+      return schemaBuilder.makeChoice(p1, p2, startLocation);
     }
   }
 
@@ -375,7 +375,7 @@ class SchemaParser {
       return new InterleaveState();
     }
     ParsedPattern combinePattern(ParsedPattern p1, ParsedPattern p2) {
-      return schemaBuilder.makeInterleave(p1, p2, startLocation, null);
+      return schemaBuilder.makeInterleave(p1, p2, startLocation);
     }
   }
 
@@ -593,7 +593,7 @@ class SchemaParser {
       if (except == null)
 	except = pattern;
       else
-	except = schemaBuilder.makeChoice(except, pattern, startLocation, null);
+	except = schemaBuilder.makeChoice(except, pattern, startLocation);
     }
 
   }
@@ -1074,7 +1074,7 @@ class SchemaParser {
 
     void endChild(ParsedNameClass nameClass) {
       if (except != null)
-	except = schemaBuilder.makeChoice(except, nameClass, startLocation, null);
+	except = schemaBuilder.makeChoice(except, nameClass, startLocation);
       else
 	except = nameClass;
     }
@@ -1144,7 +1144,7 @@ class SchemaParser {
       if (nameClass == null)
 	nameClass = nc;
       else
-	nameClass = schemaBuilder.makeChoice(nameClass, nc, startLocation, null);
+	nameClass = schemaBuilder.makeChoice(nameClass, nc, startLocation);
     }
 
     void end() throws SAXException {

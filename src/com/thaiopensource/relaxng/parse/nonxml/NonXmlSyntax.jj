@@ -10,6 +10,8 @@ package com.thaiopensource.relaxng.parse.nonxml;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Annotations;
 import com.thaiopensource.relaxng.parse.DataPatternBuilder;
+import com.thaiopensource.relaxng.parse.ElementAnnotation;
+import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
 import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.ParsedNameClass;
 import com.thaiopensource.relaxng.parse.Scope;
@@ -289,6 +291,18 @@ void DatatypesDecl() :
   }
 }
 
+ParsedPattern AnnotatedPrimaryExpr(Scope scope) :
+{
+  ParsedPattern p;
+  ElementAnnotation e;
+}
+{
+  p = PrimaryExpr(scope)
+  ( ">>" e = AnnotationElement() { p = sb.annotateAfter(p, e); })*
+  { return p; }
+}
+
+
 ParsedPattern PrimaryExpr(Scope scope) :
 {
   ParsedPattern p;
@@ -350,9 +364,9 @@ ParsedPattern Expr(Scope scope) :
 {
   p = UnaryExpr(scope)
   (
-   (t = "|" p2 = UnaryExpr(scope) { p = sb.makeChoice(p, p2, makeLocation(t), null); } )+
-    | (t = "&" p2 = UnaryExpr(scope) { p = sb.makeInterleave(p, p2, makeLocation(t), null); } )+
-    | (t = "," p2 = UnaryExpr(scope) { p = sb.makeGroup(p, p2, makeLocation(t), null); } )+
+   (t = "|" p2 = UnaryExpr(scope) { p = sb.makeChoice(p, p2, makeLocation(t)); } )+
+    | (t = "&" p2 = UnaryExpr(scope) { p = sb.makeInterleave(p, p2, makeLocation(t)); } )+
+    | (t = "," p2 = UnaryExpr(scope) { p = sb.makeGroup(p, p2, makeLocation(t)); } )+
   )?
   { return p; }
 }
@@ -361,13 +375,16 @@ ParsedPattern UnaryExpr(Scope scope) :
 {
   ParsedPattern p;
   Token t;
+  Annotations a;
+  ElementAnnotation e;
 }
 {
-  p = PrimaryExpr(scope)
+  p = AnnotatedPrimaryExpr(scope)
   (
-   t = "+" { p = sb.makeOneOrMore(p, makeLocation(t), null); }
-   | t = "?" { p = sb.makeOptional(p, makeLocation(t), null); }
-   | t = "*" { p = sb.makeZeroOrMore(p, makeLocation(t), null); }
+   (t = "+" a = Annotations() { p = sb.makeOneOrMore(p, makeLocation(t), a); }
+    | t = "?" a = Annotations() { p = sb.makeOptional(p, makeLocation(t), a); }
+    | t = "*" a = Annotations() { p = sb.makeZeroOrMore(p, makeLocation(t), a); })
+   ( ">>" e = AnnotationElement() { p = sb.annotateAfter(p, e); } )*
   )?
   { return p; }
 }
@@ -413,7 +430,7 @@ ParsedNameClass NameClassAlternatives(boolean inAttribute, ParsedNameClass nc) :
   ParsedNameClass nc2;
 }
 {
-  (t = "|" nc2 = BasicNameClass(inAttribute) { nc = sb.makeChoice(nc, nc2, makeLocation(t), null); })*
+  (t = "|" nc2 = BasicNameClass(inAttribute) { nc = sb.makeChoice(nc, nc2, makeLocation(t)); })*
   { return nc; }
 }
 
@@ -575,14 +592,16 @@ ParsedPattern ParenExpr(Scope scope) :
 }
 {
   "(" a = Annotations() p = Expr(scope) ")"
-  // XXX annotations lost
-  { return p; }
+  { return sb.annotateMulti(p, a); }
 }
 
 void GrammarComponent(GrammarSection section, Scope scope) :
-{}
 {
-  Definition(section, scope) | Include(section, scope)
+  ElementAnnotation e;
+}
+{
+  (Definition(section, scope) | Include(section, scope))
+  ("!" e = AnnotationElement() { section.topLevelAnnotation(e); })*
 }
 
 void Definition(GrammarSection section, Scope scope) :
@@ -718,7 +737,7 @@ ParsedPattern ValueExpr() :
   Annotations a;
 }
 {
-  s = LocatedLiteral() a = NoChildAnnotations()
+  s = LocatedLiteral() a = Annotations()
   { return sb.makeValue("", "token", s.getString(), getValidationContext(), s.getLocation(), a); }
 }
 
@@ -747,7 +766,7 @@ ParsedPattern DataExpr(Scope scope) :
       datatype = datatype.substring(colon + 1);
     }
   }
-  ((s = Literal() a = NoChildAnnotations()
+  ((s = Literal() a = Annotations()
     { return sb.makeValue(datatypeUri, datatype, s, getValidationContext(), loc, a); }
   )
   | ( a = Annotations()
@@ -813,7 +832,7 @@ void Param(DataPatternBuilder dpb) :
   String value;
 }
 {
-  name = UnprefixedName() a = NoChildAnnotations() "=" value = Literal()
+  name = UnprefixedName() a = Annotations() "=" value = Literal()
   { dpb.addParam(name.getString(), value, getValidationContext(), name.getLocation(), a); }
 }
 
@@ -828,26 +847,24 @@ ParsedPattern Except(Scope scope) :
 
 Annotations Annotations() :
 {
-  Annotations a = sb.makeAnnotations();
+  Annotations a = null;
+  ElementAnnotation e;
 }
 {
-  ("["( AnnotationAttribute(a) )+ "]")?
-  (ExtensionElement(a))*
-   /* XXX (">>" (ExtensionElement(a))*)? */
-  { return a; }
-}
-
-Annotations NoChildAnnotations() :
-{
-  Annotations a = sb.makeAnnotations();
-}
-{
-  ("["( AnnotationAttribute(a) )+ "]")?
-  (">>")? (ExtensionElement(a))*
+  ("[" { a = sb.makeAnnotations(); }
+       (LOOKAHEAD(2) PrefixedAnnotationAttribute(a) )*
+       ( e = AnnotationElement() { a.addElement(e); } )*
+   "]")?
   { return a; }
 }
 
 void AnnotationAttribute(Annotations a) :
+{}
+{
+  PrefixedAnnotationAttribute(a) | UnprefixedAnnotationAttribute(a)
+}
+
+void PrefixedAnnotationAttribute(Annotations a) :
 {
   Token t;
   String value;
@@ -866,29 +883,71 @@ void AnnotationAttribute(Annotations a) :
   }
 }
 
-void ExtensionElement(Annotations a) :
+void UnprefixedAnnotationAttribute(Annotations a) :
 {
-  StringBuffer buf = new StringBuffer();
+  LocatedString name;
+  String value;
 }
 {
-  Element(buf)
+  name = UnprefixedName() "=" value = Literal()
   {
-    String e = buf.toString();
-    e = normalizeNewlines(e);
-    a.addElement(new ElementAnnotationImpl(e));
+    a.addAttribute("", name.getString(), null, value, name.getLocation());
   }
 }
 
-void Element(StringBuffer buf) :
+ElementAnnotation AnnotationElement() :
 {
-  Token t;
+  ElementAnnotation a;
 }
 {
-  t = <EMPTY_ELEMENT>
-  { buf.append(t.image); }
-  | (t = <START_TAG> { buf.append(t.image); }
-     (Element(buf))*
-     t = <END_TAG> { buf.append(t.image); })
+  (a = PrefixedAnnotationElement()
+   | a = UnprefixedAnnotationElement())
+  { return a; }
+}
+
+ElementAnnotation PrefixedAnnotationElement() :
+{
+  Token t;
+  ElementAnnotationBuilder eab;
+}
+{
+  t = <PREFIXED_NAME>
+  {
+    String qn = t.image;
+    int colon = qn.indexOf(':');
+    String prefix = qn.substring(0, colon);
+    String ns = lookupPrefix(prefix, t);
+    eab = sb.makeElementAnnotationBuilder(ns, qn.substring(colon + 1), prefix, makeLocation(t));
+  }
+  AnnotationElementContent(eab)
+  { return eab.makeElementAnnotation(); }
+}
+
+ElementAnnotation UnprefixedAnnotationElement() :
+{
+  LocatedString name;
+  ElementAnnotationBuilder eab;
+}
+{
+  name = UnprefixedName()
+  {
+    eab = sb.makeElementAnnotationBuilder("", name.getString(), null, name.getLocation());
+  }
+  AnnotationElementContent(eab)
+  { return eab.makeElementAnnotation(); }
+}
+
+void AnnotationElementContent(ElementAnnotationBuilder eab) :
+{
+  LocatedString s;
+  ElementAnnotation e;
+}
+{
+  "["
+  (LOOKAHEAD(2) AnnotationAttribute(eab))* 
+  (s = LocatedLiteral() { eab.addText(s.getString(), s.getLocation()); }
+   | e = AnnotationElement() { eab.addElement(e); })*
+  "]"
 }
 
 String Literal() :
@@ -1311,110 +1370,6 @@ TOKEN :
   | < LITERAL : ( "\"" (<CHAR_NOT_QUOT> | "\"\"")* "\"")
                 | ("'" (<CHAR_NOT_APOS> | "''")* "'") >
   | < BYTE_ORDER_MARK : "\ufeff" >
-}
-
-TOKEN :
-{
-  < #QNAME: <NCNAME> (":" <NCNAME>)? >
-  | < #S : (["\t", "\n", "\r", " "])+>
-}
-
-TOKEN_MGR_DECLS :
-{
-  int tagLevel;
-}
-
-<DEFAULT,CONTENT>
-MORE :
-{
-  < "<" <QNAME> > : STAG
-}
-
-<STAG>
-MORE :
-{
-  < #ATT_START: <S> <QNAME> (<S>)? "=" (<S>)? >
-  | < <ATT_START> "\"" > : LIT
-  | < <ATT_START> "'" > : LITA
-}
-
-<LIT>
-MORE :
-{
-  "\"" : STAG
-}
-
-<LITA>
-MORE :
-{
-  "'" : STAG
-}
-
-<LIT, LITA, CONTENT>
-TOKEN :
-{
-  <ILLEGAL_MARKUP_CHAR : ("&" | "<")>
-}
-
-<LIT, LITA, CONTENT>
-MORE :
-{
-  < <CHAR> >
-  | < "&#" ([ "0" - "9"])+ ";" >
-  | < "&#x" ([ "0" - "9", "a" - "f", "A" - "F" ])+ ";" >
-  | < "&" ("amp" | "lt" | "gt" | "quot" | "apos") ";" >
-}
-
-<CONTENT>
-MORE :
-{
-  "<!--" : COMMENT
-}
-
-<CONTENT>
-MORE :
-{
-  < "<?" <NCNAME> (<S> (<CHAR>)*)? "?>" >
-  | < "<![CDATA[" (<CHAR>)* "]]>" >
-}
-
-<CONTENT>
-TOKEN :
-{
-  < ILLEGAL_CONTENT_SEQUENCE : "]]>" >
-}
-
-<COMMENT>
-MORE :
-{
-  "-->" : CONTENT
-}
-
-<COMMENT>
-TOKEN :
-{
-  < ILLEGAL_COMMENT_SEQUENCE : "--" >
-}
-
-<COMMENT>
-MORE :
-{
-  < <CHAR> >
-}
-
-<STAG>
-TOKEN :
-{
-  < EMPTY_ELEMENT : (<S>)? "/>" >
-  { SwitchTo(tagLevel == 0 ? DEFAULT : CONTENT); }
-  | < START_TAG : (<S>)? ">" > { tagLevel++; } : CONTENT
-}
-
-<CONTENT>
-TOKEN :
-{
-  < END_TAG : "</" <QNAME> (<S>)? ">" >
-    { SwitchTo(--tagLevel == 0 ? DEFAULT : CONTENT); }
 }
 
 /* This avoids lexical errors from JavaCC. */
