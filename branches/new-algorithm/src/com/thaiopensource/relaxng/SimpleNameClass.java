@@ -12,6 +12,10 @@ class SimpleNameClass implements NameClass {
     return this.name.equals(name);
   }
 
+  public int containsSpecificity(Name name) {
+    return contains(name) ? SPECIFICITY_NAME : SPECIFICITY_NONE;
+  }
+
   public int hashCode() {
     return name.hashCode();
   }

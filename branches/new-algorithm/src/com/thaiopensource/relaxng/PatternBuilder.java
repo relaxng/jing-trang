@@ -116,8 +116,6 @@ final public class PatternBuilder {
     return intern(new ErrorPattern());
   }
   Pattern makeAfter(Pattern p1, Pattern p2) {
-    if (p1 == notAllowed || p2 == notAllowed)
-      return notAllowed;
     return intern(new AfterPattern(p1, p2));
   }
   Pattern makeGroup(Pattern p1, Pattern p2) {
@@ -237,7 +235,7 @@ final public class PatternBuilder {
   }
 
   Pattern makeAttribute(NameClass nameClass, Pattern value, Locator loc) {
-    if (value.isNotAllowed())
+    if (value == notAllowed)
       return value;
     return intern(new AttributePattern(nameClass, value, loc));
   }

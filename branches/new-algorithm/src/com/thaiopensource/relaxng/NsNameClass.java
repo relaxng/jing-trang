@@ -12,6 +12,10 @@ class NsNameClass implements NameClass {
     return this.namespaceUri.equals(name.getNamespaceUri());
   }
 
+  public int containsSpecificity(Name name) {
+    return contains(name) ? SPECIFICITY_NS_NAME : SPECIFICITY_NONE;
+  }
+
   public int hashCode() {
     return namespaceUri.hashCode();
   }
