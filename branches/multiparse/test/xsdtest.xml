@@ -14,4 +14,181 @@
 </class>
 </equiv>
 </datatype>
+<datatype name="anyURI">
+<valid>foobar</valid>
+<valid>http://www.example.com</valid>
+<valid>http://www.example.co%6d</valid>
+<valid>nosuchscheme:stuff</valid>
+<invalid>foo$bar:stuff</invalid>
+<invalid>f%oobar</invalid>
+</datatype>
+<datatype name="integer">
+<valid>10</valid>
+<valid>01</valid>
+<valid>0123456789</valid>
+<valid>+10</valid>
+<valid>-10</valid>
+<invalid>1.0</invalid>
+<invalid>.1</invalid>
+<valid>9999999999999999999999999999999</valid>
+<invalid>1.</invalid>
+<invalid>0.</invalid>
+<equiv>
+<class>
+  <value>0</value>
+  <value>+0</value>
+  <value>-0</value>
+  <value>00</value>
+</class>
+<class>
+  <value>10</value>
+  <value>+10</value>
+  <value>+0010</value>
+  <value>010</value>
+</class>
+<class>
+  <value>-10</value>
+  <value>-0010</value>
+  <value>-010</value>
+</class>
+</equiv>
+</datatype>
+<datatype name="duration">
+<valid>P1Y</valid>
+</datatype>
+<datatype name="time">
+<valid>12:45:00</valid>
+</datatype>
+<datatype name="date">
+<valid>1886-12-01</valid>
+</datatype>
+<datatype name="gYearMonth">
+<valid>1996-12</valid>
+<valid>1996-01</valid>
+<valid>1996-01Z</valid>
+<invalid>1996-00</invalid>
+<equiv>
+<class><value>1996-01</value></class>
+<class>
+  <value>1996-01Z</value>
+  <value>1996-01+00:00</value>
+  <value>1996-01-00:00</value>
+</class>
+<class><value>1996-01+01:00</value></class>
+<class><value>1996-01-01:00</value></class>
+</equiv>
+</datatype>
+<datatype name="gYear">
+<valid>2001</valid>
+</datatype>
+<datatype name="gMonthDay">
+<valid>--12-01</valid>
+</datatype>
+<datatype name="gDay">
+<valid>---20</valid>
+</datatype>
+<datatype name="gMonth">
+<valid>--12</valid>
+</datatype>
+<datatype name="boolean">
+<valid>true</valid>
+<valid>false</valid>
+<valid>0</valid>
+<valid>1</valid>
+<invalid>00</invalid>
+<invalid>00</invalid>
+<invalid>01</invalid>
+<equiv>
+<class><value>true</value><value>1</value></class>
+<class><value>false</value><value>0</value></class>
+</equiv>
+</datatype>
+<datatype name="base64Binary">
+<valid>AAAA</valid>
+</datatype>
+<datatype name="hexBinary">
+<valid>deadbeef</valid>
+<valid></valid>
+<valid>0123456789ABCDEFabcdef</valid>
+</datatype>
+<datatype name="float">
+<valid>1.0</valid>
+</datatype>
+<datatype name="double">
+<valid>1.0</valid>
+</datatype>
+<datatype name="QName">
+<valid>foo</valid>
+</datatype>
+<datatype name="NOTATION">
+<valid>foo</valid>
+</datatype>
+<datatype name="decimal">
+<valid>1.0</valid>
+</datatype>
+<datatype name="nonPositiveInteger">
+<valid>-1</valid>
+</datatype>
+<datatype name="nonNegativeInteger">
+<valid>1</valid>
+</datatype>
+<datatype name="positiveInteger">
+<valid>1</valid>
+</datatype>
+<datatype name="negativeInteger">
+<valid>-1</valid>
+</datatype>
+<datatype name="long">
+<valid>1</valid>
+</datatype>
+<datatype name="int">
+<valid>1</valid>
+</datatype>
+<datatype name="short">
+<valid>1</valid>
+</datatype>
+<datatype name="byte">
+<valid>1</valid>
+</datatype>
+<datatype name="unsignedLong">
+<valid>1</valid>
+</datatype>
+<datatype name="unsignedInt">
+<valid>1</valid>
+</datatype>
+<datatype name="unsignedShort">
+<valid>1</valid>
+</datatype>
+<datatype name="unsignedByte">
+<valid>1</valid>
+</datatype>
+<datatype name="string">
+<valid>any thing at all!</valid>
+</datatype>
+<datatype name="normalizedString">
+<valid>any thing at all!</valid>
+</datatype>
+<datatype name="token">
+<valid>any thing at all!</valid>
+</datatype>
+<datatype name="language">
+<valid>en</valid>
+</datatype>
+<datatype name="Name">
+<valid>foo</valid>
+</datatype>
+<datatype name="NCName">
+<valid>foo</valid>
+</datatype>
+<datatype name="NMTOKEN">
+<valid>foo</valid>
+</datatype>
+<datatype name="NMTOKENS">
+<valid>foo bar</valid>
+</datatype>
+<datatype name="ID">
+<valid>foobar</valid>
+<invalid>foo:bar</invalid>
+<invalid>foo bar</invalid>
+</datatype>
 </xsdtest>
