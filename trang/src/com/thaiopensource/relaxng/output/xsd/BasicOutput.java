@@ -33,6 +33,8 @@ import com.thaiopensource.relaxng.output.xsd.basic.GroupDefinition;
 import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroupDefinition;
 import com.thaiopensource.relaxng.output.xsd.basic.SimpleTypeDefinition;
 import com.thaiopensource.relaxng.output.xsd.basic.RootDeclaration;
+import com.thaiopensource.relaxng.output.xsd.basic.StructureVisitor;
+import com.thaiopensource.relaxng.output.xsd.basic.Structure;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
@@ -49,6 +51,7 @@ public class BasicOutput {
   private final ParticleVisitor particleOutput = new ParticleOutput();
   private final ParticleVisitor globalElementOutput = new GlobalElementOutput();
   private final SchemaVisitor schemaOutput = new SchemaOutput();
+  private final StructureVisitor movedStructureOutput = new MovedStructureOutput();
   private final NamespaceManager nsm;
   private final PrefixManager pm;
   private final String targetNamespace;
@@ -361,6 +364,16 @@ public class BasicOutput {
     }
   }
 
+  class MovedStructureOutput implements StructureVisitor {
+    public Object visitElement(Element element) {
+      return null;
+    }
+
+    public Object visitAttribute(Attribute attribute) {
+      return null;
+    }
+  }
+
   static void output(Schema schema, PrefixManager pm, OutputDirectory od, ErrorReporter er) throws IOException {
     NamespaceManager nsm = new NamespaceManager(schema);
     try {
@@ -409,10 +422,8 @@ public class BasicOutput {
     }
     schema.accept(schemaOutput);
 
-    for (Iterator iter = nsm.getMovedElements(targetNamespace).iterator(); iter.hasNext();)
-      outputMovedElement((Element)iter.next());
-    for (Iterator iter = nsm.getMovedAttributes(targetNamespace).iterator(); iter.hasNext();)
-      outputMovedAttribute((Attribute)iter.next());
+    for (Iterator iter = nsm.getMovedStructures(targetNamespace).iterator(); iter.hasNext();)
+      ((Structure)iter.next()).accept(movedStructureOutput);
     xw.endElement();
     xw.close();
   }
@@ -437,12 +448,6 @@ public class BasicOutput {
     if (ns.equals(""))
       return localName;
     return pm.getPrefix(ns) + ":" + localName;
-  }
-
-  void outputMovedElement(Element element) {
-  }
-
-  void outputMovedAttribute(Attribute attribute) {
   }
 
   void outputInclude(String href) {
