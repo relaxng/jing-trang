@@ -126,10 +126,12 @@ class XmlWriter {
         }
         else {
           level--;
-          write(' ');
-          write(s);
-          if (s.length() != 0 && s.charAt(s.length() - 1) != ' ')
+          if (s.length() != 0) {
             write(' ');
+            write(s);
+            if (s.charAt(s.length() - 1) != ' ')
+              write(' ');
+          }
         }
         break;
       }
