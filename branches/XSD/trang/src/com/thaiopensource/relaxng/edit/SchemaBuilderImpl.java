@@ -142,6 +142,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   public ParsedPattern makeValue(String datatypeLibrary, String type, String value, Context context,
                                  String ns, Location loc, Annotations anno) throws BuildException {
     ValuePattern p = new ValuePattern(datatypeLibrary, type, value);
+    p.setContext(context.copy());
     DatatypeLibrary dl = dlf.createDatatypeLibrary(datatypeLibrary);
     if (dl != null) {
       try {
@@ -378,6 +379,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     public void addParam(String name, String value, Context context, String ns, Location loc, Annotations anno)
             throws BuildException {
       Param param = new Param(name, value);
+      param.setContext(context.copy());
       finishAnnotated(param, loc, anno);
       p.getParams().add(param);
     }
@@ -442,7 +444,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     }
 
     void apply(Annotated subject) {
-      subject.setContext(context);
+      subject.setContext(context.copy());
       if (comments != null)
         subject.getLeadingComments().addAll(((CommentListImpl)comments).list);
       subject.getAttributeAnnotations().addAll(attributes);
@@ -514,7 +516,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     ElementAnnotation element = new ElementAnnotation(ns, localName);
     element.setPrefix(prefix);
     element.setSourceLocation((SourceLocation)loc);
-    element.setContext(context);
+    element.setContext(context.copy());
     return new ElementAnnotationBuilderImpl(comments, element);
   }
 
