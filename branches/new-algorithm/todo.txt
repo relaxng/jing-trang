@@ -1,4 +1,8 @@
-Provide implementation of JARV interface.
+Document the public API.
+
+Implement JARV API.
+
+Provide a TeeFilter.
 
 In a big choice or interleave or attribute group, memoization for each binary pattern is
 inefficient.
