@@ -5,7 +5,7 @@ start =
     element datatype {
       attribute name { xsd:NCName },
       ((param*, (valid|invalid)*)
-       | (valid|invalid|equiv)*)
+       | (valid|invalid|equiv|length)*)
     }*
   }
 
@@ -16,3 +16,5 @@ equiv =
   element equiv {
     element class { element value { string }+ }+
   }
+
+length = element length { attribute value { xsd:integer }, string }
