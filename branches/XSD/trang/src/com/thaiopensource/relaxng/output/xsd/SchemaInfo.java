@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Vector;
+import java.util.Iterator;
 
 class SchemaInfo {
   private final SchemaCollection sc;
@@ -41,9 +43,16 @@ class SchemaInfo {
   private final ErrorReporter er;
   private final Map childTypeMap = new HashMap();
   private final Map defineMap = new HashMap();
+  private final Set ignoredDefines = new HashSet();
   private final PatternVisitor childTypeVisitor = new ChildTypeVisitor();
 
+  private static final int DEFINE_KEEP = 0;
+  private static final int DEFINE_IGNORE = 1;
+  private static final int DEFINE_REQUIRE = 2;
+
+
   static private class Define {
+    int status = DEFINE_KEEP;
     boolean hadImplicit;
     Combine combine;
     Pattern pattern;
@@ -187,12 +196,31 @@ class SchemaInfo {
     }
   }
 
+  static class Override {
+    int status;
+    final Define define;
+    final String name;
+
+    Override(Define define, String name) {
+      this.define = define;
+      this.name = name;
+    }
+  }
+
   class GrammarVisitor implements ComponentVisitor {
     private final Set openIncludes = new HashSet();
     private final Set allIncludes = new HashSet();
+    private List overrides = null;
 
     public Object visitDefine(DefineComponent c) {
       Define define = lookupDefine(c.getName());
+      if (overrides != null)
+        overrides.add(new Override(define, c.getName()));
+      if (define.status != DEFINE_KEEP) {
+        ignoredDefines.add(c);
+        define.status = DEFINE_IGNORE;
+        return null;
+      }
       if (c.getCombine() == null) {
         if (define.hadImplicit) {
           er.error("multiple_define", c.getName(), c.getSourceLocation());
@@ -231,25 +259,37 @@ class SchemaInfo {
     }
 
     public Object visitInclude(IncludeComponent c) {
-      c.componentsAccept(new OverrideFinder());
+      List overrides = new Vector();
+      List savedOverrides = this.overrides;
+      this.overrides = overrides;
+      c.componentsAccept(this);
+      this.overrides = savedOverrides;
       String href = c.getHref();
       if (openIncludes.contains(href))
         er.error("include_loop", href, c.getSourceLocation());
       else if (allIncludes.contains(href))
         er.error("multiple_include", href, c.getSourceLocation());
       else {
+        for (Iterator iter = overrides.iterator(); iter.hasNext();) {
+          Override or = (Override)iter.next();
+          or.status = or.define.status;
+          or.define.status = DEFINE_REQUIRE;
+        }
         allIncludes.add(href);
         openIncludes.add(href);
         getSchema(href).componentsAccept(this);
         openIncludes.remove(href);
+        for (Iterator iter = overrides.iterator(); iter.hasNext();) {
+          Override or = (Override)iter.next();
+          if (or.define.status == DEFINE_REQUIRE) {
+            if (or.name == DefineComponent.START)
+              er.error("missing_start_replacement", c.getSourceLocation());
+            else
+              er.error("missing_define_replacement", or.name, c.getSourceLocation());
+          }
+          or.define.status = or.status;
+        }
       }
-      return null;
-    }
-  }
-
-  class OverrideFinder extends GrammarVisitor {
-    public Object visitDefine(DefineComponent c) {
-      er.error("overrides_not_supported", c.getSourceLocation());
       return null;
     }
   }
@@ -314,6 +354,10 @@ class SchemaInfo {
     if (def == null || def.head != c)
       return null;
     return def.pattern;
+  }
+
+  boolean isIgnored(DefineComponent c) {
+    return ignoredDefines.contains(c);
   }
 
   private Define lookupDefine(String name) {

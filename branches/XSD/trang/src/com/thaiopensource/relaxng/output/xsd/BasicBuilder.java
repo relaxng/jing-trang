@@ -443,9 +443,14 @@ public class BasicBuilder {
       for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
         Pattern child = (Pattern)iter.next();
         ChildType ct = si.getChildType(child);
-        if (ct.contains(ChildType.ATTRIBUTE))
-          uses.add((AttributeUse)child.accept(childVisitor));
-        if (!ct.equals(ChildType.EMPTY))
+        if (ct.contains(ChildType.ATTRIBUTE)) {
+          AttributeUse use = (AttributeUse)child.accept(childVisitor);
+          if (uses.size() != 1 || !use.equals(uses.get(0)))
+            uses.add(use);
+        }
+        if (ct.contains(ChildType.ELEMENT)
+            || ct.contains(ChildType.DATA)
+            || ct.contains(ChildType.TEXT))
           hasChildren = true;
       }
       if (hasChildren)
@@ -467,11 +472,13 @@ public class BasicBuilder {
       String name = c.getName();
       SourceLocation location = c.getSourceLocation();
       if (name == DefineComponent.START) {
-        Pattern body = c.getBody();
-        ChildType ct = si.getChildType(body);
-        if (ct.contains(ChildType.ELEMENT))
-          schema.addRoot((Particle)body.accept(particleBuilder),
-                         location);
+        if (!si.isIgnored(c)) {
+          Pattern body = c.getBody();
+          ChildType ct = si.getChildType(body);
+          if (ct.contains(ChildType.ELEMENT))
+            schema.addRoot((Particle)body.accept(particleBuilder),
+                           location);
+        }
       }
       else {
         Pattern body = si.getBody(c);
@@ -500,6 +507,7 @@ public class BasicBuilder {
     }
 
     public Object visitInclude(IncludeComponent c) {
+      c.componentsAccept(this);
       String uri = c.getHref();
       Schema sub = schema.addInclude(uri, c.getSourceLocation());
       si.getSchema(uri).componentsAccept(new BasicBuilder(er, si, sub, resolveNamespace(c.getNs())).schemaBuilder);
