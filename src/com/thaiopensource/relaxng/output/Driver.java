@@ -25,6 +25,8 @@ import java.io.IOException;
 public class Driver {
   static private Localizer localizer = new Localizer(Driver.class);
   private String encoding;
+  private String inputType;
+  private String outputType;
   private ErrorHandlerImpl eh = new ErrorHandlerImpl();
   private static final String DEFAULT_OUTPUT_ENCODING = "UTF-8";
 
@@ -34,7 +36,7 @@ public class Driver {
 
   private int doMain(String[] args) throws IncorrectSchemaException, SAXException, IOException {
     try {
-      OptionParser op = new OptionParser("e:", args);
+      OptionParser op = new OptionParser("i:o:e:", args);
       try {
         while (op.moveToNextOption()) {
           switch (op.getOptionChar()) {
@@ -62,27 +64,38 @@ public class Driver {
       if (encoding != null)
         in.setEncoding(encoding);
       Parseable parseable;
-      String ext = extension(args[0]);
-      if (ext.equalsIgnoreCase(".rng"))
+      if (inputType == null) {
+        inputType = extension(args[0]);
+        if (inputType.length() > 0)
+          inputType = inputType.substring(1);
+      }
+      if (inputType.equalsIgnoreCase("rng"))
         parseable = new SAXParseable(new Jaxp11XMLReaderCreator(), in, eh);
-      else if (ext.equalsIgnoreCase(".rngnx") || ext.equalsIgnoreCase(".rnx"))
+      else if (inputType.equalsIgnoreCase("rngnx") || inputType.equalsIgnoreCase("rnx"))
         parseable = new NonXmlParseable(in, eh);
       else {
-        error(localizer.message("unrecognized_input_extension", ext));
+        error(localizer.message("unrecognized_input_type", inputType));
         return 2;
       }
       OutputFormat of;
-      ext = extension(args[1]);
-      if (ext.equalsIgnoreCase(".dtd"))
+      String ext = extension(args[1]);
+      if (outputType == null) {
+        outputType = ext;
+        if (outputType.length() > 0)
+          outputType = outputType.substring(1);
+      }
+      if (outputType.equalsIgnoreCase(".dtd"))
         of = new DtdOutputFormat();
-      else if (ext.equalsIgnoreCase(".rng"))
+      else if (outputType.equalsIgnoreCase(".rng"))
         of = new RngOutputFormat();
       else {
-        error(localizer.message("unrecognized_output_extension", ext));
+        error(localizer.message("unrecognized_output_type", outputType));
         return 2;
       }
       SchemaCollection sc = SchemaBuilderImpl.parse(parseable,
                                                     new DatatypeLibraryLoader());
+      if (ext.length() == 0)
+        ext = outputType;
       OutputDirectory od = new LocalOutputDirectory(new File(args[1]), ext,
                                                     encoding == null ? DEFAULT_OUTPUT_ENCODING : encoding);
       of.output(sc, od, eh);
