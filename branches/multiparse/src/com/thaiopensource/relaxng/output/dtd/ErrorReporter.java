@@ -32,14 +32,75 @@ class ErrorReporter {
     if (eh == null)
       return;
     try {
-      eh.error(new SAXParseException(localizer.message(key),
-                                     null,
-                                     loc.getUri(),
-                                     loc.getLineNumber(),
-                                     loc.getColumnNumber()));
+      eh.error(makeParseException(localizer.message(key), loc));
     }
     catch (SAXException e) {
       throw new WrappedSAXException(e);
     }
+  }
+
+  void error(String key, String arg, SourceLocation loc) {
+    hadError = true;
+    if (eh == null)
+      return;
+    try {
+      eh.error(makeParseException(localizer.message(key, arg), loc));
+    }
+    catch (SAXException e) {
+      throw new WrappedSAXException(e);
+    }
+  }
+
+  void error(String key, String arg1, String arg2, SourceLocation loc) {
+    hadError = true;
+    if (eh == null)
+      return;
+    try {
+      eh.error(makeParseException(localizer.message(key, arg1, arg2), loc));
+    }
+    catch (SAXException e) {
+      throw new WrappedSAXException(e);
+    }
+  }
+
+  void warning(String key, SourceLocation loc) {
+    if (eh == null)
+      return;
+    try {
+      eh.warning(makeParseException(localizer.message(key), loc));
+    }
+    catch (SAXException e) {
+      throw new WrappedSAXException(e);
+    }
+  }
+
+  void warning(String key, String arg, SourceLocation loc) {
+    if (eh == null)
+      return;
+    try {
+      eh.warning(makeParseException(localizer.message(key, arg), loc));
+    }
+    catch (SAXException e) {
+      throw new WrappedSAXException(e);
+    }
+  }
+
+  void warning(String key, String arg1, String arg2, SourceLocation loc) {
+    if (eh == null)
+      return;
+    try {
+      eh.warning(makeParseException(localizer.message(key, arg1, arg2), loc));
+    }
+    catch (SAXException e) {
+      throw new WrappedSAXException(e);
+    }
+  }
+
+  private static SAXParseException makeParseException(String message, SourceLocation loc) {
+    return new SAXParseException(message,
+                                 null,
+                                 loc.getUri(),
+                                 loc.getLineNumber(),
+                                 loc.getColumnNumber());
   }
 }
