@@ -31,7 +31,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 /*
-Deal with annotations
+Deal with element annotations
 */
 class SchemaParser {
 
@@ -75,6 +75,7 @@ class SchemaParser {
     String datatypeLibrary;
     Scope scope;
     Location startLocation;
+    Annotations annotations;
 
     void set() {
       xr.setContentHandler(this);
@@ -175,6 +176,22 @@ class SchemaParser {
 	else if (uri.equals(xmlURI)
 		 && atts.getLocalName(i).equals("base"))
 	  xmlBaseHandler.xmlBaseAttribute(atts.getValue(i));
+        else {
+          if (annotations == null)
+            annotations = schemaBuilder.makeAnnotations(this);
+          String qName = atts.getQName(i);
+          String prefix = null;
+          if (qName.equals("")) {
+            for (PrefixMapping p = prefixMapping; p != null; p = p.next)
+              if (p.uri.equals(uri)) {
+                prefix = p.prefix;
+                break;
+              }
+          }
+          else
+            prefix = qName.substring(0, qName.indexOf(':'));
+          annotations.addAttribute(uri, atts.getLocalName(i), prefix, atts.getValue(i), startLocation);
+        }
       }
       endAttributes();
     }
@@ -327,7 +344,7 @@ class SchemaParser {
 	error("missing_children");
 	endChild(schemaBuilder.makeErrorPattern());
       }
-      sendPatternToParent(buildPattern(childPatterns, nChildPatterns, startLocation, null));
+      sendPatternToParent(buildPattern(childPatterns, nChildPatterns, startLocation, annotations));
     }
 
     void sendPatternToParent(ParsedPattern p) {
@@ -491,7 +508,7 @@ class SchemaParser {
     }
 
     ParsedPattern makePattern() {
-      return schemaBuilder.makeNotAllowed(startLocation, null);
+      return schemaBuilder.makeNotAllowed(startLocation, annotations);
     }
   }
 
@@ -501,7 +518,7 @@ class SchemaParser {
     }
 
     ParsedPattern makePattern() {
-      return schemaBuilder.makeEmpty(startLocation, null);
+      return schemaBuilder.makeEmpty(startLocation, annotations);
     }
   }
 
@@ -511,7 +528,7 @@ class SchemaParser {
     }
 
     ParsedPattern makePattern() {
-      return schemaBuilder.makeText(startLocation, null);
+      return schemaBuilder.makeText(startLocation, annotations);
     }
   }
 
@@ -552,7 +569,7 @@ class SchemaParser {
                                      this,
                                      getNs(),
                                      startLocation,
-                                     null);
+                                     annotations);
     }
 
   }
@@ -599,9 +616,9 @@ class SchemaParser {
       ParsedPattern p;
       if (dpb != null) {
         if (except != null)
-          p = dpb.makePattern(except, startLocation, null);
+          p = dpb.makePattern(except, startLocation, annotations);
         else
-          p = dpb.makePattern(startLocation, null);
+          p = dpb.makePattern(startLocation, annotations);
       }
       else
         p = schemaBuilder.makeErrorPattern();
@@ -653,7 +670,7 @@ class SchemaParser {
       if (name == null)
 	return;
       if (dpb != null)
-	dpb.addParam(name, buf.toString(), this, getNs(), startLocation, null);
+	dpb.addParam(name, buf.toString(), this, getNs(), startLocation, annotations);
     }
   }
 
@@ -777,7 +794,7 @@ class SchemaParser {
     void end() throws SAXException {
       if (href != null) {
         try {
-          include.endInclude(href, getNs(), startLocation, null);
+          include.endInclude(href, getNs(), startLocation, annotations);
         }
         catch (IllegalSchemaException e) {
         }
@@ -793,7 +810,7 @@ class SchemaParser {
     }
 
     void end() throws SAXException {
-      parent.endChild(grammar.endIncludedGrammar(startLocation, null));
+      parent.endChild(grammar.endIncludedGrammar(startLocation, annotations));
     }
   }
 
@@ -812,7 +829,7 @@ class SchemaParser {
     }
 
     void end() throws SAXException {
-      parent.endChild(grammar.endGrammar(startLocation, null));
+      parent.endChild(grammar.endGrammar(startLocation, annotations));
     }
   }
 
@@ -839,7 +856,7 @@ class SchemaParser {
     }
 
     ParsedPattern makePattern(Scope scope) {
-      return scope.makeRef(name, startLocation, null);
+      return scope.makeRef(name, startLocation, annotations);
     }
   }
 
@@ -853,7 +870,7 @@ class SchemaParser {
     }
 
     ParsedPattern makePattern() {
-      return scope.makeParentRef(name, startLocation, null);
+      return scope.makeParentRef(name, startLocation, annotations);
     }
   }
 
@@ -888,7 +905,7 @@ class SchemaParser {
                                                getNs(),
                                                scope,
                                                startLocation,
-                                               null);
+                                               annotations);
         }
         catch (IllegalSchemaException e) { }
       }
@@ -941,7 +958,7 @@ class SchemaParser {
 
     void sendPatternToParent(ParsedPattern p) {
       if (name != null)
-	section.define(name, combine, p, startLocation, null);
+	section.define(name, combine, p, startLocation, annotations);
     }
 
   }
@@ -957,7 +974,7 @@ class SchemaParser {
     }
 
     void sendPatternToParent(ParsedPattern p) {
-      section.define(GrammarSection.START, combine, p, startLocation, null);
+      section.define(GrammarSection.START, combine, p, startLocation, annotations);
     }
 
     State createChildState(String localName) throws SAXException {
@@ -1080,7 +1097,7 @@ class SchemaParser {
     }
 
     ParsedNameClass makeNameClassExcept(ParsedNameClass except) {
-      return schemaBuilder.makeAnyName(except, startLocation, null);
+      return schemaBuilder.makeAnyName(except, startLocation, annotations);
     }
 
     void endChild(ParsedNameClass nameClass) {
@@ -1166,7 +1183,7 @@ class SchemaParser {
 	parent.endChild(schemaBuilder.makeErrorNameClass());
 	return;
       }
-      parent.endChild(schemaBuilder.makeChoice(nameClasses, nNameClasses, startLocation, null));
+      parent.endChild(schemaBuilder.makeChoice(nameClasses, nNameClasses, startLocation, annotations));
     }
   }
 
