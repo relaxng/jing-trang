@@ -1,5 +1,3 @@
-Check for string sequencing constraints
-
 Check for duplicate attributes.
 
 Check for violations of interleave restriction.
@@ -7,9 +5,11 @@ Check for violations of interleave restriction.
 Approximation warnings:
 - interleave
 - mixed text
-- simple type list
-- attribute choice
+- list containing a group of two non-empty tokens
+- choice between children and attributes
+- attribute wildcard with content not text
 - wildcards
+- choice between elements and data
 
 Provide annotation to control which target namespace is assigned to a file.
 
