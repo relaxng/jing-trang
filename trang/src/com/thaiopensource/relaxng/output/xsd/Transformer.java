@@ -27,6 +27,7 @@ import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroupDefinition;
 import com.thaiopensource.relaxng.output.xsd.basic.AbstractAttributeUseVisitor;
 import com.thaiopensource.relaxng.output.xsd.basic.WildcardAttribute;
 import com.thaiopensource.relaxng.output.xsd.basic.Wildcard;
+import com.thaiopensource.relaxng.output.xsd.basic.WildcardElement;
 import com.thaiopensource.relaxng.output.common.Name;
 
 import java.util.List;
@@ -83,6 +84,10 @@ class Transformer extends SchemaTransformer {
 
   class SequenceDetector implements ParticleVisitor {
     public Object visitElement(Element p) {
+      return Boolean.FALSE;
+    }
+
+    public Object visitWildcardElement(WildcardElement p) {
       return Boolean.FALSE;
     }
 
