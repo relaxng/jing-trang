@@ -1,5 +1,7 @@
 More helpful syntax error messages with non-XML syntax parser.
 
+Namespace declaraions in element annotations.
+
 Support for IDREF checking via JARV.
 
 In a big choice or interleave or attribute group, memoization for each
@@ -29,3 +31,7 @@ from names to content models.
 Better error message for wrong namespace URI.
 
 Option to be verbose.
+
+Provide regex impl based on JDK 1.4 regexes.
+
+
