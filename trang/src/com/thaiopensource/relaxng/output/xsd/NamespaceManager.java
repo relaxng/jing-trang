@@ -9,6 +9,7 @@ import com.thaiopensource.relaxng.output.xsd.basic.GroupDefinition;
 import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroupDefinition;
 import com.thaiopensource.relaxng.output.xsd.basic.Structure;
 import com.thaiopensource.relaxng.output.xsd.basic.Include;
+import com.thaiopensource.relaxng.output.xsd.basic.Definition;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 
@@ -38,6 +39,7 @@ public class NamespaceManager {
     List movedStructures = new Vector();
     Set movedStructureSet = new HashSet();
     Map movedStructureNameMap = new HashMap();
+    Set movedStructureNameSet = new HashSet();
     int nextMovedElementSuffix;
     int nextMovedAttributeSuffix;
   }
@@ -334,22 +336,38 @@ public class NamespaceManager {
   }
 
   String getProxyName(Structure struct) {
-    TargetNamespace tn = lookupTargetNamespace(struct.getName().getNamespaceUri());
+    String ns = struct.getName().getNamespaceUri();
+    TargetNamespace tn = lookupTargetNamespace(ns);
     String name = (String)tn.movedStructureNameMap.get(struct);
     if (name == null) {
-      if (struct instanceof Element) {
-        do {
-          name = ANON + Integer.toString(tn.nextMovedElementSuffix++);
-        } while (schema.getGroup(name) != null);
+      String base = struct.getName().getLocalName();
+      name = base;
+      for (int n = 1;; n++) {
+        if (!tn.movedStructureNameSet.contains(name)) {
+          Definition def;
+          if (struct instanceof Element)
+            def = schema.getGroup(name);
+          else
+            def = schema.getAttributeGroup(name);
+          if (def == null
+              || !getTargetNamespace(def.getParentSchema().getUri()).equals(ns)
+              || (def instanceof GroupDefinition
+                  && willElide((GroupDefinition)def)))
+            break;
+        }
+        name = base + Integer.toString(n);
       }
-      else {
-        do {
-          name = ANON + Integer.toString(tn.nextMovedAttributeSuffix++);
-        } while (schema.getAttributeGroup(name) != null);
-      }
+      tn.movedStructureNameSet.add(name);
       tn.movedStructureNameMap.put(struct, name);
     }
     return name;
+  }
+
+  private boolean willElide(GroupDefinition def) {
+    Particle particle = def.getParticle();
+    if (!(particle instanceof Element))
+      return false;
+    return isGlobal((Element)particle);
   }
 
   String getTargetNamespace(String schemaUri) {
