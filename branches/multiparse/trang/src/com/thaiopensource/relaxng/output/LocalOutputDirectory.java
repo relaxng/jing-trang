@@ -31,7 +31,7 @@ public class LocalOutputDirectory implements OutputDirectory {
       file = mainOutputFile;
     else
       file = new File(mainOutputFile.getParentFile(), mapFilename(sourceUri));
-    return new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)));
+    return new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), encoding);
   }
 
   public String reference(String fromSourceUri, String toSourceUri) {
