@@ -504,6 +504,70 @@ include "bar.rnc"
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+namespace eg = "http://www.example.com"
+element eg:foo { empty }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified" version="1.0"
+ targetNamespace="http://www.example.com" xmlns:eg="http://www.example.com">
+  <xs:element name="foo">
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+default namespace = "http://www.example.com"
+element foo { empty }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified" version="1.0"
+ targetNamespace="http://www.example.com" xmlns:ns1="http://www.example.com">
+  <xs:element name="foo">
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<resource name="foo.rnc">
+start = element foo { empty }
+</resource>
+<correct>
+default namespace = "http://www.example.com"
+
+include "foo.rnc"
+</correct>
+</compact>
+<xsd>
+<resource name="foo.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com" xmlns:ns1="http://www.example.com">
+  <xs:element name="foo">
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com" xmlns:ns1="http://www.example.com">
+  <xs:include schemaLocation="foo.xsd"/>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>

@@ -38,9 +38,6 @@ import java.util.Vector;
 import java.util.Set;
 import java.util.Iterator;
 
-/**
- * prefix for "xs" needs to be chosen dynamically to avoid conflict
- */
 class Output {
   private static final String XSD_URI = "http://www.w3.org/2001/XMLSchema-datatypes";
 
@@ -51,7 +48,6 @@ class Output {
   private final OutputDirectory od;
   private final String targetNamespace;
   private final ComponentVisitor topLevelOutput = new TopLevelOutput();
-  private final ComponentVisitor includeOutput = new IncludeOutput();
   private final PatternVisitor simpleTypeOutput = new SimpleTypeOutput();
   private final PatternVisitor groupOutput = new GroupOutput();
   private final PatternVisitor particleOutput = new ParticleOutput();
@@ -67,6 +63,10 @@ class Output {
       for (Iterator iter = si.getSourceUris().iterator(); iter.hasNext();) {
         String sourceUri = (String)iter.next();
         new Output(si, er, od, sourceUri).outputSchema(si.getSchema(sourceUri));
+      }
+      for (Iterator iter = si.getGeneratedSourceUris().iterator(); iter.hasNext();) {
+        String sourceUri = (String)iter.next();
+        new Output(si, er, od, sourceUri).outputSchema(null);
       }
     }
     catch (XmlWriter.WrappedException e) {
@@ -92,13 +92,27 @@ class Output {
 
   private void outputSchema(GrammarPattern grammar) {
     xw.startElement(xs("schema"));
+    // TODO choose xs so as to avoid conflict
     xw.attribute("xmlns:xs", "http://www.w3.org/2001/XMLSchema");
     xw.attribute("elementFormDefault", "qualified");
     xw.attribute("version", "1.0");
     if (!targetNamespace.equals(""))
       xw.attribute("targetNamespace", targetNamespace);
-    grammar.componentsAccept(includeOutput);
-    grammar.componentsAccept(topLevelOutput);
+    for (Iterator iter = si.getTargetNamespaces().iterator(); iter.hasNext();) {
+      String ns = (String)iter.next();
+      // TODO omit xml prefix
+      if (!ns.equals(""))
+        xw.attribute("xmlns:" + si.getPrefix(ns), ns);
+    }
+    for (Iterator iter = si.effectiveIncludes(sourceUri).iterator(); iter.hasNext();)
+      outputInclude((String)iter.next());
+    for (Iterator iter = si.getTargetNamespaces().iterator(); iter.hasNext();) {
+      String ns = (String)iter.next();
+      if (!ns.equals(targetNamespace))
+        outputImport(ns, si.getRootSchema(ns));
+    }
+    if (grammar != null)
+      grammar.componentsAccept(topLevelOutput);
     xw.endElement();
     xw.close();
   }
@@ -230,7 +244,7 @@ class Output {
       startWrapper();
       if (!outputGlobalElementRef(p)) {
         xw.startElement(xs("group"));
-        xw.attribute("ref", p.getName());
+        xw.attribute("ref", si.qualifyName(p));
         xw.endElement();
       }
       endWrapper();
@@ -251,7 +265,7 @@ class Output {
       startWrapper();
       if (si.isGlobal(p)) {
         xw.startElement(xs("element"));
-        xw.attribute("ref", ((NameNameClass)p.getNameClass()).getLocalName());
+        xw.attribute("ref", si.qualifyName((NameNameClass)p.getNameClass(), sourceUri));
         xw.endElement();
       }
       else
@@ -418,7 +432,7 @@ class Output {
 
     public Object visitRef(RefPattern p) {
       xw.startElement(xs("restriction"));
-      xw.attribute("base", p.getName());
+      xw.attribute("base", si.qualifyName(p));
       xw.endElement();
       return null;
     }
@@ -528,8 +542,11 @@ class Output {
 
     public Object visitAttribute(AttributePattern p) {
       xw.startElement(xs("attribute"));
+      NameNameClass nc = (NameNameClass)p.getNameClass();
       xw.attribute("name",
-                   ((NameNameClass)p.getNameClass()).getLocalName());
+                   nc.getLocalName());
+      if (nc.getNamespaceUri().equals(targetNamespace) && !targetNamespace.equals(""))
+        xw.attribute("form", "qualified");
       useAttribute();
       Pattern value = p.getChild();
       ChildType ct = si.getChildType(value);
@@ -579,7 +596,7 @@ class Output {
 
     public Object visitRef(RefPattern p) {
       xw.startElement(xs("attributeGroup"));
-      xw.attribute("ref", p.getName());
+      xw.attribute("ref", si.qualifyName(p));
       xw.endElement();
       return null;
     }
@@ -600,20 +617,6 @@ class Output {
 
     public Object visitUnary(UnaryPattern p) {
       return p.getChild().accept(this);
-    }
-  }
-
-  class IncludeOutput extends AbstractVisitor {
-    public Object visitInclude(IncludeComponent c) {
-      xw.startElement(xs("include"));
-      xw.attribute("schemaLocation", od.reference(sourceUri, c.getHref()));
-      xw.endElement();
-      return null;
-    }
-
-    public Object visitDiv(DivComponent c) {
-      c.componentsAccept(this);
-      return null;
     }
   }
 
@@ -682,7 +685,10 @@ class Output {
   void declareElement(ElementPattern p) {
     xw.startElement(xs("element"));
     // TODO deal with name classes
-    xw.attribute("name", ((NameNameClass)p.getNameClass()).getLocalName());
+    NameNameClass nc = (NameNameClass)p.getNameClass();
+    xw.attribute("name", nc.getLocalName());
+    if (nc.getNamespaceUri().equals("") && !targetNamespace.equals(""))
+      xw.attribute("form", "unqualified");
     xw.startElement(xs("complexType"));
     Pattern body = p.getChild();
     ChildType ct = si.getChildType(body);
@@ -728,7 +734,20 @@ class Output {
     NameClass nc = ep.getNameClass();
     if (!(nc instanceof NameNameClass))
       return null;
-    return ((NameNameClass)nc).getLocalName();
+    return si.qualifyName((NameNameClass)nc, sourceUri);
   }
 
+  void outputInclude(String href) {
+    xw.startElement(xs("include"));
+    xw.attribute("schemaLocation", od.reference(sourceUri, href));
+    xw.endElement();
+  }
+
+  void outputImport(String ns, String href) {
+    xw.startElement(xs("import"));
+    if (!ns.equals(""))
+      xw.attribute("namespace", ns);
+    xw.attribute("schemaLocation", od.reference(sourceUri, href));
+    xw.endElement();
+  }
 }
