@@ -70,3 +70,5 @@ Support attribute defaults (should be field on OptionalAttribute).
 Avoid redundant imports and redundant namespace declarations.
 
 With combine attributes, maybe insert <ref> to preserve file structure.
+
+Add an annotation on elements to convey <start> info.
