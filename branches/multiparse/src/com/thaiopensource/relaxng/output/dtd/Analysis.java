@@ -283,14 +283,10 @@ class Analysis {
     }
 
     public Object visitDefine(DefineComponent c) {
-      if (c.getName() == DefineComponent.START) {
+      if (c.getName() == DefineComponent.START)
         startType = analyzeContentType(c.getBody());
-      }
-      else {
-        ContentType t = new Analyzer().analyzeContentType(c.getBody());
-        if (t == ContentType.COMPLEX_TYPE || t == ContentType.MODEL_GROUP || t == ContentType.ZERO_OR_MORE_ELEMENT_CLASS)
-         ; // XXX give a warning that attributes from this will be expanded
-      }
+      else
+        new Analyzer().analyzeContentType(c.getBody());
       return null;
     }
 
@@ -347,6 +343,10 @@ class Analysis {
   class AttributeTyper extends AbstractVisitor {
     public Object visitPattern(Pattern p) {
       return AttributeType.EMPTY;
+    }
+
+    public Object visitMixed(MixedPattern p) {
+      return getAttributeType(p.getChild());
     }
 
     public Object visitOneOrMore(OneOrMorePattern p) {

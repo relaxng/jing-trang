@@ -142,6 +142,11 @@ class DtdOutput {
       return null;
     }
 
+    public Object visitMixed(MixedPattern p) {
+      buf.append("#PCDATA");
+      return null;
+    }
+
     public Object visitGroup(GroupPattern p) {
       List list = p.getChildren();
       boolean needSep = false;
@@ -232,7 +237,7 @@ class DtdOutput {
 
     public Object visitRef(RefPattern p) {
       ContentType t = getContentType(p);
-      if (t == ContentType.MIXED_MODEL || t == ContentType.COMPLEX_TYPE)
+      if (t == ContentType.MIXED_MODEL)
         super.visitRef(p);
       else {
         buf.append('(');
@@ -699,7 +704,7 @@ class DtdOutput {
     buf.setLength(0);
     if (t.isA(ContentType.MODEL_GROUP) || t.isA(ContentType.NOT_ALLOWED) || t.isA(ContentType.MIXED_ELEMENT_CLASS))
       body.accept(nestedContentModelOutput);
-    else if (t == ContentType.MIXED_MODEL || t == ContentType.COMPLEX_TYPE)
+    else if (t == ContentType.MIXED_MODEL)
       body.accept(topLevelContentModelOutput);
     else if (t.isA(ContentType.EMPTY))
       attributeOutput.output(body);
