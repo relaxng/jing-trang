@@ -10,10 +10,6 @@ class DataPattern extends StringPattern {
     this.dt = dt;
   }
 
-  boolean matches(PatternBuilder b, Atom a) {
-    return a.matchesDatatype(dt);
-  }
-
   boolean samePattern(Pattern other) {
     if (other.getClass() != this.getClass())
       return false;
@@ -22,6 +18,10 @@ class DataPattern extends StringPattern {
 
   void accept(PatternVisitor visitor) {
     visitor.visitData(dt);
+  }
+
+  Pattern apply(PatternFunction f) {
+    return f.caseData(this);
   }
 
   Datatype getDatatype() {

@@ -19,20 +19,6 @@ class AttributePattern extends Pattern {
     this.loc = loc;
   }
 
-  Pattern residual(PatternBuilder b, Atom a) {
-    if (a.matchesAttribute(b, nameClass, p))
-      return b.makeEmpty();
-    else
-      return b.makeNotAllowed();
-  }
-
-  Pattern endAttributes(PatternBuilder b, boolean recovering) {
-    if (recovering)
-      return b.makeEmpty();
-    else
-      return b.makeNotAllowed();
-  }
-
   Pattern expand(PatternBuilder b) {
     Pattern ep = p.expand(b);
     if (ep != p)
@@ -85,5 +71,17 @@ class AttributePattern extends Pattern {
 
   void accept(PatternVisitor visitor) {
     visitor.visitAttribute(nameClass, p);
+  }
+
+  Pattern apply(PatternFunction f) {
+    return f.caseAttribute(this);
+  }
+
+  Pattern getContent() {
+    return p;
+  }
+
+  NameClass getNameClass() {
+    return nameClass;
   }
 }

@@ -58,34 +58,16 @@ class PatternRefPattern extends Pattern {
     return p.expand(b);
   }
 
-  Pattern residual(PatternBuilder b, Atom a) {
-    return p.residual(b, a);
-  }
-
-  void initialContentPatterns(String namespaceURI, String localName, PatternSet ts) {
-    p.initialContentPatterns(namespaceURI, localName, ts);
-  }
-
-  Pattern combinedInitialContentPattern(PatternBuilder b,
-				  String namespaceURI,
-				  String localName,
-				  int recoveryLevel) {
-    return p.combinedInitialContentPattern(b,
-					namespaceURI,
-					localName,
-					recoveryLevel);
-  }
-
-  Pattern endAttributes(PatternBuilder b, boolean recovering) {
-    return p.endAttributes(b, recovering);
-  }
-
   boolean samePattern(Pattern other) {
     return false;
   }
 
   void accept(PatternVisitor visitor) {
     p.accept(visitor);
+  }
+
+  Pattern apply(PatternFunction f) {
+    return p.apply(f);
   }
 
   byte getReplacementStatus() {

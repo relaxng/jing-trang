@@ -18,15 +18,17 @@ public class PatternBuilder {
   private final UnexpandedNotAllowedPattern unexpandedNotAllowed;
   private final TextPattern text;
 
-  private final PatternPair emptyPatternPair;
-  private final Hashtable eaTable;
-  private final Hashtable textTable;
-  private final TextAtom textAtom;
-  private final Hashtable ucpTable;
-  private final Hashtable rTable = new Hashtable();
-  private Atom rAtom = null;
+  private PatternFunction endAttributesFunction;
+  private PatternFunction ignoreMissingAttributesFunction;
+  private PatternFunction endTagDerivFunction;
+  private PatternFunction mixedTextDerivFunction;
+  private PatternFunction textOnlyFunction;
+  private PatternFunction recoverAfterFunction;
+
+  private Hashtable patternMemoMap = new Hashtable();
 
   public PatternBuilder() {
+    init();
     table = null;
     used = 0;
     usedLimit = 0;
@@ -34,14 +36,11 @@ public class PatternBuilder {
     notAllowed = new NotAllowedPattern();
     unexpandedNotAllowed = new UnexpandedNotAllowedPattern();
     text = new TextPattern();
-    emptyPatternPair = new PatternPair();
-    eaTable = new Hashtable();
-    textTable = new Hashtable();
-    textAtom = new TextAtom();
-    ucpTable = new Hashtable();
   }
 
   public PatternBuilder(PatternBuilder parent) {
+    init();
+    // XXX Should we try to clone the parent's patternMemoMap? Tricky.
     table = parent.table;
     if (table != null)
       table = (Pattern[])table.clone();
@@ -51,12 +50,16 @@ public class PatternBuilder {
     notAllowed = parent.notAllowed;
     unexpandedNotAllowed = parent.unexpandedNotAllowed;
     text = parent.text;
-    emptyPatternPair = parent.emptyPatternPair;
-    eaTable = (Hashtable)parent.eaTable.clone();
-    textTable = (Hashtable)parent.textTable.clone();
-    textAtom = parent.textAtom;
-    ucpTable = (Hashtable)parent.ucpTable.clone();
   }
+
+  private void init() {
+    endAttributesFunction = new EndAttributesFunction(this);
+    ignoreMissingAttributesFunction = new IgnoreMissingAttributesFunction(this);
+    endTagDerivFunction = new EndTagDerivFunction(this);
+    mixedTextDerivFunction = new MixedTextDerivFunction(this);
+    textOnlyFunction = new TextOnlyFunction(this);
+    recoverAfterFunction = new RecoverAfterFunction(this);
+  }    
 
   Pattern makeEmpty() {
     return empty;
@@ -69,6 +72,11 @@ public class PatternBuilder {
   }
   Pattern makeError() {
     return intern(new ErrorPattern());
+  }
+  Pattern makeAfter(Pattern p1, Pattern p2) {
+    if (p1 == notAllowed || p2 == notAllowed)
+      return notAllowed;
+    return intern(new AfterPattern(p1, p2));
   }
   Pattern makeGroup(Pattern p1, Pattern p2) {
     if (p1 == empty)
@@ -228,87 +236,40 @@ public class PatternBuilder {
     return i == 0 ? table.length - 1 : i - 1;
   }
 
-  static class Key {
-    Pattern p;
-    String namespaceURI;
-    String localName;
-    Key(Pattern p, String namespaceURI, String localName) {
-      this.p = p;
-      this.namespaceURI = namespaceURI;
-      this.localName = localName;
-    }
-
-    public boolean equals(Object obj) {
-      if (obj == null || !(obj instanceof Key))
-	return false;
-      Key other = (Key)obj;
-      return (p == other.p
-	      && namespaceURI.equals(other.namespaceURI)
-	      && localName.equals(other.localName));
-    }
-    public int hashCode() {
-      return p.hashCode() ^ namespaceURI.hashCode() ^ localName.hashCode();
-    }
-  }
-
-  PatternPair memoizedUnambigContentPattern(Pattern from,
-					    String namespaceURI,
-					    String localName) {
-    Key k = new Key(from, namespaceURI, localName);
-    PatternPair tp = (PatternPair)ucpTable.get(k);
-    if (tp != null)
-      return tp;
-    tp = from.unambigContentPattern(this, namespaceURI, localName);
-    if (tp == null)
-      return null;
-    ucpTable.put(k, tp);
-    return tp;
-  }
-
-  PatternPair makeEmptyPatternPair() {
-    return emptyPatternPair;
-  }
-
-  Pattern memoizedTextResidual(Pattern p) {
-    Pattern r = (Pattern)textTable.get(p);
-    if (r == null) {
-      r = memoizedResidual(p, textAtom);
-      textTable.put(p, r);
-    }
-    return r;
-  }
-
-  Pattern memoizedEndAttributes(Pattern p, boolean recovering) {
-    if (recovering)
-      return p.endAttributes(this, recovering);
-    Pattern ea = (Pattern)eaTable.get(p);
-    if (ea == null) {
-      ea = p.endAttributes(this, false);
-      eaTable.put(p, ea);
-    }
-    return ea;
-  }
-
-  Pattern stringResidual(Pattern p, StringAtom a) {
-    if (a.isBlank() && p.isNullable())
-      return p;
-    return p.residual(this, a);
-  }
-
-  Pattern memoizedResidual(Pattern p, Atom a) {
-    if (a != rAtom) {
-      rTable.clear();
-      rAtom = a;
-    }
-    Pattern r = (Pattern)rTable.get(p);
-    if (r == null) {
-      r = p.residual(this, a);
-      rTable.put(p, r);
-    }
-    return r;
-  }
-
   void printStats() {
     System.err.println(used + " distinct patterns");
+  }
+
+  PatternMemo getPatternMemo(Pattern p) {
+    PatternMemo memo = (PatternMemo)patternMemoMap.get(p);
+    if (memo == null) {
+      memo = new PatternMemo(p, this);
+      patternMemoMap.put(p, memo);
+    }
+    return memo;
+  }
+
+  PatternFunction getEndAttributesFunction() {
+    return endAttributesFunction;
+  }
+
+  PatternFunction getIgnoreMissingAttributesFunction() {
+    return ignoreMissingAttributesFunction;
+  }
+
+  PatternFunction getEndTagDerivFunction() {
+    return endTagDerivFunction;
+  }
+
+  PatternFunction getMixedTextDerivFunction() {
+    return mixedTextDerivFunction;
+  }
+
+  PatternFunction getTextOnlyFunction() {
+    return textOnlyFunction;
+  }
+
+  PatternFunction getRecoverAfterFunction() {
+    return recoverAfterFunction;
   }
 }
