@@ -18,6 +18,7 @@ import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.Context;
+import com.thaiopensource.relaxng.parse.CommentList;
 import com.thaiopensource.relaxng.IncorrectSchemaException;
 import com.thaiopensource.util.Localizer;
 
@@ -37,7 +38,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.io.IOException;
 
-public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilder {
+public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilder, CommentList {
   private final SchemaBuilderImpl parent;
   private boolean hadError = false;
   private final Parseable parseable;
@@ -464,6 +465,9 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     public void topLevelAnnotation(ParsedElementAnnotation ea) throws BuildException {
     }
 
+    public void addComment(String value, Location loc) throws BuildException {
+    }
+
     private RefPattern lookup(String name) {
       if (name == START)
         return startRef;
@@ -542,6 +546,9 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       // nothing to do
     }
 
+    public void addComment(String value, Location loc) throws BuildException {
+    }
+
     public Div makeDiv() {
       return this;
     }
@@ -604,6 +611,14 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
   }
 
   public ParsedNameClass annotateAfter(ParsedNameClass nc, ParsedElementAnnotation e) throws BuildException {
+    return nc;
+  }
+
+  public ParsedPattern commentAfter(ParsedPattern p, String value, Location loc) throws BuildException {
+    return p;
+  }
+
+  public ParsedNameClass commentAfter(ParsedNameClass nc, String value, Location loc) throws BuildException {
     return nc;
   }
 
@@ -694,12 +709,20 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     return new LocatorImpl(systemId, lineNumber, columnNumber);
   }
 
-  public Annotations makeAnnotations(Context context) {
+  public Annotations makeAnnotations(CommentList comments, Context context) {
     return this;
   }
 
-  public ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix, Location loc, Context context) {
+  public ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix,
+                                                               Location loc, CommentList comments, Context context) {
     return this;
+  }
+
+  public CommentList makeCommentList() {
+    return this;
+  }
+
+  public void addComment(String value, Location loc) throws BuildException {
   }
 
   public void addAttribute(String ns, String localName, String prefix, String value, Location loc) {

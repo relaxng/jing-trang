@@ -6,7 +6,7 @@ import com.thaiopensource.relaxng.parse.Context;
 import java.util.List;
 import java.util.Vector;
 
-public class ElementAnnotation extends AnnotationChild implements ParsedElementAnnotation {
+public class ElementAnnotation extends AnnotationChild {
   private String namespaceUri;
   private String localName;
   private String prefix;

@@ -6,10 +6,15 @@ import java.util.List;
 import java.util.Vector;
 
 public abstract class Annotated extends SourceObject {
+  private final List leadingComments = new Vector();
   private final List attributeAnnotations = new Vector();
   private final List childElementAnnotations = new Vector();
   private final List followingElementAnnotations = new Vector();
   private Context context;
+
+  public List getLeadingComments() {
+    return leadingComments;
+  }
 
   public List getAttributeAnnotations() {
     return attributeAnnotations;
