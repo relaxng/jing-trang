@@ -2,10 +2,6 @@ Provide implementation of JARV interface.
 
 Recovery for bad start tag.
 
-Validating attribute value should special case <text/> content.
-
-Optimize datatypes that allow any string.
-
 Memoize dataDeriv with <value>: hashTable based on converted Object.
 
 Distinguish error for unknown datatype library and unknown datatype.
@@ -30,4 +26,5 @@ Option to do XInclude before validation.
 
 Integrate the non-XML syntax.
 
-Choice pattern with multiple operands, or maybe a variant of element that has a mapping from names to content models.
+Choice pattern with multiple operands, or maybe a variant of element that has
+a mapping from names to content models.
