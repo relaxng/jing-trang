@@ -57,5 +57,9 @@ abstract class AbstractPatternFunction implements PatternFunction {
     return caseOther(p);
   }
 
+  public Object caseAfter(AfterPattern p) {
+    return caseOther(p);
+  }
+
   public abstract Object caseOther(Pattern p);
 }
