@@ -1,5 +1,4 @@
 Bulletproof LocalOutputDirectory.
-Avoid unnecessary parentheses around group members
 Pretty-print content models to avoid excessively long lines
 Recognize #FIXED attributes
 Avoid duplicate namespace declarations for global attributes
