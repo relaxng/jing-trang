@@ -19,7 +19,7 @@ public interface GrammarSection {
 
   void define(String name, Combine combine, ParsedPattern pattern, Location loc, Annotations anno)
     throws BuildException;
-  void topLevelAnnotation(ElementAnnotation ea) throws BuildException;
+  void topLevelAnnotation(ParsedElementAnnotation ea) throws BuildException;
   Div makeDiv();
   /**
    * Returns null if already in an include.

@@ -10,7 +10,7 @@ package com.thaiopensource.relaxng.parse.nonxml;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Annotations;
 import com.thaiopensource.relaxng.parse.DataPatternBuilder;
-import com.thaiopensource.relaxng.parse.ElementAnnotation;
+import com.thaiopensource.relaxng.parse.ParsedElementAnnotation;
 import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
 import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.ParsedNameClass;
@@ -304,7 +304,7 @@ void DatatypesDecl() :
 ParsedPattern AnnotatedPrimaryExpr(Scope scope) :
 {
   ParsedPattern p;
-  ElementAnnotation e;
+  ParsedElementAnnotation e;
 }
 {
   p = PrimaryExpr(scope)
@@ -394,7 +394,7 @@ ParsedPattern UnaryExpr(Scope scope) :
   ParsedPattern p;
   Token t;
   Annotations a;
-  ElementAnnotation e;
+  ParsedElementAnnotation e;
 }
 {
   p = AnnotatedPrimaryExpr(scope)
@@ -633,7 +633,7 @@ ParsedPattern ParenExpr(Scope scope) :
 
 void GrammarComponent(GrammarSection section, Scope scope) :
 {
-  ElementAnnotation e;
+  ParsedElementAnnotation e;
 }
 {
   (Definition(section, scope) | Include(section, scope))
@@ -884,7 +884,7 @@ ParsedPattern Except(Scope scope) :
 Annotations Annotations() :
 {
   Annotations a = null;
-  ElementAnnotation e;
+  ParsedElementAnnotation e;
 }
 {
   ("[" { a = sb.makeAnnotations(); }
@@ -931,9 +931,9 @@ void UnprefixedAnnotationAttribute(Annotations a) :
   }
 }
 
-ElementAnnotation AnnotationElement() :
+ParsedElementAnnotation AnnotationElement() :
 {
-  ElementAnnotation a;
+  ParsedElementAnnotation a;
 }
 {
   (a = PrefixedAnnotationElement()
@@ -941,7 +941,7 @@ ElementAnnotation AnnotationElement() :
   { return a; }
 }
 
-ElementAnnotation PrefixedAnnotationElement() :
+ParsedElementAnnotation PrefixedAnnotationElement() :
 {
   Token t;
   ElementAnnotationBuilder eab;
@@ -959,7 +959,7 @@ ElementAnnotation PrefixedAnnotationElement() :
   { return eab.makeElementAnnotation(); }
 }
 
-ElementAnnotation UnprefixedAnnotationElement() :
+ParsedElementAnnotation UnprefixedAnnotationElement() :
 {
   LocatedString name;
   ElementAnnotationBuilder eab;
@@ -976,7 +976,7 @@ ElementAnnotation UnprefixedAnnotationElement() :
 void AnnotationElementContent(ElementAnnotationBuilder eab) :
 {
   LocatedString s;
-  ElementAnnotation e;
+  ParsedElementAnnotation e;
 }
 {
   "["
