@@ -10,6 +10,9 @@ import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroupDefinition;
 import com.thaiopensource.relaxng.output.xsd.basic.Structure;
 import com.thaiopensource.relaxng.output.xsd.basic.Include;
 import com.thaiopensource.relaxng.output.xsd.basic.Definition;
+import com.thaiopensource.relaxng.output.xsd.basic.Wildcard;
+import com.thaiopensource.relaxng.output.xsd.basic.WildcardElement;
+import com.thaiopensource.relaxng.output.xsd.basic.WildcardAttribute;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 
@@ -120,6 +123,22 @@ public class NamespaceManager {
       NamespaceUsage usage = getUsage(a.getName().getNamespaceUri());
       if (!nested)
         usage.attributeCount++;
+      return null;
+    }
+
+
+    public Object visitWildcardElement(WildcardElement p) {
+      return visitWildcard(p.getWildcard());
+    }
+
+    public Object visitWildcardAttribute(WildcardAttribute a) {
+       return visitWildcard(a.getWildcard());
+    }
+
+    private Object visitWildcard(Wildcard wc) {
+      String ns = otherNamespace(wc);
+      if (ns != null)
+        lookupTargetNamespace(ns);
       return null;
     }
 
@@ -437,6 +456,26 @@ public class NamespaceManager {
       attributeNameMap.put(name, info);
     }
     return info;
+  }
+
+  static String otherNamespace(Wildcard wc) {
+    if (wc.isPositive())
+      return null;
+    Set namespaces = wc.getNamespaces();
+    switch (namespaces.size()) {
+    case 2:
+      if (!namespaces.contains(""))
+        return null;
+      Iterator iter = namespaces.iterator();
+      String ns = (String)iter.next();
+      if (!ns.equals(""))
+        return ns;
+      return (String)iter.next();
+    case 1:
+      if (namespaces.contains(""))
+        return "";
+    }
+    return null;
   }
 
 }
