@@ -95,8 +95,9 @@ public class Validator implements ContentHandler {
     Name name = new Name(namespaceURI, localName);
     if (!setMemo(memo.startTagOpenDeriv(name))) {
       error("impossible_element", localName);
-      // XXX recover better
-      memo = builder.getPatternMemo(builder.makeAfter(builder.makeNotAllowed(), memo.getPattern()));
+      if (!setMemo(memo.startTagOpenRecoverDeriv(name)))
+        // XXX recover better
+        memo = builder.getPatternMemo(builder.makeAfter(builder.makeNotAllowed(), memo.getPattern()));
     }
     int len = atts.getLength();
     for (int i = 0; i < len; i++) {

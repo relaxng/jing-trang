@@ -15,6 +15,7 @@ final class PatternMemo {
   private PatternMemo memoIgnoreMissingAttributes;
   private PatternMemo memoDataDeriv;
   private Hashtable startTagOpenDerivMap;
+  private Hashtable startTagOpenRecoverDerivMap;
   private Hashtable startAttributeDerivMap;
 
   PatternMemo(Pattern pattern, PatternBuilder builder) {
@@ -118,6 +119,30 @@ final class PatternMemo {
       f = new StartTagOpenDerivFunction(name, builder);
     tem = applyForPatternMemo(f);
     startTagOpenDerivMap.put(name, tem);
+    return tem;
+  }
+
+  PatternMemo startTagOpenRecoverDeriv(Name name) {
+    return startTagOpenRecoverDeriv(name, null);
+  }
+
+  PatternMemo startTagOpenRecoverDeriv(StartTagOpenRecoverDerivFunction f) {
+    return startTagOpenRecoverDeriv(f.getName(), f);
+  }
+
+  private PatternMemo startTagOpenRecoverDeriv(Name name, StartTagOpenRecoverDerivFunction f) {
+    PatternMemo tem;
+    if (startTagOpenRecoverDerivMap == null)
+      startTagOpenRecoverDerivMap = new Hashtable();
+    else {
+      tem = (PatternMemo)startTagOpenRecoverDerivMap.get(name);
+      if (tem != null)
+	return tem;
+    }
+    if (f == null)
+      f = new StartTagOpenRecoverDerivFunction(name, builder);
+    tem = applyForPatternMemo(f);
+    startTagOpenRecoverDerivMap.put(name, tem);
     return tem;
   }
 
