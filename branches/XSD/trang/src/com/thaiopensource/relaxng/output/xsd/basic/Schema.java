@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.HashSet;
 
 public class Schema extends Located {
   private final String uri;
@@ -16,6 +17,7 @@ public class Schema extends Located {
   private Map groupMap;
   private Map attributeGroupMap;
   private Map simpleTypeMap;
+  private Set subSchemas;
 
   public Schema(SourceLocation location, String uri) {
     super(location);
@@ -23,6 +25,8 @@ public class Schema extends Located {
     this.groupMap = new HashMap();
     this.attributeGroupMap = new HashMap();
     this.simpleTypeMap = new HashMap();
+    this.subSchemas = new HashSet();
+    this.subSchemas.add(this);
   }
 
   private Schema(SourceLocation location, String uri, Schema parent) {
@@ -32,6 +36,8 @@ public class Schema extends Located {
     this.groupMap = parent.groupMap;
     this.attributeGroupMap = parent.attributeGroupMap;
     this.simpleTypeMap = parent.simpleTypeMap;
+    this.subSchemas = parent.subSchemas;
+    this.subSchemas.add(this);
   }
 
   public String getUri() {
@@ -87,7 +93,7 @@ public class Schema extends Located {
       ((TopLevel)iter.next()).accept(visitor);
   }
 
-  public Set subSchemas() {
-    return null;
+  public Set getSubSchemas() {
+    return subSchemas;
   }
 }
