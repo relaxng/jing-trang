@@ -1,7 +1,5 @@
 Approximate <interleave>
 
-Optimize choice of restriction with enumeration.
-
 Map
 
   foo = element bar|baz { xyzzy }
