@@ -15,6 +15,11 @@ class ChoiceNameClass implements NameClass {
 	    || nameClass2.contains(name));
   }
 
+  public int containsSpecificity(Name name) {
+    return Math.max(nameClass1.containsSpecificity(name),
+                    nameClass2.containsSpecificity(name));
+  }
+
   public int hashCode() {
     return nameClass1.hashCode() ^ nameClass2.hashCode();
   }

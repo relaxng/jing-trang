@@ -12,10 +12,14 @@ import org.xml.sax.helpers.LocatorImpl;
 
 import org.relaxng.datatype.ValidationContext;
 
+import java.util.Hashtable;
+
 public class Validator implements ContentHandler {
   private final PatternBuilder builder;
   private Locator locator;
   private final XMLReader xr;
+  private Pattern start;
+  private Hashtable recoverPatternTable;
   private PatternMemo memo;
   private boolean hadError = false;
   private boolean collectingCharacters = false;
@@ -94,10 +98,14 @@ public class Validator implements ContentHandler {
 
     Name name = new Name(namespaceURI, localName);
     if (!setMemo(memo.startTagOpenDeriv(name))) {
-      error("impossible_element", localName);
-      if (!setMemo(memo.startTagOpenRecoverDeriv(name)))
-        // XXX recover better
-        memo = builder.getPatternMemo(builder.makeAfter(builder.makeNotAllowed(), memo.getPattern()));
+      PatternMemo next = memo.startTagOpenRecoverDeriv(name);
+      if (!next.isNotAllowed())
+        error("required_elements_missing");
+      else {
+        next = builder.getPatternMemo(builder.makeAfter(findElement(name), memo.getPattern()));
+        error(next.isNotAllowed() ? "unknown_element" : "out_of_context_element", localName);
+      }
+      memo = next;
     }
     int len = atts.getLength();
     for (int i = 0; i < len; i++) {
@@ -119,9 +127,19 @@ public class Validator implements ContentHandler {
       startCollectingCharacters();
   }
 
+  private PatternMemo fixAfter(PatternMemo p) {
+    return builder.getPatternMemo(p.getPattern().applyForPattern(new ApplyAfterFunction(builder) {
+      Pattern apply(Pattern p) {
+        return builder.makeEmpty();
+      }
+    }));
+  }
+
   public void endElement(String namespaceURI,
 			 String localName,
 			 String qName) throws SAXException {
+    /* The tricky thing here is that the derivative may be notAllowed simply because the parent
+       is notAllowed; we don't want to give an error in this case. */
     if (collectingCharacters) {
       collectingCharacters = false;
       if (!setMemo(memo.textOnly())) {
@@ -129,14 +147,27 @@ public class Validator implements ContentHandler {
 	memo = memo.recoverAfter();
 	return;
       }
-      if (!setMemo(memo.dataDeriv(charBuf.toString(), prefixMapping))) {
-	error("string_not_allowed");
-	memo = memo.recoverAfter();
+      String data = charBuf.toString();
+      if (!setMemo(memo.dataDeriv(data, prefixMapping))) {
+        PatternMemo next = memo.recoverAfter();
+        boolean suppressError = false;
+        if (!memo.isNotAllowed()) {
+          if (!next.isNotAllowed()
+              || fixAfter(memo).dataDeriv(data, prefixMapping).isNotAllowed())
+            error("string_not_allowed");
+        }
+        memo = next;
       }
     }
     else if (!setMemo(memo.endTagDeriv())) {
-      error("unfinished_element");
-      memo = memo.recoverAfter();
+      PatternMemo next = memo.recoverAfter();
+      boolean suppressError = false;
+      if (!memo.isNotAllowed()) {
+        if (!next.isNotAllowed()
+            || fixAfter(memo).endTagDeriv().isNotAllowed())
+          error("unfinished_element");
+      }
+      memo = next;
     }
   }
 
@@ -188,6 +219,7 @@ public class Validator implements ContentHandler {
     this.builder = builder;
     this.xr = xr;
     this.memo = builder.getPatternMemo(pattern);
+    this.start = pattern;
   }
 
   public boolean getValid() {
@@ -195,6 +227,8 @@ public class Validator implements ContentHandler {
   }
 
   private void error(String key) throws SAXException {
+    if (hadError && memo.isNotAllowed())
+      return;
     hadError = true;
     ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
@@ -202,6 +236,8 @@ public class Validator implements ContentHandler {
   }
 
   private void error(String key, String arg) throws SAXException {
+    if (hadError && memo.isNotAllowed())
+      return;
     hadError = true;
     ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
@@ -209,6 +245,8 @@ public class Validator implements ContentHandler {
   }
 
   private void error(String key, String arg1, String arg2, Locator loc) throws SAXException {
+    if (hadError && memo.isNotAllowed())
+      return;
     hadError = true;
     ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
@@ -217,6 +255,8 @@ public class Validator implements ContentHandler {
   }
 
   private void error(String key, String arg1, String arg2) throws SAXException {
+    if (hadError && memo.isNotAllowed())
+      return;
     hadError = true;
     ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
@@ -224,13 +264,24 @@ public class Validator implements ContentHandler {
 				     locator));
   }
 
-  /* Return false is something went wrong. */
+  /* Return false if m is notAllowed. */
   private boolean setMemo(PatternMemo m) {
     if (m.isNotAllowed())
-      return memo.isNotAllowed();
+      return false;
     else {
       memo = m;
       return true;
     }
+  }
+
+  private Pattern findElement(Name name) {
+    if (recoverPatternTable == null)
+     recoverPatternTable = new Hashtable();
+    Pattern p = (Pattern)recoverPatternTable.get(name);
+    if (p == null) {
+      p = FindElementFunction.findElement(builder, name, start);
+      recoverPatternTable.put(name, p);
+    }
+    return p;
   }
 }

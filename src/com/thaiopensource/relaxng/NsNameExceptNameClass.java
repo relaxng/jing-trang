@@ -15,6 +15,10 @@ class NsNameExceptNameClass implements NameClass {
 	    && !nameClass.contains(name));
   }
 
+  public int containsSpecificity(Name name) {
+    return contains(name) ? SPECIFICITY_NS_NAME : SPECIFICITY_NONE;
+  }
+
   public boolean equals(Object obj) {
     if (obj == null || !(obj instanceof NsNameExceptNameClass))
       return false;

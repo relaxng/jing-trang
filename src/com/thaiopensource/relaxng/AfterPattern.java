@@ -8,6 +8,10 @@ class AfterPattern extends BinaryPattern {
 	  p2);
   }
 
+  boolean isNotAllowed() {
+    return p1.isNotAllowed();
+  }
+
   Object apply(PatternFunction f) {
     return f.caseAfter(this);
   }

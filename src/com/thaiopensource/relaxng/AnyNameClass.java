@@ -6,6 +6,10 @@ class AnyNameClass implements NameClass {
     return true;
   }
 
+  public int containsSpecificity(Name name) {
+    return SPECIFICITY_ANY_NAME;
+  }
+
   public boolean equals(Object obj) {
     return obj != null && obj instanceof AnyNameClass;
   }

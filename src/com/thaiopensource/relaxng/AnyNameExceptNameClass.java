@@ -12,6 +12,10 @@ class AnyNameExceptNameClass implements NameClass {
     return !nameClass.contains(name);
   }
 
+  public int containsSpecificity(Name name) {
+    return contains(name) ? SPECIFICITY_ANY_NAME : SPECIFICITY_NONE;
+  }
+
   public boolean equals(Object obj) {
     if (obj == null || !(obj instanceof AnyNameExceptNameClass))
       return false;
