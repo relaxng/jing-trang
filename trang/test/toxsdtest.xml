@@ -2284,6 +2284,127 @@ include "bad.rnc"
 </incorrect>
 </compact>
 </testCase>
+<testCase>
+<compact>
+<incorrect>
+inline = element em { text }
+inline |= element code { text }
+inline = element b { text }
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect><![CDATA[
+inline = element em { text }
+inline |= element code { text }
+inline &= element b { text }
+]]></incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<correct>
+inline = element em { text }
+inline |= element code { text }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:group name="inline">
+    <xs:choice>
+      <xs:element ref="em"/>
+      <xs:element ref="code"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="em">
+    <xs:complexType mixed="true"/>
+  </xs:element>
+  <xs:element name="code">
+    <xs:complexType mixed="true"/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+inline |= element code { text }
+inline = element em { text }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:group name="inline">
+    <xs:choice>
+      <xs:element ref="code"/>
+      <xs:element ref="em"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="code">
+    <xs:complexType mixed="true"/>
+  </xs:element>
+  <xs:element name="em">
+    <xs:complexType mixed="true"/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+inline |= element code { text }
+inline = element em { text }
+inline |= element b { text }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:group name="inline">
+    <xs:choice>
+      <xs:element ref="code"/>
+      <xs:element ref="em"/>
+      <xs:element ref="b"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="code">
+    <xs:complexType mixed="true"/>
+  </xs:element>
+  <xs:element name="em">
+    <xs:complexType mixed="true"/>
+  </xs:element>
+  <xs:element name="b">
+    <xs:complexType mixed="true"/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+atts &= attribute foo { text }
+atts = attribute bar { text }
+atts &= attribute baz { text }
+]]></correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:attributeGroup name="atts">
+    <xs:attribute name="foo" use="required"/>
+    <xs:attribute name="bar" use="required"/>
+    <xs:attribute name="baz" use="required"/>
+  </xs:attributeGroup>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>
