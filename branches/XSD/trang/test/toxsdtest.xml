@@ -3019,12 +3019,6 @@ foo = xsd:float*
 </correct>
 </xsd>
 </testCase>
-<!--
-<testCase>
-<compact>
-<incorrect>
-</incorrect>
-</compact>
 <testCase>
 <compact>
 <correct>
@@ -3126,6 +3120,77 @@ element foo {
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+element foo { attribute * { xsd:float }* }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:anyAttribute processContents="skip"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+start = element foo { attribute * { x }* }
+x = xsd:normalizedString
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:anyAttribute processContents="skip"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="x">
+    <xs:restriction base="xs:normalizedString"/>
+  </xs:simpleType>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<incorrect>
+element foo { attribute * { text } }
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo { attribute * { text }+ }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:anyAttribute processContents="skip"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<!--
+<testCase>
+<compact>
+<incorrect>
+</incorrect>
+</compact>
 </testCase>
 <testCase>
 <compact>
