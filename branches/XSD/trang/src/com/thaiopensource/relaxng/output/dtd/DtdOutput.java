@@ -32,6 +32,7 @@ import com.thaiopensource.relaxng.edit.Annotated;
 import com.thaiopensource.relaxng.edit.Comment;
 import com.thaiopensource.relaxng.edit.AnnotationChild;
 import com.thaiopensource.relaxng.output.OutputDirectory;
+import com.thaiopensource.relaxng.output.common.ErrorReporter;
 import com.thaiopensource.xml.util.Naming;
 
 import java.io.IOException;
