@@ -4,8 +4,6 @@ import java.util.Hashtable;
 
 import org.relaxng.datatype.ValidationContext;
 
-/* XXX When caching fails look for an After pattern with same first operand. */
-
 final class PatternMemo {
   private final Pattern pattern;
   private final PatternBuilder builder;
