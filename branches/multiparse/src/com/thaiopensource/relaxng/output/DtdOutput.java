@@ -81,6 +81,7 @@ option to protect element declarations with included section
 allow mixed(repeat(NOT_ALLOWED))
 Avoid unnecessary parentheses around group members
 Pretty-print content models to avoid excessively long lines
+Prettier formatting of ATTLISTs
 Handle DTD compatibility ID/IDREF/IDREFS
 */
 public class DtdOutput {
@@ -217,7 +218,8 @@ public class DtdOutput {
             p.setType("string");
             return ATTRIBUTE_TYPE;
           }
-        p.setType("NMTOKEN");
+        if (!type.equals("string"))
+          p.setType("NMTOKEN");
       }
       else if (!lib.equals("")) {
         error("unrecognized_datatype_library", p.getSourceLocation());
