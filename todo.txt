@@ -1,17 +1,20 @@
-Compact syntax documentation: \x; string literals; ##
+Document \x in compact syntax.
 
-Comments embedded within strings.
+Document ## in compact syntax.
+
+Handle comments embedded within strings better.
 
 Compact syntax UTF-8/UTF-16 autodetection.
 
 Compact syntax: skip BOM before \x interpretation.
 
-Inform user about position of regex error; improve wording of
-expected_eos error. Document regex support.
-
 Make SAX-based parser preserve element annotations.
 
 SAXParser and comment formatting.
+
+Don't simply ignore XSD datatypes that we don't implement.
+
+Trang should output a:documentation as comments in the DTD.
 
 Put location information in error messages into a standard format
 understandable by Emacs.
@@ -50,3 +53,6 @@ Option to be verbose.
 
 On output, using character escapes for things outside repertoire of
 character encoding.
+
+Streaming validation of data.
+
