@@ -7,6 +7,9 @@ import org.relaxng.datatype.helpers.DatatypeLibraryLoader;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
+import java.io.FileOutputStream;
 
 import com.thaiopensource.relaxng.XMLReaderCreator;
 import com.thaiopensource.relaxng.IncorrectSchemaException;
@@ -21,6 +24,7 @@ import com.thaiopensource.relaxng.output.xsd.XsdOutputFormat;
 import com.thaiopensource.relaxng.parse.compact.CompactParseable;
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.util.Jaxp11XMLReaderCreator;
+import com.thaiopensource.relaxng.util.ErrorHandlerImpl;
 import com.thaiopensource.util.UriOrFile;
 
 public class CompactTestDriver {
@@ -39,6 +43,7 @@ public class CompactTestDriver {
   }
 
   private int doMain(String[] args) throws IOException {
+    eh = new ErrorHandlerImpl(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(args[0]))));
     if (args[2].equals("xsd")) {
       of = new XsdOutputFormat();
       toExt = XSD_EXTENSION;
