@@ -1,10 +1,10 @@
-Preserve all comments in non-XML syntax.
+Add design.html into build file; add pointer in index.html.
 
-Add design.html into build file.
-
-Documentation for trang.
+Finish trang.html.
 
 Make SAX-based parser preserve element annotations.
+
+Preserve all comments in non-XML syntax.
 
 SAXParser and comment formatting.
 
