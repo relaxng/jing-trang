@@ -1,4 +1,3 @@
-Error for <include> content
 Avoid duplicate element declarations when expanding param entities
 Avoid warning for content that is data of type string
 Check single element type
@@ -27,4 +26,4 @@ Handle choice involving attributes (perhaps just special case where alphabets ar
 Handle interleave where operand is a zero or more element class
 Give warnings for definitions that had to be expanded
 Closer approximation of choice of datatypes
-Better approximation of attribute choice
+Robust handling of attribute choice
