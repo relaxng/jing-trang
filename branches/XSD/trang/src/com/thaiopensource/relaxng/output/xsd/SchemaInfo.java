@@ -24,10 +24,14 @@ import com.thaiopensource.relaxng.edit.OptionalPattern;
 import com.thaiopensource.relaxng.edit.GrammarPattern;
 import com.thaiopensource.relaxng.edit.DefineComponent;
 import com.thaiopensource.relaxng.edit.DivComponent;
+import com.thaiopensource.relaxng.edit.CompositePattern;
+import com.thaiopensource.relaxng.edit.UnaryPattern;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 class SchemaInfo {
   private final SchemaCollection sc;
@@ -35,6 +39,7 @@ class SchemaInfo {
   private final ErrorReporter er;
   private final Map childTypeMap = new HashMap();
   private final Map defineMap = new HashMap();
+  private final Set rootElements = new HashSet();
   private final PatternVisitor childTypeVisitor = new ChildTypeVisitor();
 
   abstract class PatternAnalysisVisitor extends AbstractVisitor {
@@ -175,13 +180,45 @@ class SchemaInfo {
 
   class GrammarVisitor extends AbstractVisitor {
     public Object visitDefine(DefineComponent c) {
-      defineMap.put(c.getName(), c.getBody());
+      if (c.getName() != DefineComponent.START)
+        defineMap.put(c.getName(), c.getBody());
       return null;
     }
 
     public Object visitDiv(DivComponent c) {
       c.componentsAccept(this);
       return null;
+    }
+  }
+
+  class RootMarker extends AbstractVisitor {
+    public Object visitDiv(DivComponent c) {
+      c.componentsAccept(this);
+      return null;
+    }
+
+    public Object visitDefine(DefineComponent c) {
+      if (c.getName() == DefineComponent.START)
+        c.getBody().accept(this);
+      return null;
+    }
+
+    public Object visitElement(ElementPattern p) {
+      rootElements.add(p);
+      return null;
+    }
+
+    public Object visitComposite(CompositePattern p) {
+      p.childrenAccept(this);
+      return null;
+    }
+
+    public Object visitUnary(UnaryPattern p) {
+      return p.getChild().accept(this);
+    }
+
+    public Object visitRef(RefPattern p) {
+      return getBody(p).accept(this);
     }
   }
 
@@ -192,6 +229,7 @@ class SchemaInfo {
     if (p instanceof GrammarPattern) {
       grammar = (GrammarPattern)p;
       grammar.componentsAccept(new GrammarVisitor());
+      grammar.componentsAccept(new RootMarker());
     }
     else {
       grammar = new GrammarPattern();
@@ -199,6 +237,7 @@ class SchemaInfo {
       DefineComponent dc = new DefineComponent(DefineComponent.START, p);
       dc.setSourceLocation(p.getSourceLocation());
       grammar.getComponents().add(dc);
+      p.accept(new RootMarker());
     }
   }
 
@@ -221,5 +260,9 @@ class SchemaInfo {
 
   Pattern getBody(RefPattern p) {
     return (Pattern)defineMap.get(p.getName());
+  }
+
+  boolean isGlobal(ElementPattern p) {
+    return rootElements.contains(p);
   }
 }
