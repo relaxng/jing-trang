@@ -23,6 +23,7 @@ import com.thaiopensource.relaxng.edit.OneOrMorePattern;
 import com.thaiopensource.relaxng.edit.OptionalPattern;
 import com.thaiopensource.relaxng.edit.GrammarPattern;
 import com.thaiopensource.relaxng.edit.DefineComponent;
+import com.thaiopensource.relaxng.edit.DivComponent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,7 @@ class SchemaInfo {
   private GrammarPattern grammar;
   private final ErrorReporter er;
   private final Map childTypeMap = new HashMap();
+  private final Map defineMap = new HashMap();
   private final PatternVisitor childTypeVisitor = new ChildTypeVisitor();
 
   abstract class PatternAnalysisVisitor extends AbstractVisitor {
@@ -171,12 +173,26 @@ class SchemaInfo {
     }
   }
 
+  class GrammarVisitor extends AbstractVisitor {
+    public Object visitDefine(DefineComponent c) {
+      defineMap.put(c.getName(), c.getBody());
+      return null;
+    }
+
+    public Object visitDiv(DivComponent c) {
+      c.componentsAccept(this);
+      return null;
+    }
+  }
+
   SchemaInfo(SchemaCollection sc, ErrorReporter er) {
     this.sc = sc;
     this.er = er;
     Pattern p = sc.getMainSchema();
-    if (p instanceof GrammarPattern)
+    if (p instanceof GrammarPattern) {
       grammar = (GrammarPattern)p;
+      grammar.componentsAccept(new GrammarVisitor());
+    }
     else {
       grammar = new GrammarPattern();
       grammar.setSourceLocation(p.getSourceLocation());
@@ -204,6 +220,6 @@ class SchemaInfo {
   }
 
   Pattern getBody(RefPattern p) {
-    return null;
+    return (Pattern)defineMap.get(p.getName());
   }
 }
