@@ -11,6 +11,7 @@ import com.thaiopensource.relaxng.parse.ParsedNameClass;
 import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
+import com.thaiopensource.relaxng.parse.Annotations;
 import com.thaiopensource.util.Uri;
 import com.thaiopensource.util.Localizer;
 import org.relaxng.datatype.Datatype;
@@ -279,8 +280,11 @@ class SchemaParser {
     }
   }
 
+  static private final int INIT_CHILD_ALLOC = 5;
+
   abstract class PatternContainerState extends State {
-    ParsedPattern containedPattern;
+    ParsedPattern[] childPatterns;
+    int nChildPatterns = 0;
 
     State createChildState(String localName) throws SAXException {
       State state = (State)patternTable.get(localName);
@@ -291,27 +295,29 @@ class SchemaParser {
       return state.create();
     }
 
-    ParsedPattern combinePattern(ParsedPattern p1, ParsedPattern p2) {
-      return schemaBuilder.makeGroup(p1, p2, startLocation);
-    }
-
-    ParsedPattern wrapPattern(ParsedPattern p) throws SAXException {
-      return p;
+    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
+      if (nPatterns == 1 && anno == null)
+        return patterns[0];
+      return schemaBuilder.makeGroup(patterns, nPatterns, loc, anno);
     }
 
     void endChild(ParsedPattern pattern) {
-      if (containedPattern == null)
-	containedPattern = pattern;
-      else
-	containedPattern = combinePattern(containedPattern, pattern);
+      if (childPatterns == null)
+        childPatterns = new ParsedPattern[INIT_CHILD_ALLOC];
+      else if (nChildPatterns >= childPatterns.length) {
+        ParsedPattern[] newChildPatterns = new ParsedPattern[childPatterns.length * 2];
+        System.arraycopy(childPatterns, 0, newChildPatterns, 0, childPatterns.length);
+        childPatterns = newChildPatterns;
+      }
+      childPatterns[nChildPatterns++] = pattern;
     }
 
     void end() throws SAXException {
-      if (containedPattern == null) {
+      if (nChildPatterns == 0) {
 	error("missing_children");
-	containedPattern = schemaBuilder.makeErrorPattern();
+	endChild(schemaBuilder.makeErrorPattern());
       }
-      sendPatternToParent(wrapPattern(containedPattern));
+      sendPatternToParent(buildPattern(childPatterns, nChildPatterns, startLocation, null));
     }
 
     void sendPatternToParent(ParsedPattern p) {
@@ -329,8 +335,9 @@ class SchemaParser {
     State create() {
       return new ZeroOrMoreState();
     }
-    ParsedPattern wrapPattern(ParsedPattern p) {
-      return schemaBuilder.makeZeroOrMore(p, startLocation, null);
+
+    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
+      return schemaBuilder.makeZeroOrMore(super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
     }
   }
 
@@ -338,8 +345,8 @@ class SchemaParser {
     State create() {
       return new OneOrMoreState();
     }
-    ParsedPattern wrapPattern(ParsedPattern p) {
-      return schemaBuilder.makeOneOrMore(p, startLocation, null);
+    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
+      return schemaBuilder.makeOneOrMore(super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
     }
   }
 
@@ -347,8 +354,8 @@ class SchemaParser {
     State create() {
       return new OptionalState();
     }
-    ParsedPattern wrapPattern(ParsedPattern p) {
-      return schemaBuilder.makeOptional(p, startLocation, null);
+    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
+      return schemaBuilder.makeOptional(super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
     }
   }
 
@@ -356,8 +363,8 @@ class SchemaParser {
     State create() {
       return new ListState();
     }
-    ParsedPattern wrapPattern(ParsedPattern p) {
-      return schemaBuilder.makeList(p, startLocation, null);
+    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
+      return schemaBuilder.makeList(super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
     }
   }
 
@@ -365,8 +372,8 @@ class SchemaParser {
     State create() {
       return new ChoiceState();
     }
-    ParsedPattern combinePattern(ParsedPattern p1, ParsedPattern p2) {
-      return schemaBuilder.makeChoice(p1, p2, startLocation);
+    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
+      return schemaBuilder.makeChoice(patterns, nPatterns, loc, anno);
     }
   }
 
@@ -374,8 +381,8 @@ class SchemaParser {
     State create() {
       return new InterleaveState();
     }
-    ParsedPattern combinePattern(ParsedPattern p1, ParsedPattern p2) {
-      return schemaBuilder.makeInterleave(p1, p2, startLocation);
+    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) {
+      return schemaBuilder.makeInterleave(patterns, nPatterns, loc, anno);
     }
   }
 
@@ -383,8 +390,8 @@ class SchemaParser {
     State create() {
       return new MixedState();
     }
-    ParsedPattern wrapPattern(ParsedPattern p) {
-      return schemaBuilder.makeMixed(p, startLocation, null);
+    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
+      return schemaBuilder.makeMixed(super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
     }
   }
 
@@ -415,13 +422,15 @@ class SchemaParser {
       return new ElementState();
     }
 
-    ParsedPattern wrapPattern(ParsedPattern p) {
-      return schemaBuilder.makeElement(nameClass, p, startLocation, null);
+    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
+      return schemaBuilder.makeElement(nameClass, super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
     }
+
   }
 
   class RootState extends PatternContainerState {
     IncludedGrammar grammar;
+
     RootState() {
     }
 
@@ -449,9 +458,8 @@ class SchemaParser {
       error("root_bad_namespace_uri", relaxng10URI);
     }
 
-    public void endDocument() throws SAXException {
-      if (!hadError)
-	startPattern = containedPattern;
+    void endChild(ParsedPattern pattern) {
+      startPattern = pattern;
     }
 
     boolean isRelaxNGElement(String uri) throws SAXException {
@@ -590,10 +598,7 @@ class SchemaParser {
     }
 
     void endChild(ParsedPattern pattern) {
-      if (except == null)
-	except = pattern;
-      else
-	except = schemaBuilder.makeChoice(except, pattern, startLocation);
+      except = pattern;
     }
 
   }
@@ -671,18 +676,18 @@ class SchemaParser {
     }
 
     void end() throws SAXException {
-      if (containedPattern == null)
-	containedPattern = schemaBuilder.makeText(startLocation, null);
+      if (nChildPatterns == 0)
+	endChild(schemaBuilder.makeText(startLocation, null));
       super.end();
     }
 
-    ParsedPattern wrapPattern(ParsedPattern p) throws SAXException {
-      return schemaBuilder.makeAttribute(nameClass, p, startLocation, null);
+    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
+      return schemaBuilder.makeAttribute(nameClass, super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
     }
 
     State createChildState(String localName) throws SAXException {
       State tem = super.createChildState(localName);
-      if (tem != null && containedPattern != null)
+      if (tem != null && nChildPatterns != 0)
 	error("attribute_multi_pattern");
       return tem;
     }
@@ -691,7 +696,7 @@ class SchemaParser {
 
   abstract class SinglePatternContainerState extends PatternContainerState {
     State createChildState(String localName) throws SAXException {
-      if (containedPattern == null)
+      if (nChildPatterns == 0)
 	return super.createChildState(localName);
       error("too_many_children");
       return null;
@@ -951,7 +956,7 @@ class SchemaParser {
 
     State createChildState(String localName) throws SAXException {
       State tem = super.createChildState(localName);
-      if (tem != null && containedPattern != null)
+      if (tem != null && nChildPatterns != 0)
 	error("start_multi_pattern");
       return tem;
     }
@@ -1073,10 +1078,7 @@ class SchemaParser {
     }
 
     void endChild(ParsedNameClass nameClass) {
-      if (except != null)
-	except = schemaBuilder.makeChoice(except, nameClass, startLocation);
-      else
-	except = nameClass;
+      except = nameClass;
     }
 
   }
@@ -1101,7 +1103,8 @@ class SchemaParser {
   }
 
   class NameClassChoiceState extends NameClassContainerState {
-    private ParsedNameClass nameClass;
+    private ParsedNameClass[] nameClasses;
+    private int nNameClasses;
     private int context;
 
     NameClassChoiceState() {
@@ -1141,19 +1144,23 @@ class SchemaParser {
     }
 
     void endChild(ParsedNameClass nc) {
-      if (nameClass == null)
-	nameClass = nc;
-      else
-	nameClass = schemaBuilder.makeChoice(nameClass, nc, startLocation);
+      if (nameClasses == null)
+        nameClasses = new ParsedNameClass[INIT_CHILD_ALLOC];
+      else if (nNameClasses >= nameClasses.length) {
+        ParsedNameClass[] newNameClasses = new ParsedNameClass[nameClasses.length * 2];
+        System.arraycopy(nameClasses, 0, newNameClasses, 0, nameClasses.length);
+        nameClasses = newNameClasses;
+      }
+      nameClasses[nNameClasses++] = nc;
     }
 
     void end() throws SAXException {
-      if (nameClass == null) {
+      if (nNameClasses == 0) {
 	error("missing_name_class");
 	parent.endChild(schemaBuilder.makeErrorNameClass());
 	return;
       }
-      parent.endChild(nameClass);
+      parent.endChild(schemaBuilder.makeChoice(nameClasses, nNameClasses, startLocation, null));
     }
   }
 
@@ -1189,7 +1196,7 @@ class SchemaParser {
   }
 
   ParsedPattern getStartPattern() throws IllegalSchemaException {
-    if (startPattern == null)
+    if (startPattern == null || hadError)
       throw new IllegalSchemaException();
     return startPattern;
   }
