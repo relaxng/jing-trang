@@ -112,6 +112,9 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
     <fileset dir="eg" includes="*.rng"/>
     <fileset dir="xhtml" includes="**/*.rng"/>
   </jing>
+  <jing rngfile="doc/nonxml/relaxng.rnx" nonxmlsyntax="true">
+    <fileset dir="eg" includes="relaxng.rng"/>
+  </jing>
   <jing rngfile="eg/xslt.rng">
      <fileset dir="convert" includes="*.xsl"/>
   </jing>
@@ -183,7 +186,25 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
          style="doc/derivative.xsl"/>
 </target>
 
-<target name="dist" depends="jar,exegen,validate,test,javadoc,datatype-sample,doc">
+<target name="trang-jar" depends="compile">
+  <ant dir="trang" target="jar">
+    <property name="build.dir" value="../build/trang"/>
+    <property name="dist.dir" value="../build"/>
+    <property name="jing.classes" value="../build/classes"/>
+    <property file="trang/src/com/thaiopensource/relaxng/output/resources/Version.properties"/>
+  </ant>
+</target>
+
+<target name="trang-dist" depends="jar">
+  <ant dir="trang" target="dist">
+    <property name="build.dir" value="../build/trang"/>
+    <property name="dist.dir" value="../build"/>
+    <property name="jing.classes" value="../build/classes"/>
+    <property file="trang/src/com/thaiopensource/relaxng/output/resources/Version.properties"/>
+  </ant>
+</target>
+
+<target name="dist" depends="jar,exegen,validate,test,javadoc,datatype-sample,doc,trang-dist">
   <zip zipfile="build/jing-src.zip">
     <fileset dir="src" includes="**/*.java,**/*.properties"/>
   </zip>
@@ -200,6 +221,8 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
   <copy todir="build/nonxml">
     <fileset dir="doc/nonxml" includes="*.html"/>
   </copy>
+  <copy file="doc/nonxml/relaxng.rnx"
+        tofile="build/nonxml/relaxng.rnx.txt"/>
   <replace file="build/jing.html" token="@VERSION@" value="${version}"/>
   <mkdir dir="build/jing-win32-bin"/>
   <copy todir="build/jing-win32-bin">
@@ -221,7 +244,7 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
     <fileset dir="build" includes="jing.jar,copying.txt"/>
   </zip>
   <unzip src="build/xhtml-rng.zip" dest="build"/>
-  <copy file="build/xhtml-rng.zip" todir="build/xhtml"/>
+  <move file="build/xhtml-rng.zip" todir="build/xhtml"/>
   <zip zipfile="build/datatype-sample.zip">
     <fileset dir="datatype-sample"/>
     <zipfileset dir="build/api/datatype" includes="**" prefix="api"/>
@@ -235,22 +258,12 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
     <fileset dir="eg" includes="testSuite.rng"/>
   </zip>
   <tar tarfile="build/relaxng.tar" basedir="build"
-    includes="jing-win32-bin.zip,jing-bin.zip,jing-src.zip,copying.txt,*.html,*.xsl,*.rng,xhtml/**,datatype-sample.zip,testSuite.zip,jing-api.zip,api/**,nonxml/**"/>
-
+    includes="*.zip,copying.txt,*.html,*.xsl,*.rng,xhtml/**,api/**,nonxml/**"/>
   <gzip zipfile="build/relaxng.tar.gz" src="build/relaxng.tar"/>
-
 </target>
 
 <target name="clean">
   <delete dir="build"/>
-</target>
-
-<target name="trang-jar" depends="compile">
-  <ant dir="trang" target="jar">
-    <property name="build.dir" value="../build/trang"/>
-    <property name="dist.dir" value="../build"/>
-    <property name="jing.classes" value="../build/classes"/>
-  </ant>
 </target>
 
 </project>
