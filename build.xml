@@ -211,7 +211,7 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
 
 <target name="dist" depends="jar,exegen,validate,test,javadoc,datatype-sample,doc,trang-dist">
   <zip zipfile="build/jing-src.zip">
-    <fileset dir="src" includes="**/*.java,**/*.properties"/>
+    <fileset dir="src" includes="**/*.java,**/*.properties,META-INF/services/*"/>
   </zip>
   <zip zipfile="build/xhtml-rng.zip">
     <fileset dir="." includes="xhtml/**/*.rng,xhtml/index.html"/>
