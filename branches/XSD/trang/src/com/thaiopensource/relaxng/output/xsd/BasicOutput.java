@@ -37,6 +37,7 @@ import com.thaiopensource.relaxng.output.xsd.basic.StructureVisitor;
 import com.thaiopensource.relaxng.output.xsd.basic.Structure;
 import com.thaiopensource.relaxng.output.xsd.basic.OptionalAttribute;
 import com.thaiopensource.relaxng.output.xsd.basic.SchemaWalker;
+import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroup;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
@@ -308,14 +309,14 @@ public class BasicOutput {
         particleOutput.context = COMPLEX_TYPE_CONTEXT;
         t.getParticle().accept(particleOutput);
       }
-      attributeUseOutput.outputList(t.getAttributeUses());
+      t.getAttributeUses().accept(attributeUseOutput);
       xw.endElement();
       return null;
     }
 
     public Object visitSimpleContent(ComplexTypeSimpleContent t) {
-      List attributeUses = t.getAttributeUses();
-      if (attributeUses.size() == 0)
+      AttributeUse attributeUses = t.getAttributeUses();
+      if (attributeUses.equals(AttributeGroup.EMPTY))
         simpleTypeOutput.outputWrap(t.getSimpleType());
       else {
         xw.startElement(xs("complexType"));
@@ -330,7 +331,7 @@ public class BasicOutput {
           xw.attribute("base", xs("anyType"));
           simpleTypeOutput.outputWrap(t.getSimpleType());
         }
-        attributeUseOutput.outputList(attributeUses);
+        attributeUses.accept(attributeUseOutput);
         xw.endElement();
         xw.endElement();
         xw.endElement();
@@ -387,9 +388,10 @@ public class BasicOutput {
       return null;
     }
 
-    void outputList(List list) {
-      for (Iterator iter = list.iterator(); iter.hasNext();)
+    public Object visitAttributeGroup(AttributeGroup a) {
+      for (Iterator iter = a.getChildren().iterator(); iter.hasNext();)
         ((AttributeUse)iter.next()).accept(this);
+      return null;
     }
   }
 
@@ -448,9 +450,10 @@ public class BasicOutput {
   }
 
   class GlobalAttributeOutput implements AttributeUseVisitor {
-    void outputList(List list) {
-      for (Iterator iter = list.iterator(); iter.hasNext();)
+    public Object visitAttributeGroup(AttributeGroup a) {
+      for (Iterator iter = a.getChildren().iterator(); iter.hasNext();)
         ((AttributeUse)iter.next()).accept(this);
+      return null;
     }
 
     public Object visitAttribute(Attribute a) {
@@ -500,9 +503,9 @@ public class BasicOutput {
     public void visitAttributeGroup(AttributeGroupDefinition def) {
       xw.startElement(xs("attributeGroup"));
       xw.attribute("name", def.getName());
-      attributeUseOutput.outputList(def.getAttributeUses());
+      def.getAttributeUses().accept(attributeUseOutput);
       xw.endElement();
-      globalAttributeOutput.outputList(def.getAttributeUses());
+      def.getAttributeUses().accept(globalAttributeOutput);
     }
 
     public void visitRoot(RootDeclaration decl) {

@@ -60,7 +60,7 @@ public abstract class SchemaWalker implements
   }
 
   public void visitAttributeGroup(AttributeGroupDefinition def) {
-    visitAttributeUses(def.getAttributeUses());
+    def.getAttributeUses().accept(this);
   }
 
   public Object visitAttribute(Attribute a) {
@@ -77,6 +77,12 @@ public abstract class SchemaWalker implements
     return null;
   }
 
+  public Object visitAttributeGroup(AttributeGroup a) {
+    for (Iterator iter = a.getChildren().iterator(); iter.hasNext();)
+      ((AttributeUse)iter.next()).accept(this);
+    return null;
+  }
+
   public void visitSimpleType(SimpleTypeDefinition def) {
     def.getSimpleType().accept(this);
   }
@@ -90,18 +96,14 @@ public abstract class SchemaWalker implements
   }
 
   public Object visitComplexContent(ComplexTypeComplexContent t) {
-    visitAttributeUses(t.getAttributeUses());
+    t.getAttributeUses().accept(this);
     if (t.getParticle() == null)
       return null;
     return t.getParticle().accept(this);
   }
 
   public Object visitSimpleContent(ComplexTypeSimpleContent t) {
+    t.getAttributeUses().accept(this);
     return t.getSimpleType().accept(this);
-  }
-
-  public void visitAttributeUses(List list) {
-    for (Iterator iter = list.iterator(); iter.hasNext();)
-      ((AttributeUse)iter.next()).accept(this);
   }
 }

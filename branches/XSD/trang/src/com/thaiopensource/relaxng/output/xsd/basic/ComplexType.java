@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.Collections;
 
 public abstract class ComplexType {
-  private final List attributeUses;
+  private final AttributeUse attributeUses;
 
-  public ComplexType(List attributeUses) {
-    this.attributeUses = Collections.unmodifiableList(attributeUses);
+  public ComplexType(AttributeUse attributeUses) {
+    this.attributeUses = attributeUses;
   }
 
-  public List getAttributeUses() {
+  public AttributeUse getAttributeUses() {
     return attributeUses;
   }
 

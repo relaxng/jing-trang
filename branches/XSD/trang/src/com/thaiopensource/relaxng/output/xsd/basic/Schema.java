@@ -54,7 +54,7 @@ public class Schema extends Located {
     groupMap.put(name, def);
   }
 
-  public void defineAttributeGroup(String name, List attributeUses, SourceLocation location) {
+  public void defineAttributeGroup(String name, AttributeUse attributeUses, SourceLocation location) {
     AttributeGroupDefinition def = new AttributeGroupDefinition(location, this, name, attributeUses);
     topLevel.add(def);
     attributeGroupMap.put(name, def);

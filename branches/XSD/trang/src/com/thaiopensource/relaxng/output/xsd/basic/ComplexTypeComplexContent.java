@@ -8,7 +8,7 @@ public class ComplexTypeComplexContent extends ComplexType {
   /**
    * particle may be null
    */
-  public ComplexTypeComplexContent(List attributeUses, Particle particle, boolean mixed) {
+  public ComplexTypeComplexContent(AttributeUse attributeUses, Particle particle, boolean mixed) {
     super(attributeUses);
     this.particle = particle;
     this.mixed = mixed;

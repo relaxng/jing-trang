@@ -2,23 +2,20 @@ package com.thaiopensource.relaxng.output.xsd.basic;
 
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
-import java.util.List;
-import java.util.Collections;
-
 public class AttributeGroupDefinition extends Definition {
-  private List attributeUses;
+  private AttributeUse attributeUses;
 
-  public AttributeGroupDefinition(SourceLocation location, Schema parentSchema, String name, List attributeUses) {
+  public AttributeGroupDefinition(SourceLocation location, Schema parentSchema, String name, AttributeUse attributeUses) {
     super(location, parentSchema, name);
-    this.attributeUses = Collections.unmodifiableList(attributeUses);
+    this.attributeUses = attributeUses;
   }
 
-  public List getAttributeUses() {
+  public AttributeUse getAttributeUses() {
     return attributeUses;
   }
 
-  public void setAttributeUses(List attributeUses) {
-    this.attributeUses = Collections.unmodifiableList(attributeUses);
+  public void setAttributeUses(AttributeUse attributeUses) {
+    this.attributeUses = attributeUses;
   }
 
   public void accept(SchemaVisitor visitor) {
