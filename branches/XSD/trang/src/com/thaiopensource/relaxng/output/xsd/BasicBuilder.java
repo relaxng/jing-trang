@@ -167,11 +167,11 @@ public class BasicBuilder {
     }
 
     public Object visitData(DataPattern p) {
-      return new Occurs(1, 1);
+      return Occurs.EXACTLY_ONE;
     }
 
     public Object visitValue(ValuePattern p) {
-      return new Occurs(1, 1);
+      return Occurs.EXACTLY_ONE;
     }
 
     public Object visitEmpty(EmptyPattern p) {
@@ -233,9 +233,12 @@ public class BasicBuilder {
       }
       if (ct.contains(ChildType.TEXT))
         mixed = true;
-      if (ct.contains(ChildType.DATA) && !mixed && particle == null)
-        type = new ComplexTypeSimpleContent(attributeUses,
-                                            (SimpleType)child.accept(simpleTypeBuilder));
+      if (ct.contains(ChildType.DATA) && !mixed && particle == null) {
+        SimpleType simpleType = (SimpleType)child.accept(simpleTypeBuilder);
+        if (ct.contains(ChildType.EMPTY))
+          simpleType = makeUnionWithEmptySimpleType(simpleType, p.getSourceLocation());
+        type = new ComplexTypeSimpleContent(attributeUses, simpleType);
+      }
       else
         type = new ComplexTypeComplexContent(attributeUses, particle, mixed);
       List result = new Vector();
@@ -334,9 +337,13 @@ public class BasicBuilder {
       Pattern child = p.getChild();
       ChildType ct = si.getChildType(child);
       SimpleType value;
-      if (ct.contains(ChildType.DATA) && !ct.contains(ChildType.TEXT))
+      if (ct.contains(ChildType.DATA) && !ct.contains(ChildType.TEXT)) {
         value = (SimpleType)child.accept(simpleTypeBuilder);
-      // TODO handle empty
+        if (ct.contains(ChildType.EMPTY))
+          value = makeUnionWithEmptySimpleType(value, location);
+      }
+      else if (ct.contains(ChildType.EMPTY) && !ct.contains(ChildType.TEXT))
+        value = makeEmptySimpleType(location);
       else
         value = null;
       List names = NameClassSplitter.split(p.getNameClass());
@@ -477,6 +484,13 @@ public class BasicBuilder {
     Schema schema = new Schema(grammar.getSourceLocation(), OutputDirectory.MAIN);
     grammar.componentsAccept(new BasicBuilder(er, si, schema, "").schemaBuilder);
     return schema;
+  }
+
+  private static SimpleType makeUnionWithEmptySimpleType(SimpleType type, SourceLocation location) {
+    List list = new Vector();
+    list.add(type);
+    list.add(makeEmptySimpleType(location));
+    return new SimpleTypeUnion(location, list);
   }
 
   private static SimpleType makeEmptySimpleType(SourceLocation location) {
