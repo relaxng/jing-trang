@@ -36,12 +36,20 @@ class SchemaInfo {
   private final PatternVisitor childTypeVisitor = new ChildTypeVisitor();
 
   static class ChildType {
-    private ChildType() { }
-    private static final ChildType SIMPLE = new ChildType();
-    private static final ChildType NEUTRAL = new ChildType();
-    private static final ChildType COMPLEX = new ChildType();
-  }
+    private final String name;
+    private ChildType(String name) {
+      this.name = name;
+    }
 
+    public String toString() {
+      return name;
+    }
+
+    private static final ChildType SIMPLE = new ChildType("SIMPLE");
+    private static final ChildType EMPTY = new ChildType("EMPTY");
+    private static final ChildType NOT_ALLOWED = new ChildType("NOT_ALLOWED");
+    private static final ChildType COMPLEX = new ChildType("COMPLEX");
+  }
 
   abstract class PatternAnalysisVisitor extends AbstractVisitor {
     abstract Object get(Pattern p);
@@ -53,13 +61,13 @@ class SchemaInfo {
       return combine(o1, o2);
     }
     Object interleave(Object o1, Object o2) {
-      return combine(o1, o2);
+      return group(o1, o2);
     }
     Object ref(Object obj) {
       return obj;
     }
     Object oneOrMore(Object obj) {
-      return obj;
+      return group(obj, obj);
     }
     abstract Object empty();
     abstract Object text();
@@ -107,7 +115,7 @@ class SchemaInfo {
     }
 
     public Object visitRef(RefPattern p) {
-      return get(getBody(p));
+      return ref(get(getBody(p)));
     }
 
     public Object visitMixed(MixedPattern p) {
@@ -141,7 +149,7 @@ class SchemaInfo {
     }
 
     Object empty() {
-      return ChildType.NEUTRAL;
+      return ChildType.EMPTY;
     }
 
     Object text() {
@@ -153,13 +161,27 @@ class SchemaInfo {
     }
 
     Object notAllowed() {
-      return ChildType.NEUTRAL;
+      return ChildType.NOT_ALLOWED;
+    }
+
+    Object choice(Object o1, Object o2) {
+      if (o1 == ChildType.NOT_ALLOWED)
+        return o2;
+      if (o2 == ChildType.NOT_ALLOWED)
+        return o1;
+      return combine(o1, o2);
+    }
+
+    Object group(Object o1, Object o2) {
+      if (o1 == ChildType.NOT_ALLOWED || o2 == ChildType.NOT_ALLOWED)
+        return ChildType.NOT_ALLOWED;
+      return combine(o1, o2);
     }
 
     Object combine(Object o1, Object o2) {
-      if (o1 == ChildType.NEUTRAL)
+      if (o1 == ChildType.EMPTY)
         return o2;
-      if (o2 == ChildType.NEUTRAL)
+      if (o2 == ChildType.EMPTY)
         return o1;
       if (o1 == ChildType.SIMPLE && o2 == ChildType.SIMPLE)
         return o1;
@@ -171,9 +193,8 @@ class SchemaInfo {
     }
 
     public Object visitAttribute(AttributePattern p) {
-      return ChildType.NEUTRAL;
+      return ChildType.EMPTY;
     }
-
   }
 
   SchemaInfo(SchemaCollection sc, ErrorReporter er) {
