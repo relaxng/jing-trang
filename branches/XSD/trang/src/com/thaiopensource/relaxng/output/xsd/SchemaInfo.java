@@ -21,6 +21,8 @@ import com.thaiopensource.relaxng.edit.InterleavePattern;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
 import com.thaiopensource.relaxng.edit.OneOrMorePattern;
 import com.thaiopensource.relaxng.edit.OptionalPattern;
+import com.thaiopensource.relaxng.edit.GrammarPattern;
+import com.thaiopensource.relaxng.edit.DefineComponent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +30,7 @@ import java.util.List;
 
 class SchemaInfo {
   private final SchemaCollection sc;
+  private GrammarPattern grammar;
   private final ErrorReporter er;
   private final Map childTypeMap = new HashMap();
   private final PatternVisitor childTypeVisitor = new ChildTypeVisitor();
@@ -176,10 +179,20 @@ class SchemaInfo {
   SchemaInfo(SchemaCollection sc, ErrorReporter er) {
     this.sc = sc;
     this.er = er;
+    Pattern p = sc.getMainSchema();
+    if (p instanceof GrammarPattern)
+      grammar = (GrammarPattern)p;
+    else {
+      grammar = new GrammarPattern();
+      grammar.setSourceLocation(p.getSourceLocation());
+      DefineComponent dc = new DefineComponent(DefineComponent.START, p);
+      dc.setSourceLocation(p.getSourceLocation());
+      grammar.getComponents().add(dc);
+    }
   }
 
-  Pattern getPattern() {
-    return sc.getMainSchema();
+  GrammarPattern getGrammar() {
+    return grammar;
   }
 
   Pattern getSchema(String sourceUri) {
@@ -199,7 +212,7 @@ class SchemaInfo {
     return ct;
   }
 
-  private Pattern getBody(RefPattern p) {
+  Pattern getBody(RefPattern p) {
     return null;
   }
 }
