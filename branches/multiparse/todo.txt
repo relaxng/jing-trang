@@ -1,3 +1,5 @@
+Use DTDinst command-line arg to URI function.
+
 SAXParser and comment formatting.
 
 Usage error message for driver.
