@@ -124,7 +124,8 @@ class XmlWriter {
           level--;
           write(' ');
           write(s);
-          write(' ');
+          if (s.length() != 0 && s.charAt(s.length() - 1) != ' ')
+            write(' ');
         }
         break;
       }
