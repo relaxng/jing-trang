@@ -10,12 +10,12 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class LocalOutputDirectory implements OutputDirectory {
-  private File mainOutputFile;
-  private String lineSeparator;
-  private String extension;
-  private String encoding;
+  private final File mainOutputFile;
+  private final String lineSeparator;
+  private final String extension;
+  private final String encoding;
   // maps URIs to filenames
-  private Map uriMap = new HashMap();
+  private final Map uriMap = new HashMap();
 
   public LocalOutputDirectory(File mainOutputFile, String extension, String encoding) {
     this.mainOutputFile = mainOutputFile;
