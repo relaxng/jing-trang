@@ -209,4 +209,7 @@
 <testCase>
 <incorrect>[a-[a]-[a]]</incorrect>
 </testCase>
+<testCase>
+<incorrect>\pL</incorrect>
+</testCase>
 </testSuite>
