@@ -108,7 +108,7 @@ includeDiv ::= annotations includeBody
 
 inherit ::= "inherit" "=" identifier
 
-followAnnotations ::= ("&gt;" annotationElement)*
+followAnnotations ::= ("&gt;&gt;" annotationElement)*
 
 annotations ::= "[" prefixedAnnotationAttribute* annotationElement* "]"
 
@@ -587,7 +587,7 @@ declarations) and the definitions (putting the attribute annotations
 in square brackets would cause them to be attached to the first
 definition rather than the grammar)</li>
 
-<li>a pattern or a name class can be followed by <code>&gt;</code> and
+<li>a pattern or a name class can be followed by <code>&gt;&gt;</code> and
 then an element annotation; this is equivalent to a following sibling
 element in the XML syntax</li>
 
@@ -637,11 +637,11 @@ start =
     element player {
       attribute number {
         [ c:alias="number" ]
-	xsd:positiveInteger > c:java [ "System.out.println(number);" ]
+	xsd:positiveInteger >> c:java [ "System.out.println(number);" ]
       },
       element name {
         [ c:alias="name" ]
-	text > c:java [ "System.out.println(name);" ]
+	text >> c:java [ "System.out.println(name);" ]
       }
     }+
   }
