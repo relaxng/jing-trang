@@ -1,16 +1,14 @@
 package com.thaiopensource.relaxng.output.dtd;
 
 class ContentType {
-  private final ContentType parent1;
-  private final ContentType parent2;
-  static ContentType COMPLEX_TYPE = new ContentType();
+  private final ContentType parent;
   static ContentType MIXED_ELEMENT_CLASS = new ContentType();
   static ContentType NOT_ALLOWED = new ContentType();
   static ContentType SIMPLE_TYPE = new ContentType();
-  static ContentType EMPTY = new ContentType(COMPLEX_TYPE);
-  static ContentType TEXT = new ContentType(MIXED_ELEMENT_CLASS, COMPLEX_TYPE);
-  static ContentType MIXED_MODEL = new ContentType(COMPLEX_TYPE);
-  static ContentType MODEL_GROUP = new ContentType(COMPLEX_TYPE);
+  static ContentType EMPTY = new ContentType();
+  static ContentType TEXT = new ContentType(MIXED_ELEMENT_CLASS);
+  static ContentType MIXED_MODEL = new ContentType();
+  static ContentType MODEL_GROUP = new ContentType();
   static ContentType ELEMENT_CLASS = new ContentType(MODEL_GROUP);
   static ContentType DIRECT_SINGLE_ELEMENT = new ContentType(ELEMENT_CLASS);
   static ContentType ZERO_OR_MORE_ELEMENT_CLASS = new ContentType(MODEL_GROUP);
@@ -18,26 +16,17 @@ class ContentType {
   static ContentType ERROR = new ContentType();
 
   private ContentType() {
-    this.parent1 = null;
-    this.parent2 = null;
+    this.parent = null;
   }
 
-  private ContentType(ContentType parent1) {
-    this.parent1 = parent1;
-    this.parent2 = null;
-  }
-
-  private ContentType(ContentType parent1, ContentType parent2) {
-    this.parent1 = parent1;
-    this.parent2 = parent2;
+  private ContentType(ContentType parent) {
+    this.parent = parent;
   }
 
   boolean isA(ContentType t) {
     if (this == t)
       return true;
-    if (parent1 != null && parent1.isA(t))
-      return true;
-    if (parent2 != null && parent2.isA(t))
+    if (parent != null && parent.isA(t))
       return true;
     return false;
   }
@@ -61,28 +50,14 @@ class ContentType {
   }
 
   static ContentType group(ContentType t1, ContentType t2) {
-    if (t1 == ERROR || t2 == ERROR)
-      return ERROR;
     if (t1.isA(MODEL_GROUP) && t2.isA(MODEL_GROUP))
       return MODEL_GROUP;
-    if (t1.isA(EMPTY) && t2.isA(EMPTY))
-      return EMPTY;
-    if (t1.isA(EMPTY)) {
-      if (t2.isA(ZERO_OR_MORE_ELEMENT_CLASS))
-        return ZERO_OR_MORE_ELEMENT_CLASS;
-      if (t2.isA(MODEL_GROUP))
-        return MODEL_GROUP;
-      if (t2.isA(COMPLEX_TYPE))
-        return COMPLEX_TYPE;
-    }
-    else if (t2.isA(EMPTY))
-      return group(t1, t2);
-    return null;
+    return interleave(t1, t2);
   }
 
   static ContentType mixed(ContentType t) {
     if (t.isA(EMPTY))
-      return COMPLEX_TYPE; // XXX should be TEXT?
+      return TEXT;
     if (t.isA(ZERO_OR_MORE_ELEMENT_CLASS))
       return MIXED_MODEL;
     return null;
@@ -91,18 +66,10 @@ class ContentType {
   static ContentType interleave(ContentType t1, ContentType t2) {
     if (t1 == ERROR || t2 == ERROR)
       return ERROR;
-    if (t1.isA(EMPTY) && t2.isA(EMPTY))
-      return EMPTY;
-    if (t1.isA(EMPTY)) {
-      if (t2.isA(ZERO_OR_MORE_ELEMENT_CLASS))
-        return ZERO_OR_MORE_ELEMENT_CLASS;
-      if (t2.isA(MODEL_GROUP))
-        return MODEL_GROUP;
-      if (t2.isA(COMPLEX_TYPE))
-        return COMPLEX_TYPE;
-    }
-    else if (t2.isA(EMPTY))
-      return interleave(t1, t2);
+    if (t1.isA(EMPTY))
+      return ref(t2);
+    if (t2.isA(EMPTY))
+      return ref(t1);
     return null;
   }
 
