@@ -5,7 +5,6 @@ import com.thaiopensource.relaxng.impl.IdTypeMap;
 import com.thaiopensource.relaxng.impl.IdTypeMapBuilder;
 import com.thaiopensource.relaxng.impl.IdTypeMapSchema;
 import com.thaiopensource.relaxng.impl.Pattern;
-import com.thaiopensource.relaxng.impl.PatternReader;
 import com.thaiopensource.relaxng.impl.PatternSchema;
 import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
 import com.thaiopensource.relaxng.impl.SchemaBuilderImpl;
