@@ -44,6 +44,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Collections;
+import java.util.Iterator;
 
 class Analysis {
   private NamespaceManager nsm = new NamespaceManager();
@@ -51,6 +53,7 @@ class Analysis {
   private ErrorReporter er;
   private Map contentTypes = new HashMap();
   private Map attributeTypes = new HashMap();
+  private Map attributeAlphabets = new HashMap();
   private Map defines = null;
   private Map parts = new HashMap();
   private Map seenTable = new HashMap();
@@ -61,6 +64,7 @@ class Analysis {
   private GrammarPattern grammarPattern;
   private Pattern pattern;
   private AttributeTyper attributeTyper = new AttributeTyper();
+  private AttributeAlphabetComputer attributeAlphabetComputer = new AttributeAlphabetComputer();
   private IncludeContentChecker includeContentChecker = new IncludeContentChecker();
 
   private class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
@@ -165,6 +169,22 @@ class Analysis {
       ContentType tem = analyzeContentType((Pattern)children.get(0));
       for (int i = 1, len = children.size(); i < len; i++)
         tem = checkContentType("sorry_choice", ContentType.choice(tem, analyzeContentType((Pattern)children.get(i))), p);
+      if (getAttributeType(p) == AttributeType.MULTI) {
+        Set attributeNames = new HashSet();
+        for (int i = 0, len = children.size(); i < len; i++) {
+          Set childAttributeNames = getAttributeAlphabet((Pattern)children.get(i));
+          for (Iterator iter = childAttributeNames.iterator(); iter.hasNext();) {
+            Object name = iter.next();
+            if (attributeNames.contains(name))
+              er.error("sorry_choice_attribute_name",
+                       ((Name)name).getNamespaceUri(),
+                       ((Name)name).getLocalName(),
+                       p.getSourceLocation());
+            else
+              attributeNames.add(name);
+          }
+        }
+      }
       return tem;
     }
 
@@ -369,6 +389,54 @@ class Analysis {
     }
   }
 
+
+  class AttributeAlphabetComputer extends AbstractVisitor {
+    public Object visitPattern(Pattern p) {
+      return Collections.EMPTY_SET;
+    }
+
+    public Object visitMixed(MixedPattern p) {
+      return getAttributeAlphabet(p.getChild());
+    }
+
+    public Object visitOneOrMore(OneOrMorePattern p) {
+      return getAttributeAlphabet(p.getChild());
+    }
+
+    public Object visitZeroOrMore(ZeroOrMorePattern p) {
+      return getAttributeAlphabet(p.getChild());
+    }
+
+    public Object visitOptional(OptionalPattern p) {
+      return getAttributeAlphabet(p.getChild());
+    }
+
+    public Object visitComposite(CompositePattern p) {
+      List list = p.getChildren();
+      Set result = new HashSet();
+      for (int i = 0, len = list.size(); i < len; i++)
+        result.addAll(getAttributeAlphabet((Pattern)list.get(i)));
+      return result;
+    }
+
+    public Object visitAttribute(AttributePattern p) {
+      Set result = new HashSet();
+      List names = NameClassSplitter.split(p.getNameClass());
+      for (int i = 0, len = names.size(); i < len; i++) {
+        NameNameClass nnc = (NameNameClass)names.get(i);
+        String ns = nnc.getNamespaceUri();
+        if (ns == NameClass.INHERIT_NS)
+          ns = "";
+        result.add(new Name(ns, nnc.getLocalName()));
+      }
+      return result;
+    }
+
+    public Object visitRef(RefPattern p) {
+      return getAttributeAlphabet(getBody(p.getName()));
+    }
+  }
+
   private boolean seen(Pattern p) {
     if (seenTable.get(p) != null)
       return true;
@@ -411,6 +479,15 @@ class Analysis {
       attributeTypes.put(p, at);
     }
     return at;
+  }
+
+  Set getAttributeAlphabet(Pattern p) {
+    Set aa = (Set)attributeAlphabets.get(p);
+    if (aa == null) {
+      aa = Collections.unmodifiableSet((Set)p.accept(attributeAlphabetComputer));
+      attributeAlphabets.put(p, aa);
+    }
+    return aa;
   }
 
   Pattern getBody(String name) {

@@ -1,5 +1,3 @@
-Robust handling of attribute choice
-Handle choice involving attributes (perhaps just special case where alphabets are disjoint)
 Bulletproof LocalOutputDirectory.
 Avoid unnecessary parentheses around group members
 Pretty-print content models to avoid excessively long lines
@@ -25,4 +23,5 @@ Handle interleave where operand is a zero or more element class
 Give warnings for definitions that had to be expanded
 Closer approximation of choice of datatypes
 Approximate when single element restriction is violated
+Allow choice of attributes and data
 
