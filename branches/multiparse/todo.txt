@@ -1,6 +1,6 @@
 Make SAX-based parser preserve element annotations.
 
-conv should produce non-zero return value on failure
+conv should have option to specify encoding.
 
 In conv, option to explicitly set input and output type.
 
@@ -9,7 +9,7 @@ SAXParser and comment formatting.
 Usage error message for driver.
 
 Put location information in error messages into a standard format
-understandable by Emacs/Intellij.                                                                                     k
+understandable by Emacs/Intellij.
 
 More helpful syntax error messages with non-XML syntax parser.
 
@@ -46,5 +46,3 @@ Better error message for wrong namespace URI.
 Option to be verbose.
 
 Provide regex impl based on JDK 1.4 regexes.
-
-
