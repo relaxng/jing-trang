@@ -5,6 +5,7 @@ import com.thaiopensource.relaxng.parse.BuildException;
 import com.thaiopensource.relaxng.parse.DataPatternBuilder;
 import com.thaiopensource.relaxng.parse.Div;
 import com.thaiopensource.relaxng.parse.ElementAnnotation;
+import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
 import com.thaiopensource.relaxng.parse.Grammar;
 import com.thaiopensource.relaxng.parse.GrammarSection;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
@@ -35,7 +36,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.io.IOException;
 
-public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
+public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilder {
   private final SchemaBuilderImpl parent;
   private boolean hadError = false;
   private final Parseable parseable;
@@ -134,17 +135,17 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
     this.openIncludes = new OpenIncludes(uri, parent.openIncludes);
   }
 
-  public ParsedPattern makeChoice(ParsedPattern p1, ParsedPattern p2, Location loc, Annotations anno)
+  public ParsedPattern makeChoice(ParsedPattern p1, ParsedPattern p2, Location loc)
           throws BuildException {
     return pb.makeChoice((Pattern)p1, (Pattern)p2);
   }
 
-  public ParsedPattern makeInterleave(ParsedPattern p1, ParsedPattern p2, Location loc, Annotations anno)
+  public ParsedPattern makeInterleave(ParsedPattern p1, ParsedPattern p2, Location loc)
           throws BuildException {
     return pb.makeInterleave((Pattern)p1, (Pattern)p2);
   }
 
-  public ParsedPattern makeGroup(ParsedPattern p1, ParsedPattern p2, Location loc, Annotations anno)
+  public ParsedPattern makeGroup(ParsedPattern p1, ParsedPattern p2, Location loc)
           throws BuildException {
     return pb.makeGroup((Pattern)p1, (Pattern)p2);
   }
@@ -568,6 +569,14 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
     return new GrammarImpl(this, parent);
   }
 
+  public ParsedPattern annotateMulti(ParsedPattern p, Annotations a) throws BuildException {
+    return p;
+  }
+
+  public ParsedNameClass annotateMulti(ParsedNameClass nc, Annotations a) throws BuildException {
+    return nc;
+  }
+
   public ParsedPattern annotateAfter(ParsedPattern p, ElementAnnotation e) throws BuildException {
     return p;
   }
@@ -596,7 +605,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
     }
   }
 
-  public ParsedNameClass makeChoice(ParsedNameClass nc1, ParsedNameClass nc2, Location loc, Annotations anno) {
+  public ParsedNameClass makeChoice(ParsedNameClass nc1, ParsedNameClass nc2, Location loc) {
     return new ChoiceNameClass((NameClass)nc1, (NameClass)nc2);
   }
 
@@ -662,12 +671,24 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
     return this;
   }
 
+  public ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix, Location loc) {
+    return this;
+  }
+
   public void addAttribute(String ns, String localName, String prefix, String value, Location loc) {
     // nothing needed
   }
 
   public void addElement(ElementAnnotation ea) {
     // nothing needed
+  }
+
+  public void addText(String value, Location loc) {
+    // nothing needed
+  }
+
+  public ElementAnnotation makeElementAnnotation() {
+    return null;
   }
 
   private void error(SAXParseException message) throws BuildException {
