@@ -36,8 +36,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 /*
-Set up startLocation
-
 Deal with annotations
 */
 class SchemaParser {
@@ -96,12 +94,13 @@ class SchemaParser {
 
     void setParent(State parent) {
       this.parent = parent;
-      if (parent.ns != null)
-	this.nsInherit = parent.ns;
-      else
-	this.nsInherit = parent.nsInherit;
+      this.nsInherit = parent.getNs();
       this.datatypeLibrary = parent.datatypeLibrary;
       this.scope = parent.scope;
+    }
+
+    String getNs() {
+      return ns == null ? nsInherit : ns;
     }
 
     boolean isRelaxNGElement(String uri) throws SAXException {
@@ -113,6 +112,7 @@ class SchemaParser {
 			     String qName,
 			     Attributes atts) throws SAXException {
       xmlBaseHandler.startElement();
+      startLocation = makeLocation();
       if (isRelaxNGElement(namespaceURI)) {
 	State state = createChildState(localName);
 	if (state == null) {
@@ -224,7 +224,7 @@ class SchemaParser {
 
     public String resolveNamespacePrefix(String prefix) {
       if (prefix.equals(""))
-        return ns == null ? nsInherit : ns;
+        return getNs();
       for (PrefixMapping p = prefixMapping; p != null; p = p.next)
         if (p.prefix.equals(prefix))
           return p.uri;
@@ -414,7 +414,7 @@ class SchemaParser {
 
     void endAttributes() throws SAXException {
       if (name != null)
-	nameClass = expandName(name, ns != null ? ns : nsInherit);
+	nameClass = expandName(name, getNs());
       else
 	new NameClassChildState(this, this).set();
     }
@@ -445,7 +445,7 @@ class SchemaParser {
     }
 
     State createChildState(String localName) throws SAXException {
-      if (scope == null)
+      if (grammar == null)
 	return super.createChildState(localName);
       if (localName.equals("grammar"))
 	return new MergeGrammarState(grammar);
@@ -529,8 +529,14 @@ class SchemaParser {
     }
 
     ParsedPattern makePattern() throws SAXException {
-      // XXX default type
-      return schemaBuilder.makeValue(ns == null ? nsInherit : ns,
+      if (type == null)
+        return makePattern("", "token");
+      else
+        return makePattern(datatypeLibrary, type);
+    }
+
+    ParsedPattern makePattern(String datatypeLibrary, String type) {
+      return schemaBuilder.makeValue(datatypeLibrary,
                                      type,
                                      buf.toString(),
                                      this,
@@ -761,11 +767,12 @@ class SchemaParser {
     }
 
     void end() throws SAXException {
-      // XXX null href
-      try {
-        include.endInclude(href, ns == null ? nsInherit : ns, startLocation, null);
-      }
-      catch (IllegalSchemaException e) {
+      if (href != null) {
+        try {
+          include.endInclude(href, getNs(), startLocation, null);
+        }
+        catch (IllegalSchemaException e) {
+        }
       }
     }
   }
@@ -875,7 +882,7 @@ class SchemaParser {
       if (href != null) {
         try {
           return schemaBuilder.makeExternalRef(href,
-                                               ns == null ? nsInherit : ns,
+                                               getNs(),
                                                scope,
                                                startLocation,
                                                null);
@@ -1028,8 +1035,7 @@ class SchemaParser {
     }
 
     ParsedNameClass makeNameClass() throws SAXException {
-      return expandName(buf.toString().trim(),
-			ns != null ? ns : nsInherit);
+      return expandName(buf.toString().trim(), getNs());
     }
 
   }
@@ -1089,15 +1095,11 @@ class SchemaParser {
     }
 
     ParsedNameClass makeNameClassNoExcept() {
-      return schemaBuilder.makeNsName(computeNs(), null, null);
+      return schemaBuilder.makeNsName(getNs(), null, null);
     }
 
     ParsedNameClass makeNameClassExcept(ParsedNameClass except) {
-      return schemaBuilder.makeNsName(computeNs(), except, null, null);
-    }
-
-    private String computeNs() {
-      return ns != null ? ns : nsInherit;
+      return schemaBuilder.makeNsName(getNs(), except, null, null);
     }
 
     int getContext() {

@@ -16,6 +16,7 @@ import com.thaiopensource.relaxng.parse.ParsedNameClass;
 import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
+import com.thaiopensource.relaxng.IncorrectSchemaException;
 
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.DatatypeException;
@@ -31,8 +32,9 @@ import org.xml.sax.SAXParseException;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.io.IOException;
 
-class SchemaBuilderImpl implements SchemaBuilder, Annotations {
+public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
   private final SchemaBuilderImpl parent;
   private boolean hadError = false;
   private final Parseable parseable;
@@ -56,12 +58,31 @@ class SchemaBuilderImpl implements SchemaBuilder, Annotations {
   static public Pattern parse(Parseable parseable,
                               ErrorHandler eh,
                               DatatypeLibraryFactory datatypeLibraryFactory,
-                              SchemaPatternBuilder pb) throws IllegalSchemaException, BuildException {
-    SchemaBuilderImpl sb = new SchemaBuilderImpl(parseable,
-                                                 eh,
-                                                 datatypeLibraryFactory,
-                                                 pb);
-    return sb.expandPattern((Pattern)parseable.parse(sb));
+                              SchemaPatternBuilder pb) throws IncorrectSchemaException, IOException, SAXException {
+    try {
+      SchemaBuilderImpl sb = new SchemaBuilderImpl(parseable,
+                                                   eh,
+                                                   new BuiltinDatatypeLibraryFactory(datatypeLibraryFactory),
+                                                   pb);
+      return sb.expandPattern((Pattern)parseable.parse(sb));
+    }
+    catch (IllegalSchemaException e) {
+      throw new IncorrectSchemaException();
+    }
+    catch (BuildException e) {
+      Throwable t = e.getCause();
+      if (t instanceof IOException)
+        throw (IOException)t;
+      if (t instanceof RuntimeException)
+        throw (RuntimeException)t;
+      if (t instanceof IllegalSchemaException)
+        throw new IncorrectSchemaException();
+      if (t instanceof SAXException)
+        throw (SAXException)t;
+      if (t instanceof Exception)
+        throw new SAXException((Exception)t);
+      throw new SAXException(t.getClass().getName() + " thrown");
+    }
   }
 
   private Pattern expandPattern(Pattern pattern) throws IllegalSchemaException, BuildException {
@@ -107,7 +128,7 @@ class SchemaBuilderImpl implements SchemaBuilder, Annotations {
     this.eh = parent.eh;
     this.datatypeLibraryFactory = parent.datatypeLibraryFactory;
     this.pb = parent.pb;
-    this.inheritNs = inheritNs;
+    this.inheritNs = parent.resolveInherit(inheritNs);
     this.openIncludes = new OpenIncludes(uri, parent.openIncludes);
   }
 
@@ -440,7 +461,7 @@ class SchemaBuilderImpl implements SchemaBuilder, Annotations {
     private Override overrides;
     private GrammarImpl grammar;
 
-    private IncludeImpl(GrammarImpl g) {
+    private IncludeImpl(GrammarImpl grammar) {
       this.grammar = grammar;
     }
 
