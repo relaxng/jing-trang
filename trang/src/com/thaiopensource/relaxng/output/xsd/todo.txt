@@ -1,9 +1,15 @@
+Element wildcards
+
+combine attributes
+- combine="choice" on <start>
+- combine in a single file
+- combine="interleave" (if only referenced once, expand?)
+- others
+
 May sometimes need to move AttributeWildcards to schema with different target namespace to
 take advantage of ##other.
 
 If expansion of a group causes the group to become unreferenced, then remove the group.
-
-Optimize nested choices in expanding <interleave>.
 
 Map
 
@@ -29,8 +35,6 @@ RELAX NG.
 
 Make choice of targetNamespace not depend on order of hash table iteration.
 
-Element wildcards
-
 Nested grammars
 - check and give an error
 - handle some cases
@@ -39,12 +43,6 @@ Nested grammars
 Include overrides
 - Check and give error
 - Handle overrides
-
-combine attributes
-- combine="choice" on <start>
-- combine in a single file
-- combine="interleave" (if only referenced once, expand?)
-- others
 
 externalRef
 - detect and give error
@@ -57,11 +55,15 @@ Check for undefined refs
 
 Check for RNG contextual constraints
 
-Take advantage of xs:all.
-
-Avoid introducing ambiguities when approximating <interleave>, eg x & (y, y).
+Interleave
+- Avoid introducing ambiguities when approximating <interleave>, eg x & (y, y).
+- Take advantage of xs:all.
+- Optimize nested choices in expanding <interleave>.
+- Optimize eg x* & (a, b, c) into x*, (a, x*), (b, x*), (c, x*)
 
 NOTATION datatypes
+- Map to QName
+- Generate an appropriate xs:notation declaration based on annotations
 
 Use complexType in place of group: <define> that contains both
 attributes or text and elements and sometimes referenced as a
