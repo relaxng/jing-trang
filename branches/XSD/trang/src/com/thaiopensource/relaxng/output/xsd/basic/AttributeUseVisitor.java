@@ -5,4 +5,5 @@ public interface AttributeUseVisitor {
   Object visitOptionalAttribute(OptionalAttribute a);
   Object visitAttributeGroupRef(AttributeGroupRef a);
   Object visitAttributeGroup(AttributeGroup a);
+  Object visitAttributeUseChoice(AttributeUseChoice a);
 }

@@ -308,7 +308,7 @@ foo = attribute foo { xsd:double } | element foo { xsd:double }
   </xs:group>
   <xs:element name="foo" type="xs:double"/>
   <xs:attributeGroup name="foo">
-    <xs:attribute name="foo" use="required" type="xs:double"/>
+    <xs:attribute name="foo" type="xs:double"/>
   </xs:attributeGroup>
 </xs:schema>
 </correct>
@@ -1257,6 +1257,113 @@ bar = element bar { bar* }
       </xs:simpleContent>
     </xs:complexType>
   </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+start = element foo { int|double|float }
+
+int = attribute type { "int" }, xsd:int
+double = attribute type { "double" }, xsd:double
+float = attribute type { "float" }, xsd:float
+
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:restriction base="xs:anyType">
+          <xs:simpleType>
+            <xs:union memberTypes="int double float"/>
+          </xs:simpleType>
+          <xs:attribute name="type" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:token">
+                <xs:enumeration value="int"/>
+                <xs:enumeration value="double"/>
+                <xs:enumeration value="float"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:restriction>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="int">
+    <xs:restriction base="xs:int"/>
+  </xs:simpleType>
+  <xs:attributeGroup name="int">
+    <xs:attribute name="type" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="int"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:simpleType name="double">
+    <xs:restriction base="xs:double"/>
+  </xs:simpleType>
+  <xs:attributeGroup name="double">
+    <xs:attribute name="type" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="double"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+  <xs:simpleType name="float">
+    <xs:restriction base="xs:float"/>
+  </xs:simpleType>
+  <xs:attributeGroup name="float">
+    <xs:attribute name="type" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="float"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+start = element foo { atts } | element bar { atts? }
+atts = attribute a1 { text }, more-atts
+more-atts = attribute a2 { text }?
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:attributeGroup ref="atts"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="bar">
+    <xs:complexType>
+      <xs:attribute name="a1"/>
+      <xs:attributeGroup ref="more-atts"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:attributeGroup name="atts">
+    <xs:attribute name="a1" use="required"/>
+    <xs:attributeGroup ref="more-atts"/>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="more-atts">
+    <xs:attribute name="a2"/>
+  </xs:attributeGroup>
 </xs:schema>
 </correct>
 </xsd>

@@ -26,10 +26,6 @@ RELAX NG.
 
 Make choice of targetNamespace not depend on order of hash table iteration.
 
-Deal with attribute choice properly:
-- Avoid duplicate attributes.
-- Deal with <ref> to attributes inside optional
-
 Attribute wildcards
 
 Element wildcards

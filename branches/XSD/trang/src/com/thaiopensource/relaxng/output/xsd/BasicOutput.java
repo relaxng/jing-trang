@@ -38,6 +38,7 @@ import com.thaiopensource.relaxng.output.xsd.basic.Structure;
 import com.thaiopensource.relaxng.output.xsd.basic.OptionalAttribute;
 import com.thaiopensource.relaxng.output.xsd.basic.SchemaWalker;
 import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroup;
+import com.thaiopensource.relaxng.output.xsd.basic.AbstractAttributeUseVisitor;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
@@ -340,7 +341,7 @@ public class BasicOutput {
     }
   }
 
-  class AttributeUseOutput implements AttributeUseVisitor {
+  class AttributeUseOutput extends AbstractAttributeUseVisitor {
     boolean isOptional = false;
 
     public Object visitOptionalAttribute(OptionalAttribute a) {
@@ -449,7 +450,7 @@ public class BasicOutput {
     }
   }
 
-  class GlobalAttributeOutput implements AttributeUseVisitor {
+  class GlobalAttributeOutput extends AbstractAttributeUseVisitor {
     public Object visitAttributeGroup(AttributeGroup a) {
       for (Iterator iter = a.getChildren().iterator(); iter.hasNext();)
         ((AttributeUse)iter.next()).accept(this);
