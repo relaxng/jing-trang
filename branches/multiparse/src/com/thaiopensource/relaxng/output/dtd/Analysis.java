@@ -180,7 +180,6 @@ class Analysis {
     }
 
     public Object visitList(ListPattern p) {
-      er.error("sorry_list", p.getSourceLocation());
       return ContentType.SIMPLE_TYPE;
     }
 

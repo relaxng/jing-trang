@@ -27,6 +27,7 @@ import com.thaiopensource.relaxng.edit.TextPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
 import com.thaiopensource.relaxng.edit.IncludeComponent;
+import com.thaiopensource.relaxng.edit.ListPattern;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 
 import java.io.IOException;
@@ -493,6 +494,12 @@ class DtdOutput {
   }
 
   class TopLevelSimpleTypeOutput extends SimpleTypeOutput {
+    public Object visitList(ListPattern p) {
+      er.warning("list_approx", p.getSourceLocation());
+      buf.append("CDATA");
+      return null;
+    }
+
     public Object visitValue(ValuePattern p) {
       buf.append('(');
       super.visitValue(p);
