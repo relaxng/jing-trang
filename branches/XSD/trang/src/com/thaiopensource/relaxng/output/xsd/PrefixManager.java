@@ -10,12 +10,14 @@ import com.thaiopensource.relaxng.edit.ElementPattern;
 import com.thaiopensource.relaxng.edit.NameNameClass;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.IncludeComponent;
+import com.thaiopensource.relaxng.parse.Context;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.Enumeration;
 
 public class PrefixManager implements SourceUriGenerator {
 
@@ -38,6 +40,13 @@ public class PrefixManager implements SourceUriGenerator {
       this.si = si;
       this.inheritedNamespace = "";
       si.getGrammar().componentsAccept(this);
+      Context context = si.getGrammar().getContext();
+      if (context != null) {
+        for (Enumeration enum = context.prefixes(); enum.hasMoreElements();) {
+          String prefix = (String)enum.nextElement();
+          notePrefix(prefix, context.resolveNamespacePrefix(prefix));
+        }
+      }
     }
 
     public Object visitElement(ElementPattern p) {
@@ -56,24 +65,26 @@ public class PrefixManager implements SourceUriGenerator {
     }
 
     public Object visitName(NameNameClass nc) {
-      String ns = nc.getNamespaceUri();
+      notePrefix(nc.getPrefix(), nc.getNamespaceUri());
+      return null;
+    }
+
+    private void notePrefix(String prefix, String ns) {
+      if (prefix == null || ns == null || ns.equals(""))
+        return;
       if (ns == NameNameClass.INHERIT_NS)
         ns = inheritedNamespace;
-      String prefix = nc.getPrefix();
-      if (prefix != null) {
-        Map prefixUsageMap = (Map)namespacePrefixUsageMap.get(ns);
-        if (prefixUsageMap == null) {
-          prefixUsageMap = new HashMap();
-          namespacePrefixUsageMap.put(ns, prefixUsageMap);
-        }
-        PrefixUsage prefixUsage = (PrefixUsage)prefixUsageMap.get(prefix);
-        if (prefixUsage == null) {
-          prefixUsage = new PrefixUsage();
-          prefixUsageMap.put(prefix, prefixUsage);
-        }
-        prefixUsage.count++;
+      Map prefixUsageMap = (Map)namespacePrefixUsageMap.get(ns);
+      if (prefixUsageMap == null) {
+        prefixUsageMap = new HashMap();
+        namespacePrefixUsageMap.put(ns, prefixUsageMap);
       }
-      return null;
+      PrefixUsage prefixUsage = (PrefixUsage)prefixUsageMap.get(prefix);
+      if (prefixUsage == null) {
+        prefixUsage = new PrefixUsage();
+        prefixUsageMap.put(prefix, prefixUsage);
+      }
+      prefixUsage.count++;
     }
 
     public Object visitComposite(CompositePattern p) {

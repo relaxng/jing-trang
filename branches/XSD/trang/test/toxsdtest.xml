@@ -1793,10 +1793,10 @@ element eg2:foo {
 </correct>
 </compact>
 <xsd>
-<resource name="ns1.xsd">
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/3" xmlns:ns1="http://www.example.com/3" xmlns:eg2="http://www.example.com/2" xmlns:ns2="http://www.example.com/1">
+<resource name="eg3.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/3" xmlns:eg3="http://www.example.com/3" xmlns:eg2="http://www.example.com/2" xmlns:eg1="http://www.example.com/1">
   <xs:import namespace="http://www.example.com/2" schemaLocation="c.xsd"/>
-  <xs:import namespace="http://www.example.com/1" schemaLocation="ns2.xsd"/>
+  <xs:import namespace="http://www.example.com/1" schemaLocation="eg1.xsd"/>
   <xs:group name="local">
     <xs:sequence>
       <xs:any namespace="##other" processContents="skip"/>
@@ -1804,9 +1804,9 @@ element eg2:foo {
   </xs:group>
 </xs:schema>
 </resource>
-<resource name="ns2.xsd">
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:ns1="http://www.example.com/3" xmlns:eg2="http://www.example.com/2" xmlns:ns2="http://www.example.com/1">
-  <xs:import namespace="http://www.example.com/3" schemaLocation="ns1.xsd"/>
+<resource name="eg1.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:eg3="http://www.example.com/3" xmlns:eg2="http://www.example.com/2" xmlns:eg1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/3" schemaLocation="eg3.xsd"/>
   <xs:import namespace="http://www.example.com/2" schemaLocation="c.xsd"/>
   <xs:group name="local">
     <xs:sequence>
@@ -1816,14 +1816,14 @@ element eg2:foo {
 </xs:schema>
 </resource>
 <correct>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:ns1="http://www.example.com/3" xmlns:eg2="http://www.example.com/2" xmlns:ns2="http://www.example.com/1">
-  <xs:import namespace="http://www.example.com/3" schemaLocation="ns1.xsd"/>
-  <xs:import namespace="http://www.example.com/1" schemaLocation="ns2.xsd"/>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:eg3="http://www.example.com/3" xmlns:eg2="http://www.example.com/2" xmlns:eg1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/3" schemaLocation="eg3.xsd"/>
+  <xs:import namespace="http://www.example.com/1" schemaLocation="eg1.xsd"/>
   <xs:element name="foo">
     <xs:complexType>
       <xs:sequence>
         <xs:choice>
-          <xs:group ref="ns2:local"/>
+          <xs:group ref="eg1:local"/>
           <xs:any namespace="##local" processContents="skip"/>
         </xs:choice>
         <xs:choice>
@@ -1831,7 +1831,7 @@ element eg2:foo {
           <xs:any namespace="##local" processContents="skip"/>
         </xs:choice>
         <xs:choice>
-          <xs:group ref="ns1:local"/>
+          <xs:group ref="eg3:local"/>
           <xs:any namespace="##local" processContents="skip"/>
         </xs:choice>
       </xs:sequence>
