@@ -64,6 +64,10 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     List children = transformParticleList(p.getChildren());
     if (children == p.getChildren())
       return p;
+    if (children.size() == 1)
+      return children.get(0);
+    if (children.size() == 0)
+      return null;
     return new ParticleSequence(p.getLocation(), children);
   }
 
@@ -174,7 +178,8 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
         transformed = new Vector();
         for (int j = 0; j < i; j++)
           transformed.add(list.get(j));
-        transformed.add(obj);
+        if (!obj.equals(AttributeGroup.EMPTY))
+          transformed.add(obj);
       }
     }
     if (transformed == null)
@@ -186,13 +191,16 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     List transformed = null;
     for (int i = 0, len = list.size(); i < len; i++) {
       Object obj = ((Particle)list.get(i)).accept(this);
-      if (transformed != null)
-        transformed.add(obj);
+      if (transformed != null) {
+        if (obj != null)
+          transformed.add(obj);
+      }
       else if (obj != list.get(i)) {
         transformed = new Vector();
         for (int j = 0; j < i; j++)
           transformed.add(list.get(j));
-        transformed.add(obj);
+        if (obj != null)
+          transformed.add(obj);
       }
     }
     if (transformed == null)
