@@ -1,0 +1,37 @@
+Simple fixups:
+
+Attribute name-classes
+
+attribute foo|bar { x } => attribute foo { x } | attribute bar {x }
+
+attribute * - foo|bar)
+
+Obnly ever generate process contents = skip
+
+
+
+Deal with single target namespace; only elements with that target namespace;
+only attributes with that target namespace or nothing.
+
+Allow elements with empty namespace.
+
+
+
+Stage 2
+
+Deal with multiple target namespaces
+
+Split up files based on namespace.
+
+
+Simple types:
+
+- Deal with multiple pattern params
+- Deal with NOTATION somehow
+- Sequence turns into list
+
+
+Contains attributes/text and sometimes referenced as a complexType, then
+define as complexType
+
+Sometimes referenced not as a complexType, define as a group

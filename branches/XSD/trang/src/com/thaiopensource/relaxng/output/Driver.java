@@ -5,6 +5,7 @@ import com.thaiopensource.relaxng.edit.SchemaBuilderImpl;
 import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.output.dtd.DtdOutputFormat;
 import com.thaiopensource.relaxng.output.rng.RngOutputFormat;
+import com.thaiopensource.relaxng.output.xsd.XsdOutputFormat;
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.parse.compact.CompactParseable;
 import com.thaiopensource.relaxng.parse.sax.SAXParseable;
@@ -94,6 +95,8 @@ public class Driver {
         of = new DtdOutputFormat();
       else if (outputType.equalsIgnoreCase("rng"))
         of = new RngOutputFormat();
+      else if (outputType.equalsIgnoreCase("xsd"))
+        of = new XsdOutputFormat();
       else {
         error(localizer.message("unrecognized_output_type", outputType));
         return 2;
