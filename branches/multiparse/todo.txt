@@ -1,14 +1,13 @@
-Auto-detect XML/compact syntax.
+Inform user about position of regex error.
 
-Errors for ref or parentRef with no applicable grammar should come
-from builder not parser.
+Check whether category C should include Cn.
 
 Make SAX-based parser preserve element annotations.
 
 SAXParser and comment formatting.
 
 Put location information in error messages into a standard format
-understandable by Emacs.
+understandable by Emacs/Intellij.
 
 More helpful syntax error messages with non-XML syntax parser.
 
@@ -42,6 +41,5 @@ Better error message for wrong namespace URI.
 
 Option to be verbose.
 
-Inform user about position of regex error.
-
-On output, using character escapes for things outside repertoire of character encoding.
+On output, using character escapes for things outside repertoire of
+character encoding.
