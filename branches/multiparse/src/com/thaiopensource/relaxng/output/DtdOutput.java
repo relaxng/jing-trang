@@ -41,6 +41,7 @@ import com.thaiopensource.relaxng.edit.AbstractVisitor;
 import com.thaiopensource.relaxng.edit.CompositePattern;
 import com.thaiopensource.relaxng.edit.Annotated;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
+import com.thaiopensource.relaxng.edit.AttributeAnnotation;
 import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
 import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 import com.thaiopensource.relaxng.util.DraconianErrorHandler;
@@ -69,7 +70,7 @@ Catch bad recursion
 Check single element type
 Warning when approximating datatypes
 Non-local namespaces
-a:defaultValue
+Recognize #FIXED attributes
 Include
 Support duplicate definitions with combine="interleave" for attlists
 Generate parameter entities to allow change of namespace prefix
@@ -93,6 +94,7 @@ public class DtdOutput {
   private Type startType = ERROR;
 
   static private final String XSD = "http://www.w3.org/2001/XMLSchema-datatypes";
+  static private final String COMPATIBILITY_ANNOTATIONS = "http://relaxng.org/ns/compatibility/annotations/1.0";
 
   public DtdOutput(ErrorHandler eh, Writer writer) {
     this.eh = eh;
@@ -648,7 +650,38 @@ public class DtdOutput {
       buf.append(((NameNameClass)p.getNameClass()).getLocalName());
       buf.append(" ");
       p.getChild().accept(topLevelAttributeTypeOutput);
-      buf.append(isRequired() ? " #REQUIRED" : " #IMPLIED");
+      if (isRequired())
+        buf.append(" #REQUIRED");
+      else {
+        String dv = getDefaultValue(p);
+        if (dv == null)
+          buf.append(" #IMPLIED");
+        else {
+          buf.append(' ');
+          buf.append('\'');
+          for (int i = 0, len = dv.length(); i < len; i++) {
+            char c = dv.charAt(i);
+            switch (c) {
+            case '<':
+              buf.append("&lt;");
+              break;
+            case '&':
+              buf.append("&amp;");
+              break;
+            case '\'':
+              buf.append("&apos;");
+              break;
+            case '"':
+              buf.append("&quot;");
+              break;
+            default:
+              buf.append(c);
+              break;
+            }
+          }
+          buf.append('\'');
+        }
+      }
       return null;
     }
 
@@ -1250,4 +1283,16 @@ public class DtdOutput {
     new DtdOutput(null, new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(args[1])))).output(p);
 
   }
+
+  private static String getDefaultValue(AttributePattern p) {
+    List list = p.getAttributeAnnotations();
+    for (int i = 0, len = list.size(); i < len; i++) {
+      AttributeAnnotation att = (AttributeAnnotation)list.get(i);
+      if (att.getLocalName().equals("defaultValue")
+          && att.getNamespaceUri().equals(COMPATIBILITY_ANNOTATIONS))
+        return att.getValue();
+    }
+    return null;
+  }
+
 }
