@@ -4,8 +4,15 @@
 <property name="jing.classes" value="../build/classes"/>
 <property name="dist.dir" value="build"/>
 
+<taskdef name="jing" classname="com.thaiopensource.relaxng.util.JingTask">
+  <classpath>
+    <pathelement location="${dist.dir}/jing.jar"/>
+  </classpath>
+</taskdef>
+
 <target name="init">
   <mkdir dir="${build.dir}"/>
+  <property file="src/com/thaiopensource/relaxng/output/resources/Version.properties"/>
 </target>
 
 <target name="compile" depends="init">
@@ -15,7 +22,6 @@
 </target>
 
 <target name="jar" depends="compile">
-
   <echo file="${build.dir}/trang-manifest.txt">Manifest-Version: 1.0
 Main-Class: com/thaiopensource/relaxng/output/Driver
 Class-Path: jing.jar
@@ -25,7 +31,6 @@ Class-Path: jing.jar
     <fileset dir="${build.dir}/classes"/>
     <fileset dir="src" includes="**/*.properties"/>
   </jar>
-
 </target>
 
 <target name="split" depends="init">
@@ -36,5 +41,30 @@ Class-Path: jing.jar
   </style>
 </target>
 
+<target name="validate" depends="jar">
+  <jing rngfile="../xhtml/xhtml-basic.rng">
+    <fileset dir="doc" includes="*.html"/>
+  </jing>
+</target>
+
+<target name="dist" depends="jar,validate">
+  <zip zipfile="${dist.dir}/trang-src.zip">
+    <fileset dir="src" includes="**/*.java,**/*.properties"/>
+  </zip>
+  <mkdir dir="${build.dir}/doc"/>
+  <copy todir="${build.dir}/doc">
+    <fileset dir="doc" includes="readme.html"/>
+  </copy>
+  <replace file="${build.dir}/doc/readme.html" token="@VERSION@" value="${version}"/>
+  <zip zipfile="${dist.dir}/trang-bin.zip">
+    <fileset dir="${build.dir}/doc" includes="readme.html"/>
+    <fileset dir="." includes="copying.txt"/>
+    <fileset dir="${dist.dir}" includes="trang.jar,jing.jar"/>
+  </zip>
+  <copy todir="${dist.dir}">
+    <fileset dir="doc" includes="trang.html"/>
+  </copy>
+  <replace file="${dist.dir}/trang.html" token="@VERSION@" value="${version}"/>
+</target>
 
 </project>
