@@ -18,7 +18,7 @@ class Translator {
   private StringBuffer result = new StringBuffer();
 
   static private final String categories = "LMNPZSC";
-  static private final CharClass[] categoryCharClasses = new CharClass[categories.length() / 2];
+  static private final CharClass[] categoryCharClasses = new CharClass[categories.length()];
   static private final String subCategories = "LuLlLtLmLoMnMcMeNdNlNoPcPdPsPePiPfPoZsZlZpSmScSkSoCcCfCoCn";
   static private final CharClass[] subCategoryCharClasses = new CharClass[subCategories.length() / 2];
 
@@ -350,7 +350,7 @@ class Translator {
       return containsNonBmp;
     }
 
-    void output(StringBuffer buf) {
+    final void output(StringBuffer buf) {
       switch (containsNonBmp) {
       case NONE:
         if (containsBmp == NONE)
@@ -479,24 +479,8 @@ class Translator {
       return lowRanges.toString();
     }
 
-    void outputBmp(StringBuffer buf) {
-      buf.append('[');
-      inClassOutputBmp(buf);
-      buf.append(']');
-    }
-
-    abstract void inClassOutputBmp(StringBuffer buf);
-
-    // must not call if containsBmp == ALL
-    void outputComplementBmp(StringBuffer buf) {
-      if (containsBmp == NONE)
-        buf.append("[\u0000-\uFFFF]");
-      else {
-        buf.append("[^");
-        inClassOutputBmp(buf);
-        buf.append(']');
-      }
-    }
+    abstract void outputBmp(StringBuffer buf);
+    abstract void outputComplementBmp(StringBuffer buf);
 
     int singleChar() {
       return -1;
@@ -523,7 +507,7 @@ class Translator {
             max = r2.getMax();
         }
         if (max != r.getMax())
-          r = new Range(min, r.getMax());
+          r = new Range(min, max);
         ranges.set(toIndex++, r);
       }
       while (len > toIndex)
@@ -532,7 +516,31 @@ class Translator {
 
   }
 
-  static class SingleChar extends CharClass {
+  static abstract class SimpleCharClass extends CharClass {
+    SimpleCharClass(int containsBmp, int containsNonBmp) {
+      super(containsBmp, containsNonBmp);
+    }
+
+    void outputBmp(StringBuffer buf) {
+      buf.append('[');
+      inClassOutputBmp(buf);
+      buf.append(']');
+    }
+
+    // must not call if containsBmp == ALL
+    void outputComplementBmp(StringBuffer buf) {
+      if (getContainsBmp() == NONE)
+        buf.append("[\u0000-\uFFFF]");
+      else {
+        buf.append("[^");
+        inClassOutputBmp(buf);
+        buf.append(']');
+      }
+    }
+    abstract void inClassOutputBmp(StringBuffer buf);
+  }
+
+  static class SingleChar extends SimpleCharClass {
     private char c;
     SingleChar(char c) {
       super(SOME, NONE);
@@ -555,7 +563,7 @@ class Translator {
 
   }
 
-  static class WideSingleChar extends CharClass {
+  static class WideSingleChar extends SimpleCharClass {
     private int c;
 
     WideSingleChar(int c) {
@@ -576,7 +584,7 @@ class Translator {
     }
   }
 
-  static class CharRange extends CharClass {
+  static class CharRange extends SimpleCharClass {
     private int lower;
     private int upper;
 
@@ -610,7 +618,7 @@ class Translator {
     }
   }
 
-  static class Property extends CharClass {
+  static class Property extends SimpleCharClass {
     private String name;
 
     Property(String name) {
@@ -648,14 +656,17 @@ class Translator {
     }
 
     void outputBmp(StringBuffer buf) {
-      inClassOutputBmp(buf);
-    }
-
-    void inClassOutputBmp(StringBuffer buf) {
       buf.append('[');
-      cc1.inClassOutputBmp(buf);
+      cc1.outputBmp(buf);
       buf.append("&&");
       cc2.outputComplementBmp(buf);
+      buf.append(']');
+    }
+
+    void outputComplementBmp(StringBuffer buf) {
+      buf.append('[');
+      cc1.outputComplementBmp(buf);
+      cc2.outputBmp(buf);
       buf.append(']');
     }
 
@@ -663,7 +674,7 @@ class Translator {
       List posList = new Vector();
       cc1.addNonBmpRanges(posList);
       List negList = new Vector();
-      cc2.addNonBmpRanges(posList);
+      cc2.addNonBmpRanges(negList);
       sortRangeList(posList);
       sortRangeList(negList);
       Iterator negIter = negList.iterator();
@@ -719,12 +730,52 @@ class Translator {
       this.members = members;
     }
 
-    void inClassOutputBmp(StringBuffer buf) {
+    void outputBmp(StringBuffer buf) {
+      buf.append('[');
       for (int i = 0, len = members.size(); i < len; i++) {
         CharClass cc = (CharClass)members.get(i);
-        if (cc.getContainsBmp() != NONE)
-          cc.inClassOutputBmp(buf);
+        if (cc.getContainsBmp() != NONE) {
+          if (cc instanceof SimpleCharClass)
+            ((SimpleCharClass)cc).inClassOutputBmp(buf);
+          else
+            cc.outputBmp(buf);
+        }
       }
+      buf.append(']');
+    }
+
+    void outputComplementBmp(StringBuffer buf) {
+      boolean first = true;
+      int len = members.size();
+      for (int i = 0; i < len; i++) {
+        CharClass cc = (CharClass)members.get(i);
+        if (cc.getContainsBmp() != NONE && cc instanceof SimpleCharClass) {
+          if (first) {
+            buf.append("[^");
+            first = false;
+          }
+          ((SimpleCharClass)cc).inClassOutputBmp(buf);
+        }
+      }
+      for (int i = 0; i < len; i++) {
+        CharClass cc = (CharClass)members.get(i);
+        if (cc.getContainsBmp() != NONE && !(cc instanceof SimpleCharClass)) {
+          if (first) {
+            buf.append('[');
+            first = false;
+          }
+          else
+            buf.append("&&");
+          // can't have any members that are ALL, because that would make this ALL, which violates
+          // the precondition for outputComplementBmp
+          cc.outputComplementBmp(buf);
+        }
+      }
+      if (first == true)
+        // all members are NONE, so this is NONE, so complement is everything
+        buf.append("[\u0000-\uFFFF]");
+      else
+        buf.append(']');
     }
 
     void addNonBmpRanges(List ranges) {
@@ -755,24 +806,11 @@ class Translator {
     }
 
     void outputBmp(StringBuffer buf) {
-      if (cc.getContainsBmp() == NONE)
-        super.outputBmp(buf);
-      else
-        inClassOutputBmp(buf);
+      cc.outputComplementBmp(buf);
     }
 
     void outputComplementBmp(StringBuffer buf) {
       cc.outputBmp(buf);
-    }
-
-    void inClassOutputBmp(StringBuffer buf) {
-      if (cc.getContainsBmp() == NONE)
-        buf.append("\u0000-\uFFFF");
-      else {
-        buf.append("[^");
-        cc.inClassOutputBmp(buf);
-        buf.append(']');
-      }
     }
 
     void addNonBmpRanges(List ranges) {
@@ -1032,14 +1070,14 @@ class Translator {
       result = (CharClass)members.get(0);
     else
       result = new Union(members);
+    if (compl)
+      result = new Complement(result);
     if (curChar == '[') {
       advance();
       result = new Subtraction(result, parseCharClassExpr());
       expect(']');
     }
     advance();
-    if (compl)
-      return new Complement(result);
     return result;
   }
 
@@ -1124,21 +1162,23 @@ class Translator {
   static private CharClass computeCategoryCharClass(char code) {
     List classes = new Vector();
     classes.add(new Property(new String(new char[] { code })));
-    for (int ci = Categories.CATEGORY_NAMES.indexOf(code); ci < 0; ci = Categories.CATEGORY_NAMES.indexOf(code, ci)) {
+    for (int ci = Categories.CATEGORY_NAMES.indexOf(code); ci >= 0; ci = Categories.CATEGORY_NAMES.indexOf(code, ci + 1)) {
       int[] addRanges = Categories.CATEGORY_RANGES[ci/2];
       for (int i = 0; i < addRanges.length; i += 2)
         classes.add(new CharRange(addRanges[i], addRanges[i + 1]));
     }
     if (code == 'P')
-      classes.add(makeCharClass(CATEGORY_Pi + CATEGORY_Pi));
+      classes.add(makeCharClass(CATEGORY_Pi + CATEGORY_Pf));
     if (code == 'L') {
       classes.add(new SingleChar(UNICODE_3_1_ADD_Ll));
       classes.add(new SingleChar(UNICODE_3_1_ADD_Lu));
     }
     if (code == 'C') {
+      // JDK 1.4 leaves Cn out of C?
+      classes.add(new Subtraction(new Property("Cn"),
+                                  new Union(new CharClass[] { new SingleChar(UNICODE_3_1_ADD_Lu),
+                                                              new SingleChar(UNICODE_3_1_ADD_Ll) })));
       List assignedRanges = new Vector();
-      assignedRanges.add(new SingleChar(UNICODE_3_1_ADD_Lu));
-      assignedRanges.add(new SingleChar(UNICODE_3_1_ADD_Ll));
       for (int i = 0; i < Categories.CATEGORY_RANGES.length; i++)
         for (int j = 0; j < Categories.CATEGORY_RANGES[i].length; j += 2)
           assignedRanges.add(new CharRange(Categories.CATEGORY_RANGES[i][j],
