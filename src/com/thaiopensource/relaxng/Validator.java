@@ -186,7 +186,6 @@ public class Validator implements ContentHandler {
     this.b = b;
     this.xr = xr;
     this.memo = b.getPatternMemo(pattern);
-    xr.setContentHandler(this);
   }
 
   public boolean getValid() {

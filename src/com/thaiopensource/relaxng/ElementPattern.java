@@ -84,4 +84,8 @@ class ElementPattern extends Pattern {
   NameClass getNameClass() {
     return nameClass;
   }
+
+  Locator getLocator() {
+    return loc;
+  }
 }

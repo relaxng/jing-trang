@@ -16,6 +16,8 @@ public class ValidationEngine {
   private DatatypeLibraryFactory dlf;
   private PatternBuilder pb;
   private Pattern p;
+  private boolean checkId;
+  private IdTypeMap idTypeMap;
 
   public void setXMLReaderCreator(XMLReaderCreator xrc) {
     this.xrc = xrc;
@@ -36,6 +38,10 @@ public class ValidationEngine {
     this.dlf = dlf;
   }
 
+  public void setCheckId(boolean checkId) {
+    this.checkId = checkId;
+  }
+
   /**
    * setXMLReaderCreator must be called before any call to loadPattern
    */
@@ -47,6 +53,9 @@ public class ValidationEngine {
     p = PatternReader.readPattern(xrc, xr, pb, dlf, in);
     if (p == null)
       return false;
+    idTypeMap = null;
+    if (checkId)
+      idTypeMap = new IdTypeMapBuilder(xr, p).getIdTypeMap();
     return true;
   }
 
@@ -54,9 +63,7 @@ public class ValidationEngine {
    * loadPattern must be called before any call to validate
    */
   public boolean validate(InputSource in) throws SAXException, IOException {
-    Validator v = new Validator(p, pb, xr);
-    xr.parse(in);
-    return v.getValid();
+    return validate1(new Validator(p, pb, xr), in);
   }
 
   /**
@@ -68,7 +75,21 @@ public class ValidationEngine {
     throws SAXException, IOException {
     XMLReader xr = xrc.createXMLReader();
     Validator v = new Validator(p, new PatternBuilder(pb), xr);
-    xr.parse(in);
-    return v.getValid();
+    return validate1(v, in);
+  }
+
+  private boolean validate1(Validator v, InputSource in)
+      throws SAXException, IOException {
+    if (idTypeMap != null) {
+      IdSoundnessChecker idSoundnessChecker = new IdSoundnessChecker(idTypeMap, xr);
+      xr.setContentHandler(new SplitContentHandler(v, idSoundnessChecker));
+      xr.parse(in);
+      return v.getValid() && idSoundnessChecker.getSound();
+    }
+    else {
+      xr.setContentHandler(v);
+      xr.parse(in);
+      return v.getValid();
+    }
   }
 }

@@ -20,4 +20,14 @@ class Localizer {
     return MessageFormat.format(ResourceBundle.getBundle(bundleName).getString(key),
 			        new Object[]{arg1, arg2});
   }
+
+  static String message(String key, Object arg1, Object arg2, Object arg3) {
+    return MessageFormat.format(ResourceBundle.getBundle(bundleName).getString(key),
+			        new Object[]{arg1, arg2, arg3});
+  }
+
+  static String message(String key, Object arg1, Object arg2, Object arg3, Object arg4) {
+    return MessageFormat.format(ResourceBundle.getBundle(bundleName).getString(key),
+			        new Object[]{arg1, arg2, arg3, arg4});
+  }
 }
