@@ -29,6 +29,8 @@ import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
 import com.thaiopensource.relaxng.edit.IncludeComponent;
 import com.thaiopensource.relaxng.edit.ListPattern;
 import com.thaiopensource.relaxng.edit.Annotated;
+import com.thaiopensource.relaxng.edit.Comment;
+import com.thaiopensource.relaxng.edit.AnnotationChild;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.xml.util.Naming;
 
@@ -678,9 +680,11 @@ class DtdOutput {
       }
       else {
         if (getContentType(c.getBody()) == ContentType.DIRECT_SINGLE_ELEMENT)
-          outputElement((ElementPattern)c.getBody());
-        else
-          outputParamEntity(c.getName(), c.getBody());
+          outputElement((ElementPattern)c.getBody(), c);
+        else if (!doneParamEntities.contains(c.getName())) {
+          doneParamEntities.add(c.getName());
+          outputParamEntity(c);
+        }
       }
       outputQueuedElements();
       return null;
@@ -694,7 +698,7 @@ class DtdOutput {
 
   void outputQueuedElements() {
     for (int i = 0; i < elementQueue.size(); i++)
-      outputElement((ElementPattern)elementQueue.get(i));
+      outputElement((ElementPattern)elementQueue.get(i), null);
     elementQueue.clear();
   }
 
@@ -712,17 +716,23 @@ class DtdOutput {
     xmlDecl();
     Pattern p = analysis.getPattern();
     if (p != grammarPattern) {
+      outputLeadingComments(p);
       p.accept(nestedContentModelOutput);
       outputQueuedElements();
     }
-    if (grammarPattern != null)
+    if (grammarPattern != null) {
+      outputLeadingComments(grammarPattern);
       grammarOutput.visitContainer(grammarPattern);
+      outputFollowingComments(grammarPattern);
+    }
     close();
   }
 
   void subOutput(GrammarPattern grammarPattern) {
     xmlDecl();
+    outputLeadingComments(grammarPattern);
     grammarOutput.visitContainer(grammarPattern);
+    outputFollowingComments(grammarPattern);
     close();
   }
 
@@ -793,8 +803,12 @@ class DtdOutput {
       Component c = part.getWhereProvided(name);
       if (c == null)
         externallyRequiredParamEntities.add(name);
-      else if (c instanceof DefineComponent)
-        outputParamEntity(name, getBody(name));
+      else if (c instanceof DefineComponent) {
+        if (!doneParamEntities.contains(name)) {
+          doneParamEntities.add(name);
+          outputParamEntity((DefineComponent)c);
+        }
+      }
       else
         outputInclude((IncludeComponent)c);
     }
@@ -875,9 +889,9 @@ class DtdOutput {
     return true;
   }
 
-  void outputParamEntity(String name, Pattern body) {
-    if (doneParamEntities.contains(name))
-      return;
+  void outputParamEntity(DefineComponent def) {
+    String name = def.getName();
+    Pattern body = def.getBody();
     ContentType t = getContentType(body);
     buf.setLength(0);
     if (t.isA(ContentType.MODEL_GROUP) || t.isA(ContentType.NOT_ALLOWED) || t.isA(ContentType.MIXED_ELEMENT_CLASS))
@@ -894,6 +908,7 @@ class DtdOutput {
       body.accept(topLevelSimpleTypeOutput);
     String replacement = buf.toString();
     outputRequiredComponents();
+    outputLeadingComments(def);
     String elementName = analysis.getParamEntityElementName(name);
     if (elementName != null) {
       if (replacement.length() > 0) {
@@ -918,9 +933,10 @@ class DtdOutput {
       write('>');
       newline();
     }
+    outputFollowingComments(def);
   }
 
-  void outputElement(ElementPattern p) {
+  void outputElement(ElementPattern p, Annotated def) {
     buf.setLength(0);
     Pattern content = p.getChild();
     ContentType ct = getContentType(content);
@@ -945,6 +961,9 @@ class DtdOutput {
     attributeOutput.output(content);
     String atts = buf.toString();
     outputRequiredComponents();
+    if (def != null)
+      outputLeadingComments(def);
+    outputLeadingComments(p);
     List names = NameClassSplitter.split(p.getNameClass());
     for (Iterator iter = names.iterator(); iter.hasNext();) {
       NameNameClass name = (NameNameClass)iter.next();
@@ -997,6 +1016,8 @@ class DtdOutput {
         newline();
       }
     }
+    if (def != null)
+      outputFollowingComments(def);
   }
 
   void outputAttributeNamespaces(Pattern p) {
@@ -1013,6 +1034,46 @@ class DtdOutput {
       attributeValueLiteral(ns);
       write(buf.toString());
     }
+  }
+
+  void outputLeadingComments(Annotated a) {
+    for (Iterator iter = a.getLeadingComments().iterator(); iter.hasNext();)
+      outputComment(((Comment)iter.next()).getValue());
+  }
+
+  void outputFollowingComments(Annotated a) {
+    for (Iterator iter = a.getFollowingElementAnnotations().iterator(); iter.hasNext();) {
+      AnnotationChild child = (AnnotationChild)iter.next();
+      if (child instanceof Comment)
+        outputComment(((Comment)child).getValue());
+    }
+  }
+
+  void outputComment(String value) {
+    newline();
+    write("<!--");
+    int start = 0;
+    for (;;) {
+      int i = value.indexOf('\n', start);
+      if (i < 0) {
+        if (start == 0) {
+          write(' ');
+          write(value);
+          write(' ');
+        }
+        else {
+          newline();
+          write(value.substring(start));
+          newline();
+        }
+        break;
+      }
+      newline();
+      write(value.substring(start, i));
+      start = i + 1;
+    }
+    write("-->");
+    newline();
   }
 
   void newline() {
