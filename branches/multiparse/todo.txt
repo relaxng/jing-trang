@@ -1,9 +1,14 @@
+Auto-detect XML/compact syntax.
+
+Errors for ref or parentRef with no applicable grammar should come
+from builder not parser.
+
 Make SAX-based parser preserve element annotations.
 
 SAXParser and comment formatting.
 
 Put location information in error messages into a standard format
-understandable by Emacs/Intellij.
+understandable by Emacs.
 
 More helpful syntax error messages with non-XML syntax parser.
 

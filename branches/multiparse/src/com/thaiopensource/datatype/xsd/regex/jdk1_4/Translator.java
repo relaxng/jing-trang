@@ -18,7 +18,9 @@ class Translator {
   private StringBuffer result = new StringBuffer();
 
   static private final String categories = "LMNPZSC";
+  static private final CharClass[] categoryCharClasses = new CharClass[categories.length() / 2];
   static private final String subCategories = "LuLlLtLmLoMnMcMeNdNlNoPcPdPsPePiPfPoZsZlZpSmScSkSoCcCfCoCn";
+  static private final CharClass[] subCategoryCharClasses = new CharClass[subCategories.length() / 2];
 
   static private final int NONBMP_MIN = 0x10000;
   static private final int NONBMP_MAX = 0x10FFFF;
@@ -257,12 +259,11 @@ class Translator {
     if (curChar == ',') {
       copyCurChar();
       if (curChar != '}') {
-        advance();
         String upper = parseQuantExact();
         try {
           int upperValue = Integer.parseInt(upper);
           result.append(upper);
-          if (lowerValue < 0 || upperValue <= lowerValue)
+          if (lowerValue < 0 || upperValue < lowerValue)
             throw makeException("invalid_quantity_range");
         }
         catch (NumberFormatException e) {
@@ -646,10 +647,16 @@ class Translator {
       this.cc2 = cc2;
     }
 
+    void outputBmp(StringBuffer buf) {
+      inClassOutputBmp(buf);
+    }
+
     void inClassOutputBmp(StringBuffer buf) {
+      buf.append('[');
       cc1.inClassOutputBmp(buf);
       buf.append("&&");
       cc2.outputComplementBmp(buf);
+      buf.append(']');
     }
 
     void addNonBmpRanges(List ranges) {
@@ -945,13 +952,15 @@ class Translator {
     case 0:
       throw makeException("empty_property_name");
     case 2:
-      if (subCategories.indexOf(propertyName) < 0)
+      int sci = subCategories.indexOf(propertyName);
+      if (sci < 0 || sci % 2 == 1)
         throw makeException("bad_category");
-      // fall through
+      return getSubCategoryCharClass(sci / 2);
     case 1:
-      if (categories.indexOf(propertyName.charAt(0)) < 1)
+      int ci = categories.indexOf(propertyName.charAt(0));
+      if (ci < 0)
         throw makeException("bad_category", propertyName);
-      return new Property(propertyName);
+      return getCategoryCharClass(ci);
     default:
       if (!propertyName.startsWith("Is"))
         break;
@@ -1092,4 +1101,100 @@ class Translator {
     return false;
   }
 
+  static private synchronized CharClass getCategoryCharClass(int ci) {
+    if (categoryCharClasses[ci] == null)
+      categoryCharClasses[ci] = computeCategoryCharClass(categories.charAt(ci));
+    return categoryCharClasses[ci];
+  }
+
+  static private synchronized CharClass getSubCategoryCharClass(int sci) {
+    if (subCategoryCharClasses[sci] == null)
+      subCategoryCharClasses[sci] = computeSubCategoryCharClass(subCategories.substring(sci * 2, (sci + 1) * 2));
+    return subCategoryCharClasses[sci];
+  }
+
+  static private char UNICODE_3_1_ADD_Lu = '\u03F4';   // added in 3.1
+  static private char UNICODE_3_1_ADD_Ll = '\u03F5';   // added in 3.1
+  // 3 characters changed from No to Nl between 3.0 and 3.1
+  static private char UNICODE_3_1_CHANGE_No_to_Nl_MIN = '\u16EE';
+  static private char UNICODE_3_1_CHANGE_No_to_Nl_MAX = '\u16F0';
+  static private String CATEGORY_Pi = "\u00AB\u2018\u201B\u201C\u201F\u2039"; // Java doesn't know about category Pi
+  static private String CATEGORY_Pf = "\u00BB\u2019\u201D\u203A"; // Java doesn't know about category Pf
+
+  static private CharClass computeCategoryCharClass(char code) {
+    List classes = new Vector();
+    classes.add(new Property(new String(new char[] { code })));
+    for (int ci = Categories.CATEGORY_NAMES.indexOf(code); ci < 0; ci = Categories.CATEGORY_NAMES.indexOf(code, ci)) {
+      int[] addRanges = Categories.CATEGORY_RANGES[ci/2];
+      for (int i = 0; i < addRanges.length; i += 2)
+        classes.add(new CharRange(addRanges[i], addRanges[i + 1]));
+    }
+    if (code == 'P')
+      classes.add(makeCharClass(CATEGORY_Pi + CATEGORY_Pi));
+    if (code == 'L') {
+      classes.add(new SingleChar(UNICODE_3_1_ADD_Ll));
+      classes.add(new SingleChar(UNICODE_3_1_ADD_Lu));
+    }
+    if (code == 'C') {
+      List assignedRanges = new Vector();
+      assignedRanges.add(new SingleChar(UNICODE_3_1_ADD_Lu));
+      assignedRanges.add(new SingleChar(UNICODE_3_1_ADD_Ll));
+      for (int i = 0; i < Categories.CATEGORY_RANGES.length; i++)
+        for (int j = 0; j < Categories.CATEGORY_RANGES[i].length; j += 2)
+          assignedRanges.add(new CharRange(Categories.CATEGORY_RANGES[i][j],
+                                           Categories.CATEGORY_RANGES[i][j + 1]));
+      classes.add(new Subtraction(new CharRange(NONBMP_MIN, NONBMP_MAX),
+                                  new Union(assignedRanges)));
+    }
+    if (classes.size() == 1)
+      return (CharClass)classes.get(0);
+    return new Union(classes);
+  }
+
+  static private CharClass computeSubCategoryCharClass(String name) {
+    CharClass base = new Property(name);
+    int sci = Categories.CATEGORY_NAMES.indexOf(name);
+    if (sci < 0) {
+      if (name.equals("Cn")) {
+        // Unassigned
+        List assignedRanges = new Vector();
+        assignedRanges.add(new SingleChar(UNICODE_3_1_ADD_Lu));
+        assignedRanges.add(new SingleChar(UNICODE_3_1_ADD_Ll));
+        for (int i = 0; i < Categories.CATEGORY_RANGES.length; i++)
+          for (int j = 0; j < Categories.CATEGORY_RANGES[i].length; j += 2)
+            assignedRanges.add(new CharRange(Categories.CATEGORY_RANGES[i][j],
+                                             Categories.CATEGORY_RANGES[i][j + 1]));
+        return new Subtraction(new Union(new CharClass[] { base, new CharRange(NONBMP_MIN, NONBMP_MAX) }),
+                               new Union(assignedRanges));
+      }
+      if (name.equals("Pi"))
+        return makeCharClass(CATEGORY_Pi);
+      if (name.equals("Pf"))
+        return makeCharClass(CATEGORY_Pf);
+      return base;
+    }
+    List classes = new Vector();
+    classes.add(base);
+    int[] addRanges = Categories.CATEGORY_RANGES[sci/2];
+    for (int i = 0; i < addRanges.length; i += 2)
+      classes.add(new CharRange(addRanges[i], addRanges[i + 1]));
+    if (name.equals("Lu"))
+      classes.add(new SingleChar(UNICODE_3_1_ADD_Lu));
+    else if (name.equals("Ll"))
+      classes.add(new SingleChar(UNICODE_3_1_ADD_Ll));
+    else if (name.equals("Nl"))
+      classes.add(new CharRange(UNICODE_3_1_CHANGE_No_to_Nl_MIN, UNICODE_3_1_CHANGE_No_to_Nl_MAX));
+    else if (name.equals("No"))
+      return new Subtraction(new Union(classes),
+                             new CharRange(UNICODE_3_1_CHANGE_No_to_Nl_MIN,
+                                           UNICODE_3_1_CHANGE_No_to_Nl_MAX));
+    return new Union(classes);
+  }
+
+  static CharClass makeCharClass(String members) {
+    List list = new Vector();
+    for (int i = 0, len = members.length(); i < len; i++)
+      list.add(new SingleChar(members.charAt(i)));
+    return new Union(list);
+  }
 }
