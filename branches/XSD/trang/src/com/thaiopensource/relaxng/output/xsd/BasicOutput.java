@@ -40,6 +40,8 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.io.IOException;
 
 public class BasicOutput {
@@ -48,7 +50,7 @@ public class BasicOutput {
   private final SimpleTypeOutput simpleTypeOutput = new SimpleTypeOutput();
   private final ComplexTypeVisitor complexTypeOutput = new ComplexTypeOutput();
   private final AttributeUseOutput attributeUseOutput = new AttributeUseOutput();
-  private final ParticleVisitor particleOutput = new ParticleOutput();
+  private final ParticleOutput particleOutput = new ParticleOutput();
   private final ParticleVisitor globalElementOutput = new GlobalElementOutput();
   private final SchemaVisitor schemaOutput = new SchemaOutput();
   private final StructureVisitor movedStructureOutput = new MovedStructureOutput();
@@ -57,6 +59,7 @@ public class BasicOutput {
   private final String targetNamespace;
   private final OutputDirectory od;
   private final String sourceUri;
+  private final Set globalElementsDefined;
 
   class SimpleTypeOutput implements SimpleTypeVisitor {
     public Object visitRestriction(SimpleTypeRestriction t) {
@@ -130,31 +133,69 @@ public class BasicOutput {
 
   // TODO deal with different particle output in complexType and namedGroup
 
+  private static final int NORMAL_CONTEXT = 0;
+  private static final int COMPLEX_TYPE_CONTEXT = 1;
+  private static final int NAMED_GROUP_CONTEXT = 2;
+
   class ParticleOutput implements ParticleVisitor {
     private Occurs occ = Occurs.EXACTLY_ONE;
+    private int context = NORMAL_CONTEXT;
+
+    private boolean startWrapperForElement() {
+      boolean needWrapper = context >= COMPLEX_TYPE_CONTEXT;
+      context = NORMAL_CONTEXT;
+      if (needWrapper)
+        xw.startElement(xs("sequence"));
+      xw.startElement(xs("element"));
+      outputOccurAttributes();
+      return needWrapper;
+    }
+
+    private boolean startWrapperForGroupRef() {
+      boolean needWrapper = context == NAMED_GROUP_CONTEXT;
+      context = NORMAL_CONTEXT;
+      if (needWrapper)
+        xw.startElement(xs("sequence"));
+      xw.startElement(xs("group"));
+      outputOccurAttributes();
+      return needWrapper;
+    }
+
+    private boolean startWrapperForGroup(String groupType) {
+      boolean needWrapper = context == NAMED_GROUP_CONTEXT && !occ.equals(Occurs.EXACTLY_ONE);
+      context = NORMAL_CONTEXT;
+      if (needWrapper)
+        xw.startElement(xs("sequence"));
+      xw.startElement(xs(groupType));
+      outputOccurAttributes();
+      return needWrapper;
+    }
+
+    private void endWrapper(boolean extra) {
+      xw.endElement();
+      if (extra)
+        xw.endElement();
+    }
 
     public Object visitElement(Element p) {
+      boolean usedWrapper;
       if (nsm.isGlobal(p)) {
-        xw.startElement(xs("element"));
-        outputOccurAttributes();
-        xw.endElement();
+        usedWrapper = startWrapperForElement();
+        xw.attribute("ref", qualifyName(p.getName()));
       }
       else if (!namespaceIsLocal(p.getName().getNamespaceUri())) {
-        xw.startElement(xs("group"));
+        usedWrapper = startWrapperForGroupRef();
         xw.attribute("ref", qualifyName(p.getName().getNamespaceUri(),
                                         nsm.getProxyName(p)));
-        outputOccurAttributes();
-        xw.endElement();
       }
       else {
-        xw.startElement(xs("element"));
+        usedWrapper = startWrapperForElement();
         xw.attribute("name", p.getName().getLocalName());
         if (!p.getName().getNamespaceUri().equals(targetNamespace))
           xw.attribute("form", "unqualified");
-        outputOccurAttributes();
         p.getComplexType().accept(complexTypeOutput);
-        xw.endElement();
       }
+      endWrapper(usedWrapper);
       return null;
     }
 
@@ -165,28 +206,27 @@ public class BasicOutput {
     }
 
     public Object visitSequence(ParticleSequence p) {
-      xw.startElement(xs("sequence"));
+      boolean usedWrapper = startWrapperForGroup("sequence");
       outputParticles(p.getChildren());
-      xw.endElement();
+      endWrapper(usedWrapper);
       return null;
     }
 
     public Object visitChoice(ParticleChoice p) {
-      xw.startElement(xs("choice"));
+      boolean usedWrapper = startWrapperForGroup("choice");
       outputParticles(p.getChildren());
-      xw.endElement();
+      endWrapper(usedWrapper);
       return null;
     }
 
     public Object visitAll(ParticleAll p) {
-      xw.startElement(xs("all"));
+      boolean usedWrapper = startWrapperForGroup("all");
       outputParticles(p.getChildren());
-      xw.endElement();
+      endWrapper(usedWrapper);
       return null;
     }
 
     private void outputParticles(List particles) {
-      outputOccurAttributes();
       for (Iterator iter = particles.iterator(); iter.hasNext();)
         ((Particle)iter.next()).accept(this);
     }
@@ -195,18 +235,16 @@ public class BasicOutput {
       String name = p.getName();
       GroupDefinition def = schema.getGroup(name);
       Particle particle = def.getParticle();
+      boolean usedWrapper;
       if (particle instanceof Element && nsm.isGlobal((Element)particle)) {
-        xw.startElement(xs("element"));
+        usedWrapper = startWrapperForElement();
         xw.attribute("ref", qualifyName(((Element)particle).getName()));
-        outputOccurAttributes();
-        xw.endElement();
       }
       else {
-        xw.startElement(xs("group"));
+        usedWrapper = startWrapperForGroupRef();
         xw.attribute("ref", qualifyRef(def.getParentSchema().getUri(), name));
-        outputOccurAttributes();
-        xw.endElement();
       }
+      endWrapper(usedWrapper);
       return null;
     }
 
@@ -225,9 +263,11 @@ public class BasicOutput {
       xw.startElement(xs("complexType"));
       if (t.isMixed())
         xw.attribute("mixed", "true");
-      attributeUseOutput.outputList(t.getAttributeUses());
-      if (t.getParticle() != null)
+      if (t.getParticle() != null) {
+        particleOutput.context = COMPLEX_TYPE_CONTEXT;
         t.getParticle().accept(particleOutput);
+      }
+      attributeUseOutput.outputList(t.getAttributeUses());
       xw.endElement();
       return null;
     }
@@ -286,9 +326,13 @@ public class BasicOutput {
 
   class GlobalElementOutput implements ParticleVisitor, ComplexTypeVisitor {
     public Object visitElement(Element p) {
-      if (nsm.isGlobal(p) && p.getName().getNamespaceUri().equals(targetNamespace)) {
+      Name name = p.getName();
+      if (nsm.isGlobal(p)
+          && name.getNamespaceUri().equals(targetNamespace)
+          && !globalElementsDefined.contains(name)) {
+        globalElementsDefined.add(name);
         xw.startElement(xs("element"));
-        xw.attribute("name", p.getName().getLocalName());
+        xw.attribute("name", name.getLocalName());
         p.getComplexType().accept(complexTypeOutput);
         xw.endElement();
       }
@@ -340,6 +384,7 @@ public class BasicOutput {
       if (!(particle instanceof Element) || !nsm.isGlobal((Element)particle)) {
         xw.startElement(xs("group"));
         xw.attribute("name", def.getName());
+        particleOutput.context = NAMED_GROUP_CONTEXT;
         particle.accept(particleOutput);
         xw.endElement();
       }
@@ -367,21 +412,32 @@ public class BasicOutput {
 
   class MovedStructureOutput implements StructureVisitor {
     public Object visitElement(Element element) {
-      // TODO
+      if (!nsm.isGlobal(element)) {
+        xw.startElement(xs("group"));
+        xw.attribute("name", nsm.getProxyName(element));
+        particleOutput.context = NAMED_GROUP_CONTEXT;
+        particleOutput.visitElement(element);
+        xw.endElement();
+      }
+      globalElementOutput.visitElement(element);
       return null;
     }
 
     public Object visitAttribute(Attribute attribute) {
-      // TODO
+      xw.startElement(xs("attributeGroup"));
+      xw.attribute("name", nsm.getProxyName(attribute));
+      attributeUseOutput.visitAttribute(attribute);
+      xw.endElement();
       return null;
     }
   }
 
   static void output(Schema schema, PrefixManager pm, OutputDirectory od, ErrorReporter er) throws IOException {
     NamespaceManager nsm = new NamespaceManager(schema, pm);
+    Set globalElementsDefined = new HashSet();
     try {
       for (Iterator iter = schema.getSubSchemas().iterator(); iter.hasNext();)
-        new BasicOutput((Schema)iter.next(), er, od, nsm, pm).output();
+        new BasicOutput((Schema)iter.next(), er, od, nsm, pm, globalElementsDefined).output();
     }
     catch (XmlWriter.WrappedException e) {
       throw e.getIOException();
@@ -389,10 +445,11 @@ public class BasicOutput {
   }
 
   public BasicOutput(Schema schema, ErrorReporter er, OutputDirectory od,
-                     NamespaceManager nsm, PrefixManager pm) throws IOException {
+                     NamespaceManager nsm, PrefixManager pm, Set globalElementsDefined) throws IOException {
     this.schema = schema;
     this.nsm = nsm;
     this.pm = pm;
+    this.globalElementsDefined = globalElementsDefined;
     this.sourceUri = schema.getUri();
     this.od = od;
     this.targetNamespace = nsm.getTargetNamespace(schema.getUri());

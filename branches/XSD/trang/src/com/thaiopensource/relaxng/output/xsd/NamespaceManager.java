@@ -109,7 +109,7 @@ public class NamespaceManager {
         info.occur = occur;
         info.globalType = element;
       }
-      else if (occur == info.occur)
+      else if (occur == info.occur && info.globalType != element)
         info.globalType = null;
       NamespaceUsage usage = getUsage(element.getName().getNamespaceUri());
       if (!nested)
@@ -198,7 +198,7 @@ public class NamespaceManager {
         moveStructure(p);
         p.getComplexType().accept(new StructureMover(ns));
       }
-      return super.visitElement(p);
+      return null;
     }
 
     public Object visitAttribute(Attribute a) {

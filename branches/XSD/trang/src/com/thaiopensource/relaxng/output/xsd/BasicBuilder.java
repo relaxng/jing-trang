@@ -417,7 +417,7 @@ public class BasicBuilder {
     public Object visitInclude(IncludeComponent c) {
       String uri = c.getHref();
       Schema sub = schema.addInclude(uri, c.getSourceLocation());
-      si.getSchema(uri).componentsAccept(new BasicBuilder(er, si, sub, c.getNs()).schemaBuilder);
+      si.getSchema(uri).componentsAccept(new BasicBuilder(er, si, sub, resolveNamespace(c.getNs())).schemaBuilder);
       return null;
     }
   }
