@@ -10,7 +10,7 @@ import com.thaiopensource.relaxng.impl.PatternSchema;
 import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
 import com.thaiopensource.relaxng.impl.SchemaBuilderImpl;
 import com.thaiopensource.relaxng.parse.Parseable;
-import com.thaiopensource.relaxng.parse.sax.ParseableImpl;
+import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
@@ -75,7 +75,7 @@ public class SchemaFactory {
     SchemaPatternBuilder spb = new SchemaPatternBuilder();
     Pattern start;
     if (NEW_PARSER) {
-      start = SchemaBuilderImpl.parse(new ParseableImpl(xrc, in, eh), eh, dlf, spb);
+      start = SchemaBuilderImpl.parse(new SAXParseable(xrc, in, eh), eh, dlf, spb);
     }
     else {
       XMLReader xr = xrc.createXMLReader();
