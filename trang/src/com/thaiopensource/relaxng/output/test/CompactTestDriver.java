@@ -130,7 +130,7 @@ public class CompactTestDriver {
       Parseable parseable = new CompactParseable(new InputSource(UriOrFile.fileToUri(in)), eh);
       SchemaCollection sc = SchemaBuilderImpl.parse(parseable,
                                                     new DatatypeLibraryLoader());
-      OutputDirectory od = new LocalOutputDirectory(out, XML_EXTENSION, OUTPUT_ENCODING);
+      OutputDirectory od = new LocalOutputDirectory(out, toExt, OUTPUT_ENCODING);
       of.output(sc, od, eh);
       return true;
     }
