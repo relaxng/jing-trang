@@ -22,3 +22,4 @@ Support for ANY
 <empty/> used as a model-group hook
 Approximate wildcards intelligently
 Handle interleave of zero or more element class with model group
+Turn elements with content <value type="string"></value> into EMPTY.
