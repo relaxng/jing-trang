@@ -229,6 +229,7 @@ class SchemaInfo {
       return (GrammarPattern)p;
     GrammarPattern g = new GrammarPattern();
     g.setSourceLocation(p.getSourceLocation());
+    g.setContext(p.getContext());
     DefineComponent dc = new DefineComponent(DefineComponent.START, p);
     dc.setSourceLocation(p.getSourceLocation());
     g.getComponents().add(dc);
