@@ -54,6 +54,7 @@ public class NonXmlSyntax implements Context {
   private Hashtable datatypesTable = new Hashtable();
   private boolean hadError = false;
   private static Localizer localizer = new Localizer(NonXmlSyntax.class);
+  private Hashtable attributeNameTable = new Hashtable();
 
   final class LocatedString {
     private final String str;
@@ -115,6 +116,10 @@ public class NonXmlSyntax implements Context {
 
   private void error(String key, String arg, Token tok) {
     doError(localizer.message(key, arg), tok);
+  }
+
+  private void error(String key, String arg1, String arg2, Token tok) {
+    doError(localizer.message(key, arg1, arg2), tok);
   }
 
   private void doError(String message, Token tok) {
@@ -271,6 +276,20 @@ public class NonXmlSyntax implements Context {
     return sb.makeAnnotations(comments, getContext());
   }
 
+  private void clearAttributeList() {
+    attributeNameTable.clear();
+  }
+
+  private void addAttribute(Annotations a, String ns, String localName, String prefix, String value, Token tok) {
+    String key = ns + "#" + localName;
+    if (attributeNameTable.get(key) != null)
+      error("duplicate_attribute", ns, localName, tok);
+    else {
+      attributeNameTable.put(key, key);
+      a.addAttribute(ns, localName, prefix, value, makeLocation(tok));
+    }
+  }
+
   private String lookupPrefix(String prefix, Token t) {
     String ns = (String)namespaceTable.get(prefix);
     if (ns == null) {
@@ -378,6 +397,7 @@ Annotations TopLevelAnnotations() :
   Annotations a = sb.makeAnnotations(getTopLevelComments(), getContext());
 }
 {
+  { clearAttributeList(); }
   (LOOKAHEAD(2) PrefixedAnnotationAttribute(a, false))*
   { return a; }
 }
@@ -1125,7 +1145,7 @@ Annotations RequiredAnnotations() :
   ParsedElementAnnotation e;
 }
 {
-  "[" { a = sb.makeAnnotations(comments, getContext()); }
+  "[" { a = sb.makeAnnotations(comments, getContext()); clearAttributeList(); }
        (LOOKAHEAD(2) PrefixedAnnotationAttribute(a, false) )*
        ( e = AnnotationElement() { a.addElement(e); } )*
        { a.addComment(getComments()); }
@@ -1162,7 +1182,7 @@ void PrefixedAnnotationAttribute(Annotations a, boolean allowUnqualified) :
     else {
       if (ns.length() == 0)
 	prefix = null;
-      a.addAttribute(ns, qn.substring(colon + 1), prefix, value, makeLocation(t));
+      addAttribute(a, ns, qn.substring(colon + 1), prefix, value, t);
     }
   }
 }
@@ -1178,7 +1198,7 @@ void UnprefixedAnnotationAttribute(Annotations a) :
     if (name.getString().equals("xmlns"))
       error("xmlns_annotation_attribute", name.getToken());
     else
-      a.addAttribute("", name.getString(), null, value, name.getLocation());
+      addAttribute(a, "", name.getString(), null, value, name.getToken());
   }
 }
 
@@ -1268,7 +1288,7 @@ void AnnotationElementContent(ElementAnnotationBuilder eab) :
   ParsedElementAnnotation e;
 }
 {
-  "["
+  "[" { clearAttributeList(); }
   (LOOKAHEAD(2) AnnotationAttribute(eab))* 
   (s = LocatedLiteral() { eab.addText(s.getString(), s.getLocation()); }
    | e = AnnotationElement() { eab.addElement(e); })*

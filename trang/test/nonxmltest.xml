@@ -1290,7 +1290,7 @@ string - "foo"*
 ]]></incorrect>
 </nonxml>
 </bug>
-<bug>
+<testCase>
 <nonxml>
 <incorrect><![CDATA[
 namespace eg = "http://www.example.com"
@@ -1298,8 +1298,8 @@ namespace eg = "http://www.example.com"
 element foo { empty }
 ]]></incorrect>
 </nonxml>
-</bug>
-<bug>
+</testCase>
+<testCase>
 <nonxml>
 <incorrect><![CDATA[
 namespace eg1 = "http://www.example.com"
@@ -1308,7 +1308,7 @@ namespace eg2 = "http://www.example.com"
 element foo { empty }
 ]]></incorrect>
 </nonxml>
-</bug>
+</testCase>
 <bug>
 <nonxml>
 <incorrect><![CDATA[
