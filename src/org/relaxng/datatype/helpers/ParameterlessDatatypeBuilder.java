@@ -13,9 +13,6 @@ import org.relaxng.datatype.*;
  * <PRE><XMP>
  * class MyDatatypeLibrary implements DatatypeLibrary {
  *     ....
- *     DatatypeBuilder createDatatypeBuilder( String typeName ) {
- *         return new ParameterleessDatatypeBuilder(createDatatype(typeName));
- *     }
  *     ....
  * }
  * </XMP></PRE>
