@@ -2,7 +2,7 @@
 
 <property name="sdkjava.dir" value="c:\Program Files\Microsoft SDK for Java 4.0"/>
 
-<property name="javacc.dir" value="c:\Program Files\JavaCC\bin\lib"/>
+<property name="javacc.dir" value="lib"/>
 
 <target name="all" depends="jar, exegen, test, validate"/>
 

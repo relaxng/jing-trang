@@ -1,7 +1,5 @@
 Make SAX-based parser preserve comments and element annotations.
 
-Add JavaCC binaries to CVS.
-
 More helpful syntax error messages with non-XML syntax parser.
 
 Namespace declarations in element annotations.
