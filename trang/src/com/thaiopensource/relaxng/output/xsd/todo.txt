@@ -1,4 +1,6 @@
-Doesn't work simply to expand refs in <interleave> because it may interfere with pattern moving.
+Approximate <interleave>
+
+Optimize choice of restriction with enumeration.
 
 Map
 
