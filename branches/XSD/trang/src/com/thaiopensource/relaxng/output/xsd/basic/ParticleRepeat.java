@@ -4,20 +4,20 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 
 public class ParticleRepeat extends Particle {
   private final Particle child;
-  private final Occurs occcurs;
+  private final Occurs occurs;
 
-  public ParticleRepeat(SourceLocation location, Particle child, Occurs occcurs) {
+  public ParticleRepeat(SourceLocation location, Particle child, Occurs occurs) {
     super(location);
     this.child = child;
-    this.occcurs = occcurs;
+    this.occurs = occurs;
   }
 
   public Particle getChild() {
     return child;
   }
 
-  public Occurs getOcccurs() {
-    return occcurs;
+  public Occurs getOccurs() {
+    return occurs;
   }
 
   public Object accept(ParticleVisitor visitor) {

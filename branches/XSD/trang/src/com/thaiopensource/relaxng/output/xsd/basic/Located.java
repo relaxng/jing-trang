@@ -8,4 +8,8 @@ public abstract class Located {
   public Located(SourceLocation location) {
     this.location = location;
   }
+
+  public SourceLocation getLocation() {
+    return location;
+  }
 }
