@@ -872,11 +872,10 @@ void GrammarComponent(GrammarSection section, Scope scope) :
   Annotations a;
 }
 {
- (Definition(section, scope, getCommentsAsAnnotations())
-  | Include(section, scope, getCommentsAsAnnotations())
-  | (a = RequiredAnnotations() (Definition(section, scope, a)
-                                | Include(section, scope, a)
-                                | Div(section, scope, a))))
+  (a = Annotations() 
+   (Definition(section, scope, a)
+    | Include(section, scope, a)
+    | Div(section, scope, a)))
   (LOOKAHEAD(2) e = AnnotationElementNotKeyword() { section.topLevelAnnotation(e); })*
 }
 
@@ -941,9 +940,8 @@ void IncludeComponent(GrammarSection section, Scope scope) :
   Annotations a;
 }
 {
- (Definition(section, scope, getCommentsAsAnnotations())
-  | (a = RequiredAnnotations() (Definition(section, scope, a)
-                                | IncludeDiv(section, scope, a))))
+  (a = Annotations() (Definition(section, scope, a)
+                      | IncludeDiv(section, scope, a)))
   (LOOKAHEAD(2) e = AnnotationElementNotKeyword() { section.topLevelAnnotation(e); })*
 }
 
@@ -953,7 +951,7 @@ void Div(GrammarSection section, Scope scope, Annotations a) :
   Div div = section.makeDiv();
 }
 {
-  t = "{" (GrammarComponent(div, scope))* { topLevelComments(div); } "}"
+  t = "div" "{" (GrammarComponent(div, scope))* { topLevelComments(div); } "}"
   { div.endDiv(makeLocation(t), a); }
 }
 
@@ -963,7 +961,7 @@ void IncludeDiv(GrammarSection section, Scope scope, Annotations a) :
   Div div = section.makeDiv();
 }
 {
-  t = "{" (IncludeComponent(div, scope))* { topLevelComments(div); } "}"
+  t = "div" "{" (IncludeComponent(div, scope))* { topLevelComments(div); } "}"
   { div.endDiv(makeLocation(t), a); }
 }
 
@@ -1155,28 +1153,21 @@ ParsedPattern Except(Scope scope, Token[] except) :
 
 Annotations Annotations() :
 {
-  Annotations a = null;
-}
-{
-  (a = RequiredAnnotations())?
-  { 
-    return a == null ? getCommentsAsAnnotations() : a;
-  }
-}
-
-Annotations RequiredAnnotations() :
-{
   CommentList comments = getComments();
-  Annotations a;
+  Annotations a = null;
   ParsedElementAnnotation e;
 }
 {
-  "[" { a = sb.makeAnnotations(comments, getContext()); clearAttributeList(); }
+  ("[" { a = sb.makeAnnotations(comments, getContext()); clearAttributeList(); }
        (LOOKAHEAD(2) PrefixedAnnotationAttribute(a, false) )*
        ( e = AnnotationElement() { a.addElement(e); } )*
        { a.addComment(getComments()); }
-   "]"
-  { return a; }
+  "]")?
+  { 
+    if (a == null && comments != null)
+      a = sb.makeAnnotations(comments, getContext());
+    return a;
+  }
 }
 
 void AnnotationAttribute(Annotations a) :
@@ -1385,7 +1376,8 @@ Token Keyword() :
   | t = "inherit"
   | t = "string"
   | t = "token"
-  | t = "datatypes")
+  | t = "datatypes"
+  | t = "div")
   { return t; }
 }
 
