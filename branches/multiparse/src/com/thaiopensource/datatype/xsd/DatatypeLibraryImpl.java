@@ -95,10 +95,10 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
     typeTable.put("gMonth", new StringDatatype());
   }
 
-  public DatatypeBuilder createDatatypeBuilder(String localName) {
+  public DatatypeBuilder createDatatypeBuilder(String localName) throws DatatypeException {
     DatatypeBase base = (DatatypeBase)typeTable.get(localName);
     if (base == null)
-      return null;
+      throw new DatatypeException();
     return new DatatypeBuilderImpl(this, base);
   }
 
