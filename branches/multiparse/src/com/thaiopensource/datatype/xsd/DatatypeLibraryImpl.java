@@ -92,10 +92,10 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
     typeTable.put("gDay", new DateTimeDatatype("---D"));
     typeTable.put("gMonth", new DateTimeDatatype("--M"));
 
-    // Partially implemented
-    DatatypeBase entityType = ncNameType;
+    DatatypeBase entityType = new EntityDatatype();
     typeTable.put("ENTITY", entityType);
     typeTable.put("ENTITIES", list(entityType));
+    // Partially implemented
     typeTable.put("duration", new DurationDatatype());
   }
 

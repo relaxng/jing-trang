@@ -131,6 +131,7 @@ public class ValidationEngine {
         xr.setErrorHandler(eh);
     }
     xr.setContentHandler(vh);
+    xr.setDTDHandler(vh);
     xr.parse(in);
     return vh.isValidSoFar();
   }

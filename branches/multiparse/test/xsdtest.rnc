@@ -10,11 +10,13 @@ start =
   }
 
 param = element param { attribute name { xsd:NCName }, string }
-valid = element valid { string }
-invalid = element invalid { string }
+valid = element valid { internalSubset?, string }
+invalid = element invalid { internalSubset?, string }
 equiv =
   element equiv {
-    element class { element value { string }+ }+
+    element class { element value { internalSubset?, string }+ }+
   }
 
-length = element length { attribute value { xsd:integer }, string }
+length = element length { attribute value { xsd:integer }, internalSubset?, string }
+
+internalSubset = attribute internalSubset { string }

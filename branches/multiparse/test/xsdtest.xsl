@@ -30,30 +30,69 @@
 </xsl:template>
 
 <xsl:template match="valid">
- <valid><doc><xsl:copy-of select="namespace::*"/><xsl:value-of select="."/></doc></valid>
+ <xsl:call-template name="valid"/>
 </xsl:template>
 
 <xsl:template match="invalid">
- <invalid><doc><xsl:copy-of select="namespace::*"/><xsl:value-of select="."/></doc></invalid>
+ <xsl:call-template name="invalid"/>
+</xsl:template>
+
+<xsl:template name="valid">
+  <valid>
+    <xsl:apply-templates select="@internalSubset"/>
+    <doc>
+      <xsl:copy-of select="namespace::*"/>
+      <xsl:value-of select="."/>
+    </doc>
+  </valid>
+</xsl:template>
+
+<xsl:template name="invalid">
+  <invalid>
+    <xsl:apply-templates select="@internalSubset"/>
+    <doc>
+      <xsl:copy-of select="namespace::*"/>
+      <xsl:value-of select="."/>
+    </doc>
+  </invalid>
+</xsl:template>
+
+<xsl:template match="@internalSubset">
+  <xsl:param name="doc" select="'doc'"/>
+  <xsl:attribute name="dtd">
+    <xsl:text>
+&lt;!DOCTYPE </xsl:text>
+    <xsl:value-of select="$doc"/>
+    <xsl:text> [
+</xsl:text>
+    <xsl:value-of select="."/>
+    <xsl:text>
+]></xsl:text>
+  </xsl:attribute>
 </xsl:template>
 
 <xsl:template match="class">
 <testCase>
 <correct>
-<element xmlns="http://relaxng.org/ns/structure/1.0" name="doc"
+  <xsl:for-each select="value[1]">
+    <xsl:apply-templates select="@internalSubset">
+      <xsl:with-param name="doc">element</xsl:with-param>
+    </xsl:apply-templates>
+    <element xmlns="http://relaxng.org/ns/structure/1.0" name="doc"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
-  <value>
-    <xsl:copy-of select="value[1]/namespace::*"/>
-    <xsl:attribute name="type"><xsl:value-of select="../../@name"/></xsl:attribute>
-    <xsl:value-of select="value[1]"/>
-  </value>
-</element>
+      <value>
+        <xsl:copy-of select="namespace::*"/>
+        <xsl:attribute name="type"><xsl:value-of select="../../../@name"/></xsl:attribute>
+        <xsl:value-of select="."/>
+      </value>
+    </element>
+  </xsl:for-each>
 </correct>
 <xsl:for-each select="value[position() != 1]">
-  <valid><doc><xsl:copy-of select="namespace::*"/><xsl:value-of select="."/></doc></valid>
+  <xsl:call-template name="valid"/>
 </xsl:for-each>
 <xsl:for-each select="preceding-sibling::class/value|following-sibling::class/value">
-  <invalid><doc><xsl:copy-of select="namespace::*"/><xsl:value-of select="."/></doc></invalid>
+  <xsl:call-template name="invalid"/>
 </xsl:for-each>
 </testCase>
 </xsl:template>
@@ -68,9 +107,7 @@
   </data>
 </element>
 </correct>
-<valid>
-<doc><xsl:copy-of select="namespace::*"/><xsl:value-of select="."/></doc>
-</valid>
+<xsl:call-template name="valid"/>
 </testCase>
 
 <testCase>
@@ -82,9 +119,7 @@
   </data>
 </element>
 </correct>
-<invalid>
-<doc><xsl:copy-of select="namespace::*"/><xsl:value-of select="."/></doc>
-</invalid>
+<xsl:call-template name="invalid"/>
 </testCase>
 
 <xsl:if test="@value != 0">
@@ -97,9 +132,7 @@
     </data>
   </element>
   </correct>
-  <invalid>
-  <doc><xsl:copy-of select="namespace::*"/><xsl:value-of select="."/></doc>
-  </invalid>
+  <xsl:call-template name="invalid"/>
   </testCase>
 </xsl:if>
 

@@ -162,6 +162,19 @@ public class IdSoundnessChecker implements ValidatorHandler {
   public void skippedEntity(String s) throws SAXException {
   }
 
+  public void notationDecl(String name,
+                           String publicId,
+                           String systemId)
+          throws SAXException {
+  }
+
+  public void unparsedEntityDecl(String name,
+                                 String publicId,
+                                 String systemId,
+                                 String notationName)
+          throws SAXException {
+  }
+
   private void error(String key) throws SAXException {
     hadError = true;
     if (eh != null)

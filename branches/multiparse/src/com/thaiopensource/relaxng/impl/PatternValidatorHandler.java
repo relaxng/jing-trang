@@ -1,6 +1,7 @@
 package com.thaiopensource.relaxng.impl;
 
 import com.thaiopensource.relaxng.ValidatorHandler;
+import com.thaiopensource.relaxng.parse.sax.DtdContext;
 import org.relaxng.datatype.ValidationContext;
 import org.xml.sax.Attributes;
 import org.xml.sax.ErrorHandler;
@@ -10,7 +11,7 @@ import org.xml.sax.SAXParseException;
 
 import java.util.Hashtable;
 
-public class PatternValidatorHandler implements ValidatorHandler {
+public class PatternValidatorHandler extends DtdContext implements ValidatorHandler {
   private final ValidatorPatternBuilder builder;
   private final Pattern start;
   private ErrorHandler eh;
@@ -24,43 +25,20 @@ public class PatternValidatorHandler implements ValidatorHandler {
   private Locator locator;
   private static final String xmlURI = "http://www.w3.org/XML/1998/namespace";
 
-  static private final class PrefixMapping implements ValidationContext {
+  private static final class PrefixMapping {
     private final String prefix;
     private final String namespaceURI;
-    private final PrefixMapping prev;
+    private final PrefixMapping previous;
 
     PrefixMapping(String prefix, String namespaceURI, PrefixMapping prev) {
       this.prefix = prefix;
       this.namespaceURI = namespaceURI;
-      this.prev = prev;
+      this.previous = prev;
     }
 
     PrefixMapping getPrevious() {
-      return prev;
+      return previous;
     }
-
-    public String resolveNamespacePrefix(String prefix) {
-      PrefixMapping tem = this;
-      do {
-	if (tem.prefix.equals(prefix))
-	  return tem.namespaceURI;
-	tem = tem.prev;
-      } while (tem != null);
-      return null;
-    }
-
-    public String getBaseUri() {
-      return null;
-    }
-
-    public boolean isUnparsedEntity(String name) {
-      return false;
-    }
-
-    public boolean isNotation(String name) {
-      return false;
-    }
-
   }
 
   private void startCollectingCharacters() {
@@ -111,7 +89,7 @@ public class PatternValidatorHandler implements ValidatorHandler {
 
       if (!setMemo(memo.startAttributeDeriv(attName)))
 	error("impossible_attribute_ignored", attName);
-      else if (!setMemo(memo.dataDeriv(atts.getValue(i), prefixMapping))) {
+      else if (!setMemo(memo.dataDeriv(atts.getValue(i), this))) {
         error("bad_attribute_value", attName);
         memo = memo.recoverAfter();
       }
@@ -146,11 +124,11 @@ public class PatternValidatorHandler implements ValidatorHandler {
 	return;
       }
       final String data = charBuf.toString();
-      if (!setMemo(memo.dataDeriv(data, prefixMapping))) {
+      if (!setMemo(memo.dataDeriv(data, this))) {
         PatternMemo next = memo.recoverAfter();
         if (!memo.isNotAllowed()) {
           if (!next.isNotAllowed()
-              || fixAfter(memo).dataDeriv(data, prefixMapping).isNotAllowed())
+              || fixAfter(memo).dataDeriv(data, this).isNotAllowed())
             error("string_not_allowed");
         }
         memo = next;
@@ -228,6 +206,7 @@ public class PatternValidatorHandler implements ValidatorHandler {
     locator = null;
     memo = builder.getPatternMemo(start);
     prefixMapping = new PrefixMapping("xml", xmlURI, null);
+    clearDtdContext();
   }
 
   public boolean isValidSoFar() {
@@ -277,6 +256,20 @@ public class PatternValidatorHandler implements ValidatorHandler {
       recoverPatternTable.put(name, p);
     }
     return p;
+  }
+
+  public String resolveNamespacePrefix(String prefix) {
+    PrefixMapping tem = prefixMapping;
+    do {
+      if (tem.prefix.equals(prefix))
+        return tem.namespaceURI;
+      tem = tem.previous;
+    } while (tem != null);
+    return null;
+  }
+
+  public String getBaseUri() {
+    return null;
   }
 
   public ErrorHandler getErrorHandler() {

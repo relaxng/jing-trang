@@ -1,6 +1,3 @@
-Test: anyUri, integer, base64Binary, hexBinary, language, decimal,
-date/time types.
-
 Document \x in compact syntax.
 
 Document ## in compact syntax.
@@ -11,7 +8,9 @@ Make SAX-based parser preserve element annotations.
 
 SAXParser and comment formatting.
 
-Don't simply ignore XSD datatypes that we don't implement.
+Implement duration equality properly.
+
+Implement duration ordering.
 
 Trang should output a:documentation as comments in the DTD.
 
@@ -33,10 +32,6 @@ More helpful error message for duplicate attributes.
 
 Implement ValidationContext.getBaseUri in the instance.
 
-Implement ValidationContext.isUnparsedEntity.
-
-Implement ValidationContext.isNotation.
-
 Support infoset modification for ID/IDREF/IDREFS.
 
 Support DTD compatibility use of default values.
@@ -54,4 +49,3 @@ On output, using character escapes for things outside repertoire of
 character encoding.
 
 Streaming validation of data.
-
