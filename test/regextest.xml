@@ -212,4 +212,9 @@
 <testCase>
 <incorrect>\pL</incorrect>
 </testCase>
+<testCase>
+<correct>a[&#x10330;-[&#x10330;]]*b</correct>
+<valid>ab</valid>
+<invalid>a&#x10330;b</invalid>
+</testCase>
 </testSuite>
