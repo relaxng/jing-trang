@@ -8,12 +8,27 @@ import org.xml.sax.XMLReader;
 
 import java.io.IOException;
 
+/**
+ * A factory for RELAX NG schemas.  The factory creates <code>Schema</code> objects from their
+ * XML representation.
+ *
+ * A single <code>SchemaFactory</code> is <em>not</em> safe for concurrent
+ * access by multiple threads; it must be accessed by at most one thread at a time.
+ * Schemas can be created concurrently by using a distinct <code>SchemaFactory</code> for each
+ * thread.  However, the <code>Schema</code> objects created <em>are</em> safe for concurrent
+ * access by multiple threads.
+ *
+ * @author <a href="mailto:jjc@jclark.com">James Clark</a>
+ */
 public class SchemaFactory {
   private XMLReaderCreator xrc = null;
   private ErrorHandler eh = null;
   private DatatypeLibraryFactory dlf = null;
   private boolean checkIdIdref = false;
 
+  /**
+   * Constructs a schema factory.
+   */
   public SchemaFactory() {
   }
 
