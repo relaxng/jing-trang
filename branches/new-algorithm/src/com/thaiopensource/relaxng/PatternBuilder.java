@@ -1,6 +1,6 @@
 package com.thaiopensource.relaxng;
 
-public class PatternBuilder {
+class PatternBuilder {
   private final EmptyPattern empty;
   protected final NotAllowedPattern notAllowed;
   protected final PatternInterner interner;

@@ -25,7 +25,7 @@ import org.relaxng.datatype.DatatypeException;
 
 import com.thaiopensource.util.Uri;
 
-public class PatternReader {
+class PatternReader {
 
   static final String relaxngURI = "http://relaxng.org/ns/structure/1.0";
   static final String xmlURI = "http://www.w3.org/XML/1998/namespace";

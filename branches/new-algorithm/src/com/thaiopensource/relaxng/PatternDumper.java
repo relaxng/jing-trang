@@ -7,7 +7,7 @@ import java.io.OutputStream;
 
 import org.relaxng.datatype.Datatype;
 
-public class PatternDumper {
+class PatternDumper {
   private boolean startTagOpen = false;
   private Vector tagStack = new Vector();
   private PrintWriter writer;
@@ -24,11 +24,11 @@ public class PatternDumper {
   NameClassVisitor choiceNameClassVisitor = new ChoiceDumpNameClassVisitor();
   NameClassVisitor differenceNameClassVisitor = new DifferenceDumpNameClassVisitor();
 
-  static public void dump(PrintWriter writer, Pattern p) {
+  static void dump(PrintWriter writer, Pattern p) {
     new PatternDumper(writer).dump(p);
   }
 
-  static public void dump(OutputStream out, Pattern p) {
+  static void dump(OutputStream out, Pattern p) {
     new PatternDumper(new PrintWriter(out)).dump(p);
   }
 

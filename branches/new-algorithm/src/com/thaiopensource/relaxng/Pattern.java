@@ -4,7 +4,7 @@ import org.xml.sax.SAXException;
 
 import org.relaxng.datatype.Datatype;
 
-public abstract class Pattern {
+abstract class Pattern {
   private boolean nullable;
   private int hc;
   private int contentType;

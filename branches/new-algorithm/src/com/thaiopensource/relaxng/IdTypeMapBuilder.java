@@ -12,7 +12,7 @@ import java.util.Hashtable;
 import java.util.Enumeration;
 import java.util.Vector;
 
-public class IdTypeMapBuilder {
+class IdTypeMapBuilder {
   private boolean hadError;
   private final XMLReader xr;
   private final PatternFunction idTypeFunction = new IdTypeFunction();
@@ -235,7 +235,7 @@ public class IdTypeMapBuilder {
      }
   }
 
-  public IdTypeMapBuilder(XMLReader xr, Pattern pattern) throws SAXException {
+  IdTypeMapBuilder(XMLReader xr, Pattern pattern) throws SAXException {
     this.xr = xr;
     try {
       pattern.apply(new BuildFunction(null, null));
@@ -268,7 +268,7 @@ public class IdTypeMapBuilder {
     }
   }
 
-  public IdTypeMap getIdTypeMap() {
+  IdTypeMap getIdTypeMap() {
     if (hadError)
       return null;
     return idTypeMap;
