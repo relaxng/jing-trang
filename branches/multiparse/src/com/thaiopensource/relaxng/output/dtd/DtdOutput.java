@@ -46,9 +46,11 @@ class DtdOutput {
   List externallyRequiredParamEntities = new Vector();
   Set doneParamEntities = new HashSet();
   Set doneIncludes = new HashSet();
+  Set pendingIncludes = new HashSet();
   private Analysis analysis;
   private GrammarPart part;
   private OutputDirectory od;
+  private ErrorReporter er;
 
   PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
   PatternVisitor nestedContentModelOutput = new ContentModelOutput();
@@ -60,10 +62,11 @@ class DtdOutput {
 
   static private final String COMPATIBILITY_ANNOTATIONS = "http://relaxng.org/ns/compatibility/annotations/1.0";
 
-  private DtdOutput(String sourceUri, Analysis analysis, OutputDirectory od) {
+  private DtdOutput(String sourceUri, Analysis analysis, OutputDirectory od, ErrorReporter er) {
     this.sourceUri = sourceUri;
     this.analysis = analysis;
     this.od = od;
+    this.er = er;
     this.part = analysis.getGrammarPart(sourceUri);
     try {
       this.writer = od.open(sourceUri);
@@ -475,7 +478,7 @@ class DtdOutput {
     }
 
     public Object visitInclude(IncludeComponent c) {
-      outputInclude(c.getHref());
+      outputInclude(c);
       return null;
     }
   }
@@ -486,9 +489,9 @@ class DtdOutput {
     elementQueue.clear();
   }
 
-  static void output(Analysis analysis, OutputDirectory od) throws IOException {
+  static void output(Analysis analysis, OutputDirectory od, ErrorReporter er) throws IOException {
     try {
-      new DtdOutput(od.MAIN, analysis, od).topLevelOutput();
+      new DtdOutput(od.MAIN, analysis, od, er).topLevelOutput();
     }
     catch (WrappedIOException e) {
       throw e.cause;
@@ -563,19 +566,24 @@ class DtdOutput {
       else if (c instanceof DefineComponent)
         outputParamEntity(name, getBody(name));
       else
-        outputInclude(((IncludeComponent)c).getHref());
+        outputInclude((IncludeComponent)c);
     }
     requiredParamEntities.clear();
   }
 
-  void outputInclude(String href) {
+  void outputInclude(IncludeComponent inc) {
+    String href = inc.getHref();
     if (doneIncludes.contains(href))
       return;
-    doneIncludes.add(href);
-    DtdOutput inc = new DtdOutput(href, analysis, od);
+    if (pendingIncludes.contains(href)) {
+      er.error("sorry_include_depend", inc.getSourceLocation());
+      return;
+    }
+    pendingIncludes.add(href);
+    DtdOutput sub = new DtdOutput(href, analysis, od, er);
     GrammarPattern g = (GrammarPattern)analysis.getSchema(href);
-    inc.output(g);
-    requiredParamEntities.addAll(inc.externallyRequiredParamEntities);
+    sub.output(g);
+    requiredParamEntities.addAll(sub.externallyRequiredParamEntities);
     outputRequiredComponents();
     String entityName = genEntityName(href);
     write("<!ENTITY % ");
@@ -591,6 +599,8 @@ class DtdOutput {
     write(entityName);
     write(';');
     newline();
+    doneIncludes.add(href);
+    pendingIncludes.remove(href);
   }
 
   String genEntityName(String uri) {

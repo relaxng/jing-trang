@@ -30,6 +30,6 @@ public class Driver {
     ErrorReporter er = new ErrorReporter(null);
     Analysis analysis = new Analysis(p, sc, er);
     if (!er.hadError)
-      DtdOutput.output(analysis, new LocalOutputDirectory(new File(args[1])));
+      DtdOutput.output(analysis, new LocalOutputDirectory(new File(args[1])), er);
   }
 }
