@@ -107,6 +107,8 @@ class ContentType {
     }
     if (t2 == NOT_ALLOWED)
       return choice(t2, t1);
+    if (t1.isA(ENUM) && t2.isA(ENUM))
+      return ENUM;
     if (t1.isA(SIMPLE_TYPE) && t2.isA(SIMPLE_TYPE))
       return SIMPLE_TYPE_CHOICE;
     if (t1.isA(ELEMENT_CLASS) && t2.isA(ELEMENT_CLASS))
@@ -116,8 +118,6 @@ class ContentType {
     if ((t1.isA(MIXED_ELEMENT_CLASS) && t2.isA(ELEMENT_CLASS))
             || (t1.isA(ELEMENT_CLASS) && t2.isA(MIXED_ELEMENT_CLASS)))
       return MIXED_ELEMENT_CLASS;
-    if (t1.isA(ENUM) && t2.isA(ENUM))
-      return ENUM;
     return null;
   }
 
