@@ -21,9 +21,33 @@ class DateTimeDatatype extends RegexDatatype {
     return getValue(str, vc) != null;
   }
 
+  static private class DateTime {
+    private Date date;
+    private int leapMilliseconds;
+    private boolean hasTimeZone;
+
+    DateTime(Date date, int leapMilliseconds, boolean hasTimeZone) {
+      this.date = date;
+      this.leapMilliseconds = leapMilliseconds;
+      this.hasTimeZone = hasTimeZone;
+    }
+
+    public boolean equals(Object obj) {
+      if (!(obj instanceof DateTime))
+        return false;
+      DateTime other = (DateTime)obj;
+      return (this.date.equals(other.date)
+              && this.leapMilliseconds == other.leapMilliseconds
+              && this.hasTimeZone == other.hasTimeZone);
+    }
+
+    public int hashCode() {
+      return date.hashCode();
+    }
+  }
+
   // XXX What to do about leap seconds?
   // XXX Allow 24:00:00?
-  // XXX With and without time zone are different values.
   Object getValue(String str, ValidationContext vc) {
     int yearStartIndex = str.charAt(0) == '-' ? 1 : 0;
     int yearEndIndex = str.indexOf('-', yearStartIndex);
@@ -46,18 +70,7 @@ class DateTimeDatatype extends RegexDatatype {
     cal.setGregorianChange(new Date(Long.MIN_VALUE));
     cal.clear();
     cal.set(Calendar.ERA, yearStartIndex == 0 ? GregorianCalendar.AD : GregorianCalendar.BC);
-    try {
-      cal.set(Integer.parseInt(str.substring(yearStartIndex, yearEndIndex)),  // year
-              // months in Java start from 0, in ISO 8601 from 1
-              parse2Digits(str, yearEndIndex + 1) - 1, // month
-              parse2Digits(str, yearEndIndex + 4), // day of month
-              parse2Digits(str, yearEndIndex + 7), // hour
-              parse2Digits(str, yearEndIndex + 10), // minute
-              parse2Digits(str, yearEndIndex + 13)); // second
-    }
-    catch (NumberFormatException e) {
-      return null;
-    }
+
     int milliseconds = 0;
     if (secondFractionStartIndex < len && str.charAt(secondFractionStartIndex) == '.') {
       for (int i = 0; i < 3; i++) {
@@ -69,9 +82,28 @@ class DateTimeDatatype extends RegexDatatype {
               && str.charAt(secondFractionStartIndex) >= '6')
         milliseconds++;
     }
-    cal.set(Calendar.MILLISECOND, milliseconds);
+    int seconds = parse2Digits(str, yearEndIndex + 13);
+    int leapMilliseconds;
+    if (seconds == 60) {
+      leapMilliseconds = milliseconds + 1;
+      milliseconds = 999;
+      seconds = 59;
+    }
+    else
+      leapMilliseconds = 0;
     try {
-      return cal.getTime();
+      cal.set(Integer.parseInt(str.substring(yearStartIndex, yearEndIndex)),  // year
+              // months in Java start from 0, in ISO 8601 from 1
+              parse2Digits(str, yearEndIndex + 1) - 1, // month
+              parse2Digits(str, yearEndIndex + 4), // day of month
+              parse2Digits(str, yearEndIndex + 7), // hour
+              parse2Digits(str, yearEndIndex + 10), // minute
+              seconds); // second
+      cal.set(Calendar.MILLISECOND, milliseconds);
+      return new DateTime(cal.getTime(), leapMilliseconds, hasTimeZone);
+    }
+    catch (NumberFormatException e) {
+      return null;
     }
     catch (IllegalArgumentException e) {
       return null;
