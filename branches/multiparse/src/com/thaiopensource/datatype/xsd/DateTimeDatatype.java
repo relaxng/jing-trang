@@ -7,7 +7,7 @@ import java.util.TimeZone;
 import java.util.Calendar;
 import java.util.Date;
 
-class DateTimeDatatype extends RegexDatatype {
+class DateTimeDatatype extends RegexDatatype implements OrderRelation {
   static private final String DATE_PATTERN = "([1-9][0-9]*)?[0-9]{4}-[0-9]{2}-[0-9]{2}";
   static private final String TIME_PATTERN = "[0-9]{2}:[0-9]{2}:[0-9]{2}";
   static private final String TZ_PATTERN = "(Z|[+\\-]([01][0-9]|2[0-3]):[0-5][0-9])?";
@@ -22,9 +22,9 @@ class DateTimeDatatype extends RegexDatatype {
   }
 
   static private class DateTime {
-    private Date date;
-    private int leapMilliseconds;
-    private boolean hasTimeZone;
+    private final Date date;
+    private final int leapMilliseconds;
+    private final boolean hasTimeZone;
 
     DateTime(Date date, int leapMilliseconds, boolean hasTimeZone) {
       this.date = date;
@@ -44,9 +44,21 @@ class DateTimeDatatype extends RegexDatatype {
     public int hashCode() {
       return date.hashCode();
     }
+
+    Date getDate() {
+      return date;
+    }
+
+    int getLeapMilliseconds() {
+      return leapMilliseconds;
+    }
+
+    boolean getHasTimeZone() {
+      return hasTimeZone;
+    }
   }
 
-  // XXX What to do about leap seconds?
+  // XXX Check leap second validity?
   // XXX Allow 24:00:00?
   Object getValue(String str, ValidationContext vc) {
     int yearStartIndex = str.charAt(0) == '-' ? 1 : 0;
@@ -110,7 +122,49 @@ class DateTimeDatatype extends RegexDatatype {
     }
   }
 
-  static int parse2Digits(String str, int i) {
+  static private int parse2Digits(String str, int i) {
     return (str.charAt(i) - '0')*10 + (str.charAt(i + 1) - '0');
+  }
+
+  OrderRelation getOrderRelation() {
+    return this;
+  }
+
+  static private final int TIME_ZONE_MAX = 14*60*60*1000;
+
+  public int compareValue(Object obj1, Object obj2) {
+    DateTime dt1 = (DateTime)obj1;
+    DateTime dt2 = (DateTime)obj2;
+    long t1 = dt1.getDate().getTime();
+    long t2 = dt2.getDate().getTime();
+    if (dt1.getHasTimeZone() == dt2.getHasTimeZone())
+      return compare(t1,
+                     dt1.getLeapMilliseconds(),
+                     t2,
+                     dt2.getLeapMilliseconds());
+    int res1, res2;
+    if (!dt2.getHasTimeZone()) {
+      res1 = compare(t1, dt1.getLeapMilliseconds(), t2 - TIME_ZONE_MAX, dt2.getLeapMilliseconds());
+      res2 = compare(t1, dt1.getLeapMilliseconds(), t2 + TIME_ZONE_MAX, dt2.getLeapMilliseconds());
+    }
+    else {
+      res1 = compare(t1 - TIME_ZONE_MAX, dt1.getLeapMilliseconds(), t2, dt2.getLeapMilliseconds());
+      res2 = compare(t1 + TIME_ZONE_MAX, dt1.getLeapMilliseconds(), t2, dt2.getLeapMilliseconds());
+    }
+    if (res1 == res2)
+      return res1;
+    return COMPARE_INCOMPARABLE;
+  }
+
+  static private int compare(long t1, int leapMillis1, long t2, int leapMillis2) {
+    if (t1 < t2)
+      return COMPARE_LESS_THAN;
+    if (t1 > t2)
+      return COMPARE_GREATER_THAN;
+    if (leapMillis1 < leapMillis2)
+      return COMPARE_LESS_THAN;
+    if (leapMillis1 > leapMillis2)
+      return COMPARE_GREATER_THAN;
+    return COMPARE_EQUAL;
   }
 }
