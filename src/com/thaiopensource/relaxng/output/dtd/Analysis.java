@@ -60,6 +60,7 @@ class Analysis {
   private GrammarPattern grammarPattern;
   private Pattern pattern;
   private AttributeTyper attributeTyper = new AttributeTyper();
+  private IncludeContentChecker includeContentChecker = new IncludeContentChecker();
 
   private class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
     private ElementPattern ancestorPattern;
@@ -237,6 +238,7 @@ class Analysis {
     }
 
     public Object visitInclude(IncludeComponent c) {
+      includeContentChecker.visitContainer(c);
       visitContainer((GrammarPattern)schemas.getSchemas().get(c.getHref()));
       return null;
     }
@@ -284,6 +286,24 @@ class Analysis {
       return (ancestorPattern == null ? this : new Analyzer(pendingRefs)).analyzeContentType(p);
     }
 
+  }
+
+  class IncludeContentChecker extends AbstractVisitor {
+    public Object visitContainer(Container c) {
+      List list = c.getComponents();
+      for (int i = 0, len = list.size(); i < len; i++)
+        ((Component)list.get(i)).accept(this);
+      return null;
+    }
+
+    public Object visitDefine(DefineComponent c) {
+      er.error("sorry_include_override", c.getSourceLocation());
+      return null;
+    }
+
+    public Object visitDiv(DivComponent c) {
+      return visitContainer(c);
+    }
   }
 
   class AttributeTyper extends AbstractVisitor {
