@@ -1,5 +1,3 @@
-For group with no attributes, sufficient if at least one reference that can be a type attribute?
-
 Check for RNG contextual constraints
 
 Approximation warnings:
