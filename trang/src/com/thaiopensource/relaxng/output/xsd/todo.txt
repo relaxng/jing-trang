@@ -23,11 +23,7 @@ Map
   xyzzy
 </xs:complexType>
 
-Choose name of generated schema file better when there was no prefix.
-- use Context to find prefix
-- use last component of namespace URI
-
-Use the last component of the namespace URI in selecting prefix when no prefix is used in the
+Use the last component of the namespace URI in selecting prefix and generated schema file when no prefix is used in the
 RELAX NG.
 
 Try using default namespace declaration to refer to things in targetNamespace.
