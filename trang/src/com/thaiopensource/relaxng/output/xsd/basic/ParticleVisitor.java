@@ -5,5 +5,6 @@ public interface ParticleVisitor {
   Object visitRepeat(ParticleRepeat p);
   Object visitSequence(ParticleSequence p);
   Object visitChoice(ParticleChoice p);
+  Object visitAll(ParticleAll p);
   Object visitGroupRef(GroupRef p);
 }
