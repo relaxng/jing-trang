@@ -1,22 +1,19 @@
-Use DTDinst command-line arg to URI function.
+Make SAX-based parser preserve element annotations.
+
+conv should produce non-zero return value on failure
+
+In conv, option to explicitly set input and output type.
 
 SAXParser and comment formatting.
 
 Usage error message for driver.
 
-Package conversion as separate jar file.
-
-Put error messages in standard format understandable by Intellij.
-
-Make SAX-based parser preserve comments and element annotations.
+Put location information in error messages into a standard format
+understandable by Emacs/Intellij.                                                                                     k
 
 More helpful syntax error messages with non-XML syntax parser.
 
 Namespace declarations in element annotations.
-
-Annotations in SAX parser.
-
-Annotations in XML output.
 
 Support for IDREF checking via JARV.
 
