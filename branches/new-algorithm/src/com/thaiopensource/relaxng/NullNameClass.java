@@ -5,6 +5,10 @@ class NullNameClass implements NameClass {
     return false;
   }
 
+  public int containsSpecificity(Name name) {
+    return SPECIFICITY_NONE;
+  }
+
   public int hashCode() {
     return NullNameClass.class.hashCode();
   }
