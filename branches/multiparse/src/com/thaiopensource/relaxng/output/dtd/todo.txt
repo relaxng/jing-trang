@@ -1,6 +1,5 @@
 Avoid duplicate element declarations when expanding param entities
 Avoid warning for content that is data of type string
-Check single element type
 Recognize #FIXED attributes
 Avoid duplicate namespace declarations for global attributes
 Option to generate namespace declarations only on start elements

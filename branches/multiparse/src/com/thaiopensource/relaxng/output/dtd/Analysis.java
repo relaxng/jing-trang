@@ -54,6 +54,7 @@ class Analysis {
   private Map defines = null;
   private Map parts = new HashMap();
   private Map seenTable = new HashMap();
+  private Map elementDecls = new HashMap();
   private ContentType startType = ContentType.ERROR;
   private GrammarPart mainPart;
   private SchemaCollection schemas;
@@ -95,13 +96,33 @@ class Analysis {
     }
 
     public Object visitElement(ElementPattern p) {
-      if (!seen(p.getChild()))
+      int len;
+      if (seen(p))
+        len = NameClassSplitter.split(p.getNameClass()).size();
+      else {
         new Analyzer(p).analyzeContentType(p.getChild());
-      return doNameClass(p.getNameClass(), true) ? ContentType.DIRECT_SINGLE_ELEMENT : ContentType.ELEMENT_CLASS;
+        List names = noteNames(p.getNameClass(), true);
+        len = names.size();
+        for (int i = 0; i < len; i++) {
+          NameNameClass nnc = (NameNameClass)names.get(i);
+          String ns = nnc.getNamespaceUri();
+          if (ns == NameClass.INHERIT_NS)
+            ns = "";
+          Name name = new Name(ns, nnc.getLocalName());
+          ElementPattern prev = (ElementPattern)elementDecls.get(name);
+          if (prev != null) {
+            er.error("sorry_multiple_element", ns, name.getLocalName(), p.getSourceLocation());
+            er.error("other_element", prev.getSourceLocation());
+          }
+          else
+            elementDecls.put(name, p);
+        }
+      }
+      return len == 1 ? ContentType.DIRECT_SINGLE_ELEMENT : ContentType.ELEMENT_CLASS;
     }
 
     public Object visitAttribute(AttributePattern p) {
-      doNameClass(p.getNameClass(), false);
+      noteNames(p.getNameClass(), false);
       ContentType t = analyzeContentType(p.getChild());
       if (t.isA(ContentType.MODEL_GROUP) || t == ContentType.MIXED_ELEMENT_CLASS || t == ContentType.MIXED_MODEL)
         er.error("bad_attribute_type", p.getSourceLocation());
@@ -110,13 +131,13 @@ class Analysis {
       return ContentType.EMPTY;
     }
 
-    private boolean doNameClass(NameClass nc, boolean defaultable) {
+    private List noteNames(NameClass nc, boolean defaultable) {
       nc.accept(this);
       List names = NameClassSplitter.split(nc);
       int len = names.size();
       for (int i = 0; i < len; i++)
         nsm.noteName((NameNameClass)names.get(i), defaultable);
-      return len == 1;
+      return names;
     }
 
     public Object visitNotAllowed(NotAllowedPattern p) {
