@@ -213,6 +213,10 @@
 <incorrect>\pL</incorrect>
 </testCase>
 <testCase>
+<correct>\p{IsHighSurrogates}\p{IsLowSurrogates}</correct>
+<invalid>&#x10330;</invalid>
+</testCase>
+<testCase>
 <correct>a[&#x10330;-[&#x10330;]]*b</correct>
 <valid>ab</valid>
 <invalid>a&#x10330;b</invalid>
