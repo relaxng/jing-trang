@@ -39,7 +39,7 @@ public class SAXParseable implements Parseable {
       return sp.getStartPattern();
     }
     catch (SAXException e) {
-      throw new BuildException(e);
+      throw toBuildException(e);
     }
     catch (IOException e) {
       throw new BuildException(e);
@@ -55,7 +55,7 @@ public class SAXParseable implements Parseable {
       return sp.getStartPattern();
     }
     catch (SAXException e) {
-     throw new BuildException(e);
+     throw toBuildException(e);
     }
     catch (IOException e) {
      throw new BuildException(e);
@@ -71,7 +71,7 @@ public class SAXParseable implements Parseable {
       return sp.getStartPattern();
     }
     catch (SAXException e) {
-      throw new BuildException(e);
+      throw toBuildException(e);
     }
     catch (IOException e) {
       throw new BuildException(e);
@@ -86,5 +86,12 @@ public class SAXParseable implements Parseable {
 	return inputSource;
     }
     return new InputSource(systemId);
+  }
+
+  private static BuildException toBuildException(SAXException e) {
+    Exception inner = e.getException();
+    if (inner instanceof BuildException)
+      throw (BuildException)inner;
+    throw new BuildException(e);
   }
 }
