@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.math.BigDecimal;
 
 class Translator {
   private String regExp;
@@ -243,23 +244,45 @@ class Translator {
   }
 
   private void translateQuantity() throws InvalidRegexException {
-    // XXX check that the lower bound is <= upper bound
-    translateQuantExact();
+    String lower = parseQuantExact();
+    int lowerValue = -1;
+    try {
+      lowerValue = Integer.parseInt(lower);
+      result.append(lower);
+    }
+    catch (NumberFormatException e) {
+      // JDK 1.4 cannot handle this ranges bigger than this
+      result.append(Integer.MAX_VALUE);
+    }
     if (curChar == ',') {
       copyCurChar();
       if (curChar != '}') {
         advance();
-        translateQuantExact();
+        String upper = parseQuantExact();
+        try {
+          int upperValue = Integer.parseInt(upper);
+          result.append(upper);
+          if (lowerValue < 0 || upperValue <= lowerValue)
+            throw makeException("invalid_quantity_range");
+        }
+        catch (NumberFormatException e) {
+          result.append(Integer.MAX_VALUE);
+          if (lowerValue < 0 && new BigDecimal(lower).compareTo(new BigDecimal(upper)) > 0)
+            throw makeException("invalid_quantity_range");
+        }
       }
     }
   }
 
-  private void translateQuantExact() throws InvalidRegexException {
+  private String parseQuantExact() throws InvalidRegexException {
+    StringBuffer buf = new StringBuffer();
     do {
       if ("0123456789".indexOf(curChar) < 0)
         throw makeException("expected_digit");
-      copyCurChar();
+      buf.append(curChar);
+      advance();
     } while (curChar != ',' && curChar != '}');
+    return buf.toString();
   }
 
   private void copyCurChar() throws InvalidRegexException {
