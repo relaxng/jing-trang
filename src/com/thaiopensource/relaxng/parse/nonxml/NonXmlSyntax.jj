@@ -729,8 +729,6 @@ String Inherit() :
   {
     if (ns == null)
       ns = defaultNamespace;
-    if (ns == SchemaBuilder.INHERIT_NS)
-      ns = null;
     return ns;
   }
 }
