@@ -28,7 +28,9 @@ import com.thaiopensource.relaxng.edit.ValuePattern;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
 import com.thaiopensource.relaxng.edit.IncludeComponent;
 import com.thaiopensource.relaxng.edit.ListPattern;
+import com.thaiopensource.relaxng.edit.Annotated;
 import com.thaiopensource.relaxng.output.OutputDirectory;
+import com.thaiopensource.xml.util.Naming;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -53,6 +55,7 @@ class DtdOutput {
   private GrammarPart part;
   private OutputDirectory od;
   private ErrorReporter er;
+  private Set reservedEntityNames;
 
   PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
   PatternVisitor nestedContentModelOutput = new ContentModelOutput();
@@ -63,11 +66,13 @@ class DtdOutput {
   PatternVisitor nestedSimpleTypeOutput = new SimpleTypeOutput();
   GrammarOutput grammarOutput = new GrammarOutput();
 
-  static private final String COMPATIBILITY_ANNOTATIONS = "http://relaxng.org/ns/compatibility/annotations/1.0";
+  static private final String COMPATIBILITY_ANNOTATIONS_URI = "http://relaxng.org/ns/compatibility/annotations/1.0";
+  static private final String DTD_URI = "http://www.thaiopensource.com/ns/relaxng/dtd";
 
-  private DtdOutput(String sourceUri, Analysis analysis, OutputDirectory od, ErrorReporter er) {
+  private DtdOutput(String sourceUri, Analysis analysis, Set reservedEntityNames, OutputDirectory od, ErrorReporter er) {
     this.sourceUri = sourceUri;
     this.analysis = analysis;
+    this.reservedEntityNames = reservedEntityNames;
     this.od = od;
     this.er = er;
     this.part = analysis.getGrammarPart(sourceUri);
@@ -605,7 +610,7 @@ class DtdOutput {
 
   static void output(Analysis analysis, OutputDirectory od, ErrorReporter er) throws IOException {
     try {
-      new DtdOutput(od.MAIN, analysis, od, er).topLevelOutput();
+      new DtdOutput(od.MAIN, analysis, new HashSet(), od, er).topLevelOutput();
     }
     catch (WrappedIOException e) {
       throw e.cause;
@@ -715,12 +720,12 @@ class DtdOutput {
       return;
     }
     pendingIncludes.add(href);
-    DtdOutput sub = new DtdOutput(href, analysis, od, er);
+    DtdOutput sub = new DtdOutput(href, analysis, reservedEntityNames, od, er);
     GrammarPattern g = (GrammarPattern)analysis.getSchema(href);
     sub.subOutput(g);
     requiredParamEntities.addAll(sub.externallyRequiredParamEntities);
     outputRequiredComponents();
-    String entityName = genEntityName(href);
+    String entityName = genEntityName(inc);
     newline();
     write("<!ENTITY % ");
     write(entityName);
@@ -739,15 +744,45 @@ class DtdOutput {
     pendingIncludes.remove(href);
   }
 
-  String genEntityName(String uri) {
-    // XXX make this bulletproof and customizable
-    int slash = uri.lastIndexOf('/');
-    if (slash >= 0)
-      uri = uri.substring(slash + 1);
-    int dot = uri.lastIndexOf('.');
-    if (dot > 0)
-      uri = uri.substring(0, dot);
-    return uri;
+  String genEntityName(IncludeComponent inc) {
+    String entityName = getAttributeAnnotation(inc, DTD_URI, "entityName");
+    if (entityName != null) {
+      entityName = entityName.trim();
+      if (!Naming.isNcname(entityName)) {
+        er.warning("entity_name_not_ncname", entityName, inc.getSourceLocation());
+        entityName = null;
+      }
+    }
+    if (entityName == null) {
+      String uri = inc.getHref();
+      int slash = uri.lastIndexOf('/');
+      if (slash >= 0)
+        uri = uri.substring(slash + 1);
+      int dot = uri.lastIndexOf('.');
+      if (dot > 0)
+        uri = uri.substring(0, dot);
+      if (Naming.isNcname(uri))
+        entityName = uri;
+    }
+    if (entityName == null)
+      entityName = "ent";
+    if (reserveEntityName(entityName)) {
+      for (int i = 1;; i++) {
+        String tem = entityName + Integer.toString(i);
+        if (reserveEntityName(tem)) {
+          entityName = tem;
+          break;
+        }
+      }
+    }
+    return entityName;
+  }
+
+  private boolean reserveEntityName(String name) {
+    if (reservedEntityNames.contains(name))
+      return false;
+    reservedEntityNames.add(name);
+    return true;
   }
 
   void outputParamEntity(String name, Pattern body) {
@@ -916,11 +951,15 @@ class DtdOutput {
   }
 
   private static String getDefaultValue(AttributePattern p) {
+    return getAttributeAnnotation(p, COMPATIBILITY_ANNOTATIONS_URI, "defaultValue");
+  }
+
+  private static String getAttributeAnnotation(Annotated p, String ns, String localName) {
     List list = p.getAttributeAnnotations();
     for (int i = 0, len = list.size(); i < len; i++) {
       AttributeAnnotation att = (AttributeAnnotation)list.get(i);
-      if (att.getLocalName().equals("defaultValue")
-          && att.getNamespaceUri().equals(COMPATIBILITY_ANNOTATIONS))
+      if (att.getLocalName().equals(localName)
+          && att.getNamespaceUri().equals(ns))
         return att.getValue();
     }
     return null;
