@@ -221,7 +221,7 @@ public class IdTypeMapBuilder {
    hadError = true;
    if (eh != null)
      try {
-       eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key),
+       eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key, NameFormatter.format(arg1), NameFormatter.format(arg2)),
                                       locator));
      }
      catch (SAXException e) {
