@@ -193,23 +193,6 @@ class SchemaInfo {
     }
   }
 
-
-  static class NamespaceUsage {
-    int elementCount;
-    int attributeCount;
-    static boolean isBetter(NamespaceUsage n1, NamespaceUsage n2) {
-      return (n1.elementCount > n2.elementCount
-              || (n1.elementCount == n2.elementCount
-                  && n1.attributeCount > n2.attributeCount));
-    }
-  }
-
-  static class PrefixUsage {
-    int count;
-  }
-
-
-
   SchemaInfo(SchemaCollection sc, ErrorReporter er) {
     this.sc = sc;
     this.er = er;
