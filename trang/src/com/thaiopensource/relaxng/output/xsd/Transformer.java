@@ -29,6 +29,7 @@ import com.thaiopensource.relaxng.output.xsd.basic.WildcardAttribute;
 import com.thaiopensource.relaxng.output.xsd.basic.Wildcard;
 import com.thaiopensource.relaxng.output.xsd.basic.WildcardElement;
 import com.thaiopensource.relaxng.output.common.Name;
+import com.thaiopensource.relaxng.output.common.ErrorReporter;
 
 import java.util.List;
 import java.util.Iterator;
@@ -41,10 +42,12 @@ import java.util.HashMap;
 
 class Transformer extends SchemaTransformer {
   private final AttributeMapper attributeMapper = new AttributeMapper();
-  private Set transformedAttributeGroups = new HashSet();
+  private final Set transformedAttributeGroups = new HashSet();
+  private final ErrorReporter er;
 
-  Transformer(Schema schema) {
+  Transformer(Schema schema, ErrorReporter er) {
     super(schema);
+    this.er = er;
   }
 
   public Object visitUnion(SimpleTypeUnion t) {
