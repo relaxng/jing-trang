@@ -118,4 +118,8 @@ public abstract class SchemaWalker implements
     t.getAttributeUses().accept(this);
     return t.getSimpleType().accept(this);
   }
+
+  public Object visitNotAllowedContent(ComplexTypeNotAllowedContent t) {
+    return null;
+  }
 }

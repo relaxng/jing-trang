@@ -2,7 +2,7 @@ package com.thaiopensource.relaxng.output.xsd.basic;
 
 import java.util.List;
 
-public class ComplexTypeComplexContent extends ComplexType {
+public class ComplexTypeComplexContent extends ComplexTypeAllowedContent {
   private final Particle particle;
   private final boolean mixed;
   /**

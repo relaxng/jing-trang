@@ -1,5 +1,3 @@
-Deal with elements with content of notAllowed.
-
 Errors in SchemaBuilderImpl should be reflected in exit code
 
 combine attributes
