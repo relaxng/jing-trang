@@ -908,6 +908,77 @@ element x { attribute eg:y { text } }
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+element foo|bar|baz { empty }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="bar">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="baz">
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+start = root
+root = element foo|bar|baz { empty }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:group name="root">
+    <xs:choice>
+      <xs:element ref="foo"/>
+      <xs:element ref="bar"/>
+      <xs:element ref="baz"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="foo">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="bar">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="baz">
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo { attribute bar|baz { text } }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:attribute name="bar"/>
+      <xs:attribute name="baz"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>

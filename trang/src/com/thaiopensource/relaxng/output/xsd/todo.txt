@@ -1,6 +1,21 @@
-Choice name classes
+Global elements
 
-Global elements and attributes
+Global attributes
+
+Map
+
+foo = element bar|baz { xyzzy }
+
+<xs:group name="foo">
+  <xs:choice>
+    <xs:element name="bar" type="foo"/>
+    <xs:element name="baz" type="foo"/>
+  </xs:choice>
+</xs:group>
+
+<xs:complexType name="foo">
+  xyzzy
+</xs:complexType>
 
 Choose name of generated schema file better when there was no prefix.
 - use Context to find prefix
@@ -22,7 +37,6 @@ Avoid duplicate attributes.
 Deal with <ref> to attributes inside optional.
 
 Name classes
-- choice
 - attribute wildcards
 - element wildcards
 
@@ -72,7 +86,7 @@ Deal with annotations
 
 Deal with a:documentation
 
---
+-----
 
 Strategy for handling namespaces
 
@@ -98,7 +112,4 @@ the includes of G occured in F
 - generate imports to the heads of all target namespaces
 
 
-foo = element bar|baz { xyzzy }
 
-group foo = <choice><element name="bar" type="foo"><element name="baz" type="foo"/></choice>
-type goo = xyzzy
