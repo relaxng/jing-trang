@@ -631,8 +631,8 @@ class SchemaInfo {
     grammar.accept(new PatternMover(getTargetNamespace(OutputDirectory.MAIN), ""));
     for (Iterator iter = getSourceUris().iterator(); iter.hasNext();) {
       String sourceUri = (String)iter.next();
-      grammar.accept(new PatternMover(getTargetNamespace(sourceUri),
-                                      getInheritedNamespace(sourceUri)));
+      getSchema(sourceUri).accept(new PatternMover(getTargetNamespace(sourceUri),
+                                                   getInheritedNamespace(sourceUri)));
     }
   }
 
@@ -717,11 +717,6 @@ class SchemaInfo {
   String qualifyName(RefPattern p) {
     String name = p.getName();
     return qualifyName(getTargetNamespace((String)whereDefinedMap.get(name)), name);
-  }
-
-  String qualifyName(NameNameClass nc, String sourceUri) {
-    return qualifyName(resolveNamespace(nc.getNamespaceUri(), getInheritedNamespace(sourceUri)),
-                       nc.getLocalName());
   }
 
   String qualifyName(String ns, String localName) {
