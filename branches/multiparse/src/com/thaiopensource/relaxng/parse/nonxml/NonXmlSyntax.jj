@@ -22,10 +22,10 @@ import com.thaiopensource.relaxng.parse.IncludedGrammar;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.BuildException;
 import com.thaiopensource.relaxng.parse.Location;
+import com.thaiopensource.relaxng.parse.Context;
 
 import com.thaiopensource.util.Localizer;
 
-import org.relaxng.datatype.ValidationContext;
 
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
@@ -34,11 +34,12 @@ import org.xml.sax.Locator;
 import org.xml.sax.helpers.LocatorImpl;
 
 import java.util.Hashtable;
+import java.util.Enumeration;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class NonXmlSyntax implements ValidationContext {
+public class NonXmlSyntax implements Context {
 
   private static final String xmlUri = "http://www.w3.org/XML/1998/namespace";
   private String defaultNamespace = SchemaBuilder.INHERIT_NS;
@@ -150,9 +151,14 @@ public class NonXmlSyntax implements ValidationContext {
   }
 
   public String resolveNamespacePrefix(String prefix) {
-    if (prefix.length() == 0)
-      return defaultNamespace;
-    return (String)namespaceTable.get(prefix);
+    String result = (String)namespaceTable.get(prefix);
+    if (result.length() == 0)
+      return null;
+    return result;
+  }
+
+  public Enumeration prefixes() {
+    return namespaceTable.keys();
   }
 
   public String getBaseUri() {
@@ -167,7 +173,7 @@ public class NonXmlSyntax implements ValidationContext {
     return false;
   }
 
-  private ValidationContext getValidationContext() {
+  private Context getContext() {
     return this;
   }
 
@@ -772,7 +778,7 @@ ParsedPattern ValueExpr() :
 }
 {
   s = LocatedLiteral() a = Annotations()
-  { return sb.makeValue("", "token", s.getString(), getValidationContext(), s.getLocation(), a); }
+  { return sb.makeValue("", "token", s.getString(), getContext(), defaultNamespace, s.getLocation(), a); }
 }
 
 ParsedPattern DataExpr(Scope scope) :
@@ -801,7 +807,7 @@ ParsedPattern DataExpr(Scope scope) :
     }
   }
   ((s = Literal() a = Annotations()
-    { return sb.makeValue(datatypeUri, datatype, s, getValidationContext(), loc, a); }
+    { return sb.makeValue(datatypeUri, datatype, s, getContext(), defaultNamespace, loc, a); }
   )
   | ( a = Annotations()
       { dpb = sb.makeDataPatternBuilder(datatypeUri, datatype, loc); }
@@ -867,7 +873,7 @@ void Param(DataPatternBuilder dpb) :
 }
 {
   name = UnprefixedName() a = Annotations() "=" value = Literal()
-  { dpb.addParam(name.getString(), value, getValidationContext(), name.getLocation(), a); }
+  { dpb.addParam(name.getString(), value, getContext(), defaultNamespace, name.getLocation(), a); }
 }
 
 ParsedPattern Except(Scope scope) :
@@ -885,7 +891,7 @@ Annotations Annotations() :
   ParsedElementAnnotation e;
 }
 {
-  ("[" { a = sb.makeAnnotations(); }
+  ("[" { a = sb.makeAnnotations(getContext()); }
        (LOOKAHEAD(2) PrefixedAnnotationAttribute(a, false) )*
        ( e = AnnotationElement() { a.addElement(e); } )*
    "]")?
@@ -956,13 +962,15 @@ ParsedElementAnnotation PrefixedAnnotationElement() :
     int colon = qn.indexOf(':');
     String prefix = qn.substring(0, colon);
     String ns = lookupPrefix(prefix, t);
-    if (ns == SchemaBuilder.INHERIT_NS)
+    if (ns == SchemaBuilder.INHERIT_NS) {
       error("inherited_annotation_namespace", t);
+      ns = "";
+    }
     else {
       if (ns.length() == 0)
         prefix = null;
-      eab = sb.makeElementAnnotationBuilder(ns, qn.substring(colon + 1), prefix, makeLocation(t));
     }
+    eab = sb.makeElementAnnotationBuilder(ns, qn.substring(colon + 1), prefix, makeLocation(t), getContext());
   }
   AnnotationElementContent(eab)
   { return eab.makeElementAnnotation(); }
@@ -976,7 +984,7 @@ ParsedElementAnnotation UnprefixedAnnotationElement() :
 {
   name = UnprefixedName()
   {
-    eab = sb.makeElementAnnotationBuilder("", name.getString(), null, name.getLocation());
+    eab = sb.makeElementAnnotationBuilder("", name.getString(), null, name.getLocation(), getContext());
   }
   AnnotationElementContent(eab)
   { return eab.makeElementAnnotation(); }

@@ -1,9 +1,7 @@
 package com.thaiopensource.relaxng.parse;
 
-import org.relaxng.datatype.ValidationContext;
-
 public interface DataPatternBuilder {
-  void addParam(String name, String value, ValidationContext vc, Location loc, Annotations anno)
+  void addParam(String name, String value, Context context, String ns, Location loc, Annotations anno)
     throws BuildException;
   ParsedPattern makePattern(Location loc, Annotations anno)
     throws BuildException;

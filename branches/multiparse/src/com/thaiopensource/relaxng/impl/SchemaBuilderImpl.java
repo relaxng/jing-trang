@@ -17,6 +17,7 @@ import com.thaiopensource.relaxng.parse.ParsedNameClass;
 import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
+import com.thaiopensource.relaxng.parse.Context;
 import com.thaiopensource.relaxng.IncorrectSchemaException;
 import com.thaiopensource.util.Localizer;
 
@@ -224,7 +225,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
   }
 
   private class DummyDataPatternBuilder implements DataPatternBuilder {
-    public void addParam(String name, String value, ValidationContext vc, Location loc, Annotations anno)
+    public void addParam(String name, String value, Context context, String ns, Location loc, Annotations anno)
             throws BuildException {
     }
 
@@ -241,19 +242,21 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
 
   private class ValidationContextImpl implements ValidationContext {
     private ValidationContext vc;
+    private String ns;
 
-    ValidationContextImpl(ValidationContext vc) {
+    ValidationContextImpl(ValidationContext vc, String ns) {
       this.vc = vc;
+      this.ns = ns.length() == 0 ? null : ns;
     }
 
     public String resolveNamespacePrefix(String prefix) {
-      String ns = vc.resolveNamespacePrefix(prefix);
-      if (ns == INHERIT_NS) {
+      String result = prefix.length() == 0 ? ns : vc.resolveNamespacePrefix(prefix);
+      if (result == INHERIT_NS) {
         if (inheritNs.length() == 0)
           return null;
         return inheritNs;
       }
-      return ns;
+      return result;
     }
 
     public String getBaseUri() {
@@ -275,10 +278,10 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       this.dtb = dtb;
     }
 
-    public void addParam(String name, String value, ValidationContext vc, Location loc, Annotations anno)
+    public void addParam(String name, String value, Context context, String ns, Location loc, Annotations anno)
             throws BuildException {
       try {
-        dtb.addParameter(name, value, new ValidationContextImpl(vc));
+        dtb.addParameter(name, value, new ValidationContextImpl(context, ns));
       }
       catch (DatatypeException e) {
 	String detail = e.getMessage();
@@ -336,7 +339,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     return new DummyDataPatternBuilder();
   }
 
-  public ParsedPattern makeValue(String datatypeLibrary, String type, String value, ValidationContext vc,
+  public ParsedPattern makeValue(String datatypeLibrary, String type, String value, Context context, String ns,
                                  Location loc, Annotations anno) throws BuildException {
     DatatypeLibrary dl = datatypeLibraryFactory.createDatatypeLibrary(datatypeLibrary);
     if (dl == null)
@@ -346,7 +349,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
         DatatypeBuilder dtb = dl.createDatatypeBuilder(type);
         try {
           Datatype dt = dtb.createDatatype();
-          Object obj = dt.createValue(value, new ValidationContextImpl(vc));
+          Object obj = dt.createValue(value, new ValidationContextImpl(context, ns));
           if (obj != null)
             return pb.makeValue(dt, obj);
           error("invalid_value", value, (Locator)loc);
@@ -683,11 +686,11 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     return new LocatorImpl(systemId, lineNumber, columnNumber);
   }
 
-  public Annotations makeAnnotations() {
+  public Annotations makeAnnotations(Context context) {
     return this;
   }
 
-  public ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix, Location loc) {
+  public ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix, Location loc, Context context) {
     return this;
   }
 

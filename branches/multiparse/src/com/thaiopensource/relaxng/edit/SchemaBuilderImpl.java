@@ -18,6 +18,7 @@ import com.thaiopensource.relaxng.parse.ParsedNameClass;
 import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
+import com.thaiopensource.relaxng.parse.Context;
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.DatatypeLibrary;
@@ -103,18 +104,25 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   private static class TraceValidationContext implements ValidationContext {
     private final Map map;
     private final ValidationContext vc;
-    TraceValidationContext(Map map, ValidationContext vc) {
+    private final String ns;
+    TraceValidationContext(Map map, ValidationContext vc, String ns) {
       this.map = map;
       this.vc = vc;
+      this.ns = ns.length() == 0 ? null : ns;
     }
 
     public String resolveNamespacePrefix(String prefix) {
-      String ns = vc.resolveNamespacePrefix(prefix);
-      if (ns == SchemaBuilder.INHERIT_NS && prefix.length() != 0)
-        return null;
-      if (ns != null)
-        map.put(prefix, ns);
-      return ns;
+      String result;
+      if (prefix.length() == 0)
+        result = ns;
+      else {
+        result = vc.resolveNamespacePrefix(prefix);
+        if (result == SchemaBuilder.INHERIT_NS)
+          return null;
+      }
+      if (result != null)
+        map.put(prefix, result);
+      return result;
     }
 
     public String getBaseUri() {
@@ -130,15 +138,15 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     }
   }
 
-  public ParsedPattern makeValue(String datatypeLibrary, String type, String value, ValidationContext vc,
-                                 Location loc, Annotations anno) throws BuildException {
+  public ParsedPattern makeValue(String datatypeLibrary, String type, String value, Context context,
+                                 String ns, Location loc, Annotations anno) throws BuildException {
     ValuePattern p = new ValuePattern(datatypeLibrary, type, value);
     DatatypeLibrary dl = dlf.createDatatypeLibrary(datatypeLibrary);
     if (dl != null) {
       try {
         Datatype dt = dl.createDatatype(type);
         if (dt.isContextDependent())
-          dt.checkValid(value, new TraceValidationContext(p.getPrefixMap(), vc));
+          dt.checkValid(value, new TraceValidationContext(p.getPrefixMap(), context, ns));
       }
       catch (DatatypeException e) {
         // XXX print an error
@@ -314,7 +322,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       this.p = p;
     }
 
-    public void addParam(String name, String value, ValidationContext vc, Location loc, Annotations anno)
+    public void addParam(String name, String value, Context context, String ns, Location loc, Annotations anno)
             throws BuildException {
       Param param = new Param(name, value);
       finishAnnotated(param, loc, anno);
@@ -348,6 +356,12 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   private static class AnnotationsImpl implements Annotations {
     private List attributes = new Vector();
     private List elements = new Vector();
+    private Context context;
+
+    AnnotationsImpl(Context context) {
+      this.context = context;
+    }
+
     public void addAttribute(String ns, String localName, String prefix, String value, Location loc)
             throws BuildException {
       AttributeAnnotation att = new AttributeAnnotation(ns, localName, value);
@@ -361,6 +375,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     }
 
     void apply(Annotated subject) {
+      subject.setContext(context);
       subject.getAttributeAnnotations().addAll(attributes);
       List list;
       if (subject.mayContainText())
@@ -371,8 +386,8 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     }
   }
 
-  public Annotations makeAnnotations() {
-    return new AnnotationsImpl();
+  public Annotations makeAnnotations(Context context) {
+    return new AnnotationsImpl(context);
   }
 
   private static class ElementAnnotationBuilderImpl implements ElementAnnotationBuilder {
@@ -405,10 +420,11 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     }
   }
 
-  public ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix, Location loc) {
+  public ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix, Location loc, Context context) {
     ElementAnnotation element = new ElementAnnotation(ns, localName);
     element.setPrefix(prefix);
     element.setSourceLocation((SourceLocation)loc);
+    element.setContext(context);
     return new ElementAnnotationBuilderImpl(element);
   }
 
