@@ -197,6 +197,10 @@ public class NonXmlSyntax implements Context {
     topLevelComments = getComments(topLevelComments);
   }
 
+  private void topLevelComments(GrammarSection section) {
+    section.topLevelComment(getComments(null));
+  }
+
   private CommentList getComments(CommentList comments) {
     Token t = token.next.specialToken;
     if (t == null)
@@ -211,25 +215,17 @@ public class NonXmlSyntax implements Context {
   }
 
   private ParsedPattern afterComments(ParsedPattern p) {
-    Token t = token.next.specialToken;
-    if (t == null)
+    CommentList comments = getComments(null);
+    if (comments == null)
       return p;
-    while (t.specialToken != null)
-      t = t.specialToken;
-    for (; t != null; t = t.next)
-      p = sb.commentAfter(p, mungeComment(t.image), makeLocation(t));
-    return p;
+    return sb.commentAfter(p, comments);
   }
 
   private ParsedNameClass afterComments(ParsedNameClass nc) {
-    Token t = token.next.specialToken;
-    if (t == null)
+    CommentList comments = getComments(null);
+    if (comments == null)
       return nc;
-    while (t.specialToken != null)
-      t = t.specialToken;
-    for (; t != null; t = t.next)
-      nc = sb.commentAfter(nc, mungeComment(t.image), makeLocation(t));
-    return nc;
+    return sb.commentAfter(nc, comments);
   }
 
   private String mungeComment(String image) {
@@ -315,7 +311,8 @@ ParsedPattern Input(Scope scope) :
 {
   (<BYTE_ORDER_MARK>)?
   Preamble()
-  (LOOKAHEAD(TopLevelLookahead()) p = TopLevelGrammar(scope) | p = Expr(scope, null, null) <EOF>)
+  (LOOKAHEAD(TopLevelLookahead()) p = TopLevelGrammar(scope)
+   | p = Expr(scope, null, null) { p = afterComments(p); } <EOF>)
   { return p; }
 }
 
@@ -344,7 +341,7 @@ ParsedPattern IncludedGrammar(IncludedGrammar g) :
   (<BYTE_ORDER_MARK>)?
   Preamble()
   (LOOKAHEAD(TopLevelLookahead()) a = TopLevelAnnotations() GrammarBody(g, g, a)
-   | a = Annotations() "grammar" "{" GrammarBody(g, g, a) { getComments(g); } "}")
+   | a = Annotations() "grammar" "{" GrammarBody(g, g, a) { topLevelComments(g); } "}")
   { p = afterComments(g.endIncludedGrammar(sb.makeLocation(sourceUri, 1, 1), a)); }
   <EOF>
   { return p; }
@@ -792,7 +789,7 @@ ParsedPattern GrammarExpr(Scope scope, Annotations a) :
 }
 {
   t = "grammar" { g = sb.makeGrammar(scope); }
-  "{" GrammarBody(g, g, a) { getComments(g); } "}" 
+  "{" GrammarBody(g, g, a) { topLevelComments(g); } "}" 
   { return g.endGrammar(makeLocation(t), a); }
 }
 
@@ -875,7 +872,7 @@ void Include(GrammarSection section, Scope scope, Annotations a) :
 {
   t = "include" href = Literal()
   ns = Inherit()
-  ("{" (IncludeComponent(include, scope))* { getComments(include); } "}")?
+  ("{" (IncludeComponent(include, scope))* { topLevelComments(include); } "}")?
   {
     try {
       include.endInclude(resolve(href), ns, makeLocation(t), a);
@@ -902,7 +899,7 @@ void Div(GrammarSection section, Scope scope, Annotations a) :
   Div div = section.makeDiv();
 }
 {
-  t = "{" (GrammarComponent(div, scope))* { getComments(div); } "}"
+  t = "{" (GrammarComponent(div, scope))* { topLevelComments(div); } "}"
   { div.endDiv(makeLocation(t), a); }
 }
 
@@ -912,7 +909,7 @@ void IncludeDiv(GrammarSection section, Scope scope, Annotations a) :
   Div div = section.makeDiv();
 }
 {
-  t = "{" (IncludeComponent(div, scope))* { getComments(div); } "}"
+  t = "{" (IncludeComponent(div, scope))* { topLevelComments(div); } "}"
   { div.endDiv(makeLocation(t), a); }
 }
 
@@ -1111,6 +1108,7 @@ Annotations RequiredAnnotations() :
   "[" { a = sb.makeAnnotations(comments, getContext()); }
        (LOOKAHEAD(2) PrefixedAnnotationAttribute(a, false) )*
        ( e = AnnotationElement() { a.addElement(e); } )*
+       { a.addComment(getComments()); }
    "]"
   { return a; }
 }
@@ -1247,6 +1245,7 @@ void AnnotationElementContent(ElementAnnotationBuilder eab) :
   (LOOKAHEAD(2) AnnotationAttribute(eab))* 
   (s = LocatedLiteral() { eab.addText(s.getString(), s.getLocation()); }
    | e = AnnotationElement() { eab.addElement(e); })*
+  { eab.addComment(getComments()); }
   "]"
 }
 

@@ -1,6 +1,6 @@
 package com.thaiopensource.relaxng.parse;
 
-public interface GrammarSection extends CommentList {
+public interface GrammarSection {
 
   static final class Combine {
     private final String name;
@@ -20,6 +20,7 @@ public interface GrammarSection extends CommentList {
   void define(String name, Combine combine, ParsedPattern pattern, Location loc, Annotations anno)
     throws BuildException;
   void topLevelAnnotation(ParsedElementAnnotation ea) throws BuildException;
+  void topLevelComment(CommentList comments) throws BuildException;
   Div makeDiv();
   /**
    * Returns null if already in an include.

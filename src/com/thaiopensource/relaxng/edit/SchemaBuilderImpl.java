@@ -249,14 +249,13 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       addAfterAnnotation(lastComponent, ea);
     }
 
-    public void addComment(String value, Location loc) throws BuildException {
-      if (lastComponent == null) {
-        Comment comment = new Comment(value);
-        comment.setSourceLocation((SourceLocation)loc);
-        subject.getChildElementAnnotations().add(comment);
+    public void topLevelComment(CommentList comments) throws BuildException {
+      if (comments != null) {
+        if (lastComponent == null)
+          subject.getChildElementAnnotations().addAll(((CommentListImpl)comments).list);
+        else
+          addAfterComment(lastComponent, comments);
       }
-      else
-       addAfterComment(lastComponent, value, loc);
     }
 
     private void add(Component c) {
@@ -334,20 +333,19 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     ((ElementAnnotationBuilderImpl)e).addTo(a.getFollowingElementAnnotations());
   }
 
-  public ParsedPattern commentAfter(ParsedPattern p, String value, Location loc) throws BuildException {
-    addAfterComment((Pattern)p, value, loc);
+  public ParsedPattern commentAfter(ParsedPattern p, CommentList comments) throws BuildException {
+    addAfterComment((Pattern)p, comments);
     return p;
   }
 
-  public ParsedNameClass commentAfter(ParsedNameClass nc, String value, Location loc) throws BuildException {
-    addAfterComment((NameClass)nc, value, loc);
+  public ParsedNameClass commentAfter(ParsedNameClass nc, CommentList comments) throws BuildException {
+    addAfterComment((NameClass)nc, comments);
     return nc;
   }
 
-  static private void addAfterComment(Annotated a, String value, Location loc) {
-    Comment comment = new Comment(value);
-    comment.setSourceLocation((SourceLocation)loc);
-    a.getFollowingElementAnnotations().add(comment);
+  static private void addAfterComment(Annotated a, CommentList comments) {
+    if (comments != null)
+      a.getFollowingElementAnnotations().addAll(((CommentListImpl)comments).list);
   }
 
   public Location makeLocation(String systemId, int lineNumber, int columnNumber) {
@@ -428,6 +426,11 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       ((ElementAnnotationBuilderImpl)ea).addTo(elements);
     }
 
+    public void addComment(CommentList comments) throws BuildException {
+      if (comments != null)
+        elements.addAll(((CommentListImpl)comments).list);
+    }
+
     void apply(Annotated subject) {
       subject.setContext(context);
       if (comments != null)
@@ -477,6 +480,11 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       ((ElementAnnotationBuilderImpl)ea).addTo(element.getChildren());
     }
 
+    public void addComment(CommentList comments) throws BuildException {
+      if (comments != null)
+        element.getChildren().addAll(((CommentListImpl)comments).list);
+    }
+
     void addTo(List elementList) {
       if (comments != null)
         elementList.addAll(((CommentListImpl)comments).list);
@@ -491,6 +499,10 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     element.setSourceLocation((SourceLocation)loc);
     element.setContext(context);
     return new ElementAnnotationBuilderImpl(comments, element);
+  }
+
+  public boolean usesComments() {
+    return true;
   }
 
   private static Combine mapCombine(GrammarSection.Combine combine) {
