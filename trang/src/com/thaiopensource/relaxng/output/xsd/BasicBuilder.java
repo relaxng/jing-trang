@@ -447,7 +447,13 @@ public class BasicBuilder {
   }
 
   private String resolveNamespace(String ns) {
-    return SchemaInfo.resolveNamespace(ns, inheritedNamespace);
+    return resolveNamespace(ns, inheritedNamespace);
+  }
+
+  private static String resolveNamespace(String ns, String inheritedNamespace) {
+    if (ns == NameNameClass.INHERIT_NS)
+      return inheritedNamespace;
+    return ns;
   }
 
 }
