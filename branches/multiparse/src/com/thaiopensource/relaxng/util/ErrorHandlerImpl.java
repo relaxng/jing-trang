@@ -72,7 +72,7 @@ public class ErrorHandlerImpl implements ErrorHandler {
     print(format("fatal", new Object[] { message, loc }));
   }
 
-  void print(String message) {
+  public void print(String message) {
     if (message.length() != 0) {
       err.println(message);
       err.flush();
