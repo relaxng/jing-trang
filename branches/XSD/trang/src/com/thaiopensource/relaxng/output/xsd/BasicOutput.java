@@ -39,6 +39,8 @@ import com.thaiopensource.relaxng.output.xsd.basic.OptionalAttribute;
 import com.thaiopensource.relaxng.output.xsd.basic.SchemaWalker;
 import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroup;
 import com.thaiopensource.relaxng.output.xsd.basic.AbstractAttributeUseVisitor;
+import com.thaiopensource.relaxng.output.xsd.basic.Wildcard;
+import com.thaiopensource.relaxng.output.xsd.basic.WildcardAttribute;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
@@ -55,6 +57,7 @@ public class BasicOutput {
   private final SimpleTypeOutput simpleTypeOutput = new SimpleTypeOutput();
   private final ComplexTypeVisitor complexTypeOutput = new ComplexTypeOutput();
   private final AttributeUseOutput attributeUseOutput = new AttributeUseOutput();
+  private final AttributeUseVisitor attributeWildcardOutput = new AttributeWildcardOutput();
   private final ParticleOutput particleOutput = new ParticleOutput();
   private final ParticleVisitor globalElementOutput = new GlobalElementOutput();
   private final GlobalAttributeOutput globalAttributeOutput = new GlobalAttributeOutput();
@@ -346,7 +349,7 @@ public class BasicOutput {
         particleOutput.context = COMPLEX_TYPE_CONTEXT;
         t.getParticle().accept(particleOutput);
       }
-      t.getAttributeUses().accept(attributeUseOutput);
+      outputAttributeUse(t.getAttributeUses());
       xw.endElement();
       return null;
     }
@@ -368,7 +371,7 @@ public class BasicOutput {
           xw.attribute("base", xs("anyType"));
           simpleTypeOutput.outputWrap(t.getSimpleType());
         }
-        attributeUses.accept(attributeUseOutput);
+        outputAttributeUse(attributeUses);
         xw.endElement();
         xw.endElement();
         xw.endElement();
@@ -377,7 +380,7 @@ public class BasicOutput {
     }
   }
 
-  class AttributeUseOutput extends AbstractAttributeUseVisitor {
+  class AttributeUseOutput extends SchemaWalker {
     boolean isOptional = false;
 
     public Object visitOptionalAttribute(OptionalAttribute a) {
@@ -424,12 +427,16 @@ public class BasicOutput {
       xw.endElement();
       return null;
     }
+  }
 
-    public Object visitAttributeGroup(AttributeGroup a) {
-      for (Iterator iter = a.getChildren().iterator(); iter.hasNext();)
-        ((AttributeUse)iter.next()).accept(this);
-      return null;
-    }
+  class AttributeWildcardOutput extends SchemaWalker {
+    public Object visitWildcardAttribute(WildcardAttribute a) {
+       xw.startElement(xs("anyAttribute"));
+       namespaceAttribute(a.getWildcard());
+       xw.attribute("processContents", "skip");
+       xw.endElement();
+       return null;
+     }
   }
 
   class GlobalElementOutput implements ParticleVisitor, ComplexTypeVisitor {
@@ -515,6 +522,10 @@ public class BasicOutput {
     public Object visitAttributeGroupRef(AttributeGroupRef a) {
       return null;
     }
+
+    public Object visitWildcardAttribute(WildcardAttribute a) {
+      return null;
+    }
   }
 
   class SchemaOutput extends AbstractSchemaVisitor {
@@ -540,7 +551,7 @@ public class BasicOutput {
     public void visitAttributeGroup(AttributeGroupDefinition def) {
       xw.startElement(xs("attributeGroup"));
       xw.attribute("name", def.getName());
-      def.getAttributeUses().accept(attributeUseOutput);
+      outputAttributeUse(def.getAttributeUses());
       xw.endElement();
       def.getAttributeUses().accept(globalAttributeOutput);
     }
@@ -643,6 +654,33 @@ public class BasicOutput {
 
   private boolean namespaceIsLocal(String ns) {
     return ns.equals(targetNamespace) || ns.equals("");
+  }
+
+  private void outputAttributeUse(AttributeUse use) {
+    use.accept(attributeUseOutput);
+    use.accept(attributeWildcardOutput);
+  }
+
+  private void namespaceAttribute(Wildcard wc) {
+    if (wc.isPositive()) {
+      StringBuffer buf = new StringBuffer();
+      for (Iterator iter = wc.getNamespaces().iterator(); iter.hasNext();) {
+        if (buf.length() > 0)
+          buf.append(' ');
+        String ns = (String)iter.next();
+        if (ns.equals(""))
+          buf.append("##local");
+        else if (ns.equals(targetNamespace))
+          buf.append("##targetNamespace");
+        else
+          buf.append(ns);
+      }
+      xw.attribute("namespace", buf.toString());
+    }
+    else {
+      if (wc.getNamespaces().contains("") && wc.getNamespaces().contains(targetNamespace))
+        xw.attribute("namespace", "##other");
+    }
   }
 
   private String qualifyRef(String schemaUri, String localName) {

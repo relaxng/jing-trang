@@ -1,3 +1,6 @@
+May sometimes need to move AttributeWildcards to schema with different target namespace to
+take advantage of ##other.
+
 If expansion of a group causes the group to become unreferenced, then remove the group.
 
 Optimize nested choices in expanding <interleave>.
@@ -25,8 +28,6 @@ Use the last component of the namespace URI in selecting prefix when no prefix i
 RELAX NG.
 
 Make choice of targetNamespace not depend on order of hash table iteration.
-
-Attribute wildcards
 
 Element wildcards
 
@@ -82,6 +83,7 @@ Approximation warnings:
 - simple type list
 - attribute choice
 - unknown datatypes
+- wildcards
 
 Deal with element type consistent restriction
 

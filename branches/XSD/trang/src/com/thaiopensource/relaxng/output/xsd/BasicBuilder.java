@@ -51,6 +51,8 @@ import com.thaiopensource.relaxng.output.xsd.basic.AttributeUse;
 import com.thaiopensource.relaxng.output.xsd.basic.OptionalAttribute;
 import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroup;
 import com.thaiopensource.relaxng.output.xsd.basic.AttributeUseChoice;
+import com.thaiopensource.relaxng.output.xsd.basic.Wildcard;
+import com.thaiopensource.relaxng.output.xsd.basic.WildcardAttribute;
 import com.thaiopensource.relaxng.output.common.NameClassSplitter;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
@@ -340,6 +342,9 @@ public class BasicBuilder {
         else
           choices.add(att);
       }
+      Wildcard wc = WildcardBuilder.createWildcard(p.getNameClass(), inheritedNamespace);
+      if (wc != null)
+        choices.add(new WildcardAttribute(p.getSourceLocation(), wc));
       if (choices.size() == 1)
         return choices.get(0);
       return new AttributeGroup(p.getSourceLocation(), choices);
