@@ -2,7 +2,7 @@ package com.thaiopensource.datatype.xsd;
 
 class DurationDatatype extends RegexDatatype {
   static private final String PATTERN =
-    "-?P([0-9]+Y)?([0-9]+M)?([0-9]+D)?T?([0-9]+H)?([0-9]+M)?(([0-9]+(\\.[0-9]*)?|\\.[0-9]+)S)?";
+    "-?P([0-9]+Y)?([0-9]+M)?([0-9]+D)?(T([0-9]+H)?([0-9]+M)?(([0-9]+(\\.[0-9]*)?|\\.[0-9]+)S)?)?";
   DurationDatatype() {
     super(PATTERN);
   }
