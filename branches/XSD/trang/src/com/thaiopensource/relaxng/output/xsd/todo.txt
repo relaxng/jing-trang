@@ -1,7 +1,6 @@
 Include checking
 - Error for include loop.
 - Detect multiple inclusions of same schema.
-- Check for overrides
 
 Errors in SchemaBuilderImpl should be reflected in exit code
 

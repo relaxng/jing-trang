@@ -2233,6 +2233,18 @@ x = empty
 </incorrect>
 </compact>
 </testCase>
+<testCase>
+<compact>
+<resource name="foo.rnc">
+start = element foo { empty }
+</resource>
+<incorrect>
+include "foo.rnc" {
+  start = element foo { text }
+}
+</incorrect>
+</compact>
+</testCase>
 <!--
 <testCase>
 <compact>
