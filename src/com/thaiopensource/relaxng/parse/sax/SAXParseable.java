@@ -18,13 +18,13 @@ import org.relaxng.datatype.Datatype;
 
 import java.io.IOException;
 
-public class ParseableImpl implements Parseable {
+public class SAXParseable implements Parseable {
   private XMLReaderCreator xrc;
   private InputSource in;
   private ErrorHandler eh;
   private Datatype ncNameDatatype = new NCNameDatatype();
 
-  public ParseableImpl(XMLReaderCreator xrc, InputSource in, ErrorHandler eh) {
+  public SAXParseable(XMLReaderCreator xrc, InputSource in, ErrorHandler eh) {
     this.xrc = xrc;
     this.in = in;
     this.eh = eh;
