@@ -56,7 +56,6 @@ import java.util.Iterator;
 /*
 
 Tasks:
-Order for mixed
 Order param entities catch bad recursion
 Check single element type
 Handle name class choice
@@ -68,6 +67,7 @@ a:defaultValue
 a:documentation
 non-deterministic content models
 option to protect element declarations with included section
+allow mixed(repeat(NOT_ALLOWED))
 */
 public class DtdOutput {
   private ErrorHandler eh;
@@ -122,7 +122,7 @@ public class DtdOutput {
   static Type DIRECT_SINGLE_ELEMENT = new Type(ELEMENT_CLASS);
   static Type DIRECT_SINGLE_ATTRIBUTE = new Type(ATTRIBUTE_GROUP);
   static Type OPTIONAL_ATTRIBUTE = new Type(ATTRIBUTE_GROUP);
-  static Type REPEAT_ELEMENT_CLASS = new Type(MODEL_GROUP);
+  static Type ZERO_OR_MORE_ELEMENT_CLASS = new Type(MODEL_GROUP);
   static Type ENUM = new Type(ATTRIBUTE_TYPE);
   static Type ERROR = new Type();
 
@@ -210,11 +210,11 @@ public class DtdOutput {
     }
 
     public Object visitOneOrMore(OneOrMorePattern p) {
-      return checkType("sorry_one_or_more", repeat(analyzeType(this, p.getChild())), p);
+      return checkType("sorry_one_or_more", oneOrMore(analyzeType(this, p.getChild())), p);
     }
 
     public Object visitZeroOrMore(ZeroOrMorePattern p) {
-      return checkType("sorry_zero_or_more", repeat(analyzeType(this, p.getChild())), p);
+      return checkType("sorry_zero_or_more", zeroOrMore(analyzeType(this, p.getChild())), p);
     }
 
     public Object visitChoice(ChoicePattern p) {
@@ -334,7 +334,6 @@ public class DtdOutput {
 
   PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
   PatternVisitor nestedContentModelOutput = new ContentModelOutput();
-  PatternVisitor topLevelMixedOutput = new TopLevelMixedOutput();
   PatternVisitor attributeOutput = new AttributeOutput();
   AttributeOutput optionalAttributeOutput = new OptionalAttributeOutput();
   PatternVisitor topLevelAttributeTypeOutput = new TopLevelAttributeTypeOutput();
@@ -424,10 +423,20 @@ public class DtdOutput {
       List list = p.getChildren();
       boolean needSep = false;
       final int len = list.size();
+      if (getType(p) == MIXED_ELEMENT_CLASS) {
+        for (int i = 0; i < len; i++) {
+          Pattern member = (Pattern)list.get(i);
+          if (getType(member).isA(MIXED_ELEMENT_CLASS)) {
+            member.accept(nestedContentModelOutput);
+            needSep = true;
+            break;
+          }
+        }
+      }
       for (int i = 0; i < len; i++) {
         Pattern member = (Pattern)list.get(i);
         Type t = getType(member);
-        if (t != NOT_ALLOWED) {
+        if (t != NOT_ALLOWED && !t.isA(MIXED_ELEMENT_CLASS)) {
           if (needSep)
             buf.append('|');
           else
@@ -482,7 +491,12 @@ public class DtdOutput {
     }
 
     public Object visitMixed(MixedPattern p) {
-      return p.getChild().accept(topLevelMixedOutput);
+      buf.append('(');
+      buf.append("#PCDATA|");
+      ((ZeroOrMorePattern)p.getChild()).getChild().accept(nestedContentModelOutput);
+      buf.append(')');
+      buf.append('*');
+      return null;
     }
 
     public Object visitGroup(GroupPattern p) {
@@ -503,26 +517,6 @@ public class DtdOutput {
       }
       if (main != null)
         main.accept(this);
-      return null;
-    }
-  }
-
-
-  class TopLevelMixedOutput extends ContentModelOutput {
-    public Object visitOneOrMore(OneOrMorePattern p) {
-      return visitRepeat(p, '+');
-    }
-
-    public Object visitZeroOrMore(ZeroOrMorePattern p) {
-      return visitRepeat(p, '*');
-    }
-
-    private Object visitRepeat(UnaryPattern p, char op) {
-      buf.append('(');
-      buf.append("#PCDATA|");
-      p.getChild().accept(nestedContentModelOutput);
-      buf.append(')');
-      buf.append(op);
       return null;
     }
   }
@@ -700,7 +694,7 @@ public class DtdOutput {
           write(' ');
           write('"');
           buf.setLength(0);
-          if (t.isA(MODEL_GROUP) || t.isA(NOT_ALLOWED))
+          if (t.isA(MODEL_GROUP) || t.isA(NOT_ALLOWED) || t.isA(MIXED_ELEMENT_CLASS))
             body.accept(nestedContentModelOutput);
           else if (t.isA(ATTRIBUTE_GROUP))
             body.accept(attributeOutput);
@@ -766,8 +760,11 @@ public class DtdOutput {
         tem = (Pattern)list.get(0);
       else
         tem = p;
-      if (hadEmpty) {
-        tem = new OptionalPattern(tem);
+      if (hadEmpty && !(tem instanceof OptionalPattern) && !(tem instanceof ZeroOrMorePattern)) {
+        if (tem instanceof OneOrMorePattern)
+          tem = new ZeroOrMorePattern(((OneOrMorePattern)tem).getChild());
+        else
+          tem = new OptionalPattern(tem);
         copy(tem, p);
       }
       return tem;
@@ -912,13 +909,17 @@ public class DtdOutput {
     System.out.print(c);
   }
 
-  private static Type repeat(Type t) {
-    if (t == ERROR)
-      return ERROR;
+  private static Type zeroOrMore(Type t) {
     if (t.isA(ELEMENT_CLASS))
-      return REPEAT_ELEMENT_CLASS;
+      return ZERO_OR_MORE_ELEMENT_CLASS;
     if (t.isA(MIXED_ELEMENT_CLASS))
       return COMPLEX_TYPE;
+    return oneOrMore(t);
+  }
+
+  private static Type oneOrMore(Type t) {
+    if (t == ERROR)
+      return ERROR;
     if (t.isA(MODEL_GROUP))
       return MODEL_GROUP;
     return null;
@@ -940,7 +941,7 @@ public class DtdOutput {
   }
 
   private static Type mixed(Type t) {
-    if (t.isA(REPEAT_ELEMENT_CLASS))
+    if (t.isA(ZERO_OR_MORE_ELEMENT_CLASS))
       return COMPLEX_TYPE;
     return null;
   }
@@ -1012,6 +1013,8 @@ public class DtdOutput {
       return ATTRIBUTE_GROUP;
     if (t == DIRECT_SINGLE_ELEMENT)
       return ELEMENT_CLASS;
+    if (t == ZERO_OR_MORE_ELEMENT_CLASS)
+      return MODEL_GROUP;
     if (t == COMPLEX_TYPE)
       return ERROR;
     return t;
