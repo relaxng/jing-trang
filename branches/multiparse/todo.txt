@@ -1,7 +1,5 @@
 Compact syntax documentation: \x; string literals; ##
 
-## comments before declarations
-
 Comments embedded within strings.
 
 Compact syntax UTF-8/UTF-16 autodetection.
