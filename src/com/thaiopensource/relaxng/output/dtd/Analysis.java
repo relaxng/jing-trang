@@ -206,7 +206,13 @@ public class Analysis {
         return Type.ERROR;
       }
       defines = new HashMap();
-      mainPart = new GrammarPart(er, defines, schemas, parts, p);
+      try {
+        mainPart = new GrammarPart(er, defines, schemas, parts, p);
+      }
+      catch (GrammarPart.IncludeLoopException e) {
+        er.error("include_loop", e.getInclude().getSourceLocation());
+        return Type.ERROR;
+      }
       grammarPattern = p;
       visitContainer(p);
       return startType;
