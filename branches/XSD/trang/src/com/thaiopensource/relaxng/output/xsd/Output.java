@@ -343,6 +343,17 @@ class Output {
       xw.endElement();
       return null;
     }
+
+    public Object visitRef(RefPattern p) {
+      if (globalElementName(si.getBody(p)) != null) {
+        xw.startElement(xs("sequence"));
+        particleOutput.visitRef(p);
+        xw.endElement();
+      }
+      else
+        super.visitRef(p);
+      return null;
+    }
   }
 
   /**
