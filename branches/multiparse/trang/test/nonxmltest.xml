@@ -1318,14 +1318,23 @@ element foo { empty }
 ]]></incorrect>
 </nonxml>
 </bug>
-<bug>
+<testCase>
 <nonxml>
 <incorrect><![CDATA[
 foo [ xmlns = "bar" ]
 start = element foo { empty }
 ]]></incorrect>
 </nonxml>
-</bug>
+</testCase>
+<testCase>
+<nonxml>
+<incorrect><![CDATA[
+namespace local = ""
+foo [ local:xmlns = "bar" ]
+start = element foo { empty }
+]]></incorrect>
+</nonxml>
+</testCase>
 <testCase>
 <nonxml>
 <correct><![CDATA[
