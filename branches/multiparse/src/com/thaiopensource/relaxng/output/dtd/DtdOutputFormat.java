@@ -12,9 +12,14 @@ import java.io.File;
 public class DtdOutputFormat implements OutputFormat {
   public void output(SchemaCollection sc, OutputDirectory od, ErrorHandler eh) throws SAXException, IOException {
     Simplifier.simplify(sc);
-    ErrorReporter er = new ErrorReporter(eh);
-    Analysis analysis = new Analysis(sc, er);
-    if (!er.hadError)
-      DtdOutput.output(analysis, od, er);
+    try {
+      ErrorReporter er = new ErrorReporter(eh);
+      Analysis analysis = new Analysis(sc, er);
+      if (!er.hadError)
+        DtdOutput.output(analysis, od, er);
+    }
+    catch (ErrorReporter.WrappedSAXException e) {
+      throw e.getException();
+    }
   }
 }
