@@ -71,7 +71,7 @@ Warning when approximating datatypes
 Non-local namespaces
 Generate parameter entities to allow change of namespace prefix
 Include
-combine attribute/suppress definition corresponding to ATTLIST
+Support combine="interleave" for attlists
 nested grammars
 a:defaultValue
 a:documentation
@@ -202,6 +202,14 @@ public class DtdOutput {
   };
 
   class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
+    private ElementPattern ancestorPattern;
+
+    public Analyzer() {
+    }
+
+    public Analyzer(ElementPattern ancestorPattern) {
+      this.ancestorPattern = ancestorPattern;
+    }
 
     public Object visitEmpty(EmptyPattern p) {
       return EMPTY;
@@ -238,7 +246,7 @@ public class DtdOutput {
     public Object visitElement(ElementPattern p) {
       Object ret = p.getNameClass().accept(this);
       if (!seen(p.getChild())) {
-        Type t = analyzeType(this, p.getChild());
+        Type t = analyzeType(new Analyzer(p), p.getChild());
         if (!t.isA(COMPLEX_TYPE) && t != ERROR)
           error("bad_element_type", p.getSourceLocation());
       }
@@ -251,6 +259,8 @@ public class DtdOutput {
       Type t = analyzeType(this, p.getChild());
       if (!t.isA(ATTRIBUTE_TYPE) && t != DIRECT_TEXT && t != ERROR)
         error("sorry_attribute_type", p.getSourceLocation());
+      if (ancestorPattern != null)
+        noteAttribute(ancestorPattern);
       return DIRECT_SINGLE_ATTRIBUTE;
     }
 
@@ -305,7 +315,10 @@ public class DtdOutput {
         error("undefined_ref", p.getSourceLocation());
         return ERROR;
       }
-      return ref(analyzeType(this, def));
+      Type t = ref(analyzeType(new Analyzer(null), def));
+      if (t.isA(ATTRIBUTE_GROUP))
+        noteAttributeGroupRef(ancestorPattern, p.getName());
+      return ref(t);
     }
 
     public Object visitParentRef(ParentRefPattern p) {
@@ -349,11 +362,11 @@ public class DtdOutput {
     }
 
     public Object visitDefine(DefineComponent c) {
-      Type t = analyzeType(this, c.getBody());
       if (c.getName() == DefineComponent.START) {
-        startType = t;
+        startType = analyzeType(this, c.getBody());
       }
       else {
+        Type t = analyzeType(new Analyzer(), c.getBody());
         if (t == COMPLEX_TYPE || t == COMPLEX_TYPE_MODEL_GROUP)
           error("sorry_complex_type_define", c.getSourceLocation());
       }
@@ -623,7 +636,7 @@ public class DtdOutput {
     }
 
     public Object visitRef(RefPattern p) {
-      if (getType(p).isA(ATTRIBUTE_GROUP)) {
+      if (getType(p).isA(ATTRIBUTE_GROUP) && getParamEntityElementName(p.getName()) == null) {
         indent();
         paramEntityRef(p);
       }
@@ -942,6 +955,39 @@ public class DtdOutput {
     return (Type)patternTypes.get(p);
   }
 
+  private Map elementToAttlistMap = new HashMap();
+  private Map paramEntityToElementMap = new HashMap();
+
+  void noteAttribute(ElementPattern e) {
+    elementToAttlistMap.put(e, Boolean.FALSE);
+  }
+
+  void noteAttributeGroupRef(ElementPattern e, String paramEntityName) {
+    if (e != null) {
+      if (elementToAttlistMap.get(e) != null)
+        elementToAttlistMap.put(e, Boolean.FALSE);
+      else
+        elementToAttlistMap.put(e, paramEntityName);
+    }
+    if (e == null || paramEntityToElementMap.get(paramEntityName) != null)
+      paramEntityToElementMap.put(paramEntityName, Boolean.FALSE);
+    else
+      paramEntityToElementMap.put(paramEntityName, e);
+  }
+
+  String getParamEntityElementName(String name) {
+    Object elem = paramEntityToElementMap.get(name);
+    if (elem == null || elem == Boolean.FALSE)
+      return null;
+    Object tem = elementToAttlistMap.get(elem);
+    if (!name.equals(tem))
+      return null;
+    NameClass nc = ((ElementPattern)elem).getNameClass();
+    if (!(nc instanceof NameNameClass))
+      return null;
+    return ((NameNameClass)nc).getLocalName();
+  }
+
   void paramEntityRef(RefPattern p) {
     String name = p.getName();
     buf.append('%');
@@ -977,14 +1023,31 @@ public class DtdOutput {
       body.accept(topLevelAttributeTypeOutput);
     String replacement = buf.toString();
     outputRequiredParamEntities();
-    write("<!ENTITY % ");
-    write(name);
-    write(' ');
-    write('"');
-    write(replacement);
-    write('"');
-    write('>');
+    String elementName = getParamEntityElementName(name);
+    if (elementName != null) {
+      write("<!ATTLIST ");
+      write(elementName);
+      write(replacement);
+      write('>');
+    }
+    else {
+      write("<!ENTITY % ");
+      write(name);
+      write(' ');
+      write('"');
+      write(replacement);
+      write('"');
+      write('>');
+    }
     newline();
+  }
+
+  static class NameClassWalker extends AbstractVisitor {
+     public Object visitChoice(ChoiceNameClass nc) {
+        for (Iterator iter = nc.getChildren().iterator(); iter.hasNext();)
+          ((NameClass)iter.next()).accept(this);
+        return null;
+      }
   }
 
   void outputElement(ElementPattern p) {
@@ -998,7 +1061,7 @@ public class DtdOutput {
     final String atts = buf.toString();
     outputRequiredParamEntities();
     final NameClass nc = p.getNameClass();
-    nc.accept(new AbstractVisitor() {
+    nc.accept(new NameClassWalker() {
       public Object visitName(NameNameClass nc) {
         write("<!ELEMENT ");
         write(nc.getLocalName());
@@ -1013,12 +1076,6 @@ public class DtdOutput {
           write('>');
           newline();
         }
-        return null;
-      }
-
-      public Object visitChoice(ChoiceNameClass nc) {
-        for (Iterator iter = nc.getChildren().iterator(); iter.hasNext();)
-          ((NameClass)iter.next()).accept(this);
         return null;
       }
     });
