@@ -2,6 +2,8 @@
 
 <property name="sdkjava.dir" value="c:\Program Files\Microsoft SDK for Java 4.0"/>
 
+<property name="javacc.dir" value="c:\Program Files\JavaCC\bin\lib"/>
+
 <target name="all" depends="jar, exegen, test, validate"/>
 
 <target name="init">
@@ -9,10 +11,22 @@
   <property file="src/com/thaiopensource/relaxng/util/resources/Version.properties"/>
 </target>
 
-<target name="compile" depends="init">
+<target name="compile-grammar" depends="init">
+ <mkdir dir="build/src/com/thaiopensource/relaxng/parse/nonxml"/>
+ <javacc target="src/com/thaiopensource/relaxng/parse/nonxml/NonXmlSyntax.jj"
+         outputdirectory="build/src/com/thaiopensource/relaxng/parse/nonxml"
+         javacchome="${javacc.dir}"
+         />
+ <delete quiet="true">
+  <fileset dir="build/src/com/thaiopensource/relaxng/parse/nonxml"
+           includes="UCode_CharStream.java"/>
+ </delete>
+</target>
+
+<target name="compile" depends="compile-grammar">
 
   <mkdir dir="build/classes"/>
-  <javac srcdir="src" destdir="build/classes"/>
+  <javac srcdir="src:build/src" destdir="build/classes"/>
 
 </target>
 
