@@ -2245,6 +2245,45 @@ include "foo.rnc" {
 </incorrect>
 </compact>
 </testCase>
+<testCase>
+<compact>
+<incorrect>
+element foo { xsd:no-such-datatype }
+| element bar { xsd:string { pattrn = "[a-zA-Z]+" } }
+| element baz { xsd:string { maxLength = "2in" } }
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<resource name="bad.rnc">
+start = element foo { xsd:gdday-bruce }
+</resource>
+<incorrect>
+include "bad.rnc"
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<resource name="bad.rnc">
+element foo { empty }
+</resource>
+<incorrect>
+include "bad.rnc"
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<resource name="bad.rnc">
+start = element foo { xsd:gdday-bruce }
+</resource>
+<incorrect>
+include "bad.rnc"
+</incorrect>
+</compact>
+</testCase>
 <!--
 <testCase>
 <compact>

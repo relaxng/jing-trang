@@ -42,6 +42,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   private final ErrorHandler eh;
   private final Map schemas;
   private final DatatypeLibraryFactory dlf;
+  private boolean hadError = false;
   static final Localizer localizer = new Localizer(SchemaBuilderImpl.class);
 
   private SchemaBuilderImpl(Parseable parseable, ErrorHandler eh, Map schemas, DatatypeLibraryFactory dlf) {
@@ -297,7 +298,15 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       if (schemas.get(uri) == null) {
         schemas.put(uri, new Object()); // avoid possibility of infinite loop
         GrammarPattern g = new GrammarPattern();
-        schemas.put(uri, parseable.parseInclude(uri, SchemaBuilderImpl.this, new GrammarSectionImpl(g, g)));
+        try {
+          ParsedPattern pattern = parseable.parseInclude(uri, SchemaBuilderImpl.this, new GrammarSectionImpl(g, g));
+          schemas.put(uri, pattern);
+        }
+        catch (IllegalSchemaException e) {
+          schemas.remove(uri);
+          hadError = true;
+          throw e;
+        }
       }
     }
 
@@ -594,7 +603,10 @@ public class SchemaBuilderImpl implements SchemaBuilder {
           throws IncorrectSchemaException, IOException, SAXException {
     try {
       SchemaCollection sc = new SchemaCollection();
-      sc.setMainSchema((Pattern)parseable.parse(new SchemaBuilderImpl(parseable, eh, sc.getSchemas(), dlf), new ScopeImpl()));
+      SchemaBuilderImpl sb = new SchemaBuilderImpl(parseable, eh, sc.getSchemas(), dlf);
+      sc.setMainSchema((Pattern)parseable.parse(sb, new ScopeImpl()));
+      if (sb.hadError)
+        throw new IncorrectSchemaException();
       return sc;
     }
     catch (IllegalSchemaException e) {
@@ -617,6 +629,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   }
 
   private void error(SAXParseException message) throws BuildException {
+    hadError = true;
     try {
       if (eh != null)
         eh.error(message);

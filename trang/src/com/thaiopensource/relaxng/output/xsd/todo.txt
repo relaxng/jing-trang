@@ -2,8 +2,6 @@ Include checking
 - Error for include loop.
 - Detect multiple inclusions of same schema.
 
-Errors in SchemaBuilderImpl should be reflected in exit code
-
 combine attributes
 - combine="choice" on <start>
 - combine in a single file
