@@ -12,8 +12,6 @@ import java.io.IOException;
  * An implementation of interface CharStream, where the stream is assumed to
  * contain 16-bit unicode characters.
  */
-
-// XXX must normalize newlines
 public final class UCode_UCodeESC_CharStream {
   public static final boolean staticFlag = false;
 
@@ -75,7 +73,6 @@ public final class UCode_UCodeESC_CharStream {
   private java.io.Reader inputStream;
   private boolean closed = false;
 
-  private boolean prevCharIsCR = false;
   private boolean prevCharIsLF = false;
 
   private char[] nextCharBuf;
@@ -193,19 +190,8 @@ public final class UCode_UCodeESC_CharStream {
       prevCharIsLF = false;
       line += (column = 1);
     }
-    else if (prevCharIsCR) {
-      prevCharIsCR = false;
-      if (c == '\n') {
-        prevCharIsLF = true;
-      }
-      else
-        line += (column = 1);
-    }
 
     switch (c) {
-    case '\r':
-      prevCharIsCR = true;
-      break;
     case '\n':
       prevCharIsLF = true;
       break;
@@ -230,6 +216,15 @@ public final class UCode_UCodeESC_CharStream {
     char c;
     try {
       c = ReadChar();
+      if (c == '\r') {
+        c = '\n';
+        try {
+          if (PeekChar() == '\n')
+            ReadChar();
+        }
+        catch (EOFException e) {
+        }
+      }
     }
     catch (EOFException e) {
       if (bufpos == -1) {
@@ -393,7 +388,7 @@ public final class UCode_UCodeESC_CharStream {
       bufcolumn = new int[buffersize];
       nextCharBuf = new char[4096];
     }
-    prevCharIsLF = prevCharIsCR = false;
+    prevCharIsLF = false;
     tokenBegin = inBuf = maxNextCharInd = 0;
     nextCharInd = bufpos = -1;
   }
