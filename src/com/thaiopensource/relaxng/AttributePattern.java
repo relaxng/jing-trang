@@ -19,7 +19,7 @@ class AttributePattern extends Pattern {
     this.loc = loc;
   }
 
-  Pattern expand(PatternBuilder b) {
+  Pattern expand(SchemaPatternBuilder b) {
     Pattern ep = p.expand(b);
     if (ep != p)
       return b.makeAttribute(nameClass, ep, loc);

@@ -1,7 +1,7 @@
 package com.thaiopensource.relaxng;
 
 class StartTagOpenRecoverDerivFunction extends StartTagOpenDerivFunction {
-  StartTagOpenRecoverDerivFunction(Name name, PatternBuilder builder) {
+  StartTagOpenRecoverDerivFunction(Name name, ValidatorPatternBuilder builder) {
     super(name, builder);
   }
 
@@ -9,7 +9,7 @@ class StartTagOpenRecoverDerivFunction extends StartTagOpenDerivFunction {
     Pattern tem = (Pattern)super.caseGroup(p);
     if (p.getOperand1().isNullable())
       return tem;
-    return getPatternBuilder().makeChoice(tem, memoApply(p.getOperand2()), true);
+    return getPatternBuilder().makeChoice(tem, memoApply(p.getOperand2()));
  }
 
   PatternMemo apply(PatternMemo memo) {

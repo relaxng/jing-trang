@@ -11,7 +11,7 @@ class InterleavePattern extends BinaryPattern {
 	  p1,
 	  p2);
   }
-  Pattern expand(PatternBuilder b) {
+  Pattern expand(SchemaPatternBuilder b) {
     Pattern ep1 = p1.expand(b);
     Pattern ep2 = p2.expand(b);
     if (ep1 != p1 || ep2 != p2)

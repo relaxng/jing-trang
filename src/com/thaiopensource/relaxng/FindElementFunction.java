@@ -3,13 +3,13 @@ package com.thaiopensource.relaxng;
 import java.util.Hashtable;
 
 class FindElementFunction extends AbstractPatternFunction {
-  private PatternBuilder builder;
+  private ValidatorPatternBuilder builder;
   private Name name;
   private Hashtable processed = new Hashtable();
   private int specificity = NameClass.SPECIFICITY_NONE;
   private Pattern pattern = null;
 
-  static public Pattern findElement(PatternBuilder builder, Name name, Pattern start) {
+  static public Pattern findElement(ValidatorPatternBuilder builder, Name name, Pattern start) {
     FindElementFunction f = new FindElementFunction(builder, name);
     start.apply(f);
     if (f.pattern == null)
@@ -17,7 +17,7 @@ class FindElementFunction extends AbstractPatternFunction {
     return f.pattern;
   }
 
-  private FindElementFunction(PatternBuilder builder, Name name) {
+  private FindElementFunction(ValidatorPatternBuilder builder, Name name) {
     this.builder = builder;
     this.name = name;
   }
@@ -64,7 +64,7 @@ class FindElementFunction extends AbstractPatternFunction {
         pattern = p.getContent();
       }
       else if (s == specificity && s != NameClass.SPECIFICITY_NONE)
-        pattern = builder.makeChoice(pattern, p.getContent(), true);
+        pattern = builder.makeChoice(pattern, p.getContent());
       p.getContent().apply(this);
     }
     return null;

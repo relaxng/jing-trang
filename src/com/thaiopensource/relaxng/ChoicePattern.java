@@ -9,11 +9,11 @@ class ChoicePattern extends BinaryPattern {
 	  p1,
 	  p2);
   }
-  Pattern expand(PatternBuilder b) {
+  Pattern expand(SchemaPatternBuilder b) {
     Pattern ep1 = p1.expand(b);
     Pattern ep2 = p2.expand(b);
     if (ep1 != p1 || ep2 != p2)
-      return b.makeChoice(ep1, ep2, false);
+      return b.makeChoice(ep1, ep2);
     else
       return this;
   }

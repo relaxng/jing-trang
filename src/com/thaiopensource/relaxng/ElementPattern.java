@@ -48,7 +48,7 @@ class ElementPattern extends Pattern {
     }
   }
 
-  Pattern expand(PatternBuilder b) {
+  Pattern expand(SchemaPatternBuilder b) {
     if (!expanded) {
       expanded = true;
       p = p.expand(b);

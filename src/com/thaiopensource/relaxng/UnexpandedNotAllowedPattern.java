@@ -6,7 +6,7 @@ class UnexpandedNotAllowedPattern extends NotAllowedPattern {
   boolean isNotAllowed() {
     return false;
   }
-  Pattern expand(PatternBuilder b) {
+  Pattern expand(SchemaPatternBuilder b) {
     return b.makeNotAllowed();
   }
 }

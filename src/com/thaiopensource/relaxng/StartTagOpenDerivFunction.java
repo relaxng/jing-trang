@@ -2,16 +2,16 @@ package com.thaiopensource.relaxng;
 
 class StartTagOpenDerivFunction extends AbstractPatternFunction {
   private final Name name;
-  private final PatternBuilder builder;
+  private final ValidatorPatternBuilder builder;
 
-  StartTagOpenDerivFunction(Name name, PatternBuilder builder) {
+  StartTagOpenDerivFunction(Name name, ValidatorPatternBuilder builder) {
     this.name = name;
     this.builder = builder;
   }
 
   public Object caseChoice(ChoicePattern p) {
     return builder.makeChoice(memoApply(p.getOperand1()),
-			      memoApply(p.getOperand2()), true);
+			      memoApply(p.getOperand2()));
   }
 
   public Object caseGroup(GroupPattern p) {
@@ -23,7 +23,7 @@ class StartTagOpenDerivFunction extends AbstractPatternFunction {
 					    return builder.makeGroup(x, p2);
 					  }
 					});
-    return p1.isNullable() ? builder.makeChoice(tem, memoApply(p2), true) : tem;
+    return p1.isNullable() ? builder.makeChoice(tem, memoApply(p2)) : tem;
   }
 
   public Object caseInterleave(InterleavePattern p) {
@@ -39,7 +39,7 @@ class StartTagOpenDerivFunction extends AbstractPatternFunction {
 				  Pattern apply(Pattern x) {
 				    return builder.makeInterleave(p1, x);
 				  }
-				}), true);
+				}));
   }
 
   public Object caseAfter(AfterPattern p) {
@@ -87,7 +87,7 @@ class StartTagOpenDerivFunction extends AbstractPatternFunction {
     return name;
   }
 
-  PatternBuilder getPatternBuilder() {
+  ValidatorPatternBuilder getPatternBuilder() {
     return builder;
   }
 }

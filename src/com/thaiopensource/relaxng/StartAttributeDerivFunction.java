@@ -2,7 +2,7 @@ package com.thaiopensource.relaxng;
 
 
 class StartAttributeDerivFunction extends StartTagOpenDerivFunction {
-  StartAttributeDerivFunction(Name name, PatternBuilder builder) {
+  StartAttributeDerivFunction(Name name, ValidatorPatternBuilder builder) {
     super(name, builder);
   }
 
@@ -23,8 +23,7 @@ class StartAttributeDerivFunction extends StartTagOpenDerivFunction {
 					      Pattern apply(Pattern x) {
 						return getPatternBuilder().makeGroup(p1, x);
 					      }
-                                            }),
-                                          true);
+                                            }));
   }
 
   public Object caseAttribute(AttributePattern p) {

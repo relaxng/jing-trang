@@ -18,7 +18,7 @@ class ValueDataDerivType extends DataDerivType {
     return new ValueDataDerivType(dt);
   }
 
-  PatternMemo dataDeriv(PatternBuilder builder, Pattern p, String str, ValidationContext vc) {
+  PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc) {
     Object value = dt.createValue(str, vc);
     if (value == null) {
       if (noValue == null)

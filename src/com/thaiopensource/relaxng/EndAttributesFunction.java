@@ -1,9 +1,9 @@
 package com.thaiopensource.relaxng;
 
 class EndAttributesFunction extends AbstractPatternFunction {
-  private final PatternBuilder builder;
+  private final ValidatorPatternBuilder builder;
 
-  EndAttributesFunction(PatternBuilder builder) {
+  EndAttributesFunction(ValidatorPatternBuilder builder) {
     this.builder = builder;
   }
 
@@ -38,7 +38,7 @@ class EndAttributesFunction extends AbstractPatternFunction {
     Pattern q2 = memoApply(p2);
     if (p1 == q1 && p2 == q2)
       return p;
-    return builder.makeChoice(q1, q2, true);
+    return builder.makeChoice(q1, q2);
   }
 
   public Object caseOneOrMore(OneOrMorePattern p) {
@@ -69,7 +69,7 @@ class EndAttributesFunction extends AbstractPatternFunction {
     return memo.endAttributes(this);
   }
 
-  PatternBuilder getPatternBuilder() {
+  ValidatorPatternBuilder getPatternBuilder() {
     return builder;
   }
 }

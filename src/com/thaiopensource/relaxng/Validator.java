@@ -15,7 +15,7 @@ import org.relaxng.datatype.ValidationContext;
 import java.util.Hashtable;
 
 public class Validator implements ContentHandler {
-  private final PatternBuilder builder;
+  private final ValidatorPatternBuilder builder;
   private Locator locator;
   private final XMLReader xr;
   private Pattern start;
@@ -213,7 +213,7 @@ public class Validator implements ContentHandler {
     prefixMapping = prefixMapping.getPrevious();
   }
 
-  public Validator(Pattern pattern, PatternBuilder builder, XMLReader xr) {
+  public Validator(Pattern pattern, ValidatorPatternBuilder builder, XMLReader xr) {
     this.builder = builder;
     this.xr = xr;
     this.memo = builder.getPatternMemo(pattern);

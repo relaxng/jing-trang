@@ -1,9 +1,9 @@
 package com.thaiopensource.relaxng;
 
 class RecoverAfterFunction extends AbstractPatternFunction {
-  private final PatternBuilder builder;
+  private final ValidatorPatternBuilder builder;
 
-  RecoverAfterFunction(PatternBuilder builder) {
+  RecoverAfterFunction(ValidatorPatternBuilder builder) {
     this.builder = builder;
   }
 
@@ -13,9 +13,7 @@ class RecoverAfterFunction extends AbstractPatternFunction {
 
   public Object caseChoice(ChoicePattern p) {
     return builder.makeChoice(p.getOperand1().applyForPattern(this),
-			      p.getOperand2().applyForPattern(this),
-                              true);
-
+			      p.getOperand2().applyForPattern(this));
   }
 
   public Object caseAfter(AfterPattern p) {

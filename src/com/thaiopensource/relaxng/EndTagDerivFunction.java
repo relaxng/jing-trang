@@ -1,9 +1,9 @@
 package com.thaiopensource.relaxng;
 
 class EndTagDerivFunction extends AbstractPatternFunction {
-  private final PatternBuilder builder;
+  private final ValidatorPatternBuilder builder;
 
-  EndTagDerivFunction(PatternBuilder builder) {
+  EndTagDerivFunction(ValidatorPatternBuilder builder) {
     this.builder = builder;
   }
 
@@ -13,8 +13,7 @@ class EndTagDerivFunction extends AbstractPatternFunction {
 
   public Object caseChoice(ChoicePattern p) {
     return builder.makeChoice(memoApply(p.getOperand1()),
-			      memoApply(p.getOperand2()),
-                              true);
+			      memoApply(p.getOperand2()));
   }
 
   public Object caseAfter(AfterPattern p) {
