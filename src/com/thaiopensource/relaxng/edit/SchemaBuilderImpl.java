@@ -15,13 +15,32 @@ import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
+import com.thaiopensource.relaxng.parse.Parseable;
+import com.thaiopensource.relaxng.parse.sax.SAXParseable;
+import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
+import com.thaiopensource.relaxng.util.DraconianErrorHandler;
+import com.thaiopensource.relaxng.util.Jaxp11XMLReaderCreator;
 import org.relaxng.datatype.ValidationContext;
+import org.relaxng.datatype.DatatypeLibraryFactory;
+import org.relaxng.datatype.DatatypeLibrary;
+import org.relaxng.datatype.Datatype;
+import org.relaxng.datatype.DatatypeException;
+import org.relaxng.datatype.helpers.DatatypeLibraryLoader;
+import org.xml.sax.InputSource;
 
 import java.util.List;
 import java.util.Vector;
+import java.util.Map;
 
 /* Need to change handling of parentRef */
+/* Need to deal with inheritNs */
 public class SchemaBuilderImpl implements SchemaBuilder {
+  private final DatatypeLibraryFactory dlf;
+
+  private SchemaBuilderImpl(DatatypeLibraryFactory dlf) {
+    this.dlf = dlf;
+  }
+
   public ParsedPattern makeChoice(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws BuildException  {
     return makeComposite(new ChoicePattern(), patterns, nPatterns, loc, anno);
   }
@@ -81,15 +100,54 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     return finishPattern(new ElementPattern((NameClass)nc, (Pattern)p), loc, anno);
   }
 
+  private static class TraceValidationContext implements ValidationContext {
+    private final Map map;
+    private final ValidationContext vc;
+    TraceValidationContext(Map map, ValidationContext vc) {
+      this.map = map;
+      this.vc = vc;
+    }
+
+    public String resolveNamespacePrefix(String prefix) {
+      String ns = vc.resolveNamespacePrefix(prefix);
+      if (ns != null)
+        map.put(prefix, ns);
+      return ns;
+    }
+
+    public String getBaseUri() {
+      return vc.getBaseUri();
+    }
+
+    public boolean isUnparsedEntity(String entityName) {
+      return vc.isUnparsedEntity(entityName);
+    }
+
+    public boolean isNotation(String notationName) {
+      return vc.isNotation(notationName);
+    }
+  }
+
   public ParsedPattern makeValue(String datatypeLibrary, String type, String value, ValidationContext vc,
                                  Location loc, Annotations anno) throws BuildException {
-    return finishPattern(new ValuePattern(datatypeLibrary, type, value), loc, anno);
+    ValuePattern p = new ValuePattern(datatypeLibrary, type, value);
+    DatatypeLibrary dl = dlf.createDatatypeLibrary(datatypeLibrary);
+    if (dl != null) {
+      try {
+        Datatype dt = dl.createDatatype(type);
+        if (dt.isContextDependent())
+          dt.checkValid(value, new TraceValidationContext(p.getPrefixMap(), vc));
+      }
+      catch (DatatypeException e) {
+      }
+    }
+    return finishPattern(p, loc, anno);
   }
 
   public ParsedPattern makeExternalRef(String uri, String ns, Scope scope,
                                        Location loc, Annotations anno) throws BuildException, IllegalSchemaException {
     ExternalRefPattern p = new ExternalRefPattern(uri);
-    p.setNs(ns);
+    p.setNs(mapInheritNs(ns));
     return finishPattern(p, loc, anno);
   }
 
@@ -107,17 +165,17 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   }
 
   public ParsedNameClass makeName(String ns, String localName, String prefix, Location loc, Annotations anno) {
-    NameNameClass nc = new NameNameClass(ns, localName);
+    NameNameClass nc = new NameNameClass(mapInheritNs(ns), localName);
     nc.setPrefix(prefix);
     return finishNameClass(nc, loc, anno);
   }
 
   public ParsedNameClass makeNsName(String ns, Location loc, Annotations anno) {
-    return finishNameClass(new NsNameNameClass(ns), loc, anno);
+    return finishNameClass(new NsNameNameClass(mapInheritNs(ns)), loc, anno);
   }
 
   public ParsedNameClass makeNsName(String ns, ParsedNameClass except, Location loc, Annotations anno) {
-    return finishNameClass(new NsNameNameClass(ns, (NameClass)except), loc, anno);
+    return finishNameClass(new NsNameNameClass(mapInheritNs(ns), (NameClass)except), loc, anno);
   }
 
   public ParsedNameClass makeAnyName(Location loc, Annotations anno) {
@@ -197,7 +255,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
                            Location loc, Annotations anno) throws BuildException, IllegalSchemaException {
       IncludeComponent ic = (IncludeComponent)subject;
       ic.setHref(uri);
-      ic.setNs(ns);
+      ic.setNs(mapInheritNs(ns));
       finishAnnotated(ic, loc, anno);
     }
 
@@ -234,6 +292,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   }
 
   static private void addAfterAnnotation(Annotated a, ParsedElementAnnotation e) {
+    a.getFollowingElementAnnotations().add(e);
   }
 
   public Location makeLocation(String systemId, int lineNumber, int columnNumber) {
@@ -344,5 +403,22 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     if (combine == null)
       return null;
     return combine == GrammarSection.COMBINE_CHOICE ? Combine.CHOICE : Combine.INTERLEAVE;
+  }
+
+  private static String mapInheritNs(String ns) {
+    return ns;
+  }
+
+  static public Pattern parse(Parseable parseable, DatatypeLibraryFactory dlf) throws IllegalSchemaException {
+    return (Pattern)parseable.parse(new SchemaBuilderImpl(dlf));
+  }
+
+  static public void main(String[] args) throws IllegalSchemaException {
+    Pattern p = parse(new SAXParseable(new Jaxp11XMLReaderCreator(), new InputSource(args[0]), new DraconianErrorHandler()),
+                      new DatatypeLibraryLoader());
+    dump(p);
+  }
+
+  static public void dump(Pattern p) {
   }
 }
