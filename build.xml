@@ -95,9 +95,12 @@
 
 <target name="validate" depends="jar">
   <jing rngfile="xhtml/xhtml-basic.rng">
-    <fileset dir="doc" includes="**/*.html"/>
+    <fileset dir="doc" includes="*.html"/>
     <fileset dir="datatype-sample" includes="index.html"/>
     <fileset dir="test" includes="index.html"/>
+  </jing>
+  <jing rngfile="xhtml/xhtml.rng">
+    <fileset dir="doc/nonxml" includes="*.html"/>
   </jing>
   <jing rngfile="eg/relaxng.rng">
     <fileset dir="eg" includes="*.rng"/>
