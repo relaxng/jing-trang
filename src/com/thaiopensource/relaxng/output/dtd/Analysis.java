@@ -94,25 +94,28 @@ class Analysis {
     }
 
     public Object visitElement(ElementPattern p) {
-      Object ret = p.getNameClass().accept(this);
       if (!seen(p.getChild()))
         new Analyzer(p).analyzeContentType(p.getChild());
-      return ret;
+      return doNameClass(p.getNameClass(), true) ? ContentType.DIRECT_SINGLE_ELEMENT : ContentType.ELEMENT_CLASS;
     }
 
     public Object visitAttribute(AttributePattern p) {
-      if (p.getNameClass() instanceof NameNameClass) {
-        NameNameClass nc = (NameNameClass)p.getNameClass();
-        nsm.noteName(nc, false);
-      }
-      else
-        er.error("sorry_attribute_name_class", p.getNameClass().getSourceLocation());
+      doNameClass(p.getNameClass(), false);
       ContentType t = analyzeContentType(p.getChild());
       if (t.isA(ContentType.MODEL_GROUP) || t == ContentType.MIXED_ELEMENT_CLASS || t == ContentType.MIXED_MODEL)
         er.error("bad_attribute_type", p.getSourceLocation());
       if (ancestorPattern != null)
         am.noteAttribute(ancestorPattern);
       return ContentType.EMPTY;
+    }
+
+    private boolean doNameClass(NameClass nc, boolean defaultable) {
+      nc.accept(this);
+      List names = NameClassSplitter.split(nc);
+      int len = names.size();
+      for (int i = 0; i < len; i++)
+        nsm.noteName((NameNameClass)names.get(i), defaultable);
+      return len == 1;
     }
 
     public Object visitNotAllowed(NotAllowedPattern p) {
@@ -247,12 +250,12 @@ class Analysis {
 
     public Object visitAnyName(AnyNameNameClass nc) {
       er.error("sorry_wildcard", nc.getSourceLocation());
-      return ContentType.ERROR;
+      return null;
     }
 
     public Object visitNsName(NsNameNameClass nc) {
       er.error("sorry_wildcard", nc.getSourceLocation());
-      return ContentType.ERROR;
+      return null;
     }
 
     public Object visitName(NameNameClass nc) {
