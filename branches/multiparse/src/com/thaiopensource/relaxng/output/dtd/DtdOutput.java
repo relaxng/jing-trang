@@ -92,9 +92,41 @@ public class DtdOutput {
   private Grammar grammar = null;
   private GrammarPattern grammarPattern;
   private Type startType = Type.ERROR;
+  StringBuffer buf = new StringBuffer();
+  List elementQueue = new Vector();
+  List requiredParamEntities = new Vector();
+  Set doneParamEntitySet = new HashSet();
+  HashMap patternTypes = new HashMap();
+  private HashMap seenTable = new HashMap();
+  private Map elementToAttlistMap = new HashMap();
+  private Map paramEntityToElementMap = new HashMap();
+
+  PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
+  PatternVisitor nestedContentModelOutput = new ContentModelOutput();
+  PatternVisitor attributeOutput = new AttributeOutput();
+  AttributeOutput optionalAttributeOutput = new OptionalAttributeOutput();
+  PatternVisitor topLevelAttributeTypeOutput = new TopLevelAttributeTypeOutput();
+  PatternVisitor nestedAttributeTypeOutput = new AttributeTypeOutput();
+  GrammarOutput grammarOutput = new GrammarOutput();
 
   static private final String XSD = "http://www.w3.org/2001/XMLSchema-datatypes";
   static private final String COMPATIBILITY_ANNOTATIONS = "http://relaxng.org/ns/compatibility/annotations/1.0";
+
+  static final String[] compatibleTypes = {
+    "ENTITIES",
+    "ENTITY",
+    "ID",
+    "IDREF",
+    "IDREFS",
+    "NMTOKEN",
+    "NMTOKENS"
+  };
+
+  static final String[] stringTypes = {
+    "anyURI",
+    "normalizedString",
+    "base64Binary"
+  };
 
   public DtdOutput(ErrorHandler eh, Writer writer) {
     this.eh = eh;
@@ -136,22 +168,6 @@ public class DtdOutput {
       return null;
     }
   }
-
-  static final String[] compatibleTypes = {
-    "ENTITIES",
-    "ENTITY",
-    "ID",
-    "IDREF",
-    "IDREFS",
-    "NMTOKEN",
-    "NMTOKENS"
-  };
-
-  static final String[] stringTypes = {
-    "anyURI",
-    "normalizedString",
-    "base64Binary"
-  };
 
   class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
     private ElementPattern ancestorPattern;
@@ -353,19 +369,6 @@ public class DtdOutput {
       return Type.DIRECT_SINGLE_ELEMENT;
     }
   }
-
-  StringBuffer buf = new StringBuffer();
-  List elementQueue = new Vector();
-  List requiredParamEntities = new Vector();
-  Set doneParamEntitySet = new HashSet();
-
-  PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
-  PatternVisitor nestedContentModelOutput = new ContentModelOutput();
-  PatternVisitor attributeOutput = new AttributeOutput();
-  AttributeOutput optionalAttributeOutput = new OptionalAttributeOutput();
-  PatternVisitor topLevelAttributeTypeOutput = new TopLevelAttributeTypeOutput();
-  PatternVisitor nestedAttributeTypeOutput = new AttributeTypeOutput();
-  GrammarOutput grammarOutput = new GrammarOutput();
 
   class ContentModelOutput extends AbstractVisitor {
     public Object visitName(NameNameClass nc) {
@@ -885,7 +888,6 @@ public class DtdOutput {
     elementQueue.clear();
   }
 
-  HashMap patternTypes = new HashMap();
 
   void output(Pattern p) throws IOException {
     try {
@@ -908,8 +910,6 @@ public class DtdOutput {
     }
     writer.flush();
   }
-
-  HashMap seenTable = new HashMap();
 
   boolean seen(Pattern p) {
     if (seenTable.get(p) != null)
@@ -937,9 +937,6 @@ public class DtdOutput {
   Type getType(Pattern p) {
     return (Type)patternTypes.get(p);
   }
-
-  private Map elementToAttlistMap = new HashMap();
-  private Map paramEntityToElementMap = new HashMap();
 
   void noteAttribute(ElementPattern e) {
     elementToAttlistMap.put(e, Boolean.FALSE);
