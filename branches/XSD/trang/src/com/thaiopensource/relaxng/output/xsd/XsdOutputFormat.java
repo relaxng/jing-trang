@@ -17,7 +17,7 @@ public class XsdOutputFormat implements OutputFormat {
       ErrorReporter er = new ErrorReporter(eh, XsdOutputFormat.class);
       SchemaInfo si = new SchemaInfo(sc, er);
       if (!er.getHadError()) {
-        SchemaChecker.check(si, er);
+        RefChecker.check(si, er);
         if (!er.getHadError()) {
           Schema schema = BasicBuilder.buildBasicSchema(si, er);
           if (!er.getHadError()) {

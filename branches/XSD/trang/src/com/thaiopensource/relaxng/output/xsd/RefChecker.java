@@ -18,7 +18,7 @@ import com.thaiopensource.relaxng.output.common.ErrorReporter;
 import java.util.Map;
 import java.util.HashMap;
 
-class SchemaChecker extends AbstractVisitor {
+class RefChecker extends AbstractVisitor {
   private final SchemaInfo schema;
   private final ErrorReporter er;
   private final Map refMap = new HashMap();
@@ -32,13 +32,13 @@ class SchemaChecker extends AbstractVisitor {
     }
   }
 
-  private SchemaChecker(SchemaInfo schema, ErrorReporter er) {
+  private RefChecker(SchemaInfo schema, ErrorReporter er) {
     this.schema = schema;
     this.er = er;
   }
 
   static void check(SchemaInfo schema, ErrorReporter er) {
-    schema.getGrammar().componentsAccept(new SchemaChecker(schema, er));
+    schema.getGrammar().componentsAccept(new RefChecker(schema, er));
   }
 
   public Object visitDiv(DivComponent c) {
