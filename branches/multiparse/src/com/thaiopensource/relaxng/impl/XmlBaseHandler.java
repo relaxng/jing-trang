@@ -3,7 +3,7 @@ package com.thaiopensource.relaxng.impl;
 import com.thaiopensource.util.Uri;
 import org.xml.sax.Locator;
 
-class XmlBaseHandler {
+public class XmlBaseHandler {
   private int depth = 0;
   private Locator loc;
   private Entry stack = null;
@@ -15,21 +15,21 @@ class XmlBaseHandler {
     private int depth;
   }
 
-  void setLocator(Locator loc) {
+  public void setLocator(Locator loc) {
     this.loc = loc;
   }
 
-  void startElement() {
+  public void startElement() {
     ++depth;
   }
 
-  void endElement() {
+  public void endElement() {
     if (stack != null && stack.depth == depth)
       stack = stack.parent;
     --depth;
   }
 
-  void xmlBaseAttribute(String value) {
+  public void xmlBaseAttribute(String value) {
     Entry entry = new Entry();
     entry.parent = stack;
     stack = entry;
@@ -42,7 +42,7 @@ class XmlBaseHandler {
     return loc == null ? null : loc.getSystemId();
   }
 
-  String getBaseUri() {
+  public String getBaseUri() {
     return getBaseUri1(getSystemId(), stack);
   }
 

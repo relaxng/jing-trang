@@ -41,6 +41,7 @@ class SchemaBuilderImpl implements SchemaBuilder, Annotations {
   private final String inheritNs;
   private final ErrorHandler eh;
   private final OpenIncludes openIncludes;
+  private AttributeNameClassChecker attributeNameClassChecker = new AttributeNameClassChecker();
 
   static class OpenIncludes {
     final String uri;
@@ -155,15 +156,26 @@ class SchemaBuilderImpl implements SchemaBuilder, Annotations {
   }
 
   public ParsedPattern makeNotAllowed(Location loc, Annotations anno) {
-    return pb.makeNotAllowed();
+    return pb.makeUnexpandedNotAllowed();
   }
 
   public ParsedPattern makeText(Location loc, Annotations anno) {
     return pb.makeText();
   }
 
+  public ParsedPattern makeErrorPattern() {
+    return pb.makeError();
+  }
+
+  public ParsedNameClass makeErrorNameClass() {
+    return new ErrorNameClass();
+  }
+
   public ParsedPattern makeAttribute(ParsedNameClass nc, ParsedPattern p, Location loc, Annotations anno)
           throws BuildException {
+    String messageId = attributeNameClassChecker.checkNameClass((NameClass)nc);
+    if (messageId != null)
+      error(messageId, (Locator)loc);
     return pb.makeAttribute((NameClass)nc, (Pattern)p, (Locator)loc);
   }
 
