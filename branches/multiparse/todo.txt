@@ -1,6 +1,5 @@
-Inform user about position of regex error.
-
-Check whether category C should include Cn.
+Inform user about position of regex error; improve wording of
+expected_eos error. Document regex support.
 
 Make SAX-based parser preserve element annotations.
 
