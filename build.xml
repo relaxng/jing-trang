@@ -35,15 +35,22 @@
       <pathelement location="build/gen"/>
     </classpath>
   </java>
+  <java classname="com.thaiopensource.datatype.xsd.regex.jdk1_4.gen.CategoriesGen" fork="yes" failonerror="yes">
+    <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.Categories"/>
+    <arg value="build/src"/>
+    <arg value="lib/UnicodeData-3.1.0.txt"/>
+    <classpath>
+      <pathelement location="build/gen"/>
+    </classpath>
+  </java>
 </target>
 
 <target name="check-gen">
   <uptodate property="gen-ok"
-    targetfile="build/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/NamingExceptions.java">
+    targetfile="build/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/Categories.java">
     <srcfiles dir="build/gen" includes="**/*.class"/>
   </uptodate>
 </target>
-
 
 <target name="compile" depends="compile-grammar,gen">
   <mkdir dir="build/classes"/>
