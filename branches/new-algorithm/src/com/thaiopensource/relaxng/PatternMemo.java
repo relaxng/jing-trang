@@ -7,7 +7,7 @@ import org.relaxng.datatype.Datatype;
 
 final class PatternMemo {
   private final Pattern pattern;
-  private final PatternBuilder builder;
+  private final ValidatorPatternBuilder builder;
   private final boolean notAllowed;
   private PatternMemo memoEndAttributes;
   private PatternMemo memoTextOnly;
@@ -19,7 +19,7 @@ final class PatternMemo {
   private Hashtable startAttributeDerivMap;
   private DataDerivType memoDataDerivType;
 
-  PatternMemo(Pattern pattern, PatternBuilder builder) {
+  PatternMemo(Pattern pattern, ValidatorPatternBuilder builder) {
     this.pattern = pattern;
     this.builder = builder;
     this.notAllowed = pattern.isNotAllowed();
@@ -29,7 +29,7 @@ final class PatternMemo {
     return pattern;
   }
 
-  PatternBuilder getPatternBuilder() {
+  ValidatorPatternBuilder getPatternBuilder() {
     return builder;
   }
 

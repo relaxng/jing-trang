@@ -1,7 +1,7 @@
 package com.thaiopensource.relaxng;
 
 class IgnoreMissingAttributesFunction extends EndAttributesFunction {
-  IgnoreMissingAttributesFunction(PatternBuilder builder) {
+  IgnoreMissingAttributesFunction(ValidatorPatternBuilder builder) {
     super(builder);
   }
 

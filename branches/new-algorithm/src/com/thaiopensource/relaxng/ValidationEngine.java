@@ -14,7 +14,8 @@ public class ValidationEngine {
   private XMLReader xr;
   private ErrorHandler eh;
   private DatatypeLibraryFactory dlf;
-  private PatternBuilder pb;
+  private SchemaPatternBuilder spb;
+  private ValidatorPatternBuilder vpb;
   private Pattern p;
   private boolean checkId;
   private IdTypeMap idTypeMap;
@@ -46,15 +47,16 @@ public class ValidationEngine {
    * setXMLReaderCreator must be called before any call to loadPattern
    */
   public boolean loadPattern(InputSource in) throws SAXException, IOException {
-    pb = new PatternBuilder();
+    spb = new SchemaPatternBuilder();
+    vpb = null;
     xr = xrc.createXMLReader();
     xr.setErrorHandler(eh);
     p = null;
-    p = PatternReader.readPattern(xrc, xr, pb, dlf, in);
+    p = PatternReader.readPattern(xrc, xr, spb, dlf, in);
     if (p == null)
       return false;
     idTypeMap = null;
-    if (pb.hasIdTypes() && checkId) {
+    if (spb.hasIdTypes() && checkId) {
       idTypeMap = new IdTypeMapBuilder(xr, p).getIdTypeMap();
       if (idTypeMap == null)
         return false;
@@ -66,7 +68,9 @@ public class ValidationEngine {
    * loadPattern must be called before any call to validate
    */
   public boolean validate(InputSource in) throws SAXException, IOException {
-    return validate1(new Validator(p, pb, xr), in);
+    if (vpb == null)
+     vpb = new ValidatorPatternBuilder(spb);
+    return validate1(new Validator(p, vpb, xr), in);
   }
 
   /**
@@ -77,7 +81,7 @@ public class ValidationEngine {
   public boolean validateMultiThread(InputSource in)
     throws SAXException, IOException {
     XMLReader xr = xrc.createXMLReader();
-    Validator v = new Validator(p, new PatternBuilder(pb), xr);
+    Validator v = new Validator(p, new ValidatorPatternBuilder(spb), xr);
     return validate1(v, in);
   }
 

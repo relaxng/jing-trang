@@ -4,11 +4,11 @@ import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.ValidationContext;
 
 class DataDerivFunction extends AbstractPatternFunction {
-  private PatternBuilder builder;
+  private ValidatorPatternBuilder builder;
   private ValidationContext vc;
   private String str;
 
-  DataDerivFunction(String str, ValidationContext vc, PatternBuilder builder) {
+  DataDerivFunction(String str, ValidationContext vc, ValidatorPatternBuilder builder) {
     this.str = str;
     this.vc = vc;
     this.builder = builder;
@@ -101,8 +101,7 @@ class DataDerivFunction extends AbstractPatternFunction {
 
   public Object caseChoice(ChoicePattern p) {
     return builder.makeChoice(memoApply(p.getOperand1()),
-			      memoApply(p.getOperand2()),
-                              true);
+			      memoApply(p.getOperand2()));
   }
   
   public Object caseGroup(GroupPattern p) {
@@ -111,15 +110,14 @@ class DataDerivFunction extends AbstractPatternFunction {
     Pattern tem = builder.makeGroup(memoApply(p1), p2);
     if (!p1.isNullable())
       return tem;
-    return builder.makeChoice(tem, memoApply(p2), true);
+    return builder.makeChoice(tem, memoApply(p2));
   }
 
   public Object caseInterleave(InterleavePattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
     return builder.makeChoice(builder.makeInterleave(memoApply(p1), p2),
-			      builder.makeInterleave(p1, memoApply(p2)),
-                              true);
+			      builder.makeInterleave(p1, memoApply(p2)));
   }
 
   public Object caseOneOrMore(OneOrMorePattern p) {

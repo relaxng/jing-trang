@@ -51,7 +51,7 @@ public abstract class Pattern {
 
   void checkRecursion(int depth) throws SAXException { }
 
-  Pattern expand(PatternBuilder b) {
+  Pattern expand(SchemaPatternBuilder b) {
     return this;
   }
 

@@ -1,7 +1,7 @@
 package com.thaiopensource.relaxng;
 
 class TextOnlyFunction extends EndAttributesFunction {
-  TextOnlyFunction(PatternBuilder builder) {
+  TextOnlyFunction(ValidatorPatternBuilder builder) {
     super(builder);
   }
   public Object caseAttribute(AttributePattern p) {

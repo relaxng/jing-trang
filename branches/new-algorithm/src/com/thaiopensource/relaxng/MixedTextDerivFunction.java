@@ -2,7 +2,7 @@ package com.thaiopensource.relaxng;
 
 class MixedTextDerivFunction extends EndAttributesFunction {
 
-  MixedTextDerivFunction(PatternBuilder builder) {
+  MixedTextDerivFunction(ValidatorPatternBuilder builder) {
     super(builder);
   }
 
@@ -17,7 +17,7 @@ class MixedTextDerivFunction extends EndAttributesFunction {
     Pattern tem = (q1 == p1) ? p : getPatternBuilder().makeGroup(q1, p2);
     if (!p1.isNullable())
       return tem;
-    return getPatternBuilder().makeChoice(tem, memoApply(p2), true);
+    return getPatternBuilder().makeChoice(tem, memoApply(p2));
   }
 
   public Object caseInterleave(InterleavePattern p) {
@@ -27,7 +27,7 @@ class MixedTextDerivFunction extends EndAttributesFunction {
     final Pattern q2 = memoApply(p2);
     final Pattern i1 = (q1 == p1) ? p : getPatternBuilder().makeInterleave(q1, p2);
     final Pattern i2 = (q2 == p2) ? p : getPatternBuilder().makeInterleave(p1, q2);
-    return getPatternBuilder().makeChoice(i1, i2, true);
+    return getPatternBuilder().makeChoice(i1, i2);
   }
 
   public Object caseOneOrMore(OneOrMorePattern p) {

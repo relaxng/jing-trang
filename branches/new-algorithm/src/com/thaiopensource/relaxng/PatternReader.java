@@ -33,7 +33,7 @@ public class PatternReader {
 
   XMLReader xr;
   XMLReaderCreator xrc;
-  PatternBuilder patternBuilder;
+  SchemaPatternBuilder patternBuilder;
   DatatypeLibraryFactory datatypeLibraryFactory;
   Pattern startPattern;
   Locator locator;
@@ -364,7 +364,7 @@ public class PatternReader {
       return new ChoiceState();
     }
     Pattern combinePattern(Pattern p1, Pattern p2) {
-      return patternBuilder.makeChoice(p1, p2, false);
+      return patternBuilder.makeChoice(p1, p2);
     }
   }
 
@@ -596,7 +596,7 @@ public class PatternReader {
       if (except == null)
 	except = pattern;
       else
-	except = patternBuilder.makeChoice(except, pattern, false);
+	except = patternBuilder.makeChoice(except, pattern);
     }
 
   }
@@ -984,7 +984,7 @@ public class PatternReader {
 						       p));
 	else
 	  prp.setPattern(patternBuilder.makeChoice(prp.getPattern(),
-						   p, false));
+						   p));
 	break;
       case PatternRefPattern.REPLACEMENT_REQUIRE:
 	prp.setReplacementStatus(PatternRefPattern.REPLACEMENT_IGNORE);
@@ -1401,7 +1401,7 @@ public class PatternReader {
 
   public PatternReader(XMLReaderCreator xrc,
 		       XMLReader xr,
-		       PatternBuilder patternBuilder,
+		       SchemaPatternBuilder patternBuilder,
 		       DatatypeLibraryFactory factory) {
     this.xrc = xrc;
     this.patternBuilder = patternBuilder;
@@ -1481,7 +1481,7 @@ public class PatternReader {
 
   public static Pattern readPattern(XMLReaderCreator xrc,
 				    XMLReader xr,
-				    PatternBuilder patternBuilder,
+				    SchemaPatternBuilder patternBuilder,
 				    DatatypeLibraryFactory datatypeLibraryFactory,
 				    InputSource in) throws SAXException, IOException {
     PatternReader pr = new PatternReader(xrc, xr, patternBuilder, datatypeLibraryFactory);

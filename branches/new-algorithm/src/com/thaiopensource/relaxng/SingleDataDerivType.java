@@ -7,7 +7,7 @@ class SingleDataDerivType extends DataDerivType {
 
   SingleDataDerivType() { }
 
-  PatternMemo dataDeriv(PatternBuilder builder, Pattern p, String str, ValidationContext vc) {
+  PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc) {
     if (memo == null)
       memo = super.dataDeriv(builder, p, str, vc);
     return memo;

@@ -14,7 +14,7 @@ class OneOrMorePattern extends Pattern {
     this.p = p;
   }
 
-  Pattern expand(PatternBuilder b) {
+  Pattern expand(SchemaPatternBuilder b) {
     Pattern ep = p.expand(b);
     if (ep != p)
       return b.makeOneOrMore(ep);

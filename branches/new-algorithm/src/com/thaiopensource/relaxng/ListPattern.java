@@ -18,7 +18,7 @@ class ListPattern extends Pattern {
     this.locator = locator;
   }
 
-  Pattern expand(PatternBuilder b) {
+  Pattern expand(SchemaPatternBuilder b) {
     Pattern ep = p.expand(b);
     if (ep != p)
       return b.makeList(ep, locator);

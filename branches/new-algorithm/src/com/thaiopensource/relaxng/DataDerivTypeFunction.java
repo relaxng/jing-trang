@@ -1,13 +1,13 @@
 package com.thaiopensource.relaxng;
 
 class DataDerivTypeFunction extends AbstractPatternFunction {
-  private final PatternBuilder builder;
+  private final ValidatorPatternBuilder builder;
 
-  DataDerivTypeFunction(PatternBuilder builder) {
+  DataDerivTypeFunction(ValidatorPatternBuilder builder) {
     this.builder = builder;
   }
 
-  static DataDerivType dataDerivType(PatternBuilder builder, Pattern pattern) {
+  static DataDerivType dataDerivType(ValidatorPatternBuilder builder, Pattern pattern) {
     return (DataDerivType)pattern.apply(builder.getDataDerivTypeFunction());
   }
 

@@ -55,7 +55,7 @@ class PatternRefPattern extends Pattern {
 				  refLoc);
   }
 
-  Pattern expand(PatternBuilder b) {
+  Pattern expand(SchemaPatternBuilder b) {
     if (!expanded) {
       p = p.expand(b);
       expanded = true;
