@@ -159,6 +159,41 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
   </java>
 </target>
 
+<target name="xsd-test" depends="jar,xsd-split">
+  <java classname="com.thaiopensource.relaxng.util.TestDriver" fork="yes" failonerror="yes">
+    <arg value="build/xsdtest/out.log"/>
+    <arg value="build/xsdtest"/>
+    <classpath>
+      <pathelement location="build/jing.jar"/>
+      <pathelement path="${java.class.path}"/>
+    </classpath>
+  </java>
+</target>
+
+<target name="check-xsd-split">
+  <uptodate property="xsd-split-not-required" targetfile="build/xsdtest/xsdtest.stamp">
+    <srcfiles dir="test" includes="xsdtest.xml,xsdtest.xsl,xsdtest.rnc,split.xsl"/>
+  </uptodate>
+</target>
+
+
+<target name="xsd-split" depends="jar,check-xsd-split" unless="xsd-split-not-required">
+  <jing rngfile="test/xsdtest.rnc" compactsyntax="true">
+    <fileset dir="test" includes="xsdtest.xml"/>
+  </jing>
+  <delete dir="build/xsdtest"/>
+  <mkdir dir="build/xsdtest"/>
+  <style basedir="test" destdir="build/xsdtest" includes="xsdtest.xml" extension=".xml"
+         style="test/xsdtest.xsl"/>
+  <jing rngfile="eg/testSuite.rng">
+    <fileset dir="build/xsdtest" includes="xsdtest.xml"/>
+  </jing>
+  <style basedir="build/xsdtest" destdir="build/xsdtest" includes="xsdtest.xml"
+         extension=".stamp" style="test/split.xsl">
+    <param name="dir" expression="build/xsdtest"/>
+  </style>
+</target>
+
 <target name="regex-jar">
   <ant antfile="regex-build.xml" target="jar">
     <property name="classes.dir" value="build/regex-classes"/>
