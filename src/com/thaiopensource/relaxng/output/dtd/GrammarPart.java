@@ -10,6 +10,8 @@ import com.thaiopensource.relaxng.edit.IncludeComponent;
 import com.thaiopensource.relaxng.edit.ComponentVisitor;
 import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.edit.SourceLocation;
+import com.thaiopensource.relaxng.edit.Combine;
+import com.thaiopensource.relaxng.edit.InterleavePattern;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,9 @@ import java.util.HashSet;
 class GrammarPart implements ComponentVisitor {
   private ErrorReporter er;
   private Map defines;
+  private Set attlists;
+  private Set implicitlyCombinedDefines;
+  private Map combineTypes;
   private SchemaCollection schemas;
   private Map parts;
   // maps name to component that provides it
@@ -40,12 +45,15 @@ class GrammarPart implements ComponentVisitor {
   }
 
 
-  GrammarPart(ErrorReporter er, Map defines, SchemaCollection schemas, Map parts, GrammarPattern p) {
+  GrammarPart(ErrorReporter er, Map defines, Set attlists, SchemaCollection schemas, Map parts, GrammarPattern p) {
     this.er = er;
     this.defines = defines;
+    this.attlists = attlists;
     this.schemas = schemas;
     this.parts = parts;
     this.pendingIncludes = new HashSet();
+    this.implicitlyCombinedDefines = new HashSet();
+    this.combineTypes = new HashMap();
     visitContainer(p);
   }
 
@@ -53,7 +61,10 @@ class GrammarPart implements ComponentVisitor {
     er = part.er;
     defines = part.defines;
     schemas = part.schemas;
+    attlists = part.attlists;
     pendingIncludes = part.pendingIncludes;
+    implicitlyCombinedDefines = part.implicitlyCombinedDefines;
+    combineTypes = part.combineTypes;
     visitContainer(p);
   }
 
@@ -73,11 +84,39 @@ class GrammarPart implements ComponentVisitor {
   }
 
   public Object visitDefine(DefineComponent c) {
-    if (defines.get(c.getName()) != null)
-      er.error("sorry_multiple", c.getSourceLocation());
+    String name = c.getName();
+    Combine combine = c.getCombine();
+    if (combine == null) {
+      if (implicitlyCombinedDefines.contains(name))
+        er.error("multiple_no_combine", name, c.getSourceLocation());
+      else
+        implicitlyCombinedDefines.add(name);
+    }
     else {
-      defines.put(c.getName(), c.getBody());
-      whereProvided.put(c.getName(), c);
+      Combine oldCombine = (Combine)combineTypes.get(name);
+      if (oldCombine != null) {
+        if (oldCombine != combine)
+          er.error("inconsistent_combine", c.getSourceLocation());
+      }
+      else
+        combineTypes.put(name, combine);
+    }
+    Pattern oldDef = (Pattern)defines.get(name);
+    if (oldDef != null) {
+      if (combine == Combine.CHOICE)
+        er.error("sorry_combine_choice", c.getSourceLocation());
+      else if (combine == Combine.INTERLEAVE) {
+        InterleavePattern ip = new InterleavePattern();
+        ip.getChildren().add(oldDef);
+        ip.getChildren().add(c.getBody());
+        ip.setSourceLocation(c.getSourceLocation());
+        defines.put(name, ip);
+        attlists.add(name);
+      }
+    }
+    else {
+      defines.put(name, c.getBody());
+      whereProvided.put(name, c);
     }
     return null;
   }

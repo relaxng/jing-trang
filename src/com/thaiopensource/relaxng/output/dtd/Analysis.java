@@ -56,6 +56,7 @@ class Analysis {
   private Map attributeAlphabets = new HashMap();
   private Map attributeNamespaces = new HashMap();
   private Map defines = null;
+  private Set attlists = new HashSet();
   private Map parts = new HashMap();
   private Map seenTable = new HashMap();
   private Map elementDecls = new HashMap();
@@ -239,7 +240,7 @@ class Analysis {
       }
       defines = new HashMap();
       try {
-        mainPart = new GrammarPart(er, defines, schemas, parts, p);
+        mainPart = new GrammarPart(er, defines, attlists, schemas, parts, p);
       }
       catch (GrammarPart.IncludeLoopException e) {
         er.error("include_loop", e.getInclude().getSourceLocation());
@@ -279,6 +280,10 @@ class Analysis {
         startType = analyzeContentType(c.getBody());
       else
         new Analyzer().analyzeContentType(c.getBody());
+      if (attlists.contains(c.getName()) && getContentType(c.getBody()) != ContentType.EMPTY) {
+        er.error("not_attlist", c.getName(), c.getSourceLocation());
+        attlists.remove(c.getName());
+      }
       return null;
     }
 
@@ -517,8 +522,17 @@ class Analysis {
     this.schemas = schemas;
     this.er = er;
     new Analyzer().analyzeContentType(schemas.getMainSchema());
+    checkAttlists();
     if (!er.hadError)
       nsm.assignPrefixes();
+  }
+
+  private void checkAttlists() {
+    for (Iterator iter = attlists.iterator(); iter.hasNext();) {
+      String name = (String)iter.next();
+      if (getParamEntityElementName(name) == null)
+        er.error("not_attlist", name, getBody(name).getSourceLocation());
+    }
   }
 
   Pattern getPattern() {
@@ -587,4 +601,5 @@ class Analysis {
   Pattern getSchema(String sourceUri) {
     return (Pattern)schemas.getSchemas().get(sourceUri);
   }
+
 }
