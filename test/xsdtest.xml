@@ -2,8 +2,8 @@
 <datatype name="dateTime">
 <valid>2001-12-01T19:45:00</valid>
 <valid>2001-12-01T19:45:00Z</valid>
-<valid>2001-12-01T19:45:00-12:59</valid>
-<valid>0001-01-12T00:00:00+23:59</valid>
+<valid>2001-12-01T19:45:00-11:59</valid>
+<valid>0001-01-12T00:00:00+12:00</valid>
 <invalid>2001-12-1T19:45:00+24:00</invalid>
 <invalid>2001-12-1T19:45:00</invalid>
 <equiv>
