@@ -5,6 +5,10 @@ class ErrorNameClass implements NameClass {
     return false;
   }
 
+  public int containsSpecificity(Name name) {
+    return SPECIFICITY_NONE;
+  }
+
   public void accept(NameClassVisitor visitor) {
     visitor.visitError();
   }
