@@ -5,7 +5,7 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 public class SimpleTypeDefinition extends Definition {
   private SimpleType simpleType;
 
-  public SimpleTypeDefinition(SourceLocation location, Schema parentSchema, String name, SimpleType simpleType) {
+  SimpleTypeDefinition(SourceLocation location, Schema parentSchema, String name, SimpleType simpleType) {
     super(location, parentSchema, name);
     this.simpleType = simpleType;
   }

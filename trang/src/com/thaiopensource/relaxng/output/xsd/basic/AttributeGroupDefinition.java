@@ -5,7 +5,7 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 public class AttributeGroupDefinition extends Definition {
   private AttributeUse attributeUses;
 
-  public AttributeGroupDefinition(SourceLocation location, Schema parentSchema, String name, AttributeUse attributeUses) {
+  AttributeGroupDefinition(SourceLocation location, Schema parentSchema, String name, AttributeUse attributeUses) {
     super(location, parentSchema, name);
     this.attributeUses = attributeUses;
   }
