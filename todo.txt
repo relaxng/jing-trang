@@ -1,3 +1,7 @@
+Compact syntax documentation: \x; string literals.
+
+Comments embedded within strings.
+
 Translate High and Low  surrogates into an illegal char.
 
 Inform user about position of regex error; improve wording of
