@@ -91,7 +91,8 @@ class ContentType {
   static ContentType choice(ContentType t1, ContentType t2) {
     if (t1 == ERROR || t2 == ERROR)
       return ERROR;
-    // XXX what about EMPTY?
+    if (t1 == EMPTY && t2 == EMPTY)
+      return EMPTY;
     if (t1 == NOT_ALLOWED) {
       if (t2 == NOT_ALLOWED)
         return NOT_ALLOWED;
