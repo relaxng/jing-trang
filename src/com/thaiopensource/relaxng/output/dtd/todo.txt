@@ -30,5 +30,4 @@ Give warnings for definitions that had to be expanded
 Approximate choice of datatypes
 Better approximation of attribute choice
 Warning for non-null <except/>
-Avoid sorry_attribute_type
 Support choice name classes in attributes

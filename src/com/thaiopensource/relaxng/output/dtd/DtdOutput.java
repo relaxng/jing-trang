@@ -369,6 +369,9 @@ class DtdOutput {
     }
 
     public Object visitAttribute(AttributePattern p) {
+      ContentType ct = getContentType(p.getChild());
+      if (ct == ContentType.NOT_ALLOWED)
+        return null;
       indent();
       NameNameClass nnc = (NameNameClass)p.getNameClass();
       String ns = nnc.getNamespaceUri();
@@ -380,7 +383,12 @@ class DtdOutput {
       }
       buf.append(nnc.getLocalName());
       buf.append(" ");
-      p.getChild().accept(topLevelSimpleTypeOutput);
+      if (ct.isA(ContentType.SIMPLE_TYPE) || ct == ContentType.TEXT)
+        p.getChild().accept(topLevelSimpleTypeOutput);
+      else if (ct == ContentType.EMPTY) {
+        er.warning("empty_attribute_approx", p.getSourceLocation());
+        buf.append("CDATA");
+      }
       if (isRequired())
         buf.append(" #REQUIRED");
       else {
