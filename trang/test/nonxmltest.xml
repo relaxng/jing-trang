@@ -1309,7 +1309,7 @@ element foo { empty }
 ]]></incorrect>
 </nonxml>
 </testCase>
-<bug>
+<testCase>
 <nonxml>
 <incorrect><![CDATA[
 namespace xmlns = "http://www.example.com"
@@ -1317,7 +1317,7 @@ namespace xmlns = "http://www.example.com"
 element foo { empty }
 ]]></incorrect>
 </nonxml>
-</bug>
+</testCase>
 <testCase>
 <nonxml>
 <incorrect><![CDATA[

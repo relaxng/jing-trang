@@ -425,8 +425,12 @@ void NamespaceDecl() :
   {
     if (isDefault)
       defaultNamespace = namespaceName;
-    if (prefix != null)
-      namespaceTable.put(prefix.getString(), namespaceName);
+    if (prefix != null) {
+      if (prefix.getString().equals("xmlns"))
+        error("xmlns_prefix", prefix.getToken());
+      else
+        namespaceTable.put(prefix.getString(), namespaceName);
+    }
   }
 }
 
