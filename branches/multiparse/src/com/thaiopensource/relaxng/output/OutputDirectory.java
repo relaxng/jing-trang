@@ -9,4 +9,5 @@ public interface OutputDirectory {
   Writer open(String sourceUri) throws IOException;
   String reference(String fromSourceUri, String toSourceUri);
   String getLineSeparator();
+  String getEncoding();
 }

@@ -11,9 +11,11 @@ public class LocalOutputDirectory implements OutputDirectory {
   private File mainOutputFile;
   private String lineSeparator;
   private String ext;
+  private String encoding;
 
-  LocalOutputDirectory(File mainOutputFile) {
+  LocalOutputDirectory(File mainOutputFile, String encoding) {
     this.mainOutputFile = mainOutputFile;
+    this.encoding = encoding;
     this.lineSeparator = System.getProperty("line.separator");
     String name = mainOutputFile.getName();
     int dot = name.lastIndexOf('.');
@@ -50,5 +52,9 @@ public class LocalOutputDirectory implements OutputDirectory {
 
   public String getLineSeparator() {
     return lineSeparator;
+  }
+
+  public String getEncoding() {
+    return encoding;
   }
 }

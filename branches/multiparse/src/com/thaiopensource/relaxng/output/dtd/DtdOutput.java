@@ -524,20 +524,28 @@ class DtdOutput {
 
   void topLevelOutput() {
     GrammarPattern grammarPattern = analysis.getGrammarPattern();
+    xmlDecl();
     Pattern p = analysis.getPattern();
     if (p != grammarPattern) {
       p.accept(nestedContentModelOutput);
       outputQueuedElements();
     }
-    if (grammarPattern == null)
-      close();
-    else
-      output(grammarPattern);
+    if (grammarPattern != null)
+      grammarOutput.visitContainer(grammarPattern);
+    close();
   }
 
-  void output(GrammarPattern grammarPattern) {
+  void subOutput(GrammarPattern grammarPattern) {
+    xmlDecl();
     grammarOutput.visitContainer(grammarPattern);
     close();
+  }
+
+  void xmlDecl() {
+    write("<?xml encoding=\"");
+    write(od.getEncoding());
+    write("\"?>");
+    newline();
   }
 
   Type getType(Pattern p) {
@@ -606,10 +614,11 @@ class DtdOutput {
     pendingIncludes.add(href);
     DtdOutput sub = new DtdOutput(href, analysis, od, er);
     GrammarPattern g = (GrammarPattern)analysis.getSchema(href);
-    sub.output(g);
+    sub.subOutput(g);
     requiredParamEntities.addAll(sub.externallyRequiredParamEntities);
     outputRequiredComponents();
     String entityName = genEntityName(href);
+    newline();
     write("<!ENTITY % ");
     write(entityName);
     write(" SYSTEM ");
@@ -659,12 +668,17 @@ class DtdOutput {
     outputRequiredComponents();
     String elementName = analysis.getParamEntityElementName(name);
     if (elementName != null) {
-      write("<!ATTLIST ");
-      write(elementName);
-      write(replacement);
-      write('>');
+      if (replacement.length() > 0) {
+        newline();
+        write("<!ATTLIST ");
+        write(elementName);
+        write(replacement);
+        write('>');
+        newline();
+      }
     }
     else {
+      newline();
       write("<!ENTITY % ");
       write(name);
       write(' ');
@@ -672,8 +686,8 @@ class DtdOutput {
       write(replacement);
       write('"');
       write('>');
+      newline();
     }
-    newline();
   }
 
   static class NameClassWalker extends AbstractVisitor {
@@ -708,6 +722,7 @@ class DtdOutput {
           prefix = analysis.getPrefixForNamespaceUri(ns);
           name = prefix + ":" + nc.getLocalName();
         }
+        newline();
         write("<!ELEMENT ");
         write(name);
         write(' ');
