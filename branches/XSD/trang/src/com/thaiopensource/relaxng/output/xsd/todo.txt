@@ -55,10 +55,9 @@ Check for undefined refs
 
 Check for RNG contextual constraints
 
-Handle interleave:
-- detect
-- turn x* & y* into (x|y)*
-- approximate by choice
+Take advantage of xs:all.
+
+Avoid introducing ambiguities when approximating <interleave>, eg x & (y, y).
 
 NOTATION datatypes
 

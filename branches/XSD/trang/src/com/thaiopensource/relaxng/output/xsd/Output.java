@@ -34,6 +34,7 @@ import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.NameClass;
 import com.thaiopensource.relaxng.edit.DivComponent;
 import com.thaiopensource.relaxng.edit.ChoiceNameClass;
+import com.thaiopensource.relaxng.edit.NameClassedPattern;
 
 import java.io.IOException;
 import java.util.List;
@@ -57,6 +58,8 @@ class Output {
   private final PatternVisitor groupOutput = new GroupOutput();
   private final PatternVisitor particleOutput = new ParticleOutput();
   private final PatternVisitor typeDefParticleOutput = new TypeDefParticleOutput();
+  private final PatternVisitor elementChoiceOutput = new ElementChoiceOutput();
+  private final PatternVisitor elementChoiceChecker = new ElementChoiceChecker();
   private final PatternVisitor attributeOutput = new AttributeOutput();
   private final PatternVisitor optionalAttributeOutput = new OptionalAttributeOutput();
   private final PatternVisitor globalElementOutput = new GlobalElementOutput();
@@ -167,7 +170,12 @@ class Output {
       return null;
     }
 
-    public Object visitChoice(ChoicePattern p) {
+    /**
+     * This is used for choice.  visitComposite is used
+     * rather than visitChoice so that ElementChoiceOutput can
+     * use it for group.
+     */
+    public Object visitComposite(CompositePattern p) {
       int nChildren = 0;
       boolean optional = false;
       List children = p.getChildren();
@@ -233,17 +241,22 @@ class Output {
         if (ct.contains(ChildType.ELEMENT))
           nChildren++;
       }
-      // TODO this won't always work
-      if (nChildren != 1)
-        xw.startElement(xs("all"));
+      if (nChildren != 1) {
+        startWrapper();
+        xw.startElement(xs("choice"));
+        xw.attribute("minOccurs", "0");
+        xw.attribute("maxOccurs", "unbounded");
+      }
       for (int i = 0; i < len; i++) {
         Pattern child = (Pattern)children.get(i);
         ChildType ct = si.getChildType(child);
         if (ct.contains(ChildType.ELEMENT))
-          child.accept(nChildren == 1 ? this : particleOutput);
+          child.accept(nChildren == 1 ? this : elementChoiceOutput);
       }
-      if (nChildren != 1)
+      if (nChildren != 1) {
         xw.endElement();
+        endWrapper();
+      }
       return null;
     }
 
@@ -329,6 +342,63 @@ class Output {
       particleOutput.visitElement(p);
       xw.endElement();
       return null;
+    }
+  }
+
+  /**
+   * Given a pattern that matches a sequence, output a pattern
+   * that will match a single element if and only if that element
+   * can be a member of that sequence.
+   */
+  class ElementChoiceOutput extends ParticleOutput {
+    public Object visitGroup(GroupPattern p) {
+      return visitComposite(p);
+    }
+
+    public Object visitRef(RefPattern p) {
+      if (si.getBody(p).accept(elementChoiceChecker) == Boolean.FALSE)
+        return super.visitRef(p);
+      return si.getBody(p).accept(this);
+    }
+  }
+
+  class ElementChoiceChecker extends AbstractVisitor {
+    public Object visitPattern(Pattern p) {
+      return Boolean.FALSE;
+    }
+
+    public Object visitGroup(GroupPattern p) {
+      boolean hadOne = false;
+      for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
+        Pattern child = (Pattern)iter.next();
+        if (si.getChildType(child).contains(ChildType.ELEMENT)) {
+          if (hadOne || child.accept(this) == Boolean.TRUE)
+            return Boolean.TRUE;
+          hadOne = true;
+        }
+      }
+      return Boolean.FALSE;
+    }
+
+    public Object visitChoice(ChoicePattern p) {
+      for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
+        Pattern child = (Pattern)iter.next();
+        if (si.getChildType(child).contains(ChildType.ELEMENT) && child.accept(this) == Boolean.TRUE)
+          return Boolean.TRUE;
+      }
+      return Boolean.FALSE;
+    }
+
+    public Object visitUnary(UnaryPattern p) {
+      return p.getChild().accept(this);
+    }
+
+    public Object visitNameClassed(NameClassedPattern p) {
+      return Boolean.FALSE;
+    }
+
+    public Object visitRef(RefPattern p) {
+      return si.getBody(p).accept(this);
     }
   }
 
