@@ -33,16 +33,20 @@ class Driver {
   }
 
   private boolean checkId = true;
+  private boolean nonXmlSyntax = false;
   private boolean timing = false;
 
   public int doMain(String[] args) {
     ErrorHandlerImpl eh = new ErrorHandlerImpl(System.out);
-    OptionParser op = new OptionParser("it", args);
+    OptionParser op = new OptionParser("itn", args);
     try {
       while (op.moveToNextOption()) {
         switch (op.getOptionChar()) {
         case 'i':
           checkId = false;
+          break;
+        case 'n':
+          nonXmlSyntax = true;
           break;
         case 't':
           timing = true;
@@ -69,7 +73,7 @@ class Driver {
     long loadedPatternTime = -1;
     boolean hadError = false;
     try {
-      ValidationEngine engine = new ValidationEngine(createXMLReaderCreator(), eh, checkId);
+      ValidationEngine engine = new ValidationEngine(createXMLReaderCreator(), eh, checkId, nonXmlSyntax);
       if (engine.loadSchema(ValidationEngine.fileInputSource(args[0]))) {
         loadedPatternTime = System.currentTimeMillis();
 	for (int i = 1; i < args.length; i++) {

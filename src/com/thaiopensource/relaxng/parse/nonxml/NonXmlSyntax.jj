@@ -16,23 +16,105 @@ import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.GrammarSection;
 import com.thaiopensource.relaxng.parse.Grammar;
 import com.thaiopensource.relaxng.parse.Include;
+import com.thaiopensource.relaxng.parse.IncludedGrammar;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
+import com.thaiopensource.relaxng.parse.BuildException;
 import com.thaiopensource.relaxng.parse.Location;
 
 import org.relaxng.datatype.ValidationContext;
 
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.Locator;
+import org.xml.sax.helpers.LocatorImpl;
+
 import java.util.Hashtable;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class NonXmlSyntax {
+public class NonXmlSyntax implements ValidationContext {
 
   private static final String xmlUri = "http://www.w3.org/XML/1998/namespace";
   private String defaultNamespace = SchemaBuilder.INHERIT_NS;
   private SchemaBuilder sb;
+  private String sourceUri;
+  private ErrorHandler eh;
   private Hashtable namespaceTable = new Hashtable();
   private Hashtable datatypesTable = new Hashtable();
-  private String sourceUri;
+  private boolean hadError = false;
+
+  final class LocatedString {
+    private final String str;
+    private final Token tok;
+
+    LocatedString(String str, Token tok) {
+      this.str = str;
+      this.tok = tok;
+    }
+
+    String getString() {
+      return str;
+    }
+
+    Location getLocation() {
+      return makeLocation(tok);
+    }
+
+    Token getToken() {
+      return tok;
+    }
+
+  }
+
+  public NonXmlSyntax(Reader r, String sourceUri, SchemaBuilder sb, ErrorHandler eh) {
+    this(r);
+    this.sourceUri = sourceUri;
+    this.sb = sb;
+    this.eh = eh;
+  }
+
+  ParsedPattern parse(Scope scope) throws IllegalSchemaException {
+    try {
+      ParsedPattern p = Input(scope);
+      if (!hadError)
+        return p;
+    }
+    catch (ParseException e) {
+      error("syntax error", e.currentToken.next);
+    }
+    throw new IllegalSchemaException();
+  }
+
+  void parseInclude(IncludedGrammar g) throws IllegalSchemaException {
+    try {
+      IncludedGrammar(g);
+      if (!hadError)
+        return;
+    }
+    catch (ParseException e) {
+      error("syntax error", e.currentToken.next);
+    }
+    throw new IllegalSchemaException();
+  }
+
+
+  private void error(String message, Token tok) {
+    if (eh != null) {
+      LocatorImpl loc = new LocatorImpl();
+      loc.setLineNumber(tok.beginLine);
+      loc.setColumnNumber(tok.beginColumn);
+      loc.setSystemId(sourceUri);
+      try {
+	eh.error(new SAXParseException(message, loc));
+      }
+      catch (SAXException se) {
+	throw new BuildException(se);
+      }
+    }
+  }
+
   private static String unquote(String s) {
     char quoteChar = s.charAt(0);
     s = s.substring(1, s.length() - 1);
@@ -40,11 +122,48 @@ public class NonXmlSyntax {
       s = s.substring(0, i) + s.substring(i + 1);
     return s;
   }
-  private Location makeLocation(Token t) {
+
+  Location makeLocation(Token t) {
     return sb.makeLocation(sourceUri, t.beginLine, t.beginColumn);
   }
+
+  public String resolveNamespacePrefix(String prefix) {
+    if (prefix.length() == 0)
+      return defaultNamespace;
+    return (String)namespaceTable.get(prefix);
+  }
+
+  public String getBaseUri() {
+    return sourceUri;
+  }
+
+  public boolean isUnparsedEntity(String entityName) {
+    return false;
+  }
+
+  public boolean isNotation(String notationName) {
+    return false;
+  }
+
   private ValidationContext getValidationContext() {
-    return null; // XXX
+    return this;
+  }
+
+  private String lookupPrefix(String prefix, Token t) {
+    String ns = (String)namespaceTable.get(prefix);
+    if (ns == null) {
+      error("undeclared prefix \"" + prefix + "\"", t);
+      return "#error";
+    }
+    return ns;
+  }
+  private String lookupDatatype(String prefix, Token t) {
+    String ns = (String)datatypesTable.get(prefix);
+    if (ns == null) {
+      error("undeclared prefix \"" + prefix + "\"", t);
+      return ""; // XXX
+    }
+    return ns;
   }
   private String resolve(String str) {
     try {
@@ -74,32 +193,43 @@ public class NonXmlSyntax {
 
 PARSER_END(NonXmlSyntax)
 
-ParsedPattern Input(SchemaBuilder sb) throws SyntaxException :
+ParsedPattern Input(Scope scope) :
 {
   ParsedPattern p;
 }
 {
-  { this.sb = sb; }
   (<BYTE_ORDER_MARK>)?
   // If it starts with a non-reserved word it must be a grammar,
   // because there would be no way to define an identifier
   Preamble()
-  (LOOKAHEAD(1) p = TopLevelGrammar() | p = Expr(null))
+  (LOOKAHEAD(1) p = TopLevelGrammar(scope) | p = Expr(scope))
   <EOF>
   { return p; }
 }
 
-ParsedPattern TopLevelGrammar() throws SyntaxException :
+void IncludedGrammar(IncludedGrammar g) :
+{
+  Annotations a;
+}
+{
+  (<BYTE_ORDER_MARK>)?
+  Preamble()
+  (a = Annotations() (GrammarComponent(g, g))+)
+  | ("grammar" a = Annotations() "{" (GrammarComponent(g, g))+ "}")
+  <EOF>
+  { g.endIncludedGrammar(sb.makeLocation(sourceUri, 1, 1), a); }
+}
+
+ParsedPattern TopLevelGrammar(Scope scope) :
 {
   Annotations a;
   Grammar g;
 }
 {
   a = Annotations()
-  { g = sb.makeGrammar(null); }
+  { g = sb.makeGrammar(scope); }
   (GrammarComponent(g, g))+
-  /* XXX make a location */
-  { return g.endGrammar(null, a); }
+  { return g.endGrammar(sb.makeLocation(sourceUri, 1, 1), a); }
 }
 
 void Preamble() :
@@ -150,7 +280,7 @@ void DatatypesDecl() :
   }
 }
 
-ParsedPattern PrimaryExpr(Scope scope) throws SyntaxException :
+ParsedPattern PrimaryExpr(Scope scope) :
 {
   ParsedPattern p;
 }
@@ -172,7 +302,7 @@ ParsedPattern PrimaryExpr(Scope scope) throws SyntaxException :
   { return p; }
 }
 
-ParsedPattern EmptyExpr() throws SyntaxException :
+ParsedPattern EmptyExpr() :
 {
   Token t;
   Annotations a;
@@ -182,7 +312,7 @@ ParsedPattern EmptyExpr() throws SyntaxException :
   { return sb.makeEmpty(makeLocation(t), a); }
 }
 
-ParsedPattern TextExpr() throws SyntaxException :
+ParsedPattern TextExpr() :
 {
   Token t;
   Annotations a;
@@ -192,7 +322,7 @@ ParsedPattern TextExpr() throws SyntaxException :
   { return sb.makeText(makeLocation(t), a); }
 }
 
-ParsedPattern NotAllowedExpr() throws SyntaxException :
+ParsedPattern NotAllowedExpr() :
 {
   Token t;
   Annotations a;
@@ -202,7 +332,7 @@ ParsedPattern NotAllowedExpr() throws SyntaxException :
   { return sb.makeNotAllowed(makeLocation(t), a); }
 }
 
-ParsedPattern Expr(Scope scope) throws SyntaxException :
+ParsedPattern Expr(Scope scope) :
 {
   Token t;
   ParsedPattern p;
@@ -218,7 +348,7 @@ ParsedPattern Expr(Scope scope) throws SyntaxException :
   { return p; }
 }
 
-ParsedPattern UnaryExpr(Scope scope) throws SyntaxException :
+ParsedPattern UnaryExpr(Scope scope) :
 {
   ParsedPattern p;
   Token t;
@@ -233,7 +363,7 @@ ParsedPattern UnaryExpr(Scope scope) throws SyntaxException :
   { return p; }
 }
 
-ParsedPattern ElementExpr(Scope scope) throws SyntaxException :
+ParsedPattern ElementExpr(Scope scope) :
 {
   Token t;
   ParsedNameClass nc;
@@ -245,7 +375,7 @@ ParsedPattern ElementExpr(Scope scope) throws SyntaxException :
   { return sb.makeElement(nc, p, makeLocation(t), a); }
 }
 
-ParsedPattern AttributeExpr(Scope scope) throws SyntaxException :
+ParsedPattern AttributeExpr(Scope scope) :
 {
   Token t;
   ParsedNameClass nc;
@@ -257,18 +387,18 @@ ParsedPattern AttributeExpr(Scope scope) throws SyntaxException :
   { return sb.makeAttribute(nc, p, makeLocation(t), a); }
 }
 
-ParsedNameClass NameClass(boolean inAttribute) throws SyntaxException :
+ParsedNameClass NameClass(boolean inAttribute) :
 {
   ParsedNameClass nc;
 }
 {
-  (nc = PrimaryNameClass(inAttribute) nc = NameClassAlternatives(inAttribute, nc))
-  | nc = AnyNameExceptClass(inAttribute)
-  | nc = NsNameExceptClass(inAttribute)
+  ((nc = PrimaryNameClass(inAttribute) nc = NameClassAlternatives(inAttribute, nc))
+   | nc = AnyNameExceptClass(inAttribute)
+   | nc = NsNameExceptClass(inAttribute))
   { return nc; }
 }
 
-ParsedNameClass NameClassAlternatives(boolean inAttribute, ParsedNameClass nc) throws SyntaxException :
+ParsedNameClass NameClassAlternatives(boolean inAttribute, ParsedNameClass nc) :
 {
   Token t;
   ParsedNameClass nc2;
@@ -278,17 +408,17 @@ ParsedNameClass NameClassAlternatives(boolean inAttribute, ParsedNameClass nc) t
   { return nc; }
 }
 
-ParsedNameClass BasicNameClass(boolean inAttribute) throws SyntaxException :
+ParsedNameClass BasicNameClass(boolean inAttribute) :
 {
   ParsedNameClass nc;
 }
 {
   (nc = PrimaryNameClass(inAttribute)
-  | nc = OpenNameClass())
+   | nc = OpenNameClass())
   { return nc; }
 }
 
-ParsedNameClass PrimaryNameClass(boolean inAttribute) throws SyntaxException :
+ParsedNameClass PrimaryNameClass(boolean inAttribute) :
 {
   ParsedNameClass nc;
 }
@@ -299,7 +429,7 @@ ParsedNameClass PrimaryNameClass(boolean inAttribute) throws SyntaxException :
   { return nc; }
 }
 
-ParsedNameClass OpenNameClass() throws SyntaxException :
+ParsedNameClass OpenNameClass() :
 {
   Token t;
   LocatedString ns;
@@ -326,7 +456,7 @@ ParsedNameClass UnprefixedNameClass(boolean inAttribute) :
   }
 }
 
-ParsedNameClass PrefixedNameClass() throws SyntaxException :
+ParsedNameClass PrefixedNameClass() :
 {
   Token t;
 }
@@ -336,14 +466,11 @@ ParsedNameClass PrefixedNameClass() throws SyntaxException :
     String qn = t.image;
     int colon = qn.indexOf(':');
     String prefix = qn.substring(0, colon);
-    String ns = (String)namespaceTable.get(prefix);
-    if (ns == null)
-      throw new UndeclaredPrefixException(prefix, t);
-    return sb.makeName(ns, qn.substring(colon + 1), prefix, makeLocation(t), null);
+    return sb.makeName(lookupPrefix(prefix, t), qn.substring(colon + 1), prefix, makeLocation(t), null);
   }
 }
 
-ParsedNameClass NsNameExceptClass(boolean inAttribute) throws SyntaxException :
+ParsedNameClass NsNameExceptClass(boolean inAttribute) :
 {
   LocatedString ns;
   ParsedNameClass nc;
@@ -355,7 +482,7 @@ ParsedNameClass NsNameExceptClass(boolean inAttribute) throws SyntaxException :
          nc = NameClassAlternatives(inAttribute, nc) { return nc; }))
 }
 
-LocatedString NsName() throws SyntaxException :
+LocatedString NsName() :
 {
   Token t;
 }
@@ -364,14 +491,11 @@ LocatedString NsName() throws SyntaxException :
   {
     String qn = t.image;
     String prefix = qn.substring(0, qn.length() - 2);
-    String ns = (String)namespaceTable.get(prefix);
-    if (ns == null)
-      throw new UndeclaredPrefixException(prefix, t);
-    return new LocatedString(ns, makeLocation(t));
+    return new LocatedString(lookupPrefix(prefix, t), t);
   }
 }
 
-ParsedNameClass AnyNameExceptClass(boolean inAttribute) throws SyntaxException :
+ParsedNameClass AnyNameExceptClass(boolean inAttribute) :
 {
   Token t;
   ParsedNameClass nc;
@@ -384,7 +508,7 @@ ParsedNameClass AnyNameExceptClass(boolean inAttribute) throws SyntaxException :
       { return nc; }))
 }
 
-ParsedNameClass ParenNameClass(boolean inAttribute) throws SyntaxException :
+ParsedNameClass ParenNameClass(boolean inAttribute) :
 {
   ParsedNameClass nc;
 }
@@ -393,7 +517,7 @@ ParsedNameClass ParenNameClass(boolean inAttribute) throws SyntaxException :
   { return nc; }
 }
 
-ParsedNameClass ExceptNameClass(boolean inAttribute) throws SyntaxException :
+ParsedNameClass ExceptNameClass(boolean inAttribute) :
 {
   ParsedNameClass nc;
 }
@@ -402,7 +526,7 @@ ParsedNameClass ExceptNameClass(boolean inAttribute) throws SyntaxException :
   { return nc; }
 }
 
-ParsedPattern ListExpr(Scope scope) throws SyntaxException :
+ParsedPattern ListExpr(Scope scope) :
 {
   Token t;
   Annotations a;
@@ -413,7 +537,7 @@ ParsedPattern ListExpr(Scope scope) throws SyntaxException :
   { return sb.makeList(p, makeLocation(t), a); }
 }
 
-ParsedPattern MixedExpr(Scope scope) throws SyntaxException :
+ParsedPattern MixedExpr(Scope scope) :
 {
   Token t;
   Annotations a;
@@ -424,7 +548,7 @@ ParsedPattern MixedExpr(Scope scope) throws SyntaxException :
   { return sb.makeMixed(p, makeLocation(t), a); }
 }
 
-ParsedPattern GrammarExpr(Scope scope) throws SyntaxException :
+ParsedPattern GrammarExpr(Scope scope) :
 {
   Token t;
   Grammar g;
@@ -435,7 +559,7 @@ ParsedPattern GrammarExpr(Scope scope) throws SyntaxException :
   "{" (GrammarComponent(g, g))+ "}" { return g.endGrammar(makeLocation(t), a); }
 }
 
-ParsedPattern ParenExpr(Scope scope) throws SyntaxException :
+ParsedPattern ParenExpr(Scope scope) :
 {
   Annotations a;
   ParsedPattern p;
@@ -446,19 +570,19 @@ ParsedPattern ParenExpr(Scope scope) throws SyntaxException :
   { return p; }
 }
 
-void GrammarComponent(GrammarSection section, Scope scope) throws SyntaxException :
+void GrammarComponent(GrammarSection section, Scope scope) :
 {}
 {
   Definition(section, scope) | Include(section, scope)
 }
 
-void Definition(GrammarSection section, Scope scope) throws SyntaxException :
+void Definition(GrammarSection section, Scope scope) :
 {}
 {
   Define(section, scope) | Start(section, scope)
 }
 
-void Start(GrammarSection section, Scope scope) throws SyntaxException :
+void Start(GrammarSection section, Scope scope) :
 {
   Annotations a;
   Token t;
@@ -470,7 +594,7 @@ void Start(GrammarSection section, Scope scope) throws SyntaxException :
   { section.define(GrammarSection.START, combine, p, makeLocation(t), a); }
 }
 
-void Define(GrammarSection section, Scope scope) throws SyntaxException :
+void Define(GrammarSection section, Scope scope) :
 {
   LocatedString name;
   Annotations a;
@@ -490,7 +614,7 @@ GrammarSection.Combine AssignOp() :
   | "&=" { return GrammarSection.COMBINE_INTERLEAVE; }
 }
 
-void Include(GrammarSection section, Scope scope) throws SyntaxException :
+void Include(GrammarSection section, Scope scope) :
 {
   Token t;
   String href;
@@ -511,7 +635,7 @@ void Include(GrammarSection section, Scope scope) throws SyntaxException :
   }
 }
 
-ParsedPattern ExternalRefExpr(Scope scope) throws SyntaxException :
+ParsedPattern ExternalRefExpr(Scope scope) :
 {
   Token t;
   String href;
@@ -532,7 +656,7 @@ ParsedPattern ExternalRefExpr(Scope scope) throws SyntaxException :
   }
 }
 
-String Inherit() throws SyntaxException :
+String Inherit() :
 {
   String ns = null;
 }
@@ -547,29 +671,39 @@ String Inherit() throws SyntaxException :
   }
 }
 
-ParsedPattern ParentExpr(Scope scope) throws SyntaxException :
+ParsedPattern ParentExpr(Scope scope) :
 {
   LocatedString name;
   Annotations a;
 }
 {
   "parent" name = Identifier() a = Annotations()
-  /* XXX check for null */
-  { return scope.getParent().makeRef(name.getString(), name.getLocation(), a); }
+  { 
+    if (scope == null || scope.getParent() == null) {
+      error("no parent grammar", name.getToken());
+      return sb.makeErrorPattern();
+    }
+    return scope.getParent().makeRef(name.getString(), name.getLocation(), a); 
+  }
 }
 
-ParsedPattern IdentifierExpr(Scope scope) throws SyntaxException :
+ParsedPattern IdentifierExpr(Scope scope) :
 {
   LocatedString name;
   Annotations a;
 }
 {
   name = Identifier() a = Annotations()
-  /* XXX check for null */
-  { return scope.makeRef(name.getString(), name.getLocation(), a); }
+  { 
+    if (scope == null) {
+      error("no grammar", name.getToken());
+      return sb.makeErrorPattern();
+    }
+    return scope.makeRef(name.getString(), name.getLocation(), a);
+  }
 }
 
-ParsedPattern ValueExpr() throws SyntaxException :
+ParsedPattern ValueExpr() :
 {
   LocatedString s;
   Annotations a;
@@ -579,7 +713,7 @@ ParsedPattern ValueExpr() throws SyntaxException :
   { return sb.makeValue("", "token", s.getString(), getValidationContext(), s.getLocation(), a); }
 }
 
-ParsedPattern DataExpr(Scope scope) throws SyntaxException :
+ParsedPattern DataExpr(Scope scope) :
 {
   Token datatypeToken;
   Location loc;
@@ -600,9 +734,7 @@ ParsedPattern DataExpr(Scope scope) throws SyntaxException :
       datatypeUri = "";
     else {
       String prefix = datatype.substring(0, colon);
-      datatypeUri = (String)datatypesTable.get(prefix);
-      if (datatypeUri == null)
-        throw new UndeclaredPrefixException(prefix, datatypeToken);
+      datatypeUri = lookupDatatype(prefix, datatypeToken);
       datatype = datatype.substring(colon + 1);
     }
   }
@@ -631,12 +763,12 @@ LocatedString Identifier() :
   Token t;
 }
 {
-  (t = <IDENTIFIER> { s = new LocatedString(t.image, makeLocation(t)); }
-  | t = <ESCAPED_IDENTIFIER> { s = new LocatedString(t.image.substring(1), makeLocation(t)); })
+  (t = <IDENTIFIER> { s = new LocatedString(t.image, t); }
+  | t = <ESCAPED_IDENTIFIER> { s = new LocatedString(t.image.substring(1), t); })
   { return s; }
 }
 
-String Prefix() throws SyntaxException :
+String Prefix() :
 {
   Token t;
   String prefix;
@@ -645,12 +777,7 @@ String Prefix() throws SyntaxException :
   (t = <IDENTIFIER> { prefix = t.image; }
   | t = <ESCAPED_IDENTIFIER> { prefix = t.image.substring(1); }
   | t = Keyword() { prefix = t.image; })
-  {
-    String ns = (String)namespaceTable.get(prefix);
-    if (ns == null)
-      throw new UndeclaredPrefixException(prefix, t);
-    return ns;
-  }
+  { return lookupPrefix(prefix, t); }
 }
 
 LocatedString UnprefixedName() :
@@ -660,17 +787,17 @@ LocatedString UnprefixedName() :
 }
 {
   (s = Identifier()
-   | t = Keyword() { s = new LocatedString(t.image, makeLocation(t)); })
+   | t = Keyword() { s = new LocatedString(t.image, t); })
   { return s; }
 }
 
-void Params(DataPatternBuilder dpb) throws SyntaxException :
+void Params(DataPatternBuilder dpb) :
 {}
 {
   "{" (Param(dpb))* "}"
 }
 
-void Param(DataPatternBuilder dpb) throws SyntaxException :
+void Param(DataPatternBuilder dpb) :
 {
   LocatedString name;
   Annotations a;
@@ -681,7 +808,7 @@ void Param(DataPatternBuilder dpb) throws SyntaxException :
   { dpb.addParam(name.getString(), value, getValidationContext(), name.getLocation(), a); }
 }
 
-ParsedPattern Except(Scope scope) throws SyntaxException :
+ParsedPattern Except(Scope scope) :
 {
   ParsedPattern p;
 }
@@ -690,7 +817,7 @@ ParsedPattern Except(Scope scope) throws SyntaxException :
   { return p; }
 }
 
-Annotations Annotations() throws SyntaxException :
+Annotations Annotations() :
 {
   Annotations a = sb.makeAnnotations();
 }
@@ -701,7 +828,7 @@ Annotations Annotations() throws SyntaxException :
   { return a; }
 }
 
-Annotations NoChildAnnotations() throws SyntaxException :
+Annotations NoChildAnnotations() :
 {
   Annotations a = sb.makeAnnotations();
 }
@@ -711,7 +838,7 @@ Annotations NoChildAnnotations() throws SyntaxException :
   { return a; }
 }
 
-void AnnotationAttribute(Annotations a) throws SyntaxException :
+void AnnotationAttribute(Annotations a) :
 {
   Token t;
   String value;
@@ -722,16 +849,15 @@ void AnnotationAttribute(Annotations a) throws SyntaxException :
     String qn = t.image;
     int colon = qn.indexOf(':');
     String prefix = qn.substring(0, colon);
-    String ns = (String)namespaceTable.get(prefix);
-    if (ns == null)
-      throw new UndeclaredPrefixException(prefix, t);
+    String ns = lookupPrefix(prefix, t);
     if (ns == SchemaBuilder.INHERIT_NS || ns.length() == 0)
-      throw new BadAnnotationPrefixException(prefix, t);
-    a.addAttribute(ns, qn.substring(colon + 1), prefix, value, makeLocation(t));
+      error("prefix \"" + prefix + "\" cannot be used as the prefix of an annotation", t);
+    else
+      a.addAttribute(ns, qn.substring(colon + 1), prefix, value, makeLocation(t));
   }
 }
 
-void ExtensionElement(Annotations a) throws SyntaxException :
+void ExtensionElement(Annotations a) :
 {
   StringBuffer buf = new StringBuffer();
 }
@@ -744,7 +870,7 @@ void ExtensionElement(Annotations a) throws SyntaxException :
   }
 }
 
-void Element(StringBuffer buf) throws SyntaxException :
+void Element(StringBuffer buf) :
 {
   Token t;
 }
@@ -774,7 +900,7 @@ LocatedString LocatedLiteral() :
 {
   t = <LITERAL>
   {
-    return new LocatedString(normalizeNewlines(unquote(t.image)), makeLocation(t));
+    return new LocatedString(normalizeNewlines(unquote(t.image)), t);
   }
 }
 
