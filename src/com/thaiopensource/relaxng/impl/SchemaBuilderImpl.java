@@ -591,6 +591,14 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     return new GrammarImpl(this, parent);
   }
 
+  public ParsedPattern annotate(ParsedPattern p, Annotations anno) throws BuildException {
+    return p;
+  }
+
+  public ParsedNameClass annotate(ParsedNameClass nc, Annotations anno) throws BuildException {
+    return nc;
+  }
+
   public ParsedPattern annotateAfter(ParsedPattern p, ParsedElementAnnotation e) throws BuildException {
     return p;
   }
