@@ -57,13 +57,12 @@ import java.util.Iterator;
 
 Tasks:
 Order for mixed
-Order param entities
+Order param entities catch bad recursion
 Check single element type
 Handle name class choice
 Non-local namespaces
 Include
 combine attribute/suppress definition corresponding to ATTLIST
-catch bad recursion
 nested grammars
 a:defaultValue
 a:documentation
@@ -273,7 +272,7 @@ public class DtdOutput {
     }
 
     public Object visitMixed(MixedPattern p) {
-      return checkType("sorry_mixed", interleave(analyzeType(this, p.getChild()), DIRECT_TEXT), p);
+      return checkType("sorry_mixed", mixed(analyzeType(this, p.getChild())), p);
     }
 
     public Object visitOptional(OptionalPattern p) {
@@ -335,6 +334,7 @@ public class DtdOutput {
 
   PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
   PatternVisitor nestedContentModelOutput = new ContentModelOutput();
+  PatternVisitor topLevelMixedOutput = new TopLevelMixedOutput();
   PatternVisitor attributeOutput = new AttributeOutput();
   AttributeOutput optionalAttributeOutput = new OptionalAttributeOutput();
   PatternVisitor topLevelAttributeTypeOutput = new TopLevelAttributeTypeOutput();
@@ -398,7 +398,7 @@ public class DtdOutput {
         Type t = getType(member);
         if (!t.isA(ATTRIBUTE_GROUP)) {
           if (needSep)
-            buf.append(", ");
+            buf.append(',');
           else
             needSep = true;
           buf.append('(');
@@ -421,7 +421,6 @@ public class DtdOutput {
     }
 
     public Object visitChoice(ChoicePattern p) {
-      // XXX do mixed first
       List list = p.getChildren();
       boolean needSep = false;
       final int len = list.size();
@@ -433,8 +432,12 @@ public class DtdOutput {
             buf.append('|');
           else
             needSep = true;
-          // XXX need brackets unless a class
+          boolean needParen = !t.isA(ELEMENT_CLASS);
+          if (needParen)
+            buf.append('(');
           member.accept(nestedContentModelOutput);
+          if (needParen)
+            buf.append(')');
         }
       }
       for (int i = 0; i < len; i++) {
@@ -478,6 +481,10 @@ public class DtdOutput {
       return null;
     }
 
+    public Object visitMixed(MixedPattern p) {
+      return p.getChild().accept(topLevelMixedOutput);
+    }
+
     public Object visitGroup(GroupPattern p) {
       List list = p.getChildren();
       Pattern main = null;
@@ -498,7 +505,26 @@ public class DtdOutput {
         main.accept(this);
       return null;
     }
+  }
 
+
+  class TopLevelMixedOutput extends ContentModelOutput {
+    public Object visitOneOrMore(OneOrMorePattern p) {
+      return visitRepeat(p, '+');
+    }
+
+    public Object visitZeroOrMore(ZeroOrMorePattern p) {
+      return visitRepeat(p, '*');
+    }
+
+    private Object visitRepeat(UnaryPattern p, char op) {
+      buf.append('(');
+      buf.append("#PCDATA|");
+      p.getChild().accept(nestedContentModelOutput);
+      buf.append(')');
+      buf.append(op);
+      return null;
+    }
   }
 
   class AttributeOutput extends AbstractVisitor {
@@ -666,10 +692,8 @@ public class DtdOutput {
       else {
         Pattern body = c.getBody();
         Type t = getType(body);
-        if (t == DIRECT_SINGLE_ELEMENT) {
-          // XXX deal with DIRECT_CHOICE
+        if (t == DIRECT_SINGLE_ELEMENT)
           outputElement((ElementPattern)body);
-        }
         else {
           write("<!ENTITY % ");
           write(c.getName());
@@ -706,6 +730,7 @@ public class DtdOutput {
         ((Component)list.get(i)).accept(this);
       return c;
     }
+
 
     public Object visitInclude(IncludeComponent c) {
       return visitContainer(c);
@@ -762,6 +787,21 @@ public class DtdOutput {
       if (list.size() == 1)
         return (Pattern)p.getChildren().get(0);
       return p;
+    }
+
+
+    public Object visitInterleave(InterleavePattern p) {
+      boolean hadText = false;
+      for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
+        Pattern child = (Pattern)iter.next();
+        if (child instanceof TextPattern) {
+          iter.remove();
+          hadText = true;
+        }
+      }
+      if (!hadText)
+        return visitComposite(p);
+      return copy(new MixedPattern((Pattern)visitComposite(p)), p);
     }
 
     public Object visitUnary(UnaryPattern p) {
@@ -899,12 +939,15 @@ public class DtdOutput {
     return null;
   }
 
+  private static Type mixed(Type t) {
+    if (t.isA(REPEAT_ELEMENT_CLASS))
+      return COMPLEX_TYPE;
+    return null;
+  }
+
   private static Type interleave(Type t1, Type t2) {
     if (t1 == ERROR || t2 == ERROR)
       return ERROR;
-    if ((t1 == DIRECT_TEXT && t2.isA(REPEAT_ELEMENT_CLASS))
-            || (t2 == DIRECT_TEXT && t1.isA(REPEAT_ELEMENT_CLASS)))
-      return COMPLEX_TYPE;
     if (t1.isA(EMPTY) && t2.isA(EMPTY))
       return EMPTY;
     if (t1.isA(ATTRIBUTE_GROUP) && t2.isA(ATTRIBUTE_GROUP))
