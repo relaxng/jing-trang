@@ -33,12 +33,33 @@ Class-Path: jing.jar
   </jar>
 </target>
 
-<target name="split" depends="init">
+<target name="split" depends="init,check-split" unless="split-not-required">
+  <jing rngfile="test/nonxmltest.rnx" nonxmlsyntax="yes">
+    <fileset dir="test" includes="nonxmltest.xml"/>
+  </jing>
   <delete dir="${build.dir}/test"/>
   <mkdir dir="${build.dir}/test"/>
-  <style basedir="test" destdir="${build.dir}/test" includes="todtdtest.xml" extension=".stamp" style="../test/split.xsl">
-    <param name="dir" expression="${build.dir}/test"/>
+  <style basedir="test" destdir="${build.dir}/test" includes="nonxmltest.xml" extension=".stamp" style="test/nonxmlsplit.xsl">
+    <param name="dir" expression="trang/${build.dir}/test"/>
   </style>
+</target>
+
+<target name="check-split">
+  <uptodate property="split-not-required" targetfile="${build.dir}/test/nonxmltest.stamp">
+    <srcfiles dir="test" includes="nonxmltest.xml,nonxmlsplit.xsl"/>
+  </uptodate>
+</target>
+
+<target name="test" depends="jar,split">
+  <java classname="com.thaiopensource.relaxng.output.test.NonXmlTestDriver" fork="yes" failonerror="yes">
+    <arg value="${build.dir}/test/out.log"/>
+    <arg value="${build.dir}/test"/>
+    <classpath>
+      <pathelement location="${dist.dir}/trang.jar"/>
+      <pathelement location="${dist.dir}/jing.jar"/>
+      <pathelement path="${java.class.path}"/>
+    </classpath>
+  </java>
 </target>
 
 <target name="validate" depends="jar">

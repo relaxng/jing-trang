@@ -13,17 +13,19 @@ import java.util.Vector;
 import java.util.Collections;
 import java.util.Comparator;
 import java.io.IOException;
+import java.io.File;
 
 import com.thaiopensource.util.UriOrFile;
 import com.thaiopensource.relaxng.XMLReaderCreator;
+import com.thaiopensource.relaxng.parse.sax.AbstractLexicalHandler;
 import com.thaiopensource.relaxng.util.Jaxp11XMLReaderCreator;
 
 public class Compare {
-  static public boolean compare(String file1, String file2, XMLReaderCreator xrc) throws SAXException, IOException {
+  static public boolean compare(File file1, File file2, XMLReaderCreator xrc) throws SAXException, IOException {
     return load(xrc, file1).equals(load(xrc, file2));
   }
 
-  static private List load(XMLReaderCreator xrc, String file) throws SAXException, IOException {
+  static private List load(XMLReaderCreator xrc, File file) throws SAXException, IOException {
     InputSource in = new InputSource(UriOrFile.fileToUri(file));
     Saver saver = new Saver();
     XMLReader xr = xrc.createXMLReader();
@@ -38,6 +40,13 @@ public class Compare {
       throw new SAXException("support for namespaces-prefixes feature required");
     }
     xr.setContentHandler(saver);
+    try {
+      xr.setProperty("http://xml.org/sax/properties/lexical-handler", new CommentSaver(saver));
+    }
+    catch (SAXNotRecognizedException e) {
+    }
+    catch (SAXNotSupportedException e) {
+    }
     xr.parse(in);
     return saver.getEventList();
   }
@@ -85,6 +94,20 @@ public class Compare {
   static class EndElement extends Event {
     public boolean equals(Object obj) {
       return obj instanceof EndElement;
+    }
+  }
+
+  static class Comment extends Event {
+    private final String value;
+
+    Comment(String value) {
+      this.value = value;
+    }
+
+    public boolean equals(Object obj) {
+      if (!(obj instanceof Comment))
+        return false;
+      return value.equals(((Comment)obj).value);
     }
   }
 
@@ -172,9 +195,25 @@ public class Compare {
     public void endDocument() {
       flushWhitespace();
     }
+
+    void comment(String value) {
+      flushWhitespace();
+      eventList.add(new Comment(value));
+    }
+  }
+
+  static class CommentSaver extends AbstractLexicalHandler {
+    private Saver saver;
+    CommentSaver(Saver saver) {
+      this.saver = saver;
+    }
+
+    public void comment(char[] chars, int start, int length) throws SAXException {
+      saver.comment(new String(chars, start, length));
+    }
   }
 
   static public void main(String[] args) throws SAXException, IOException {
-    System.err.println(compare(args[0], args[1], new Jaxp11XMLReaderCreator()));
+    System.err.println(compare(new File(args[0]), new File(args[1]), new Jaxp11XMLReaderCreator()));
   }
 }
