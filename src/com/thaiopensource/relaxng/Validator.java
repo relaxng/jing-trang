@@ -138,8 +138,8 @@ public class Validator implements ContentHandler {
   public void endElement(String namespaceURI,
 			 String localName,
 			 String qName) throws SAXException {
-    /* The tricky thing here is that the derivative may be notAllowed simply because the parent
-       is notAllowed; we don't want to give an error in this case. */
+    // The tricky thing here is that the derivative that we compute may be notAllowed simply because the parent
+    // is notAllowed; we don't want to give an error in this case.
     if (collectingCharacters) {
       collectingCharacters = false;
       if (!setMemo(memo.textOnly())) {
@@ -147,10 +147,9 @@ public class Validator implements ContentHandler {
 	memo = memo.recoverAfter();
 	return;
       }
-      String data = charBuf.toString();
+      final String data = charBuf.toString();
       if (!setMemo(memo.dataDeriv(data, prefixMapping))) {
         PatternMemo next = memo.recoverAfter();
-        boolean suppressError = false;
         if (!memo.isNotAllowed()) {
           if (!next.isNotAllowed()
               || fixAfter(memo).dataDeriv(data, prefixMapping).isNotAllowed())
@@ -161,7 +160,6 @@ public class Validator implements ContentHandler {
     }
     else if (!setMemo(memo.endTagDeriv())) {
       PatternMemo next = memo.recoverAfter();
-      boolean suppressError = false;
       if (!memo.isNotAllowed()) {
         if (!next.isNotAllowed()
             || fixAfter(memo).endTagDeriv().isNotAllowed())
