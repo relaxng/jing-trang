@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 
-public class Analysis {
+class Analysis {
   private NamespaceManager nsm = new NamespaceManager();
   private AttlistMapper am = new AttlistMapper();
   private ErrorReporter er;
