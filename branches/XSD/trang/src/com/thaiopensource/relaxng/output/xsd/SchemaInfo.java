@@ -35,31 +35,10 @@ class SchemaInfo {
   private final Map childTypeMap = new HashMap();
   private final PatternVisitor childTypeVisitor = new ChildTypeVisitor();
 
-  static class ChildType {
-    private final String name;
-    private ChildType(String name) {
-      this.name = name;
-    }
-
-    public String toString() {
-      return name;
-    }
-
-    private static final ChildType SIMPLE = new ChildType("SIMPLE");
-    private static final ChildType EMPTY = new ChildType("EMPTY");
-    private static final ChildType NOT_ALLOWED = new ChildType("NOT_ALLOWED");
-    private static final ChildType COMPLEX = new ChildType("COMPLEX");
-  }
-
   abstract class PatternAnalysisVisitor extends AbstractVisitor {
     abstract Object get(Pattern p);
-    abstract Object combine(Object o1, Object o2);
-    Object choice(Object o1, Object o2) {
-      return combine(o1, o2);
-    }
-    Object group(Object o1, Object o2) {
-      return combine(o1, o2);
-    }
+    abstract Object choice(Object o1, Object o2);
+    abstract Object group(Object o1, Object o2);
     Object interleave(Object o1, Object o2) {
       return group(o1, o2);
     }
@@ -73,6 +52,9 @@ class SchemaInfo {
     abstract Object text();
     abstract Object data();
     abstract Object notAllowed();
+    Object list(Object obj) {
+      return data();
+    }
 
     public Object visitChoice(ChoicePattern p) {
       List list = p.getChildren();
@@ -135,7 +117,7 @@ class SchemaInfo {
     }
 
     public Object visitList(ListPattern p) {
-      return data();
+      return list(get(p.getChild()));
     }
 
     public Object visitNotAllowed(NotAllowedPattern p) {
@@ -153,47 +135,39 @@ class SchemaInfo {
     }
 
     Object text() {
-      return ChildType.COMPLEX;
+      return ChildType.TEXT;
     }
 
     Object data() {
-      return ChildType.SIMPLE;
+      return ChildType.DATA;
     }
 
     Object notAllowed() {
       return ChildType.NOT_ALLOWED;
     }
 
+    Object list(Object obj) {
+      if (obj.equals(ChildType.NOT_ALLOWED))
+        return obj;
+      return data();
+    }
+
     Object choice(Object o1, Object o2) {
-      if (o1 == ChildType.NOT_ALLOWED)
-        return o2;
-      if (o2 == ChildType.NOT_ALLOWED)
-        return o1;
-      return combine(o1, o2);
+      return ChildType.choice((ChildType)o1, (ChildType)o2);
     }
 
     Object group(Object o1, Object o2) {
-      if (o1 == ChildType.NOT_ALLOWED || o2 == ChildType.NOT_ALLOWED)
-        return ChildType.NOT_ALLOWED;
-      return combine(o1, o2);
-    }
-
-    Object combine(Object o1, Object o2) {
-      if (o1 == ChildType.EMPTY)
-        return o2;
-      if (o2 == ChildType.EMPTY)
-        return o1;
-      if (o1 == ChildType.SIMPLE && o2 == ChildType.SIMPLE)
-        return o1;
-      return ChildType.COMPLEX;
+      return ChildType.group((ChildType)o1, (ChildType)o2);
     }
 
     public Object visitElement(ElementPattern p) {
-      return ChildType.COMPLEX;
+      return ChildType.ELEMENT;
     }
 
     public Object visitAttribute(AttributePattern p) {
-      return ChildType.EMPTY;
+      if (getChildType(p.getChild()).equals(ChildType.NOT_ALLOWED))
+        return ChildType.NOT_ALLOWED;
+      return ChildType.ATTRIBUTE;
     }
   }
 
@@ -220,11 +194,7 @@ class SchemaInfo {
     return (Pattern)sc.getSchemas().get(sourceUri);
   }
 
-  boolean isSimpleType(Pattern p) {
-    return getChildType(p) == ChildType.SIMPLE;
-  }
-
-  private ChildType getChildType(Pattern p) {
+  ChildType getChildType(Pattern p) {
     ChildType ct = (ChildType)childTypeMap.get(p);
     if (ct == null) {
       ct = (ChildType)p.accept(childTypeVisitor);
