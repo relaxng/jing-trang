@@ -13,7 +13,7 @@ import org.xml.sax.helpers.LocatorImpl;
 import org.relaxng.datatype.ValidationContext;
 
 public class Validator implements ContentHandler {
-  private final PatternBuilder b;
+  private final PatternBuilder builder;
   private Locator locator;
   private final XMLReader xr;
   private PatternMemo memo;
@@ -96,7 +96,7 @@ public class Validator implements ContentHandler {
     if (!setMemo(memo.startTagOpenDeriv(name))) {
       error("impossible_element", localName);
       // XXX recover better
-      memo = b.getPatternMemo(b.makeAfter(b.makeNotAllowed(), memo.getPattern()));
+      memo = builder.getPatternMemo(builder.makeAfter(builder.makeNotAllowed(), memo.getPattern()));
     }
     int len = atts.getLength();
     for (int i = 0; i < len; i++) {
@@ -183,10 +183,10 @@ public class Validator implements ContentHandler {
     prefixMapping = prefixMapping.getPrevious();
   }
 
-  public Validator(Pattern pattern, PatternBuilder b, XMLReader xr) {
-    this.b = b;
+  public Validator(Pattern pattern, PatternBuilder builder, XMLReader xr) {
+    this.builder = builder;
     this.xr = xr;
-    this.memo = b.getPatternMemo(pattern);
+    this.memo = builder.getPatternMemo(pattern);
   }
 
   public boolean getValid() {
