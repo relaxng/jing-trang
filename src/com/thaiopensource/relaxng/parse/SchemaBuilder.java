@@ -40,4 +40,6 @@ public interface SchemaBuilder {
   ParsedNameClass makeAnyName(ParsedNameClass except, Location loc, Annotations anno);
   Location makeLocation(String systemId, int lineNumber, int columnNumber);
   Annotations makeAnnotations();
+  ParsedPattern makeErrorPattern();
+  ParsedNameClass makeErrorNameClass();
 }

@@ -1,6 +1,6 @@
 package com.thaiopensource.relaxng.parse;
 
-public class BuildException extends Exception {
+public class BuildException extends RuntimeException {
   private final Throwable cause;
   public BuildException(Throwable cause) {
     if (cause == null)
