@@ -19,6 +19,7 @@ import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.Context;
+import com.thaiopensource.relaxng.parse.CommentList;
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.DatatypeLibrary;
@@ -248,6 +249,16 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       addAfterAnnotation(lastComponent, ea);
     }
 
+    public void addComment(String value, Location loc) throws BuildException {
+      if (lastComponent == null) {
+        Comment comment = new Comment(value);
+        comment.setSourceLocation((SourceLocation)loc);
+        subject.getChildElementAnnotations().add(comment);
+      }
+      else
+       addAfterComment(lastComponent, value, loc);
+    }
+
     private void add(Component c) {
       components.add(c);
       lastComponent = c;
@@ -320,11 +331,40 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   }
 
   static private void addAfterAnnotation(Annotated a, ParsedElementAnnotation e) {
-    a.getFollowingElementAnnotations().add(e);
+    ((ElementAnnotationBuilderImpl)e).addTo(a.getFollowingElementAnnotations());
+  }
+
+  public ParsedPattern commentAfter(ParsedPattern p, String value, Location loc) throws BuildException {
+    addAfterComment((Pattern)p, value, loc);
+    return p;
+  }
+
+  public ParsedNameClass commentAfter(ParsedNameClass nc, String value, Location loc) throws BuildException {
+    addAfterComment((NameClass)nc, value, loc);
+    return nc;
+  }
+
+  static private void addAfterComment(Annotated a, String value, Location loc) {
+    Comment comment = new Comment(value);
+    comment.setSourceLocation((SourceLocation)loc);
+    a.getFollowingElementAnnotations().add(comment);
   }
 
   public Location makeLocation(String systemId, int lineNumber, int columnNumber) {
     return new SourceLocation(systemId, lineNumber, columnNumber);
+  }
+
+  static class CommentListImpl implements CommentList {
+    private List list = new Vector();
+    public void addComment(String value, Location loc) throws BuildException {
+      Comment comment = new Comment(value);
+      comment.setSourceLocation((SourceLocation)loc);
+      list.add(comment);
+    }
+  }
+
+  public CommentList makeCommentList() {
+    return new CommentListImpl();
   }
 
   private static class DataPatternBuilderImpl implements DataPatternBuilder {
@@ -366,11 +406,13 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   }
 
   private static class AnnotationsImpl implements Annotations {
+    private CommentList comments;
     private List attributes = new Vector();
     private List elements = new Vector();
     private Context context;
 
-    AnnotationsImpl(Context context) {
+    AnnotationsImpl(CommentList comments, Context context) {
+      this.comments = comments;
       this.context = context;
     }
 
@@ -383,11 +425,13 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     }
 
     public void addElement(ParsedElementAnnotation ea) throws BuildException {
-      elements.add(ea);
+      ((ElementAnnotationBuilderImpl)ea).addTo(elements);
     }
 
     void apply(Annotated subject) {
       subject.setContext(context);
+      if (comments != null)
+        subject.getLeadingComments().addAll(((CommentListImpl)comments).list);
       subject.getAttributeAnnotations().addAll(attributes);
       List list;
       if (subject.mayContainText())
@@ -398,14 +442,16 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     }
   }
 
-  public Annotations makeAnnotations(Context context) {
-    return new AnnotationsImpl(context);
+  public Annotations makeAnnotations(CommentList comments, Context context) {
+    return new AnnotationsImpl(comments, context);
   }
 
-  private static class ElementAnnotationBuilderImpl implements ElementAnnotationBuilder {
+  private static class ElementAnnotationBuilderImpl implements ElementAnnotationBuilder, ParsedElementAnnotation {
     private final ElementAnnotation element;
+    private final CommentList comments;
 
-    ElementAnnotationBuilderImpl(ElementAnnotation element) {
+    ElementAnnotationBuilderImpl(CommentList comments, ElementAnnotation element) {
+      this.comments = comments;
       this.element = element;
     }
 
@@ -424,20 +470,27 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     }
 
     public ParsedElementAnnotation makeElementAnnotation() throws BuildException {
-      return element;
+      return this;
     }
 
     public void addElement(ParsedElementAnnotation ea) throws BuildException {
-      element.getChildren().add(ea);
+      ((ElementAnnotationBuilderImpl)ea).addTo(element.getChildren());
+    }
+
+    void addTo(List elementList) {
+      if (comments != null)
+        elementList.addAll(((CommentListImpl)comments).list);
+      elementList.add(element);
     }
   }
 
-  public ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix, Location loc, Context context) {
+  public ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix, Location loc,
+                                                               CommentList comments, Context context) {
     ElementAnnotation element = new ElementAnnotation(ns, localName);
     element.setPrefix(prefix);
     element.setSourceLocation((SourceLocation)loc);
     element.setContext(context);
-    return new ElementAnnotationBuilderImpl(element);
+    return new ElementAnnotationBuilderImpl(comments, element);
   }
 
   private static Combine mapCombine(GrammarSection.Combine combine) {

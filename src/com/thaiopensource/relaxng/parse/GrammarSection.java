@@ -1,6 +1,6 @@
 package com.thaiopensource.relaxng.parse;
 
-public interface GrammarSection {
+public interface GrammarSection extends CommentList {
 
   static final class Combine {
     private final String name;

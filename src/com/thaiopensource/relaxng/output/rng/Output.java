@@ -43,6 +43,7 @@ import com.thaiopensource.relaxng.edit.AnnotationChild;
 import com.thaiopensource.relaxng.edit.ElementAnnotation;
 import com.thaiopensource.relaxng.edit.TextAnnotation;
 import com.thaiopensource.relaxng.edit.AttributeAnnotation;
+import com.thaiopensource.relaxng.edit.Comment;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 
@@ -106,6 +107,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitElement(ElementPattern p) {
+    leadingAnnotations(p);
     xw.startElement("element");
     boolean usedNameAtt = tryNameAttribute(p.getNameClass(), false);
     innerAnnotations(p);
@@ -117,6 +119,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitAttribute(AttributePattern p) {
+    leadingAnnotations(p);
     xw.startElement("attribute");
     boolean usedNameAtt = tryNameAttribute(p.getNameClass(), true);
     innerAnnotations(p);
@@ -187,12 +190,14 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitGrammar(GrammarPattern p) {
+    leadingAnnotations(p);
     xw.startElement("grammar");
     finishContainer(p, p);
     return null;
   }
 
   public Object visitExternalRef(ExternalRefPattern p) {
+    leadingAnnotations(p);
     xw.startElement("externalRef");
     xw.attribute("href", od.reference(sourceUri, p.getHref()));
     if (p.getNs() != NameClass.INHERIT_NS
@@ -212,6 +217,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitAbstractRef(String name, AbstractRefPattern p) {
+    leadingAnnotations(p);
     xw.startElement(name);
     xw.attribute("name", p.getName());
     innerAnnotations(p);
@@ -220,6 +226,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitValue(ValuePattern p) {
+    leadingAnnotations(p);
     xw.startElement("value");
     if (!p.getType().equals("token")
         || !p.getDatatypeLibrary().equals("")) {
@@ -242,6 +249,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitData(DataPattern p) {
+    leadingAnnotations(p);
     xw.startElement("data");
     xw.attribute("type", p.getType());
     if (!p.getDatatypeLibrary().equals(datatypeLibrary))
@@ -250,9 +258,10 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
     List list = p.getParams();
     for (int i = 0, len = list.size(); i < len; i++) {
       Param param = (Param)list.get(i);
+      leadingAnnotations(param);
       xw.startElement("param");
       xw.attribute("name", param.getName());
-      innerAnnotations(p);
+      innerAnnotations(param);
       xw.text(param.getValue());
       end(param);
     }
@@ -287,6 +296,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitNullary(String name, Pattern p) {
+    leadingAnnotations(p);
     xw.startElement(name);
     innerAnnotations(p);
     end(p);
@@ -294,6 +304,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitUnary(String name, UnaryPattern p) {
+    leadingAnnotations(p);
     xw.startElement(name);
     innerAnnotations(p);
     implicitGroup(p.getChild());
@@ -302,6 +313,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitComposite(String name, CompositePattern p) {
+    leadingAnnotations(p);
     xw.startElement(name);
     innerAnnotations(p);
     List list = p.getChildren();
@@ -312,6 +324,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitChoice(ChoiceNameClass nc) {
+    leadingAnnotations(nc);
     xw.startElement("choice");
     innerAnnotations(nc);
     List list = nc.getChildren();
@@ -322,6 +335,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitAnyName(AnyNameNameClass nc) {
+    leadingAnnotations(nc);
     xw.startElement("anyName");
     innerAnnotations(nc);
     visitExcept(nc);
@@ -330,6 +344,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitNsName(NsNameNameClass nc) {
+    leadingAnnotations(nc);
     xw.startElement("nsName");
     if (nc.getNs() != NameClass.INHERIT_NS
         && !nc.getNs().equals(prefixMap.get("")))
@@ -350,6 +365,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitName(NameNameClass nc) {
+    leadingAnnotations(nc);
     xw.startElement("name");
     String ns = nc.getNamespaceUri();
     if (ns == NameClass.INHERIT_NS) {
@@ -376,6 +392,7 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitDefine(DefineComponent c) {
+    leadingAnnotations(c);
     String name = c.getName();
     if (name == c.START)
       xw.startElement("start");
@@ -392,12 +409,14 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public Object visitDiv(DivComponent c) {
+    leadingAnnotations(c);
     xw.startElement("div");
     finishContainer(c, c);
     return null;
   }
 
   public Object visitInclude(IncludeComponent c) {
+    leadingAnnotations(c);
     xw.startElement("include");
     xw.attribute("href", od.reference(sourceUri, c.getHref()));
     finishContainer(c, c);
@@ -410,6 +429,10 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
     for (int i = 0, len = list.size(); i < len; i++)
       ((Component)list.get(i)).accept(this);
     end(subject);
+  }
+
+  public void leadingAnnotations(Annotated subject) {
+    annotationChildren(subject.getLeadingComments(), true);
   }
 
   public void innerAnnotations(Annotated subject) {
@@ -451,8 +474,10 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
         annotationChildren(elem.getChildren(), haveDefaultNamespace);
         xw.endElement();
       }
-      else
+      else if (child instanceof TextAnnotation)
         xw.text(((TextAnnotation)child).getValue());
+      else if (child instanceof Comment)
+        xw.comment(((Comment)child).getValue());
     }
   }
 
@@ -492,7 +517,8 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   private static boolean hasAnnotations(Annotated subject) {
-    return (!subject.getAttributeAnnotations().isEmpty()
+    return (!subject.getLeadingComments().isEmpty()
+            || !subject.getAttributeAnnotations().isEmpty()
             || !subject.getChildElementAnnotations().isEmpty()
             || !subject.getFollowingElementAnnotations().isEmpty());
   }

@@ -31,6 +31,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 /*
+Deal with comments
 Deal with element annotations
 */
 class SchemaParser {
@@ -178,7 +179,7 @@ class SchemaParser {
 	  xmlBaseHandler.xmlBaseAttribute(atts.getValue(i));
         else {
           if (annotations == null)
-            annotations = schemaBuilder.makeAnnotations(this);
+            annotations = schemaBuilder.makeAnnotations(null, this);
           String qName = atts.getQName(i);
           String prefix = null;
           if (qName.equals("")) {

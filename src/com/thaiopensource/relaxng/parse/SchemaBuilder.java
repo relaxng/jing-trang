@@ -24,6 +24,8 @@ public interface SchemaBuilder {
   ParsedNameClass annotate(ParsedNameClass nc, Annotations anno) throws BuildException;
   ParsedPattern annotateAfter(ParsedPattern p, ParsedElementAnnotation e) throws BuildException;
   ParsedNameClass annotateAfter(ParsedNameClass nc, ParsedElementAnnotation e) throws BuildException;
+  ParsedPattern commentAfter(ParsedPattern p, String value, Location loc) throws BuildException;
+  ParsedNameClass commentAfter(ParsedNameClass nc, String value, Location loc) throws BuildException;
   ParsedPattern makeExternalRef(String uri, String ns, Scope scope,
                                 Location loc, Annotations anno) throws BuildException, IllegalSchemaException;
   ParsedNameClass makeChoice(ParsedNameClass[] nameClasses, int nNameClasses, Location loc, Annotations anno);
@@ -41,8 +43,10 @@ public interface SchemaBuilder {
    */
   ParsedNameClass makeAnyName(ParsedNameClass except, Location loc, Annotations anno);
   Location makeLocation(String systemId, int lineNumber, int columnNumber);
-  Annotations makeAnnotations(Context context);
-  ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix, Location loc, Context context);
+  Annotations makeAnnotations(CommentList comments, Context context);
+  ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix,
+                                                        Location loc, CommentList comments, Context context);
+  CommentList makeCommentList();
   ParsedPattern makeErrorPattern();
   ParsedNameClass makeErrorNameClass();
 }

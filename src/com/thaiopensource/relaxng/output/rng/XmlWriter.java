@@ -81,6 +81,47 @@ class XmlWriter {
     inText = true;
   }
 
+  void comment(String s) {
+    if (inStartTag) {
+      maybeWriteTopLevelAttributes();
+      inStartTag = false;
+      write(">");
+      newline();
+    }
+    if (!inText)
+      indent();
+    write("<!--");
+    int start = 0;
+    level++;
+    for (;;) {
+      int i = s.indexOf('\n', start);
+      if (i < 0) {
+        if (start > 0) {
+          newline();
+          indent();
+          write(s.substring(start));
+          level--;
+          newline();
+          indent();
+        }
+        else {
+          level--;
+          write(' ');
+          write(s);
+          write(' ');
+        }
+        break;
+      }
+      newline();
+      indent();
+      write(s.substring(start, i));
+      start = i + 1;
+    }
+    write("-->");
+    if (!inText)
+      newline();
+  }
+
   void data(String s) {
     int n = s.length();
     for (int i = 0; i < n; i++) {

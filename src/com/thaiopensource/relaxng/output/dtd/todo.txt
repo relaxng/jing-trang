@@ -1,7 +1,8 @@
 Bulletproof LocalOutputDirectory
 Pretty-print content models to avoid excessively long lines
-Generate comments from a:documentation or dtd:comment elements
+Output comments
 
+Generate comments from a:documentation elements
 Avoid warning for content that is data of type string
 Option to generate namespace declarations only on start elements
 Generate parameter entities to allow change of namespace prefix
