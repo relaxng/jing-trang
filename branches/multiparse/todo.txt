@@ -1,7 +1,3 @@
-Document \x in compact syntax.
-
-Document ## in compact syntax.
-
 Handle comments embedded within strings better.
 
 Make SAX-based parser preserve element annotations.
