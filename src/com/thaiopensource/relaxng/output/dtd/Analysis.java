@@ -38,6 +38,8 @@ import com.thaiopensource.relaxng.edit.SchemaCollection;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 public class Analysis {
   private NamespaceManager nsm = new NamespaceManager();
@@ -73,12 +75,19 @@ public class Analysis {
 
   private class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
     private ElementPattern ancestorPattern;
+    private Set pendingRefs;
 
     public Analyzer() {
+      pendingRefs = new HashSet();
     }
 
     private Analyzer(ElementPattern ancestorPattern) {
       this.ancestorPattern = ancestorPattern;
+      pendingRefs = new HashSet();
+    }
+
+    private Analyzer(Set pendingRefs) {
+      this.pendingRefs = pendingRefs;
     }
 
     public Object visitEmpty(EmptyPattern p) {
@@ -184,12 +193,19 @@ public class Analysis {
     }
 
     public Object visitRef(RefPattern p) {
-      Pattern def = getBody(p.getName());
+      String name = p.getName();
+      Pattern def = getBody(name);
       if (def == null) {
         er.error("undefined_ref", p.getSourceLocation());
         return Type.ERROR;
       }
-      Type t = Type.ref(new Analyzer(null).analyzeType(def));
+      if (pendingRefs.contains(name)) {
+        er.error("ref_loop", p.getSourceLocation());
+        return Type.ERROR;
+      }
+      pendingRefs.add(name);
+      Type t = Type.ref(new Analyzer(pendingRefs).analyzeType(def));
+      pendingRefs.remove(name);
       if (t.isA(Type.ATTRIBUTE_GROUP))
         am.noteAttributeGroupRef(ancestorPattern, p.getName());
       return Type.ref(t);
@@ -247,7 +263,7 @@ public class Analysis {
         startType = analyzeType(c.getBody());
       }
       else {
-        Type t = new Analyzer(null).analyzeType(c.getBody());
+        Type t = new Analyzer().analyzeType(c.getBody());
         if (t == Type.COMPLEX_TYPE || t == Type.COMPLEX_TYPE_MODEL_GROUP)
           er.error("sorry_complex_type_define", c.getSourceLocation());
       }

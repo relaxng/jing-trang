@@ -1,4 +1,3 @@
-Check for bad recursion
 Check single element type
 Warning when approximating datatypes
 Avoid duplicate namespace declarations for global attributes
