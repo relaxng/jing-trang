@@ -1,6 +1,10 @@
 More helpful syntax error messages with non-XML syntax parser.
 
-Namespace declaraions in element annotations.
+Namespace declarations in element annotations.
+
+Annotations in SAX parser.
+
+Annotations in XML output.
 
 Support for IDREF checking via JARV.
 
