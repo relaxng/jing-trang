@@ -1,6 +1,6 @@
 Check for duplicate attributes.
 
-Check for violations of interleave restriction.
+Check for violations of RELAX NG interleave restriction.
 
 Approximation warnings:
 - interleave
