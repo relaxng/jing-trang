@@ -638,6 +638,96 @@ element e1:x {
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+namespace e1 = "http://www.example.com/1"
+
+element e1:x {
+  element y {
+    element e1:z {
+      empty
+    }
+  }
+}
+
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:e1="http://www.example.com/1">
+  <xs:element name="x">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="y" form="unqualified">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="z">
+                <xs:complexType/>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+namespace e1 = "http://www.example.com/1"
+namespace e2 = "http://www.example.com/2"
+
+element e1:x {
+  element e2:y {
+    element e1:z {
+      empty
+    }
+  }
+}
+</correct>
+</compact>
+<xsd>
+<resource name="e2.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
+  <xs:group name="anon0">
+    <xs:sequence>
+      <xs:element name="y">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:group ref="e1:anon0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:e2="http://www.example.com/2" xmlns:e1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/2" schemaLocation="e2.xsd"/>
+  <xs:element name="x">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:group ref="e2:anon0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="anon0">
+    <xs:sequence>
+      <xs:element name="z">
+        <xs:complexType/>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>
