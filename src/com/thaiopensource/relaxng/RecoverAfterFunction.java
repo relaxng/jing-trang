@@ -7,17 +7,17 @@ class RecoverAfterFunction extends AbstractPatternFunction {
     this.builder = builder;
   }
 
-  public Pattern caseOther(Pattern p) {
+  public Object caseOther(Pattern p) {
     throw new RuntimeException("recover after botch");
   }
 
-  public Pattern caseChoice(ChoicePattern p) {
-    return builder.makeChoice(p.getOperand1().apply(this),
-			      p.getOperand2().apply(this));
+  public Object caseChoice(ChoicePattern p) {
+    return builder.makeChoice(p.getOperand1().applyForPattern(this),
+			      p.getOperand2().applyForPattern(this));
 
   }
 
-  public Pattern caseAfter(AfterPattern p) {
+  public Object caseAfter(AfterPattern p) {
     return p.getOperand2();
   }
 }

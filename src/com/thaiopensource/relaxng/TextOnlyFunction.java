@@ -4,10 +4,10 @@ class TextOnlyFunction extends EndAttributesFunction {
   TextOnlyFunction(PatternBuilder builder) {
     super(builder);
   }
-  public Pattern caseAttribute(AttributePattern p) {
+  public Object caseAttribute(AttributePattern p) {
     return p;
   }
-  public Pattern caseElement(ElementPattern p) {
+  public Object caseElement(ElementPattern p) {
     return getPatternBuilder().makeNotAllowed();
   }
 

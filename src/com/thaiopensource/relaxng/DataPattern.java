@@ -20,7 +20,7 @@ class DataPattern extends StringPattern {
     visitor.visitData(dt);
   }
 
-  Pattern apply(PatternFunction f) {
+  Object apply(PatternFunction f) {
     return f.caseData(this);
   }
 

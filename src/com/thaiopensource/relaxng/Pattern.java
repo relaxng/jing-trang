@@ -92,7 +92,11 @@ public abstract class Pattern {
   }
 
   abstract void accept(PatternVisitor visitor);
-  abstract Pattern apply(PatternFunction f);
+  abstract Object apply(PatternFunction f);
+
+  Pattern applyForPattern(PatternFunction f) {
+    return (Pattern)apply(f);
+  }
 
   static boolean contentTypeGroupable(int ct1, int ct2) {
     if (ct1 == EMPTY_CONTENT_TYPE || ct2 == EMPTY_CONTENT_TYPE)

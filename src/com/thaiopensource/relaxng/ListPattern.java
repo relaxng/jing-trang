@@ -39,7 +39,7 @@ class ListPattern extends Pattern {
     visitor.visitList(p);
   }
 
-  Pattern apply(PatternFunction f) {
+  Object apply(PatternFunction f) {
     return f.caseList(this);
   }
 

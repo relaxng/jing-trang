@@ -38,64 +38,64 @@ final class PatternMemo {
 
   PatternMemo endAttributes() {
     if (memoEndAttributes == null)
-      memoEndAttributes = apply(builder.getEndAttributesFunction());
+      memoEndAttributes = applyForPatternMemo(builder.getEndAttributesFunction());
     return memoEndAttributes;
   }
 
   PatternMemo endAttributes(PatternFunction f) {
     if (memoEndAttributes == null)
-      memoEndAttributes = apply(f);
+      memoEndAttributes = applyForPatternMemo(f);
     return memoEndAttributes;
   }
 
   PatternMemo ignoreMissingAttributes() {
     if (memoIgnoreMissingAttributes == null)
       memoIgnoreMissingAttributes
-	= apply(builder.getIgnoreMissingAttributesFunction());
+	= applyForPatternMemo(builder.getIgnoreMissingAttributesFunction());
     return memoIgnoreMissingAttributes;
   }
 
   PatternMemo ignoreMissingAttributes(PatternFunction f) {
     if (memoIgnoreMissingAttributes == null)
-      memoIgnoreMissingAttributes = apply(f);
+      memoIgnoreMissingAttributes = applyForPatternMemo(f);
     return memoIgnoreMissingAttributes;
   }
 
 
   PatternMemo textOnly() {
     if (memoTextOnly == null)
-      memoTextOnly = apply(builder.getTextOnlyFunction());
+      memoTextOnly = applyForPatternMemo(builder.getTextOnlyFunction());
     return memoTextOnly;
   }
 
   PatternMemo textOnly(PatternFunction f) {
     if (memoTextOnly == null)
-      memoTextOnly = apply(f);
+      memoTextOnly = applyForPatternMemo(f);
     return memoTextOnly;
   }
 
   PatternMemo endTagDeriv() {
     if (memoEndTagDeriv == null)
-      memoEndTagDeriv = apply(builder.getEndTagDerivFunction());
+      memoEndTagDeriv = applyForPatternMemo(builder.getEndTagDerivFunction());
     return memoEndTagDeriv;
   }
 
   PatternMemo endTagDeriv(PatternFunction f) {
     if (memoEndTagDeriv == null)
-      memoEndTagDeriv = apply(f);
+      memoEndTagDeriv = applyForPatternMemo(f);
     return memoEndTagDeriv;
   }
 
 
   PatternMemo mixedTextDeriv() {
     if (memoMixedTextDeriv == null)
-      memoMixedTextDeriv = apply(builder.getMixedTextDerivFunction());
+      memoMixedTextDeriv = applyForPatternMemo(builder.getMixedTextDerivFunction());
     return memoMixedTextDeriv;
   }
 
   PatternMemo mixedTextDeriv(PatternFunction f) {
     if (memoMixedTextDeriv == null)
-      memoMixedTextDeriv = apply(f);
+      memoMixedTextDeriv = applyForPatternMemo(f);
     return memoMixedTextDeriv;
   }
 
@@ -118,7 +118,7 @@ final class PatternMemo {
     }
     if (f == null)
       f = new StartTagOpenDerivFunction(name, builder);
-    tem = apply(f);
+    tem = applyForPatternMemo(f);
     startTagOpenDerivMap.put(name, tem);
     return tem;
   }
@@ -142,22 +142,22 @@ final class PatternMemo {
     }
     if (f == null)
       f = new StartAttributeDerivFunction(name, builder);
-    tem = apply(f);
+    tem = applyForPatternMemo(f);
     startAttributeDerivMap.put(name, tem);
     return tem;
   }
 
   PatternMemo dataDeriv(String str, ValidationContext vc) {
     // XXX cache it (at least if it doesn't use the string value)
-    return apply(new DataDerivFunction(str, vc, builder));
+    return applyForPatternMemo(new DataDerivFunction(str, vc, builder));
   }
 
   PatternMemo recoverAfter() {
     // XXX memoize
-    return apply(builder.getRecoverAfterFunction());
+    return applyForPatternMemo(builder.getRecoverAfterFunction());
   }
 
-  private PatternMemo apply(PatternFunction f) {
-    return builder.getPatternMemo(pattern.apply(f));
+  private PatternMemo applyForPatternMemo(PatternFunction f) {
+    return builder.getPatternMemo(pattern.applyForPattern(f));
   }
 }

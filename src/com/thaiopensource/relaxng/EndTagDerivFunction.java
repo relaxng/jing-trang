@@ -7,16 +7,16 @@ class EndTagDerivFunction extends AbstractPatternFunction {
     this.builder = builder;
   }
 
-  public Pattern caseOther(Pattern p) {
+  public Object caseOther(Pattern p) {
     return builder.makeNotAllowed();
   }
 
-  public Pattern caseChoice(ChoicePattern p) {
+  public Object caseChoice(ChoicePattern p) {
     return builder.makeChoice(memoApply(p.getOperand1()),
 			      memoApply(p.getOperand2()));
   }
 
-  public Pattern caseAfter(AfterPattern p) {
+  public Object caseAfter(AfterPattern p) {
     if (p.getOperand1().isNullable())
       return p.getOperand2();
     else

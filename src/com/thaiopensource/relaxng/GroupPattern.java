@@ -41,7 +41,7 @@ class GroupPattern extends BinaryPattern {
   void accept(PatternVisitor visitor) {
     visitor.visitGroup(p1, p2);
   }
-  Pattern apply(PatternFunction f) {
+  Object apply(PatternFunction f) {
     return f.caseGroup(this);
   }
 }

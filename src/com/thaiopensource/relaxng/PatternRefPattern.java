@@ -66,7 +66,7 @@ class PatternRefPattern extends Pattern {
     p.accept(visitor);
   }
 
-  Pattern apply(PatternFunction f) {
+  Object apply(PatternFunction f) {
     return p.apply(f);
   }
 
