@@ -80,7 +80,7 @@ nameClass ::=
   | openNameClass "-" basicNameClass followAnnotations
 
 basicNameClass ::=
-  annotations? QName
+  annotations? (identifier | CName)
   | openNameClass
   | annotations? "(" nameClass ")"
 
