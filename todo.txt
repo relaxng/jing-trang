@@ -8,8 +8,6 @@ Make SAX-based parser preserve element annotations.
 
 SAXParser and comment formatting.
 
-Test datatype ordering (including float, dateTime, duration).
-
 Trang should output a:documentation as comments in the DTD.
 
 Put location information in error messages into a standard format

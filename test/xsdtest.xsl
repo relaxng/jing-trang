@@ -26,7 +26,7 @@
 </correct>
 <xsl:apply-templates select="valid|invalid"/>
 </testCase>
-<xsl:apply-templates select="equiv/class|length"/>
+<xsl:apply-templates select="equiv/class|length|lessThan|incomparable"/>
 </xsl:template>
 
 <xsl:template match="valid">
@@ -136,6 +136,100 @@
   </testCase>
 </xsl:if>
 
+</xsl:template>
+
+<xsl:template match="lessThan">
+<testCase>
+<correct>
+  <element xmlns="http://relaxng.org/ns/structure/1.0" name="doc"
+	   datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <data type="{../@name}">
+      <param name="minExclusive">
+        <xsl:value-of select="value[1]"/>
+      </param>
+    </data>
+   </element>
+</correct>
+<valid>
+<doc>
+<xsl:value-of select="value[2]"/>
+</doc>
+</valid>
+<invalid>
+<doc>
+<xsl:value-of select="value[1]"/>
+</doc>
+</invalid>
+</testCase>
+<testCase>
+<correct>
+  <element xmlns="http://relaxng.org/ns/structure/1.0" name="doc"
+	   datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <data type="{../@name}">
+      <param name="minExclusive">
+        <xsl:value-of select="value[2]"/>
+      </param>
+    </data>
+   </element>
+</correct>
+<invalid>
+<doc>
+<xsl:value-of select="value[1]"/>
+</doc>
+</invalid>
+<invalid>
+<doc>
+<xsl:value-of select="value[2]"/>
+</doc>
+</invalid>
+</testCase>
+</xsl:template>
+
+<xsl:template match="incomparable">
+<testCase>
+<correct>
+  <element xmlns="http://relaxng.org/ns/structure/1.0" name="doc"
+	   datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <data type="{../@name}">
+      <param name="minExclusive">
+        <xsl:value-of select="value[1]"/>
+      </param>
+    </data>
+   </element>
+</correct>
+<invalid>
+<doc>
+<xsl:value-of select="value[2]"/>
+</doc>
+</invalid>
+<invalid>
+<doc>
+<xsl:value-of select="value[1]"/>
+</doc>
+</invalid>
+</testCase>
+<testCase>
+<correct>
+  <element xmlns="http://relaxng.org/ns/structure/1.0" name="doc"
+	   datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <data type="{../@name}">
+      <param name="minExclusive">
+        <xsl:value-of select="value[2]"/>
+      </param>
+    </data>
+   </element>
+</correct>
+<invalid>
+<doc>
+<xsl:value-of select="value[1]"/>
+</doc>
+</invalid>
+<invalid>
+<doc>
+<xsl:value-of select="value[2]"/>
+</doc>
+</invalid>
+</testCase>
 </xsl:template>
 
 </xsl:stylesheet>

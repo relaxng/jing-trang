@@ -71,6 +71,13 @@
 <invalid>-P</invalid>
 <equiv>
   <class>
+    <value>-P6M</value>
+  </class>
+  <class>
+    <value>P0Y</value>
+    <value>-P0Y</value>
+  </class>
+  <class>
     <value>P1Y</value>
     <value>P001Y</value>
     <value>P001Y0M</value>
@@ -87,6 +94,118 @@
     <value>PT1.0S</value>
   </class>
 </equiv>
+<lessThan>
+  <value>PT1M</value>
+  <value>PT61S</value>
+</lessThan>
+<lessThan>
+  <value>PT59S</value>
+  <value>PT1M</value>
+</lessThan>
+<incomparable>
+  <value>PT60S</value>
+  <value>PT1M</value>
+</incomparable>
+<lessThan>
+  <value>PT1H</value>
+  <value>PT61M</value>
+</lessThan>
+<lessThan>
+  <value>PT59M</value>
+  <value>PT1H</value>
+</lessThan>
+<incomparable>
+  <value>PT60M</value>
+  <value>PT1H</value>
+</incomparable>
+<lessThan>
+  <value>P1D</value>
+  <value>PT25H</value>
+</lessThan>
+<lessThan>
+  <value>PT23H</value>
+  <value>P1D</value>
+</lessThan>
+<incomparable>
+  <value>P1D</value>
+  <value>PT24H</value>
+</incomparable>
+<lessThan>
+  <value>P1Y</value>
+  <value>P13M</value>
+</lessThan>
+<lessThan>
+  <value>P11M</value>
+  <value>P1Y</value>
+</lessThan>
+<incomparable>
+  <value>P12M</value>
+  <value>P1Y</value>
+</incomparable>
+<lessThan>
+  <value>P364D</value>
+  <value>P1Y</value>
+</lessThan>
+<incomparable>
+  <value>P1Y</value>
+  <value>P365D</value>
+</incomparable>
+<incomparable>
+  <value>P1Y</value>
+  <value>P366D</value>
+</incomparable>
+<lessThan>
+  <value>P1Y</value>
+  <value>P367D</value>
+</lessThan>
+<lessThan>
+  <value>P149D</value>
+  <value>P5M</value>
+</lessThan>
+<incomparable>
+  <value>P150D</value>
+  <value>P5M</value>
+</incomparable>
+<incomparable>
+  <value>P151D</value>
+  <value>P5M</value>
+</incomparable>
+<incomparable>
+  <value>P152D</value>
+  <value>P5M</value>
+</incomparable>
+<incomparable>
+  <value>P153D</value>
+  <value>P5M</value>
+</incomparable>
+<lessThan>
+  <value>P5M</value>
+  <value>P154D</value>
+</lessThan>
+<lessThan>
+  <value>P27D</value>
+  <value>P1M</value>
+</lessThan>
+<incomparable>
+  <value>P28D</value>
+  <value>P1M</value>
+</incomparable>
+<incomparable>
+  <value>P29D</value>
+  <value>P1M</value>
+</incomparable>
+<incomparable>
+  <value>P30D</value>
+  <value>P1M</value>
+</incomparable>
+<incomparable>
+  <value>P31D</value>
+  <value>P1M</value>
+</incomparable>
+<lessThan>
+  <value>P1M</value>
+  <value>P32D</value>
+</lessThan>
 </datatype>
 <datatype name="time">
 <valid>12:45:00</valid>
@@ -95,6 +214,14 @@
 <datatype name="date">
 <valid>1886-12-01</valid>
 <valid>1886-12-01Z</valid>
+<lessThan>
+  <value>1066-12-31</value>
+  <value>1900-01-01</value>
+</lessThan>
+<lessThan>
+  <value>1900-01-01</value>
+  <value>1900-01-02</value>
+</lessThan>
 </datatype>
 <datatype name="gYearMonth">
 <valid>1996-12</valid>
@@ -115,14 +242,34 @@
 <datatype name="gYear">
 <valid>2001</valid>
 <valid>2001Z</valid>
+<lessThan>
+  <value>1999</value>
+  <value>2000</value>
+</lessThan>
+<lessThan>
+  <value>1999+07:00</value>
+  <value>2000+07:00</value>
+</lessThan>
 </datatype>
 <datatype name="gMonthDay">
 <valid>--12-01</valid>
 <valid>--12-01Z</valid>
+<lessThan>
+  <value>--12-01</value>
+  <value>--12-04</value>
+</lessThan>
+<lessThan>
+  <value>--11-17</value>
+  <value>--12-04</value>
+</lessThan>
 </datatype>
 <datatype name="gDay">
 <valid>---20</valid>
 <valid>---20Z</valid>
+<lessThan>
+  <value>---01</value>
+  <value>---31</value>
+</lessThan>
 </datatype>
 <datatype name="gMonth">
 <valid>--12</valid>
@@ -133,6 +280,14 @@
 <invalid>--00</invalid>
 <invalid>--13</invalid>
 <invalid>- -13</invalid>
+<lessThan>
+  <value>--01</value>
+  <value>--12</value>
+</lessThan>
+<lessThan>
+  <value>--01</value>
+  <value>--02</value>
+</lessThan>
 </datatype>
 <datatype name="boolean">
 <valid>true</valid>
@@ -274,6 +429,26 @@ B EEF </value>
   <value> NaN </value>
 </class>
 </equiv>
+<lessThan>
+  <value>-INF</value>
+  <value>-1000</value>
+</lessThan>
+<lessThan>
+  <value>1000</value>
+  <value>INF</value>
+</lessThan>
+<lessThan>
+  <value>-1</value>
+  <value>1</value>
+</lessThan>
+<lessThan>
+  <value>0</value>
+  <value>1</value>
+</lessThan>
+<lessThan>
+  <value>-1</value>
+  <value>0</value>
+</lessThan>
 </datatype>
 <datatype name="double">
 <valid>1.0</valid>
@@ -320,6 +495,26 @@ B EEF </value>
   <value> NaN </value>
 </class>
 </equiv>
+<lessThan>
+  <value>-INF</value>
+  <value>-1000</value>
+</lessThan>
+<lessThan>
+  <value>1000</value>
+  <value>INF</value>
+</lessThan>
+<lessThan>
+  <value>-1</value>
+  <value>1</value>
+</lessThan>
+<lessThan>
+  <value>0</value>
+  <value>1</value>
+</lessThan>
+<lessThan>
+  <value>-1</value>
+  <value>0</value>
+</lessThan>
 </datatype>
 <datatype name="QName">
 <valid>foo</valid>
@@ -373,6 +568,10 @@ B EEF </value>
 <invalid>1 .2</invalid>
 <invalid>1+</invalid>
 <invalid>+ 1</invalid>
+<lessThan>
+  <value>0</value>
+  <value>1</value>
+</lessThan>
 </datatype>
 <datatype name="nonPositiveInteger">
 <valid>-1</valid>
