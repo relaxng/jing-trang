@@ -265,8 +265,8 @@ class Analysis {
       }
       else {
         Type t = new Analyzer().analyzeType(c.getBody());
-        if (t == Type.COMPLEX_TYPE || t == Type.COMPLEX_TYPE_MODEL_GROUP)
-          er.error("sorry_complex_type_define", c.getSourceLocation());
+        if (t == Type.COMPLEX_TYPE || t == Type.COMPLEX_TYPE_MODEL_GROUP || t == Type.COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS)
+         ; // XXX give a warning that attributes from this will be expanded
       }
       return null;
     }

@@ -230,7 +230,8 @@ class DtdOutput {
     }
 
     public Object visitRef(RefPattern p) {
-      if (getType(p) == Type.MIXED_MODEL)
+      Type t = getType(p);
+      if (t == Type.MIXED_MODEL || t == Type.COMPLEX_TYPE)
         super.visitRef(p);
       else {
         buf.append('(');
@@ -256,10 +257,25 @@ class DtdOutput {
 
     public Object visitMixed(MixedPattern p) {
       buf.append('(');
-      buf.append("#PCDATA|");
-      ((ZeroOrMorePattern)p.getChild()).getChild().accept(nestedContentModelOutput);
-      buf.append(')');
-      buf.append('*');
+      if (getType(p.getChild()).isA(Type.ATTRIBUTE_GROUP))
+        buf.append("#PCDATA)");
+      else {
+        buf.append("#PCDATA|");
+        Pattern child = p.getChild();
+        while (child instanceof CompositePattern) {
+          List list = ((CompositePattern)child).getChildren();
+          for (int i = 0, len = list.size(); i < len; i++) {
+            Pattern member = (Pattern)list.get(i);
+            if (!getType(member).isA(Type.ATTRIBUTE_GROUP)) {
+              child = member;
+              break;
+            }
+          }
+        }
+        ((ZeroOrMorePattern)child).getChild().accept(nestedContentModelOutput);
+        buf.append(')');
+        buf.append('*');
+      }
       return null;
     }
 
@@ -298,11 +314,18 @@ class DtdOutput {
       return null;
     }
 
+    public Object visitMixed(MixedPattern p) {
+      return p.getChild().accept(this);
+    }
+
     public Object visitRef(RefPattern p) {
-      if (getType(p).isA(Type.ATTRIBUTE_GROUP) && analysis.getParamEntityElementName(p.getName()) == null) {
+      Type t = getType(p);
+      if (t.isA(Type.ATTRIBUTE_GROUP) && analysis.getParamEntityElementName(p.getName()) == null) {
         indent();
         paramEntityRef(p);
       }
+      else if (t == Type.COMPLEX_TYPE || t == Type.COMPLEX_TYPE_MODEL_GROUP || t == Type.COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS)
+        getBody(p.getName()).accept(this);
       return null;
     }
 
@@ -621,9 +644,10 @@ class DtdOutput {
     doneParamEntities.add(name);
     Type t = getType(body);
     buf.setLength(0);
-    if (t.isA(Type.MODEL_GROUP) || t.isA(Type.NOT_ALLOWED) || t.isA(Type.MIXED_ELEMENT_CLASS))
+    if (t.isA(Type.MODEL_GROUP) || t.isA(Type.NOT_ALLOWED) || t.isA(Type.MIXED_ELEMENT_CLASS)
+        || t == Type.COMPLEX_TYPE_MODEL_GROUP || t == Type.COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS)
       body.accept(nestedContentModelOutput);
-    else if (t == Type.MIXED_MODEL)
+    else if (t == Type.MIXED_MODEL || t == Type.COMPLEX_TYPE)
       body.accept(topLevelContentModelOutput);
     else if (t.isA(Type.ATTRIBUTE_GROUP))
       body.accept(attributeOutput);
