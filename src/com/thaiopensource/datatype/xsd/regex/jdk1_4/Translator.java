@@ -428,13 +428,24 @@ public class Translator {
           buf.append(lo.charAt(i));
           char min = lo.charAt(i + 1);
           char max = lo.charAt(i + 2);
-          if (min == max)
+          if (min == max && (i + 3 >= len || lo.charAt(i + 3) != lo.charAt(i)))
             buf.append(min);
           else {
             buf.append('[');
-            buf.append(min);
-            buf.append('-');
-            buf.append(max);
+            for (;;) {
+              if (min == max)
+                buf.append(min);
+              else {
+                buf.append(min);
+                buf.append('-');
+                buf.append(max);
+              }
+              if (i + 3 >= len || lo.charAt(i + 3) != lo.charAt(i))
+                break;
+              i += 3;
+              min = lo.charAt(i + 1);
+              max = lo.charAt(i + 2);
+            }
             buf.append(']');
           }
         }
@@ -1253,5 +1264,27 @@ public class Translator {
     for (int i = 0, len = members.length(); i < len; i++)
       list.add(new SingleChar(members.charAt(i)));
     return new Union(list);
+  }
+
+  public static void main(String[] args) throws RegexSyntaxException {
+    String s = translate(args[0]);
+    for (int i = 0, len = s.length(); i < len; i++) {
+      char c = s.charAt(i);
+      switch (c) {
+      case '&':
+        System.err.print("&amp;");
+        break;
+      case '<':
+        System.err.print("\"");
+        break;
+      default:
+        if (c >= 0x20 && c <= 0x7e)
+          System.err.print(c);
+        else
+          System.err.print("&#x" + Integer.toHexString(c) + ";");
+        break;
+      }
+    }
+    System.err.println();
   }
 }
