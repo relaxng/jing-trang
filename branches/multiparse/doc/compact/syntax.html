@@ -104,9 +104,9 @@ include ::= annotations? "include" literal inherit? includeBody?
 
 includeBody ::= "{" (definition | includeDiv | annotationElementNotKeyword)* "}"
 
-div ::= annotations "{" grammar "}"
+div ::= annotations? "div" "{" grammar "}"
 
-includeDiv ::= annotations includeBody
+includeDiv ::= annotations? "div" includeBody
 
 inherit ::= "inherit" "=" identifier
 
