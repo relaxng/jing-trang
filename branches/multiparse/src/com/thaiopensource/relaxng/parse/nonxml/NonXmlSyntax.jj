@@ -910,10 +910,15 @@ void PrefixedAnnotationAttribute(Annotations a, boolean allowUnqualified) :
     int colon = qn.indexOf(':');
     String prefix = qn.substring(0, colon);
     String ns = lookupPrefix(prefix, t);
-    if (ns.length() == 0 && !allowUnqualified)
+    if (ns == SchemaBuilder.INHERIT_NS)
+      error("inherited_annotation_namespace", t);
+    else if (ns.length() == 0 && !allowUnqualified)
       error("unqualified_annotation_attribute", t);
-    else
+    else {
+      if (ns.length() == 0)
+	prefix = null;
       a.addAttribute(ns, qn.substring(colon + 1), prefix, value, makeLocation(t));
+    }
   }
 }
 
@@ -951,7 +956,13 @@ ParsedElementAnnotation PrefixedAnnotationElement() :
     int colon = qn.indexOf(':');
     String prefix = qn.substring(0, colon);
     String ns = lookupPrefix(prefix, t);
-    eab = sb.makeElementAnnotationBuilder(ns, qn.substring(colon + 1), prefix, makeLocation(t));
+    if (ns == SchemaBuilder.INHERIT_NS)
+      error("inherited_annotation_namespace", t);
+    else {
+      if (ns.length() == 0)
+        prefix = null;
+      eab = sb.makeElementAnnotationBuilder(ns, qn.substring(colon + 1), prefix, makeLocation(t));
+    }
   }
   AnnotationElementContent(eab)
   { return eab.makeElementAnnotation(); }
