@@ -51,7 +51,7 @@ public class Driver {
       }
       SchemaCollection sc = SchemaBuilderImpl.parse(parseable,
                                                     new DatatypeLibraryLoader());
-      OutputDirectory od = new LocalOutputDirectory(new File(args[1]), "UTF-8");
+      OutputDirectory od = new LocalOutputDirectory(new File(args[1]), ext, "UTF-8");
       of.output(sc, od, eh);
       return 0;
     }
