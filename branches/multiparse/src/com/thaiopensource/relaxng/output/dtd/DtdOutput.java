@@ -508,10 +508,15 @@ class DtdOutput {
     }
 
     public Object visitChoice(ChoicePattern p) {
-      if (getContentType(p) == ContentType.ENUM) {
+      ContentType t = getContentType(p);
+      if (t == ContentType.ENUM) {
         buf.append('(');
         nestedSimpleTypeOutput.visitChoice(p);
         buf.append(')');
+      }
+      else if (t == ContentType.SIMPLE_TYPE_CHOICE) {
+        er.warning("datatype_choice_approx", p.getSourceLocation());
+        buf.append("CDATA");
       }
       else
         super.visitChoice(p);
