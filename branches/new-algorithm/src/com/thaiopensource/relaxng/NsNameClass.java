@@ -8,8 +8,8 @@ class NsNameClass implements NameClass {
     this.namespaceURI = namespaceURI;
   }
 
-  public boolean contains(String namespaceURI, String localName) {
-    return this.namespaceURI.equals(namespaceURI);
+  public boolean contains(Name name) {
+    return this.namespaceURI.equals(name.getNamespaceUri());
   }
 
   public int hashCode() {
