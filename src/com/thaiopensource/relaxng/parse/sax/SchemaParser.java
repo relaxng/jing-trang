@@ -97,6 +97,7 @@ class SchemaParser {
       this.nsInherit = parent.getNs();
       this.datatypeLibrary = parent.datatypeLibrary;
       this.scope = parent.scope;
+      this.startLocation = makeLocation();
     }
 
     String getNs() {
@@ -112,7 +113,6 @@ class SchemaParser {
 			     String qName,
 			     Attributes atts) throws SAXException {
       xmlBaseHandler.startElement();
-      startLocation = makeLocation();
       if (isRelaxNGElement(namespaceURI)) {
 	State state = createChildState(localName);
 	if (state == null) {
@@ -424,7 +424,7 @@ class SchemaParser {
     }
 
     ParsedPattern wrapPattern(ParsedPattern p) {
-      return schemaBuilder.makeElement(nameClass, p, makeLocation(), null);
+      return schemaBuilder.makeElement(nameClass, p, startLocation, null);
     }
   }
 
@@ -685,7 +685,7 @@ class SchemaParser {
     }
 
     ParsedPattern wrapPattern(ParsedPattern p) throws SAXException {
-      return schemaBuilder.makeAttribute(nameClass, p, makeLocation(), null);
+      return schemaBuilder.makeAttribute(nameClass, p, startLocation, null);
     }
 
     State createChildState(String localName) throws SAXException {
@@ -807,7 +807,7 @@ class SchemaParser {
     }
 
     void end() throws SAXException {
-      parent.endChild(grammar.endGrammar(makeLocation(), null));
+      parent.endChild(grammar.endGrammar(startLocation, null));
     }
   }
 
@@ -834,7 +834,7 @@ class SchemaParser {
     }
 
     ParsedPattern makePattern(Scope scope) {
-      return scope.makeRef(name, makeLocation(), null);
+      return scope.makeRef(name, startLocation, null);
     }
   }
 
