@@ -59,7 +59,6 @@ final class PatternMemo {
     return memoIgnoreMissingAttributes;
   }
 
-
   PatternMemo textOnly() {
     if (memoTextOnly == null)
       memoTextOnly = applyForPatternMemo(builder.getTextOnlyFunction());
