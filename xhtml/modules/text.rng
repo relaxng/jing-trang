@@ -202,7 +202,10 @@
 <define name="pre">
   <element name="pre">
     <ref name="pre.attlist"/>
-    <ref name="Inline.model"/>
+    <ref name="Inline.model">
+      <x:exclude name="InlineNoPre.class"
+         xmlns:x="http://www.thaiopensource.com/relaxng/xhtml/exclude"/>
+    </ref>
   </element>
 </define>
 
@@ -302,7 +305,12 @@
     <ref name="span"/>
     <ref name="strong"/>
     <ref name="var"/>
+    <ref name="InlineNoPre.class"/>
   </choice>
+</define>
+
+<define name="InlineNoPre.class">
+  <notAllowed/>
 </define>
 
 <define name="Inline.model">

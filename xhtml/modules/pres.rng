@@ -95,12 +95,17 @@
 <define name="Inline.class" combine="choice">
   <choice>
     <ref name="b"/>
-    <ref name="big"/>
     <ref name="i"/>
+    <ref name="tt"/>
+  </choice>
+</define>
+
+<define name="InlineNoPre.class" combine="choice">
+  <choice>
+    <ref name="big"/>
     <ref name="small"/>
     <ref name="sub"/>
     <ref name="sup"/>
-    <ref name="tt"/>
   </choice>
 </define>
 

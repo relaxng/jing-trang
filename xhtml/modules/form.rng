@@ -9,7 +9,10 @@
       <ref name="form.attlist"/>
       <oneOrMore>
 	<choice>
-	  <ref name="Block.class"/>
+	  <ref name="Block.class">
+            <x:exclude name="Form.class"
+              xmlns:x="http://www.thaiopensource.com/relaxng/xhtml/exclude"/>
+          </ref>
 	  <ref name="fieldset"/>
 	</choice>
       </oneOrMore>
@@ -162,7 +165,14 @@
 <define name="button">
   <element name="button">
     <ref name="button.attlist"/>
-    <ref name="Flow.model"/>
+    <ref name="Flow.model"
+         xmlns:x="http://www.thaiopensource.com/relaxng/xhtml/exclude">
+      <x:exclude name="a"/>
+      <x:exclude name="Formctrl.class"/>
+      <x:exclude name="Form.class"/>
+      <x:exclude name="isindex"/>
+      <x:exclude name="iframe"/>
+    </ref>
   </element>
 </define>
 
