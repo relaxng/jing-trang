@@ -17,4 +17,11 @@ public class Occurs {
   public int getMax() {
     return max;
   }
+
+  static public Occurs add(Occurs occ1, Occurs occ2) {
+    return new Occurs(occ1.min + occ2.min,
+                      occ1.max == UNBOUNDED || occ2.max == UNBOUNDED
+                      ? UNBOUNDED
+                      : occ1.max + occ2.max);
+  }
 }
