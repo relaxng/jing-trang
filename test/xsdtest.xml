@@ -571,4 +571,9 @@ B EEF </value>
 <invalid>foo:bar</invalid>
 <invalid>foo bar</invalid>
 </datatype>
+<datatype name="ENTITY">
+<invalid>foo</invalid>
+<valid internalSubset="&lt;!ENTITY foo SYSTEM 'whatever' NDATA jpeg>"
+>foo</valid>
+</datatype>
 </xsdtest>

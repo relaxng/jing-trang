@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: testSuite.rng,v 1.9.4.2 2002-04-29 02:38:26 jjc Exp $ -->
+<!-- $Id: testSuite.rng,v 1.9.4.3 2002-04-29 04:11:54 jjc Exp $ -->
 <grammar xmlns="http://relaxng.org/ns/structure/1.0" ns="">
   <!--
     Target namespace is intentionally set to "" so as not to interfere with
@@ -32,22 +32,26 @@
        
         <!-- Incorrect schema -->
         <element name="incorrect">
+          <ref name="dtd"/>
           <ref name="anyElement"/>
         </element>
          
         <!-- Correct schema and test cases -->
         <group>
           <element name="correct">
+            <ref name="dtd"/>
             <externalRef href="relaxng.rng"/>
           </element>
           <zeroOrMore>
             <choice>
               <!-- Valid test cases -->
               <element name="valid">
+                <ref name="dtd"/>
                 <ref name="anyElement"/>
               </element>
               <!-- Invalid test cases -->
               <element name="invalid">
+                <ref name="dtd"/>
                 <ref name="anyElement"/>
               </element>
             </choice>
@@ -121,6 +125,7 @@
 	  <attribute name="name">
             <ref name="pathSegment"/>
           </attribute>
+          <ref name="dtd"/>
 	  <ref name="anyElement"/>
 	</element>
         <element name="dir">
@@ -133,6 +138,12 @@
     </zeroOrMore>
   </define>
 
+  <define name="dtd">
+    <optional>
+      <attribute name="dtd"/>
+    </optional>
+  </define>
+ 
   <!-- A relative URI segment. -->
 
   <define name="pathSegment">

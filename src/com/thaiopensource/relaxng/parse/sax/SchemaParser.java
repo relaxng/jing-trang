@@ -38,7 +38,7 @@ import java.util.Vector;
 Deal with comments
 Deal with element annotations
 */
-class SchemaParser extends AbstractLexicalHandler {
+class SchemaParser extends DtdContext implements Context {
 
   static final String relaxngURIPrefix = "http://relaxng.org/ns/structure/";
   static final String relaxng10URI = relaxngURIPrefix + "1.0";
@@ -77,7 +77,7 @@ class SchemaParser extends AbstractLexicalHandler {
     void comment(String value);
   }
 
-  abstract class State implements ContentHandler, Context, CommentHandler {
+  abstract class State implements ContentHandler, CommentHandler {
     State parent;
     String nsInherit;
     String ns;
@@ -106,7 +106,7 @@ class SchemaParser extends AbstractLexicalHandler {
       this.scope = parent.scope;
       this.startLocation = makeLocation();
       if (parent.comments != null) {
-        annotations = schemaBuilder.makeAnnotations(parent.comments, this);
+        annotations = schemaBuilder.makeAnnotations(parent.comments, SchemaParser.this);
         parent.comments = null;
       }
     }
@@ -192,7 +192,7 @@ class SchemaParser extends AbstractLexicalHandler {
 	  xmlBaseHandler.xmlBaseAttribute(atts.getValue(i));
         else {
           if (annotations == null)
-            annotations = schemaBuilder.makeAnnotations(null, this);
+            annotations = schemaBuilder.makeAnnotations(null, SchemaParser.this);
           String qName = atts.getQName(i);
           String prefix = null;
           if (qName.equals("")) {
@@ -266,34 +266,6 @@ class SchemaParser extends AbstractLexicalHandler {
       prefixMapping = prefixMapping.next;
     }
 
-    public String resolveNamespacePrefix(String prefix) {
-      for (PrefixMapping p = prefixMapping; p != null; p = p.next)
-        if (p.prefix.equals(prefix))
-          return p.uri;
-      return null;
-    }
-
-    public Enumeration prefixes() {
-      Vector v = new Vector();
-      for (PrefixMapping p = prefixMapping; p != null; p = p.next) {
-        if (!v.contains(p.prefix))
-          v.addElement(p.prefix);
-      }
-      return v.elements();
-    }
-
-    public String getBaseUri() {
-      return xmlBaseHandler.getBaseUri();
-    }
-
-    public boolean isUnparsedEntity(String name) {
-      return false;
-    }
-
-    public boolean isNotation(String name) {
-      return false;
-    }
-
     boolean isPatternNamespaceURI(String s) {
       return s.equals(relaxngURI);
     }
@@ -338,7 +310,7 @@ class SchemaParser extends AbstractLexicalHandler {
     void end() throws SAXException {
       if (comments != null) {
         if (annotations == null)
-          annotations = schemaBuilder.makeAnnotations(null, this);
+          annotations = schemaBuilder.makeAnnotations(null, SchemaParser.this);
         annotations.addComment(comments);
         comments = null;
       }
@@ -609,7 +581,7 @@ class SchemaParser extends AbstractLexicalHandler {
       return schemaBuilder.makeValue(datatypeLibrary,
                                      type,
                                      buf.toString(),
-                                     this,
+                                     SchemaParser.this,
                                      getNs(),
                                      startLocation,
                                      annotations);
@@ -714,7 +686,7 @@ class SchemaParser extends AbstractLexicalHandler {
       if (name == null)
 	return;
       if (dpb != null)
-	dpb.addParam(name, buf.toString(), this, getNs(), startLocation, annotations);
+	dpb.addParam(name, buf.toString(), SchemaParser.this, getNs(), startLocation, annotations);
     }
   }
 
@@ -1349,9 +1321,10 @@ class SchemaParser extends AbstractLexicalHandler {
     this.schemaBuilder = schemaBuilder;
     if (eh != null)
       xr.setErrorHandler(eh);
+    xr.setDTDHandler(this);
     if (schemaBuilder.usesComments()) {
       try {
-        xr.setProperty("http://xml.org/sax/properties/lexical-handler", this);
+        xr.setProperty("http://xml.org/sax/properties/lexical-handler", new LexicalHandlerImpl());
       }
       catch (SAXNotRecognizedException e) {
         warning("no_comment_support", xr.getClass().getName());
@@ -1374,19 +1347,42 @@ class SchemaParser extends AbstractLexicalHandler {
     inDtd = false;
   }
 
-  public void comment(char[] chars, int start, int length) throws SAXException {
-    if (!inDtd) {
-      if (length > 0 && (chars[start] == ' ' || chars[start] == '\n')) {
-        length--;
-        start++;
+
+  public String resolveNamespacePrefix(String prefix) {
+    for (PrefixMapping p = prefixMapping; p != null; p = p.next)
+      if (p.prefix.equals(prefix))
+        return p.uri;
+    return null;
+  }
+
+  public Enumeration prefixes() {
+    Vector v = new Vector();
+    for (PrefixMapping p = prefixMapping; p != null; p = p.next) {
+      if (!v.contains(p.prefix))
+        v.addElement(p.prefix);
+    }
+    return v.elements();
+  }
+
+  public String getBaseUri() {
+    return xmlBaseHandler.getBaseUri();
+  }
+
+  class LexicalHandlerImpl extends AbstractLexicalHandler {
+    public void comment(char[] chars, int start, int length) throws SAXException {
+      if (!inDtd) {
+        if (length > 0 && (chars[start] == ' ' || chars[start] == '\n')) {
+          length--;
+          start++;
+        }
+        while (length > 0) {
+          char c = chars[start + length - 1];
+          if (c != ' ' && c != '\n')
+            break;
+          length--;
+        }
+        ((CommentHandler)xr.getContentHandler()).comment(new String(chars, start, length));
       }
-      while (length > 0) {
-        char c = chars[start + length - 1];
-        if (c != ' ' && c != '\n')
-          break;
-        length--;
-      }
-      ((CommentHandler)xr.getContentHandler()).comment(new String(chars, start, length));
     }
   }
 
