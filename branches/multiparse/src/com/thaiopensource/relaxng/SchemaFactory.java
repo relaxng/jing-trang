@@ -10,6 +10,7 @@ import com.thaiopensource.relaxng.impl.PatternSchema;
 import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
 import com.thaiopensource.relaxng.impl.SchemaBuilderImpl;
 import com.thaiopensource.relaxng.parse.Parseable;
+import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
 import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 import org.xml.sax.ErrorHandler;
@@ -36,6 +37,7 @@ public class SchemaFactory {
   private ErrorHandler eh = null;
   private DatatypeLibraryFactory dlf = null;
   private boolean checkIdIdref = false;
+  private boolean nonXmlSyntax = false;
 
   /**
    * Constructs a schema factory.
@@ -75,7 +77,12 @@ public class SchemaFactory {
     SchemaPatternBuilder spb = new SchemaPatternBuilder();
     Pattern start;
     if (NEW_PARSER) {
-      start = SchemaBuilderImpl.parse(new SAXParseable(xrc, in, eh), eh, dlf, spb);
+      Parseable parseable;
+      if (nonXmlSyntax)
+        parseable = new NonXmlParseable(in, eh);
+      else
+        parseable = new SAXParseable(xrc, in, eh);
+      start = SchemaBuilderImpl.parse(parseable, eh, dlf, spb);
     }
     else {
       XMLReader xr = xrc.createXMLReader();
@@ -200,5 +207,13 @@ public class SchemaFactory {
    */
   public boolean getCheckIdIdref() {
     return checkIdIdref;
+  }
+
+  public void setNonXmlSyntax(boolean nonXmlSyntax) {
+    this.nonXmlSyntax = nonXmlSyntax;
+  }
+
+  public boolean getNonXmlSyntax() {
+    return nonXmlSyntax;
   }
 }

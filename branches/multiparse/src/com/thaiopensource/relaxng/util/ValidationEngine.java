@@ -66,6 +66,11 @@ public class ValidationEngine {
     factory.setCheckIdIdref(checkIdIdref);
   }
 
+  public ValidationEngine(XMLReaderCreator xrc, ErrorHandler eh, boolean checkIdIdref, boolean nonXmlSyntax) {
+    this(xrc, eh, checkIdIdref);
+    factory.setNonXmlSyntax(nonXmlSyntax);
+  }
+
   /**
    * Loads a schema. Subsequent calls to <code>validate</code> will validate with
    * respect the loaded schema. This can be called more than once to allow
