@@ -204,39 +204,29 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
 
   static private final int TIME_ZONE_MAX = 14*60*60*1000;
 
-  public int compareValue(Object obj1, Object obj2) {
+  public boolean isLessThan(Object obj1, Object obj2) {
     DateTime dt1 = (DateTime)obj1;
     DateTime dt2 = (DateTime)obj2;
     long t1 = dt1.getDate().getTime();
     long t2 = dt2.getDate().getTime();
     if (dt1.getHasTimeZone() == dt2.getHasTimeZone())
-      return compare(t1,
-                     dt1.getLeapMilliseconds(),
-                     t2,
-                     dt2.getLeapMilliseconds());
-    int res1, res2;
-    if (!dt2.getHasTimeZone()) {
-      res1 = compare(t1, dt1.getLeapMilliseconds(), t2 - TIME_ZONE_MAX, dt2.getLeapMilliseconds());
-      res2 = compare(t1, dt1.getLeapMilliseconds(), t2 + TIME_ZONE_MAX, dt2.getLeapMilliseconds());
-    }
-    else {
-      res1 = compare(t1 - TIME_ZONE_MAX, dt1.getLeapMilliseconds(), t2, dt2.getLeapMilliseconds());
-      res2 = compare(t1 + TIME_ZONE_MAX, dt1.getLeapMilliseconds(), t2, dt2.getLeapMilliseconds());
-    }
-    if (res1 == res2)
-      return res1;
-    return COMPARE_INCOMPARABLE;
+      return isLessThan(t1,
+                        dt1.getLeapMilliseconds(),
+                        t2,
+                        dt2.getLeapMilliseconds());
+    else if (!dt2.getHasTimeZone())
+      return isLessThan(t1, dt1.getLeapMilliseconds(), t2 - TIME_ZONE_MAX, dt2.getLeapMilliseconds());
+    else
+      return isLessThan(t1 + TIME_ZONE_MAX, dt1.getLeapMilliseconds(), t2, dt2.getLeapMilliseconds());
   }
 
-  static private int compare(long t1, int leapMillis1, long t2, int leapMillis2) {
+  static private boolean isLessThan(long t1, int leapMillis1, long t2, int leapMillis2) {
     if (t1 < t2)
-      return COMPARE_LESS_THAN;
+      return true;
     if (t1 > t2)
-      return COMPARE_GREATER_THAN;
+      return false;
     if (leapMillis1 < leapMillis2)
-      return COMPARE_LESS_THAN;
-    if (leapMillis1 > leapMillis2)
-      return COMPARE_GREATER_THAN;
-    return COMPARE_EQUAL;
+      return true;
+    return false;
   }
 }
