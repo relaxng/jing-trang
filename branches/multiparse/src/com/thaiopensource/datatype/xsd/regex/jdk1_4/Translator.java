@@ -253,7 +253,7 @@ class Translator {
       result.append(lower);
     }
     catch (NumberFormatException e) {
-      // JDK 1.4 cannot handle this ranges bigger than this
+      // JDK 1.4 cannot handle ranges bigger than this
       result.append(Integer.MAX_VALUE);
     }
     if (curChar == ',') {
