@@ -1,3 +1,12 @@
+Check for RNG contextual constraints
+
+Approximation warnings:
+- interleave
+- mixed text
+- simple type list
+- attribute choice
+- wildcards
+
 Provide annotation to control which target namespace is assigned to a file.
 
 Take advantage of minOccurs > 1 and 1 < maxOccurs < infinity.
@@ -34,8 +43,6 @@ Preserve definitions that are equivalent to empty or notAllowed.
 
 Handle externalRef (remember problem with parentRef in externalRef)
 
-Check for RNG contextual constraints
-
 Interleave
 - Avoid introducing ambiguities when approximating <interleave>, eg x & (y, y).
 - Take advantage of xs:all.
@@ -58,13 +65,6 @@ Deal with comments
 Deal with annotations
 
 Deal with a:documentation
-
-Approximation warnings:
-- interleave
-- mixed text
-- simple type list
-- attribute choice
-- wildcards
 
 Deal with element type consistent restriction
 
