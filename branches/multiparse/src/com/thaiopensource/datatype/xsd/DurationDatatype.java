@@ -182,6 +182,7 @@ class DurationDatatype extends RegexDatatype implements OrderRelation {
         refYear++;
       }
     }
+    // In the Gregorian calendar, there are 97 (= 100 + 4 - 1) leap years every 400 years.
     return tem[0].multiply(BigInteger.valueOf(365*400 + 97)).add(BigInteger.valueOf(total));
   }
 
