@@ -67,7 +67,8 @@ import java.util.HashSet;
 Tasks:
 Catch bad recursion
 Check single element type
-Handle name class choice
+Handle name class choice for elements
+Warning when approximating datatypes
 Non-local namespaces
 Generate parameter entities to allow change of namespace prefix
 Include
@@ -80,6 +81,7 @@ option to protect element declarations with included section
 allow mixed(repeat(NOT_ALLOWED))
 Avoid unnecessary parentheses around group members
 Pretty-print content models to avoid excessively long lines
+Handle DTD compatibility ID/IDREF/IDREFS
 */
 public class DtdOutput {
   private ErrorHandler eh;
@@ -89,6 +91,8 @@ public class DtdOutput {
   private Grammar grammar = null;
   private GrammarPattern grammarPattern;
   private Type startType = ERROR;
+
+  static private final String XSD = "http://www.w3.org/2001/XMLSchema-datatypes";
 
   public DtdOutput(ErrorHandler eh, Writer writer) {
     this.eh = eh;
@@ -179,6 +183,22 @@ public class DtdOutput {
     }
   }
 
+  static final String[] compatibleTypes = {
+    "ENTITIES",
+    "ENTITY",
+    "ID",
+    "IDREF",
+    "IDREFS",
+    "NMTOKEN",
+    "NMTOKENS"
+  };
+
+  static final String[] stringTypes = {
+    "anyURI",
+    "normalizedString",
+    "base64Binary"
+  };
+
   class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
 
     public Object visitEmpty(EmptyPattern p) {
@@ -186,6 +206,23 @@ public class DtdOutput {
     }
 
     public Object visitData(DataPattern p) {
+      String lib = p.getDatatypeLibrary();
+      if (lib.equals(XSD)) {
+        String type = p.getType();
+        for (int i = 0; i < compatibleTypes.length; i++)
+          if (type.equals(compatibleTypes[i]))
+            return ATTRIBUTE_TYPE;
+        for (int i = 0; i < stringTypes.length; i++)
+          if (type.equals(stringTypes[i])) {
+            p.setType("string");
+            return ATTRIBUTE_TYPE;
+          }
+        p.setType("NMTOKEN");
+      }
+      else if (!lib.equals("")) {
+        error("unrecognized_datatype_library", p.getSourceLocation());
+        return ERROR;
+      }
       // XXX check datatypes
       return ATTRIBUTE_TYPE;
     }
@@ -485,6 +522,13 @@ public class DtdOutput {
   }
 
   class TopLevelContentModelOutput extends ContentModelOutput {
+    public Object visitElement(ElementPattern p) {
+      buf.append('(');
+      super.visitElement(p);
+      buf.append(')');
+      return null;
+    }
+
     public Object visitRef(RefPattern p) {
       buf.append('(');
       super.visitRef(p);
@@ -608,7 +652,8 @@ public class DtdOutput {
 
     public Object visitData(DataPattern p) {
       String type = p.getType();
-      if (type.equals("string"))
+      if (p.getDatatypeLibrary().equals("")
+          || type.equals("string"))
         type = "CDATA";
       buf.append(type);
       return null;
