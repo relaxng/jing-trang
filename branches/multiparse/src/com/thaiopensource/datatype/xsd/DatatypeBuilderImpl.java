@@ -60,7 +60,10 @@ class DatatypeBuilderImpl implements DatatypeBuilder {
 					 engine.compile(value));
     }
     catch (RegexSyntaxException e) {
-      error("invalid_regex", e.getMessage());
+      int pos = e.getPosition();
+      if (pos == RegexSyntaxException.UNKNOWN_POSITION)
+        pos = DatatypeException.UNKNOWN;
+      error("invalid_regex", e.getMessage(), pos);
     }
   }
 
@@ -147,6 +150,10 @@ class DatatypeBuilderImpl implements DatatypeBuilder {
 
   private void error(String key, String arg) throws DatatypeException {
     throw new DatatypeException(message(key, arg));
+  }
+
+  private void error(String key, String arg, int pos) throws DatatypeException {
+    throw new DatatypeException(pos, message(key, arg));
   }
 
   static private String message(String key) {
