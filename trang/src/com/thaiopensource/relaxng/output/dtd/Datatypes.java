@@ -90,8 +90,8 @@ public class Datatypes {
     xsd("NMTOKEN", COMPATIBLE|EXACT|TOKEN_EQUALITY);
     xsd("NMTOKENS", COMPATIBLE|EXACT|TOKEN_EQUALITY);
     xsd("NOTATION", NMTOKEN);
-    xsd("QName", NMTOKEN);
     xsd("NCName", NMTOKEN);
+    xsd("QName", NMTOKEN);
     xsd("anyURI", CDATA|CDATA_EQUALITY);
     xsd("base64Binary", CDATA);
     xsd("boolean", NMTOKEN);
