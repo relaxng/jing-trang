@@ -6,23 +6,23 @@ import java.io.File;
 import java.io.OutputStreamWriter;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
+import java.util.Map;
+import java.util.HashMap;
 
 public class LocalOutputDirectory implements OutputDirectory {
   private File mainOutputFile;
   private String lineSeparator;
-  private String ext;
+  private String extension;
   private String encoding;
+  // maps URIs to filenames
+  private Map uriMap = new HashMap();
 
-  LocalOutputDirectory(File mainOutputFile, String encoding) {
+  LocalOutputDirectory(File mainOutputFile, String extension, String encoding) {
     this.mainOutputFile = mainOutputFile;
+    this.extension = extension;
     this.encoding = encoding;
     this.lineSeparator = System.getProperty("line.separator");
     String name = mainOutputFile.getName();
-    int dot = name.lastIndexOf('.');
-    if (dot > 0)
-      ext = name.substring(dot);
-    else
-      ext = null;
   }
 
   public Writer open(String sourceUri) throws IOException {
@@ -39,14 +39,21 @@ public class LocalOutputDirectory implements OutputDirectory {
   }
 
   private String mapFilename(String sourceUri) {
-    String filename = sourceUri.substring(sourceUri.lastIndexOf('/') + 1);
-    if (ext != null) {
-      int dot = filename.lastIndexOf('.');
-      if (dot > 0)
-        return filename.substring(0, dot) + ext;
-      else
-        return filename + ext;
+    String filename = (String)uriMap.get(sourceUri);
+    if (filename == null) {
+      filename = chooseFilename(sourceUri);
+      uriMap.put(sourceUri, filename);
     }
+    return filename;
+  }
+
+  private String chooseFilename(String sourceUri) {
+    String filename = sourceUri.substring(sourceUri.lastIndexOf('/') + 1);
+    int dot = filename.lastIndexOf('.');
+    String base = dot < 0 ? filename : filename.substring(0, dot);
+    filename = base + extension;
+    for (int i = 1; uriMap.containsValue(filename); i++)
+      filename = base + Integer.toString(i) + extension;
     return filename;
   }
 

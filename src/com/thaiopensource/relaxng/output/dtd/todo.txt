@@ -1,4 +1,3 @@
-Bulletproof LocalOutputDirectory
 Pretty-print content models to avoid excessively long lines
 
 Generate comments from a:documentation elements
