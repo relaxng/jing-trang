@@ -455,6 +455,55 @@ bar = element bar { empty }
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<resource name="bar.rnc">
+bar = element bar { empty }
+baz = element baz { empty }
+</resource>
+<correct>
+foo = element foo { bar | baz }
+include "bar.rnc"
+</correct>
+</compact>
+<xsd>
+<resource name="bar.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:group name="bar">
+    <xs:sequence>
+      <xs:element name="bar">
+        <xs:complexType/>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:group name="baz">
+    <xs:sequence>
+      <xs:element name="baz">
+        <xs:complexType/>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:include schemaLocation="bar.xsd"/>
+  <xs:group name="foo">
+    <xs:sequence>
+      <xs:element name="foo">
+        <xs:complexType>
+          <xs:choice>
+            <xs:group ref="bar"/>
+            <xs:group ref="baz"/>
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>
