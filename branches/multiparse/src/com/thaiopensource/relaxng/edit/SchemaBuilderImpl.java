@@ -110,6 +110,8 @@ public class SchemaBuilderImpl implements SchemaBuilder {
 
     public String resolveNamespacePrefix(String prefix) {
       String ns = vc.resolveNamespacePrefix(prefix);
+      if (ns == SchemaBuilder.INHERIT_NS && prefix.length() != 0)
+        return null;
       if (ns != null)
         map.put(prefix, ns);
       return ns;
@@ -139,6 +141,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
           dt.checkValid(value, new TraceValidationContext(p.getPrefixMap(), vc));
       }
       catch (DatatypeException e) {
+        // XXX print an error
       }
     }
     return finishPattern(p, loc, anno);
