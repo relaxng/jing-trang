@@ -2,11 +2,7 @@ Include checking
 - Error for include loop.
 - Detect multiple inclusions of same schema.
 
-combine attributes
-- combine="choice" on <start>
-- combine in a single file
-- combine="interleave" (if only referenced once, expand?)
-- others
+Provide annotation to control which target namespace is assigned to a file.
 
 Take advantage of minOccurs > 1 and 1 < maxOccurs < infinity.
 
@@ -36,7 +32,7 @@ Make choice of targetNamespace not depend on order of hash table iteration.
 
 Handle nested grammars (use different namespace for different grammars).
 
-Handle include overrides
+Handle include overrides (1) resolve (2) turn into <redefine>.
 
 Preserve definitions that are equivalent to empty or notAllowed.
 

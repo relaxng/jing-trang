@@ -25,6 +25,8 @@ import com.thaiopensource.relaxng.edit.TextPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
 import com.thaiopensource.relaxng.edit.ComponentVisitor;
+import com.thaiopensource.relaxng.edit.CompositePattern;
+import com.thaiopensource.relaxng.edit.Combine;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
 
 import java.util.HashMap;
@@ -39,6 +41,14 @@ class SchemaInfo {
   private final Map childTypeMap = new HashMap();
   private final Map defineMap = new HashMap();
   private final PatternVisitor childTypeVisitor = new ChildTypeVisitor();
+
+  static private class Define {
+    boolean hadImplicit;
+    Combine combine;
+    Pattern pattern;
+    CompositePattern wrapper;
+    DefineComponent head;
+  }
 
   abstract class PatternAnalysisVisitor extends AbstractVisitor {
     abstract Object get(Pattern p);
@@ -178,8 +188,36 @@ class SchemaInfo {
 
   class GrammarVisitor implements ComponentVisitor {
     public Object visitDefine(DefineComponent c) {
-      if (c.getName() != DefineComponent.START)
-        defineMap.put(c.getName(), c.getBody());
+      Define define = lookupDefine(c.getName());
+      if (c.getCombine() == null) {
+        if (define.hadImplicit) {
+          er.error("multiple_define", c.getName(), c.getSourceLocation());
+          return null;
+        }
+        define.hadImplicit = true;
+      }
+      else if (define.combine == null) {
+        define.combine = c.getCombine();
+        if (define.combine == Combine.CHOICE)
+          define.wrapper = new ChoicePattern();
+        else
+          define.wrapper = new InterleavePattern();
+        define.wrapper.setSourceLocation(c.getSourceLocation());
+      }
+      else if (define.combine != c.getCombine()) {
+        er.error("inconsistent_combine", c.getName(), c.getSourceLocation());
+        return null;
+      }
+      if (define.pattern == null) {
+        define.pattern = c.getBody();
+        define.head = c;
+      }
+      else {
+        if (define.pattern != define.wrapper)
+          define.wrapper.getChildren().add(define.pattern);
+        define.wrapper.getChildren().add(c.getBody());
+        define.pattern = define.wrapper;
+      }
       return null;
     }
 
@@ -250,7 +288,23 @@ class SchemaInfo {
   }
 
   Pattern getBody(RefPattern p) {
-    return (Pattern)defineMap.get(p.getName());
+    return lookupDefine(p.getName()).pattern;
+  }
+
+  Pattern getBody(DefineComponent c) {
+    Define def = lookupDefine(c.getName());
+    if (def == null || def.head != c)
+      return null;
+    return def.pattern;
+  }
+
+  private Define lookupDefine(String name) {
+    Define define = (Define)defineMap.get(name);
+    if (define == null) {
+      define = new Define();
+      defineMap.put(name, define);
+    }
+    return define;
   }
 
 }

@@ -451,27 +451,31 @@ public class BasicBuilder {
   class SchemaBuilder extends AbstractVisitor {
     public Object visitDefine(DefineComponent c) {
       String name = c.getName();
-      Pattern body = c.getBody();
-      ChildType ct = si.getChildType(body);
       SourceLocation location = c.getSourceLocation();
       if (name == DefineComponent.START) {
+        Pattern body = c.getBody();
+        ChildType ct = si.getChildType(body);
         if (ct.contains(ChildType.ELEMENT))
           schema.addRoot((Particle)body.accept(particleBuilder),
                          location);
       }
       else {
-        if (ct.contains(ChildType.ELEMENT))
-          schema.defineGroup(name,
-                             (Particle)body.accept(particleBuilder),
-                             location);
-        else if (ct.contains(ChildType.DATA) && !ct.contains(ChildType.TEXT))
-          schema.defineSimpleType(name,
-                                  (SimpleType)body.accept(simpleTypeBuilder),
-                                  location);
-        if (ct.contains(ChildType.ATTRIBUTE))
-          schema.defineAttributeGroup(name,
-                                      (AttributeUse)body.accept(attributeUseBuilder),
-                                      location);
+        Pattern body = si.getBody(c);
+        if (body != null) {
+          ChildType ct = si.getChildType(body);
+          if (ct.contains(ChildType.ELEMENT))
+            schema.defineGroup(name,
+                               (Particle)body.accept(particleBuilder),
+                               location);
+          else if (ct.contains(ChildType.DATA) && !ct.contains(ChildType.TEXT))
+            schema.defineSimpleType(name,
+                                    (SimpleType)body.accept(simpleTypeBuilder),
+                                    location);
+          if (ct.contains(ChildType.ATTRIBUTE))
+            schema.defineAttributeGroup(name,
+                                        (AttributeUse)body.accept(attributeUseBuilder),
+                                        location);
+        }
       }
       return null;
     }
