@@ -1,7 +1,22 @@
 package com.thaiopensource.relaxng.edit;
 
-public class AbstractPatternVisitor implements PatternVisitor {
-  public Object visitElement(ElementPattern p) {
+public class AbstractVisitor implements ComponentVisitor, PatternVisitor, NameClassVisitor {
+  public Object visitDefine(DefineComponent c) {
+    return visitComponent(c);
+  }
+
+  public Object visitDiv(DivComponent c) {
+    return visitComponent(c);
+  }
+
+  public Object visitInclude(IncludeComponent c) {
+    return visitComponent(c);
+  }
+
+  public Object visitComponent(Component c) {
+    return null;
+  }
+ public Object visitElement(ElementPattern p) {
     return visitNameClassed(p);
   }
 
@@ -90,6 +105,26 @@ public class AbstractPatternVisitor implements PatternVisitor {
   }
 
   public Object visitPattern(Pattern p) {
+    return null;
+  }
+
+  public Object visitChoice(ChoiceNameClass nc) {
+    return visitNameClass(nc);
+  }
+
+  public Object visitAnyName(AnyNameNameClass nc) {
+    return visitNameClass(nc);
+  }
+
+  public Object visitNsName(NsNameNameClass nc) {
+    return visitNsName(nc);
+  }
+
+  public Object visitName(NameNameClass nc) {
+    return visitNameClass(nc);
+  }
+
+  public Object visitNameClass(NameClass nc) {
     return null;
   }
 }
