@@ -17,7 +17,7 @@ public interface SchemaBuilder {
   ParsedPattern makeAttribute(ParsedNameClass nc, ParsedPattern p, Location loc, Annotations anno) throws BuildException;
   ParsedPattern makeElement(ParsedNameClass nc, ParsedPattern p, Location loc, Annotations anno) throws BuildException;
   DataPatternBuilder makeDataPatternBuilder(String datatypeLibrary, String type, Location loc) throws BuildException;
-  ParsedPattern makeValue(String datatypeLibrary, String type, String value, ValidationContext vc,
+  ParsedPattern makeValue(String datatypeLibrary, String type, String value, Context c, String ns,
                           Location loc, Annotations anno) throws BuildException;
   Grammar makeGrammar(Scope parent);
   ParsedPattern annotateAfter(ParsedPattern p, ParsedElementAnnotation e) throws BuildException;
@@ -39,8 +39,8 @@ public interface SchemaBuilder {
    */
   ParsedNameClass makeAnyName(ParsedNameClass except, Location loc, Annotations anno);
   Location makeLocation(String systemId, int lineNumber, int columnNumber);
-  Annotations makeAnnotations();
-  ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix, Location loc);
+  Annotations makeAnnotations(Context context);
+  ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix, Location loc, Context context);
   ParsedPattern makeErrorPattern();
   ParsedNameClass makeErrorNameClass();
 }

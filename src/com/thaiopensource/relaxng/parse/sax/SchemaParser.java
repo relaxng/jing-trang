@@ -12,6 +12,7 @@ import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.Annotations;
+import com.thaiopensource.relaxng.parse.Context;
 import com.thaiopensource.util.Uri;
 import com.thaiopensource.util.Localizer;
 import org.relaxng.datatype.Datatype;
@@ -26,6 +27,8 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 import java.util.Hashtable;
+import java.util.Enumeration;
+import java.util.Vector;
 
 /*
 Deal with annotations
@@ -65,7 +68,7 @@ class SchemaParser {
     }
   }
 
-  abstract class State implements ContentHandler, ValidationContext {
+  abstract class State implements ContentHandler, Context {
     State parent;
     String nsInherit;
     String ns;
@@ -216,12 +219,19 @@ class SchemaParser {
     }
 
     public String resolveNamespacePrefix(String prefix) {
-      if (prefix.equals(""))
-        return getNs();
       for (PrefixMapping p = prefixMapping; p != null; p = p.next)
         if (p.prefix.equals(prefix))
           return p.uri;
       return null;
+    }
+
+    public Enumeration prefixes() {
+      Vector v = new Vector();
+      for (PrefixMapping p = prefixMapping; p != null; p = p.next) {
+        if (!v.contains(p.prefix))
+          v.addElement(p.prefix);
+      }
+      return v.elements();
     }
 
     public String getBaseUri() {
@@ -540,6 +550,7 @@ class SchemaParser {
                                      type,
                                      buf.toString(),
                                      this,
+                                     getNs(),
                                      startLocation,
                                      null);
     }
@@ -642,7 +653,7 @@ class SchemaParser {
       if (name == null)
 	return;
       if (dpb != null)
-	dpb.addParam(name, buf.toString(), this, startLocation, null);
+	dpb.addParam(name, buf.toString(), this, getNs(), startLocation, null);
     }
   }
 
