@@ -61,6 +61,7 @@ class GrammarPart implements ComponentVisitor {
     er = part.er;
     defines = part.defines;
     schemas = part.schemas;
+    parts = part.parts;
     attlists = part.attlists;
     pendingIncludes = part.pendingIncludes;
     implicitlyCombinedDefines = part.implicitlyCombinedDefines;
