@@ -879,6 +879,35 @@ include "example.rnc"
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+namespace eg = "http://www.example.com"
+
+element x { attribute eg:y { text } }
+</correct>
+</compact>
+<xsd>
+<resource name="eg.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com" xmlns:eg="http://www.example.com">
+  <xs:import schemaLocation="c.xsd"/>
+  <xs:attributeGroup name="anon0">
+    <xs:attribute name="y" form="qualified" use="required"/>
+  </xs:attributeGroup>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" xmlns:eg="http://www.example.com">
+  <xs:import namespace="http://www.example.com" schemaLocation="eg.xsd"/>
+  <xs:element name="x">
+    <xs:complexType>
+      <xs:attributeGroup ref="eg:anon0"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>

@@ -1,3 +1,13 @@
+Choice name classes
+
+Global elements and attributes
+
+Choose name of generated schema file better when there was no prefix.
+- use Context to find prefix
+- use last component of namespace URI
+
+Use global attributes for cross-schema references.
+
 Make choice of targetNamespace not depend on order of hash table iteration.
 
 Use global element declarations
@@ -87,3 +97,8 @@ the includes of G occured in F
 
 - generate imports to the heads of all target namespaces
 
+
+foo = element bar|baz { xyzzy }
+
+group foo = <choice><element name="bar" type="foo"><element name="baz" type="foo"/></choice>
+type goo = xyzzy
