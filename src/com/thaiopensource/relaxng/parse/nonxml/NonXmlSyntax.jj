@@ -339,7 +339,7 @@ ParsedPattern AnnotatedPrimaryExpr(Scope scope) :
 {
   a = Annotations()
   p = PrimaryExpr(scope, a)
-  ( ">" e = AnnotationElement() { p = sb.annotateAfter(p, e); })*
+  ( <FANNOTATE> e = AnnotationElement() { p = sb.annotateAfter(p, e); })*
   { return p; }
 }
 
@@ -435,7 +435,7 @@ ParsedPattern UnaryExpr(Scope scope, boolean[] hadOccur) :
    (t = "+" { p = sb.makeOneOrMore(p, makeLocation(t), null); }
     | t = "?" { p = sb.makeOptional(p, makeLocation(t), null); }
     | t = "*" { p = sb.makeZeroOrMore(p, makeLocation(t), null); })
-   ( ">" e = AnnotationElement() { p = sb.annotateAfter(p, e); } )*
+   ( <FANNOTATE> e = AnnotationElement() { p = sb.annotateAfter(p, e); } )*
   )?
   { return p; }
 }
@@ -480,7 +480,7 @@ ParsedNameClass AnnotateAfter(ParsedNameClass nc) :
   ParsedElementAnnotation e;
 }
 {
-  ( ">" e = AnnotationElement() { nc = sb.annotateAfter(nc, e); })*
+  ( <FANNOTATE> e = AnnotationElement() { nc = sb.annotateAfter(nc, e); })*
   { return nc; }
 }
 
@@ -1548,6 +1548,7 @@ TOKEN :
   | < LITERAL : ( "\"" (<CHAR_NOT_QUOT> | "\"\"")* "\"")
                 | ("'" (<CHAR_NOT_APOS> | "''")* "'") >
   | < BYTE_ORDER_MARK : "\ufeff" >
+  | < FANNOTATE : ">>" >
 }
 
 /* This avoids lexical errors from JavaCC. */
