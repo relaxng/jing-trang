@@ -13,8 +13,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /*
-Specify indent
-Annotations
+XXX Specify indent
 */
 public class RngOutputFormat implements OutputFormat {
   public void output(SchemaCollection sc, OutputDirectory od, ErrorHandler eh) throws IOException {
