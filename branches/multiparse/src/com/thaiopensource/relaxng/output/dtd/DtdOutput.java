@@ -83,6 +83,7 @@ Pretty-print content models to avoid excessively long lines
 Prettier formatting of ATTLISTs
 Handle DTD compatibility ID/IDREF/IDREFS
 Proper error reporting
+Approximate data in content by #PCDATA
 */
 public class DtdOutput {
   private ErrorHandler eh;
