@@ -1,6 +1,7 @@
 package com.thaiopensource.relaxng;
 
 import org.relaxng.datatype.Datatype;
+import com.thaiopensource.datatype.Datatype2;
 
 class DataPattern extends StringPattern {
   private Datatype dt;
@@ -26,6 +27,10 @@ class DataPattern extends StringPattern {
 
   Datatype getDatatype() {
     return dt;
+  }
+
+  boolean allowsAnyString() {
+    return dt instanceof Datatype2 && ((Datatype2)dt).alwaysValid();
   }
 
   void checkRestrictions(int context, DuplicateAttributeDetector dad, Alphabet alpha)
