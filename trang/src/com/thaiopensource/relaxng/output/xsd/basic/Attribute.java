@@ -19,6 +19,9 @@ public class Attribute extends AttributeUse {
   static public final Use OPTIONAL = new Use("OPTIONAL");
   static public final Use PROHIBITED = new Use("PROHIBITED");
 
+  /**
+   * type may be null, indicating any type
+   */
   public Attribute(SourceLocation location, Name name, SimpleType type, Use use) {
     super(location);
     this.name = name;
