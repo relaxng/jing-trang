@@ -501,7 +501,6 @@ class DtdOutput {
     public Object visitChoice(ChoicePattern p) {
       if (getAttributeType(p) != AttributeType.EMPTY)
         er.warning("attribute_occur_approx", p.getSourceLocation());
-      // XXX may get duplicate attributes
       optionalAttributeOutput.visitComposite(p);
       return null;
     }
