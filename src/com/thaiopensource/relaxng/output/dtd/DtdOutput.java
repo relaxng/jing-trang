@@ -58,8 +58,11 @@ class DtdOutput {
   private Set reservedEntityNames;
 
   PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
-  PatternVisitor nestedContentModelOutput = new ContentModelOutput();
+  AbstractVisitor nestedContentModelOutput = new ContentModelOutput();
   PatternVisitor expandedContentModelOutput = new ExpandedContentModelOutput();
+  PatternVisitor groupContentModelOutput = new GroupContentModelOutput();
+  PatternVisitor choiceContentModelOutput = new ChoiceContentModelOutput();
+  PatternVisitor occurContentModelOutput = new ParenthesizedContentModelOutput();
   PatternVisitor innerElementClassOutput = new InnerElementClassOutput();
   PatternVisitor expandedInnerElementClassOutput = new ExpandedInnerElementClassOutput();
   AttributeOutput attributeOutput = new AttributeOutput();
@@ -85,6 +88,50 @@ class DtdOutput {
       throw new WrappedIOException(e);
     }
     this.lineSep = od.getLineSeparator();
+  }
+
+  class ParenthesizedContentModelOutput extends AbstractVisitor {
+    public Object visitPattern(Pattern p) {
+      buf.append('(');
+      p.accept(nestedContentModelOutput);
+      buf.append(')');
+      return null;
+    }
+
+    public Object visitRef(RefPattern p) {
+      Pattern def = getBody(p.getName());
+      if (getContentType(def) == ContentType.DIRECT_SINGLE_ELEMENT)
+        ((ElementPattern)def).getNameClass().accept(nestedContentModelOutput);
+      else
+        visitPattern(p);
+      return null;
+    }
+
+  }
+
+  class ChoiceContentModelOutput extends ParenthesizedContentModelOutput {
+    public Object visitOptional(OptionalPattern p) {
+      p.accept(nestedContentModelOutput);
+      return null;
+    }
+
+    public Object visitOneOrMore(OneOrMorePattern p) {
+      p.accept(nestedContentModelOutput);
+      return null;
+    }
+
+    public Object visitZeroOrMore(ZeroOrMorePattern p) {
+      p.accept(nestedContentModelOutput);
+      return null;
+    }
+
+  }
+
+  class GroupContentModelOutput extends ChoiceContentModelOutput {
+    public Object visitGroup(Pattern p) {
+      p.accept(nestedContentModelOutput);
+      return null;
+    }
   }
 
   class ContentModelOutput extends AbstractVisitor {
@@ -122,25 +169,19 @@ class DtdOutput {
     }
 
     public Object visitZeroOrMore(ZeroOrMorePattern p) {
-      buf.append('(');
-      p.getChild().accept(nestedContentModelOutput);
-      buf.append(')');
+      p.getChild().accept(occurContentModelOutput);
       buf.append('*');
       return null;
     }
 
     public Object visitOneOrMore(OneOrMorePattern p) {
-      buf.append('(');
-      p.getChild().accept(nestedContentModelOutput);
-      buf.append(')');
+      p.getChild().accept(occurContentModelOutput);
       buf.append('+');
       return null;
     }
 
     public Object visitOptional(OptionalPattern p) {
-      buf.append('(');
-      p.getChild().accept(nestedContentModelOutput);
-      buf.append(')');
+      p.getChild().accept(occurContentModelOutput);
       buf.append('?');
       return null;
     }
@@ -167,9 +208,7 @@ class DtdOutput {
             buf.append(',');
           else
             needSep = true;
-          buf.append('(');
-          member.accept(nestedContentModelOutput);
-          buf.append(')');
+          member.accept(groupContentModelOutput);
         }
       }
       return null;
@@ -208,12 +247,7 @@ class DtdOutput {
             buf.append('|');
           else
             needSep = true;
-          boolean needParen = !t.isA(ContentType.ELEMENT_CLASS);
-          if (needParen)
-            buf.append('(');
-          member.accept(nestedContentModelOutput);
-          if (needParen)
-            buf.append(')');
+          member.accept(!t.isA(ContentType.ELEMENT_CLASS) ? choiceContentModelOutput : nestedContentModelOutput);
         }
       }
       for (int i = 0; i < len; i++) {
@@ -236,6 +270,30 @@ class DtdOutput {
   }
 
   class TopLevelContentModelOutput extends ContentModelOutput {
+    public Object visitZeroOrMore(ZeroOrMorePattern p) {
+      buf.append('(');
+      p.getChild().accept(nestedContentModelOutput);
+      buf.append(')');
+      buf.append('*');
+      return null;
+    }
+
+    public Object visitOneOrMore(OneOrMorePattern p) {
+      buf.append('(');
+      p.getChild().accept(nestedContentModelOutput);
+      buf.append(')');
+      buf.append('+');
+      return null;
+    }
+
+    public Object visitOptional(OptionalPattern p) {
+      buf.append('(');
+      p.getChild().accept(nestedContentModelOutput);
+      buf.append(')');
+      buf.append('?');
+      return null;
+    }
+
     public Object visitElement(ElementPattern p) {
       buf.append('(');
       super.visitElement(p);
