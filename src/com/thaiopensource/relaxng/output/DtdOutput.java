@@ -65,9 +65,9 @@ import java.util.HashSet;
 /*
 
 Tasks:
+Allow param entity containing <mixed>
 Catch bad recursion
 Check single element type
-Handle name class choice for elements
 Warning when approximating datatypes
 Non-local namespaces
 Generate parameter entities to allow change of namespace prefix
@@ -141,7 +141,8 @@ public class DtdOutput {
   static Type COMPLEX_TYPE_MODEL_GROUP = new Type(COMPLEX_TYPE);
   static Type MODEL_GROUP = new Type(COMPLEX_TYPE_MODEL_GROUP);
   static Type ELEMENT_CLASS = new Type(MODEL_GROUP);
-  static Type DIRECT_SINGLE_ELEMENT = new Type(ELEMENT_CLASS);
+  static Type DIRECT_MULTI_ELEMENT = new Type(ELEMENT_CLASS);
+  static Type DIRECT_SINGLE_ELEMENT = new Type(DIRECT_MULTI_ELEMENT);
   static Type DIRECT_SINGLE_ATTRIBUTE = new Type(ATTRIBUTE_GROUP);
   static Type OPTIONAL_ATTRIBUTE = new Type(ATTRIBUTE_GROUP);
   static Type ZERO_OR_MORE_ELEMENT_CLASS = new Type(MODEL_GROUP);
@@ -235,17 +236,18 @@ public class DtdOutput {
     }
 
     public Object visitElement(ElementPattern p) {
-      p.getNameClass().accept(this);
+      Object ret = p.getNameClass().accept(this);
       if (!seen(p.getChild())) {
         Type t = analyzeType(this, p.getChild());
         if (!t.isA(COMPLEX_TYPE) && t != ERROR)
           error("bad_element_type", p.getSourceLocation());
       }
-      return DIRECT_SINGLE_ELEMENT;
+      return ret;
     }
 
     public Object visitAttribute(AttributePattern p) {
-      p.getNameClass().accept(this);
+      if (p.getNameClass().accept(this) == DIRECT_MULTI_ELEMENT)
+        error("sorry_attribute_choice_name_class", p.getNameClass().getSourceLocation());
       Type t = analyzeType(this, p.getChild());
       if (!t.isA(ATTRIBUTE_TYPE) && t != DIRECT_TEXT && t != ERROR)
         error("sorry_attribute_type", p.getSourceLocation());
@@ -363,25 +365,27 @@ public class DtdOutput {
     }
 
     public Object visitChoice(ChoiceNameClass nc) {
-      error("sorry_choice_name_class", nc.getSourceLocation());
-      return null;
+      List list = nc.getChildren();
+      for (int i = 0, len = list.size(); i < len; i++)
+        ((NameClass)list.get(i)).accept(this);
+      return DIRECT_MULTI_ELEMENT;
     }
 
     public Object visitAnyName(AnyNameNameClass nc) {
       error("sorry_wildcard", nc.getSourceLocation());
-      return null;
+      return ERROR;
     }
 
     public Object visitNsName(NsNameNameClass nc) {
       error("sorry_wildcard", nc.getSourceLocation());
-      return null;
+      return ERROR;
     }
 
     public Object visitName(NameNameClass nc) {
       String ns = nc.getNamespaceUri();
       if (ns != NameClass.INHERIT_NS && ns.length() != 0)
         error("sorry_namespace", nc.getSourceLocation());
-      return null;
+      return DIRECT_SINGLE_ELEMENT;
     }
   }
 
@@ -399,8 +403,26 @@ public class DtdOutput {
   GrammarOutput grammarOutput = new GrammarOutput();
 
   class ContentModelOutput extends AbstractVisitor {
+    public Object visitName(NameNameClass nc) {
+      buf.append(nc.getLocalName());
+      return null;
+    }
+
+    public Object visitChoice(ChoiceNameClass nc) {
+      List list = nc.getChildren();
+      boolean needSep = false;
+      for (int i = 0, len = list.size(); i < len; i++) {
+        if (needSep)
+          buf.append('|');
+        else
+          needSep = true;
+        ((NameClass)list.get(i)).accept(this);
+      }
+      return null;
+    }
+
     public Object visitElement(ElementPattern p) {
-      buf.append(((NameNameClass)p.getNameClass()).getLocalName());
+      p.getNameClass().accept(this);
       elementQueue.add(p);
       return null;
     }
@@ -408,7 +430,7 @@ public class DtdOutput {
     public Object visitRef(RefPattern p) {
       Pattern def = grammar.getBody(p.getName());
       if (getType(def) == DIRECT_SINGLE_ELEMENT)
-        buf.append(((NameNameClass)((ElementPattern)def).getNameClass()).getLocalName());
+        ((ElementPattern)def).getNameClass().accept(this);
       else
         paramEntityRef(p);
       return null;
@@ -744,7 +766,7 @@ public class DtdOutput {
           c.getBody().accept(nestedContentModelOutput);
       }
       else {
-        if (c.getBody() instanceof ElementPattern)
+        if (getType(c.getBody()) == DIRECT_SINGLE_ELEMENT)
           outputElement((ElementPattern)c.getBody());
         else
           outputParamEntity(c.getName(), c.getBody());
@@ -960,30 +982,40 @@ public class DtdOutput {
   }
 
   void outputElement(ElementPattern p) {
-    String name = ((NameNameClass)p.getNameClass()).getLocalName();
     buf.setLength(0);
     Pattern content = p.getChild();
     if (!getType(content).isA(ATTRIBUTE_GROUP))
      content.accept(topLevelContentModelOutput);
-    String contentModel = buf.length() == 0 ? "EMPTY" : buf.toString();
-    outputRequiredParamEntities();
-    write("<!ELEMENT ");
-    write(name);
-    write(' ');
-    write(contentModel);
-    write('>');
-    newline();
+    final String contentModel = buf.length() == 0 ? "EMPTY" : buf.toString();
     buf.setLength(0);
     content.accept(attributeOutput);
-    if (buf.length() != 0) {
-      String atts = buf.toString();
-      outputRequiredParamEntities();
-      write("<!ATTLIST ");
-      write(name);
-      write(atts);
-      write('>');
-      newline();
-    }
+    final String atts = buf.toString();
+    outputRequiredParamEntities();
+    final NameClass nc = p.getNameClass();
+    nc.accept(new AbstractVisitor() {
+      public Object visitName(NameNameClass nc) {
+        write("<!ELEMENT ");
+        write(nc.getLocalName());
+        write(' ');
+        write(contentModel);
+        write('>');
+        newline();
+        if (atts.length() != 0) {
+          write("<!ATTLIST ");
+          write(nc.getLocalName());
+          write(atts);
+          write('>');
+          newline();
+        }
+        return null;
+      }
+
+      public Object visitChoice(ChoiceNameClass nc) {
+        for (Iterator iter = nc.getChildren().iterator(); iter.hasNext();)
+          ((NameClass)iter.next()).accept(this);
+        return null;
+      }
+    });
   }
 
   void newline() {
@@ -1130,7 +1162,7 @@ public class DtdOutput {
       return TEXT;
     if (t == DIRECT_SINGLE_ATTRIBUTE)
       return ATTRIBUTE_GROUP;
-    if (t == DIRECT_SINGLE_ELEMENT)
+    if (t.isA(DIRECT_MULTI_ELEMENT))
       return ELEMENT_CLASS;
     if (t == ZERO_OR_MORE_ELEMENT_CLASS)
       return MODEL_GROUP;
