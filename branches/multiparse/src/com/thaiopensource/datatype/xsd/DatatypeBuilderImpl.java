@@ -9,10 +9,10 @@ import org.relaxng.datatype.ValidationContext;
 import org.relaxng.datatype.DatatypeException;
 import com.thaiopensource.datatype.xsd.regex.RegexEngine;
 import com.thaiopensource.datatype.xsd.regex.RegexSyntaxException;
+import com.thaiopensource.util.Localizer;
 
 class DatatypeBuilderImpl implements DatatypeBuilder {
-  static final private String bundleName
-    = "com.thaiopensource.datatype.xsd.resources.Messages";
+  static final private Localizer localizer = new Localizer(DatatypeBuilderImpl.class);
 
   private DatatypeBase base;
   private DatatypeLibraryImpl library;
@@ -145,25 +145,15 @@ class DatatypeBuilderImpl implements DatatypeBuilder {
   }
 
   private void error(String key) throws DatatypeException {
-    throw new DatatypeException(message(key));
+    throw new DatatypeException(localizer.message(key));
   }
 
   private void error(String key, String arg) throws DatatypeException {
-    throw new DatatypeException(message(key, arg));
+    throw new DatatypeException(localizer.message(key, arg));
   }
 
   private void error(String key, String arg, int pos) throws DatatypeException {
-    throw new DatatypeException(pos, message(key, arg));
-  }
-
-  static private String message(String key) {
-    return MessageFormat.format(ResourceBundle.getBundle(bundleName).getString(key),
-				new Object[]{});
-  }
-
-  static private String message(String key, Object arg) {
-    return MessageFormat.format(ResourceBundle.getBundle(bundleName).getString(key),
-			        new Object[]{arg});
+    throw new DatatypeException(pos, localizer.message(key, arg));
   }
 
   // Return -1 for anything that is not a nonNegativeInteger
