@@ -62,8 +62,6 @@ Avoid introducing ambiguities when approximating <interleave>, eg x & (y, y).
 
 NOTATION datatypes
 
-Multiple pattern parameters
-
 Use complexType in place of group: <define> that contains both
 attributes or text and elements and sometimes referenced as a
 complexType, then define as complexType.

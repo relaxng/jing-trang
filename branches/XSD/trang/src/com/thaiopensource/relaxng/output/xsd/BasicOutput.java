@@ -72,16 +72,52 @@ public class BasicOutput {
 
   class SimpleTypeOutput implements SimpleTypeVisitor {
     public Object visitRestriction(SimpleTypeRestriction t) {
+      boolean hadPatternFacet = false;
+      for (Iterator iter = t.getFacets().iterator(); iter.hasNext();) {
+        if (((Facet)iter.next()).getName().equals("pattern")) {
+          if (!hadPatternFacet)
+            hadPatternFacet = true;
+          else {
+            xw.startElement(xs("restriction"));
+            xw.startElement(xs("simpleType"));
+          }
+        }
+      }
       xw.startElement(xs("restriction"));
       xw.attribute("base", xs(t.getName()));
+      hadPatternFacet = false;
       for (Iterator iter = t.getFacets().iterator(); iter.hasNext();) {
         Facet facet = (Facet)iter.next();
-        xw.startElement(xs(facet.getName()));
-        xw.attribute("value", facet.getValue());
-        xw.endElement();
+        if (facet.getName().equals("pattern")) {
+          if (!hadPatternFacet) {
+            hadPatternFacet = true;
+            outputFacet(facet);
+          }
+        }
+        else
+          outputFacet(facet);
       }
       xw.endElement();
+      hadPatternFacet = false;
+      for (Iterator iter = t.getFacets().iterator(); iter.hasNext();) {
+        Facet facet = (Facet)iter.next();
+        if (facet.getName().equals("pattern")) {
+          if (!hadPatternFacet)
+            hadPatternFacet = true;
+          else {
+            xw.endElement();
+            outputFacet(facet);
+            xw.endElement();
+          }
+        }
+      }
       return null;
+    }
+
+    private void outputFacet(Facet facet) {
+      xw.startElement(xs(facet.getName()));
+      xw.attribute("value", facet.getValue());
+      xw.endElement();
     }
 
     public Object visitRef(SimpleTypeRef t) {
