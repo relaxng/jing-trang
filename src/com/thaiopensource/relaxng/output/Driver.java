@@ -43,6 +43,12 @@ public class Driver {
           case 'e':
             encoding = op.getOptionArg();
             break;
+          case 'i':
+            inputType = op.getOptionArg();
+            break;
+          case 'o':
+            outputType = op.getOptionArg();
+            break;
           }
         }
       }
@@ -84,9 +90,9 @@ public class Driver {
         if (outputType.length() > 0)
           outputType = outputType.substring(1);
       }
-      if (outputType.equalsIgnoreCase(".dtd"))
+      if (outputType.equalsIgnoreCase("dtd"))
         of = new DtdOutputFormat();
-      else if (outputType.equalsIgnoreCase(".rng"))
+      else if (outputType.equalsIgnoreCase("rng"))
         of = new RngOutputFormat();
       else {
         error(localizer.message("unrecognized_output_type", outputType));
