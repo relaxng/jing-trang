@@ -568,7 +568,7 @@ public class BasicOutput {
   }
 
   void output() {
-   xw.startElement(xs("schema"));
+    xw.startElement(xs("schema"));
     xw.attribute("xmlns:" + xsPrefix, xsURI);
     xw.attribute("elementFormDefault", "qualified");
     xw.attribute("version", "1.0");
