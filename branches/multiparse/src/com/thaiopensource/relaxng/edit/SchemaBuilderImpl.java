@@ -34,7 +34,6 @@ import java.util.Vector;
 import java.util.Map;
 
 /* Need to change handling of parentRef */
-/* Need to deal with inheritNs */
 
 public class SchemaBuilderImpl implements SchemaBuilder {
   private final Parseable parseable;
@@ -432,6 +431,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   }
 
   private static String mapInheritNs(String ns) {
+    // noop since we represent INHERIT_NS by the same object
     return ns;
   }
 
