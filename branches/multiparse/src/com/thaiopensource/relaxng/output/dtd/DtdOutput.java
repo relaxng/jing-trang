@@ -454,11 +454,22 @@ class DtdOutput {
     }
 
     public Object visitData(DataPattern p) {
-      String type = p.getType();
-      if (p.getDatatypeLibrary().equals("")
-          || type.equals("string"))
-        type = "CDATA";
-      buf.append(type);
+      Datatypes.Info info = Datatypes.getInfo(p.getDatatypeLibrary(), p.getType());
+      if (info == null) {
+        er.warning("unrecognized_datatype", p.getSourceLocation());
+        buf.append("CDATA");
+      }
+      else {
+        if (!info.isExact())
+          er.warning("datatype_approx", p.getType(), info.closestType(), p.getSourceLocation());
+        else {
+          if (p.getParams().size() > 0)
+            er.warning("ignore_params", p.getSourceLocation());
+          if (p.getExcept() != null)
+            er.warning("ignore_except", p.getSourceLocation());
+        }
+        buf.append(info.closestType());
+      }
       return null;
     }
 
@@ -501,9 +512,23 @@ class DtdOutput {
     }
 
     public Object visitValue(ValuePattern p) {
-      buf.append('(');
-      super.visitValue(p);
-      buf.append(')');
+      if (getContentType(p) == ContentType.ENUM) {
+        buf.append('(');
+        super.visitValue(p);
+        buf.append(')');
+      }
+      else {
+        Datatypes.Info info = Datatypes.getInfo(p.getDatatypeLibrary(), p.getType());
+        if (info == null) {
+          er.warning("unrecognized_datatype", p.getSourceLocation());
+          buf.append("CDATA");
+        }
+        else {
+          String type = info.closestType();
+          er.warning("value_approx", type, p.getSourceLocation());
+          buf.append(type);
+        }
+      }
       return null;
     }
 
