@@ -6,7 +6,6 @@ Warning when approximating datatypes
 Avoid duplicate namespace declarations for global attributes
 Option to generate namespace declarations only on start elements
 Recognize #FIXED attributes
-Include
 Support duplicate definitions with combine="interleave" for attlists
 Generate parameter entities to allow change of namespace prefix
 nested grammars
