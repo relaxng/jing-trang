@@ -23,7 +23,7 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
   }
 
   public void visitAttributeGroup(AttributeGroupDefinition def) {
-    def.setAttributeUses(transformAttributeUseList(def.getAttributeUses()));
+    def.setAttributeUses((AttributeUse)def.getAttributeUses().accept(this));
   }
 
   public void visitSimpleType(SimpleTypeDefinition def) {
@@ -79,7 +79,7 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
 
   public Object visitComplexContent(ComplexTypeComplexContent t) {
     Particle particle = t.getParticle();
-    List attributeUses = transformAttributeUseList(t.getAttributeUses());
+    AttributeUse attributeUses = (AttributeUse)t.getAttributeUses().accept(this);
     if (particle != null)
       particle = (Particle)particle.accept(this);
     if (particle == t.getParticle() && attributeUses == t.getAttributeUses())
@@ -89,7 +89,7 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
 
   public Object visitSimpleContent(ComplexTypeSimpleContent t) {
     SimpleType simpleType = (SimpleType)t.getSimpleType().accept(this);
-    List attributeUses = transformAttributeUseList(t.getAttributeUses());
+    AttributeUse attributeUses = (AttributeUse)t.getAttributeUses().accept(this);
     if (simpleType == t.getSimpleType() && attributeUses == t.getAttributeUses())
       return t;
     return new ComplexTypeSimpleContent(attributeUses, simpleType);
@@ -114,6 +114,13 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     if (attribute == a.getAttribute())
       return a;
     return new OptionalAttribute(a.getLocation(), attribute);
+  }
+
+  public Object visitAttributeGroup(AttributeGroup a) {
+    List children = transformAttributeUseList(a.getChildren());
+    if (children == a.getChildren())
+      return a;
+    return new AttributeGroup(a.getLocation(), children);
   }
 
   public Object visitRestriction(SimpleTypeRestriction t) {

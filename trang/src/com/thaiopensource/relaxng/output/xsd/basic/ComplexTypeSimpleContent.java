@@ -5,7 +5,7 @@ import java.util.List;
 public class ComplexTypeSimpleContent extends ComplexType {
   private final SimpleType simpleType;
 
-  public ComplexTypeSimpleContent(List attributeUses, SimpleType simpleType) {
+  public ComplexTypeSimpleContent(AttributeUse attributeUses, SimpleType simpleType) {
     super(attributeUses);
     this.simpleType = simpleType;
   }

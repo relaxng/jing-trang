@@ -49,6 +49,7 @@ import com.thaiopensource.relaxng.output.xsd.basic.ComplexTypeSimpleContent;
 import com.thaiopensource.relaxng.output.xsd.basic.Schema;
 import com.thaiopensource.relaxng.output.xsd.basic.AttributeUse;
 import com.thaiopensource.relaxng.output.xsd.basic.OptionalAttribute;
+import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroup;
 import com.thaiopensource.relaxng.output.common.NameClassSplitter;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
@@ -210,11 +211,11 @@ public class BasicBuilder {
       ComplexType type;
       Pattern child = p.getChild();
       ChildType ct = si.getChildType(child);
-      List attributeUses;
+      AttributeUse attributeUses;
       if (ct.contains(ChildType.ATTRIBUTE))
-        attributeUses = (List)child.accept(attributeUseBuilder);
+        attributeUses = (AttributeUse)child.accept(attributeUseBuilder);
       else
-        attributeUses = Collections.EMPTY_LIST;
+        attributeUses = AttributeGroup.EMPTY;
       Particle particle = null;
       boolean mixed = false;
       if (ct.contains(ChildType.ELEMENT)) {
@@ -338,7 +339,9 @@ public class BasicBuilder {
         else
           choices.add(att);
       }
-      return choices;
+      if (choices.size() == 1)
+        return choices.get(0);
+      return new AttributeGroup(p.getSourceLocation(), choices);
     }
 
     boolean isOptional() {
@@ -359,9 +362,7 @@ public class BasicBuilder {
 
     public Object visitRef(RefPattern p) {
       // TODO this isn't right for a ref inside an optional if the refed pattern contains required attributes
-      List list = new Vector();
-      list.add(new AttributeGroupRef(p.getSourceLocation(), p.getName()));
-      return list;
+      return new AttributeGroupRef(p.getSourceLocation(), p.getName());
     }
 
     public Object visitComposite(CompositePattern p) {
@@ -369,9 +370,13 @@ public class BasicBuilder {
       for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
         Pattern child = (Pattern)iter.next();
         if (si.getChildType(child).contains(ChildType.ATTRIBUTE))
-          uses.addAll((List)child.accept(this));
+          uses.add(child.accept(this));
       }
-      return uses;
+      if (uses.size() == 0)
+        return AttributeGroup.EMPTY;
+      if (uses.size() == 1)
+        return uses.get(0);
+      return new AttributeGroup(p.getSourceLocation(), uses);
     }
 
     public Object visitChoice(ChoicePattern p) {
@@ -408,7 +413,7 @@ public class BasicBuilder {
                                   location);
         if (ct.contains(ChildType.ATTRIBUTE))
           schema.defineAttributeGroup(name,
-                                      (List)body.accept(attributeUseBuilder),
+                                      (AttributeUse)body.accept(attributeUseBuilder),
                                       location);
       }
       return null;
