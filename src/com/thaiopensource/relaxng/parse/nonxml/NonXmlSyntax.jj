@@ -431,6 +431,10 @@ void NamespaceDecl() :
     if (prefix != null) {
       if (prefix.getString().equals("xmlns"))
         error("xmlns_prefix", prefix.getToken());
+      else if (prefix.getString().equals("xml")) {
+        if (!namespaceName.equals(xmlUri))
+          error("xml_prefix", prefix.getToken());
+      }
       else
         namespaceTable.put(prefix.getString(), namespaceName);
     }
