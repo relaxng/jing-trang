@@ -367,6 +367,7 @@ public final class UCode_UCodeESC_CharStream {
     bufline = new int[buffersize];
     bufcolumn = new int[buffersize];
     nextCharBuf = new char[4096];
+    skipBOM();
   }
 
   public UCode_UCodeESC_CharStream(java.io.Reader dstream,
@@ -391,6 +392,7 @@ public final class UCode_UCodeESC_CharStream {
     prevCharIsLF = false;
     tokenBegin = inBuf = maxNextCharInd = 0;
     nextCharInd = bufpos = -1;
+    skipBOM();
   }
 
   public void ReInit(java.io.Reader dstream,
@@ -416,6 +418,17 @@ public final class UCode_UCodeESC_CharStream {
   public void ReInit(java.io.InputStream dstream, int startline,
                      int startcolumn) {
     ReInit(dstream, startline, startcolumn, 4096);
+  }
+
+  static private final char BOM = '\ufeff';
+
+  private void skipBOM() {
+    try {
+      if (PeekChar() == BOM)
+        ReadChar();
+    }
+    catch (EOFException e) {
+    }
   }
 
   public final String GetImage() {
