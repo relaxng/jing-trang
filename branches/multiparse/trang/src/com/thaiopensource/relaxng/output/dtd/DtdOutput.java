@@ -1173,7 +1173,7 @@ class DtdOutput {
       this.cause = cause;
     }
 
-    Throwable getCause() {
+    public Throwable getCause() {
       return cause;
     }
   }
