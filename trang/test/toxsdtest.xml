@@ -3354,6 +3354,49 @@ element foo {
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+element foo {
+  element bar1 { text }
+  & element bar2 {
+    element baz1 { text }?, element baz2 { text }?
+  }*
+}
+]]></correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="bar1"/>
+        <xs:element ref="bar2"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="bar1">
+    <xs:complexType mixed="true"/>
+  </xs:element>
+  <xs:element name="bar2">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="baz1"/>
+        <xs:element minOccurs="0" ref="baz2"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="baz1">
+    <xs:complexType mixed="true"/>
+  </xs:element>
+  <xs:element name="baz2">
+    <xs:complexType mixed="true"/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>
