@@ -1,4 +1,9 @@
-Approximate <interleave>
+If expansion of a group causes the group to become unreferenced, then remove the group.
+
+Use the last component of the namespace URI in selecting prefix when no prefix is used in the
+RELAX NG.
+
+Optimize nested choices in expanding <interleave>.
 
 Map
 
@@ -23,9 +28,9 @@ Use global attributes for cross-schema references.
 
 Make choice of targetNamespace not depend on order of hash table iteration.
 
-Avoid duplicate attributes.
-
-Deal with <ref> to attributes inside optional.
+Deal with attribute choice properly:
+- Avoid duplicate attributes.
+- Deal with <ref> to attributes inside optional
 
 Attribute wildcards
 
@@ -80,8 +85,6 @@ Deal with annotations
 Deal with a:documentation
 
 Take advantage of type attribute in output.
-
-Push minOccurs down onto single child.
 
 Approximation warnings:
 - interleave

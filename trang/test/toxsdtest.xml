@@ -1163,6 +1163,12 @@ bar5 = element bar5 { empty }, element bar6 { empty }
       </xs:choice>
     </xs:complexType>
   </xs:element>
+  <xs:element name="bar5">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="bar6">
+    <xs:complexType/>
+  </xs:element>
   <xs:element name="bar1">
     <xs:complexType/>
   </xs:element>
@@ -1196,12 +1202,6 @@ bar5 = element bar5 { empty }, element bar6 { empty }
       <xs:element ref="bar6"/>
     </xs:sequence>
   </xs:group>
-  <xs:element name="bar5">
-    <xs:complexType/>
-  </xs:element>
-  <xs:element name="bar6">
-    <xs:complexType/>
-  </xs:element>
 </xs:schema>
 </correct>
 </xsd>
