@@ -4,7 +4,7 @@ import com.thaiopensource.relaxng.parse.Annotations;
 import com.thaiopensource.relaxng.parse.BuildException;
 import com.thaiopensource.relaxng.parse.DataPatternBuilder;
 import com.thaiopensource.relaxng.parse.Div;
-import com.thaiopensource.relaxng.parse.ElementAnnotation;
+import com.thaiopensource.relaxng.parse.ParsedElementAnnotation;
 import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
 import com.thaiopensource.relaxng.parse.Grammar;
 import com.thaiopensource.relaxng.parse.GrammarSection;
@@ -462,7 +462,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       return parent;
     }
 
-    public void topLevelAnnotation(ElementAnnotation ea) throws BuildException {
+    public void topLevelAnnotation(ParsedElementAnnotation ea) throws BuildException {
     }
 
     private RefPattern lookup(String name) {
@@ -531,7 +531,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       // nothing to do
     }
 
-    public void topLevelAnnotation(ElementAnnotation ea) throws BuildException {
+    public void topLevelAnnotation(ParsedElementAnnotation ea) throws BuildException {
       // nothing to do
     }
 
@@ -584,11 +584,11 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     return new GrammarImpl(this, parent);
   }
 
-  public ParsedPattern annotateAfter(ParsedPattern p, ElementAnnotation e) throws BuildException {
+  public ParsedPattern annotateAfter(ParsedPattern p, ParsedElementAnnotation e) throws BuildException {
     return p;
   }
 
-  public ParsedNameClass annotateAfter(ParsedNameClass nc, ElementAnnotation e) throws BuildException {
+  public ParsedNameClass annotateAfter(ParsedNameClass nc, ParsedElementAnnotation e) throws BuildException {
     return nc;
   }
 
@@ -691,7 +691,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     // nothing needed
   }
 
-  public void addElement(ElementAnnotation ea) {
+  public void addElement(ParsedElementAnnotation ea) {
     // nothing needed
   }
 
@@ -699,7 +699,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     // nothing needed
   }
 
-  public ElementAnnotation makeElementAnnotation() {
+  public ParsedElementAnnotation makeElementAnnotation() {
     return null;
   }
 

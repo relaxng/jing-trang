@@ -6,5 +6,5 @@ package com.thaiopensource.relaxng.parse;
 public interface Annotations {
   void addAttribute(String ns, String localName, String prefix, String value, Location loc)
           throws BuildException;
-  void addElement(ElementAnnotation ea) throws BuildException;
+  void addElement(ParsedElementAnnotation ea) throws BuildException;
 }
