@@ -272,7 +272,7 @@ class Output {
       startWrapper();
       if (si.isGlobal(p)) {
         xw.startElement(xs("element"));
-        xw.attribute("ref", si.qualifyName((NameNameClass)p.getNameClass(), sourceUri));
+        xw.attribute("ref", qualifyName((NameNameClass)p.getNameClass()));
         xw.endElement();
       }
       else {
@@ -781,7 +781,7 @@ class Output {
     NameClass nc = ep.getNameClass();
     if (!(nc instanceof NameNameClass))
       return null;
-    return si.qualifyName((NameNameClass)nc, sourceUri);
+    return qualifyName((NameNameClass)nc);
   }
 
   void outputInclude(String href) {
@@ -796,6 +796,10 @@ class Output {
       xw.attribute("namespace", ns);
     xw.attribute("schemaLocation", od.reference(sourceUri, href));
     xw.endElement();
+  }
+
+  String qualifyName(NameNameClass nc) {
+    return si.qualifyName(resolveNamespace(nc.getNamespaceUri()), nc.getLocalName());
   }
 
   String resolveNamespace(String ns) {
