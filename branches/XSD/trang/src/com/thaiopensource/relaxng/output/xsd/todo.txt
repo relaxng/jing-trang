@@ -58,3 +58,10 @@ complexType, then define as complexType.
 Deal with xsi attributes.
 
 Make use of element substitution groups.
+
+Deal with comments
+
+Deal with annotations
+
+Deal with a:documentation
+
