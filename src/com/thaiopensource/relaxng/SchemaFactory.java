@@ -8,6 +8,9 @@ import com.thaiopensource.relaxng.impl.Pattern;
 import com.thaiopensource.relaxng.impl.PatternReader;
 import com.thaiopensource.relaxng.impl.PatternSchema;
 import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
+import com.thaiopensource.relaxng.impl.SchemaBuilderImpl;
+import com.thaiopensource.relaxng.parse.Parseable;
+import com.thaiopensource.relaxng.parse.sax.ParseableImpl;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
@@ -40,6 +43,8 @@ public class SchemaFactory {
   public SchemaFactory() {
   }
 
+  private static final boolean NEW_PARSER = true;
+
   /**
    * Creates a schema by parsing an XML document.  A non-null <code>XMLReaderCreator</code> must be specified
    * with <code>setXMLReaderCreator</code> before calling <code>createSchema</code>.  The <code>ErrorHandler</code>
@@ -68,15 +73,21 @@ public class SchemaFactory {
    */
   public Schema createSchema(InputSource in) throws IOException, SAXException, IncorrectSchemaException {
     SchemaPatternBuilder spb = new SchemaPatternBuilder();
-    XMLReader xr = xrc.createXMLReader();
-    if (eh != null)
-      xr.setErrorHandler(eh);
-    Pattern start = PatternReader.readPattern(xrc, xr, spb, dlf, in);
-    if (start == null)
-      throw new IncorrectSchemaException();
+    Pattern start;
+    if (NEW_PARSER) {
+      start = SchemaBuilderImpl.parse(new ParseableImpl(xrc, in, eh), eh, dlf, spb);
+    }
+    else {
+      XMLReader xr = xrc.createXMLReader();
+      if (eh != null)
+        xr.setErrorHandler(eh);
+      start = PatternReader.readPattern(xrc, xr, spb, dlf, in);
+      if (start == null)
+        throw new IncorrectSchemaException();
+    }
     Schema schema = new PatternSchema(spb, start);
     if (spb.hasIdTypes() && checkIdIdref) {
-      IdTypeMap idTypeMap = new IdTypeMapBuilder(xr, start).getIdTypeMap();
+      IdTypeMap idTypeMap = new IdTypeMapBuilder(eh, start).getIdTypeMap();
       if (idTypeMap == null)
         throw new IncorrectSchemaException();
       schema = new CombineSchema(schema, new IdTypeMapSchema(idTypeMap));

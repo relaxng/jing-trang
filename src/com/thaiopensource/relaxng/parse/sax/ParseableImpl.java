@@ -51,7 +51,7 @@ public class ParseableImpl implements Parseable {
       XMLReader xr = xrc.createXMLReader();
       SchemaParser sp = new SchemaParser(xr, eh, schemaBuilder, ncNameDatatype, g, g);
       xr.parse(makeInputSource(xr, uri));
-      // XXX need to pass up error
+      sp.getStartPattern();
     }
     catch (SAXException e) {
      throw new BuildException(e);
