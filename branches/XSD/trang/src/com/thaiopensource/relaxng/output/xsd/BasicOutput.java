@@ -123,8 +123,12 @@ public class BasicOutput {
     private void outputFacet(Facet facet) {
       xw.startElement(xs(facet.getName()));
       xw.attribute("value", facet.getValue());
+      String prefix = facet.getPrefix();
+      if (prefix != null && !prefix.equals(topLevelPrefix(facet.getNamespace())))
+        xw.attribute(prefix.equals("") ? "xmlns" : "xmlns:" + prefix, facet.getNamespace());
       xw.endElement();
     }
+
 
     public Object visitRef(SimpleTypeRef t) {
       xw.startElement(xs("restriction"));
@@ -673,6 +677,14 @@ public class BasicOutput {
                        od.open(schema.getUri()),
                        new String[0],
                        od.getEncoding());
+  }
+
+  private String topLevelPrefix(String ns) {
+    if (!nsm.isTargetNamespace(ns))
+      return null;
+    if (ns.equals(""))
+      return "";
+    return pm.getPrefix(ns);
   }
 
   void output() {

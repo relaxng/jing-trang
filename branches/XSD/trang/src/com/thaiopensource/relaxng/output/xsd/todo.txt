@@ -90,8 +90,6 @@ Deal with ambiguous content model restriction
 
 Support attribute defaults.
 
-In-scope namespaces for QName; must ensure xs prefix does not conflict
-
 Avoid redundant imports and redundant namespace declarations.
 -----
 

@@ -157,7 +157,10 @@ public class SchemaBuilderImpl implements SchemaBuilder {
         try {
           Datatype dt = dtb.createDatatype();
           try {
-            dt.checkValid(value, dt.isContextDependent() ? new TraceValidationContext(p.getPrefixMap(), context, ns) : null);
+            ValidationContext vc = dt.isContextDependent() ? new TraceValidationContext(p.getPrefixMap(), context, ns) : null;
+            // use createValue rather than isValid so that default namespace gets used with QName
+            if (dt.createValue(value, vc) == null)
+              dt.checkValid(value, vc);
           }
           catch (DatatypeException e) {
             diagnoseDatatypeException("invalid_value_detail", "invalid_value", e, loc);
