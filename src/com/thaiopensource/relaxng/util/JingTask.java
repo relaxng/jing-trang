@@ -32,7 +32,7 @@ public class JingTask extends Task {
   private File src;
   private Vector filesets = new Vector();
   private boolean checkid = true;
-  private boolean nonxmlsyntax = false;
+  private boolean compactsyntax = false;
 
   public void execute() throws BuildException {
     if (rngFile == null)
@@ -47,7 +47,7 @@ public class JingTask extends Task {
     boolean hadError = false;
 
     try {
-      ValidationEngine engine = new ValidationEngine(new Jaxp11XMLReaderCreator(), eh, checkid, nonxmlsyntax);
+      ValidationEngine engine = new ValidationEngine(new Jaxp11XMLReaderCreator(), eh, checkid, compactsyntax);
       if (!engine.loadSchema(ValidationEngine.fileInputSource(rngFile)))
 	hadError = true;
       else {
@@ -102,12 +102,12 @@ public class JingTask extends Task {
   }
 
   /**
-   * Handles the <code>nonxmlsyntax</code> attribute.
+   * Handles the <code>compactsyntax</code> attribute.
    *
-   * @param nonxmlsyntax the attribute value converted to a boolean
+   * @param compactsyntax the attribute value converted to a boolean
    */
-  public void setNonxmlsyntax(boolean nonxmlsyntax) {
-    this.nonxmlsyntax = nonxmlsyntax;
+  public void setCompactsyntax(boolean compactsyntax) {
+    this.compactsyntax = compactsyntax;
   }
 
   public void addFileset(FileSet set) {

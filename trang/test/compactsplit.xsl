@@ -18,9 +18,9 @@
 <xsl:variable name="incorrectSchemaName" select="'i'"/>
 <xsl:variable name="correctSchemaName" select="'c'"/>
 <xsl:variable name="xmlSuffix" select="'.rng'"/>
-<xsl:variable name="nonxmlSuffix" select="'.rnx'"/>
+<xsl:variable name="compactSuffix" select="'.rnc'"/>
 <xsl:variable name="xmlDir" select="'xml'"/>
-<xsl:variable name="nonxmlDir" select="'nonxml'"/>
+<xsl:variable name="compactDir" select="'compact'"/>
 <xsl:variable name="outDir" select="'out'"/>
 
 <xsl:template match="testCase">
@@ -50,30 +50,30 @@
   </saxon:output>
 </xsl:template>
 
-<xsl:template match="nonxml//incorrect">
+<xsl:template match="compact//incorrect">
   <xsl:param name="base"/>
-  <saxon:output href="{$base}/{$incorrectSchemaName}{$nonxmlSuffix}" method="text">
+  <saxon:output href="{$base}/{$incorrectSchemaName}{$compactSuffix}" method="text">
     <xsl:value-of select="."/>
   </saxon:output>
 </xsl:template>
 
-<xsl:template match="nonxml//correct">
+<xsl:template match="compact//correct">
   <xsl:param name="base"/>
-  <saxon:output href="{$base}/{$correctSchemaName}{$nonxmlSuffix}" method="text">
+  <saxon:output href="{$base}/{$correctSchemaName}{$compactSuffix}" method="text">
     <xsl:value-of select="."/>
   </saxon:output>
 </xsl:template>
 
-<xsl:template match="nonxml//resource">
+<xsl:template match="compact//resource">
   <xsl:param name="base"/>
   <saxon:output href="{$base}/{@name}" method="text" encoding="utf-8">
     <xsl:value-of select="."/>
   </saxon:output>
 </xsl:template>
 
-<xsl:template match="nonxml">
+<xsl:template match="compact">
   <xsl:param name="base"/>
-  <xsl:variable name="d" select="concat($base, '/', $nonxmlDir)"/>
+  <xsl:variable name="d" select="concat($base, '/', $compactDir)"/>
   <xsl:call-template name="mkdir">
     <xsl:with-param name="dir" select="$d"/>
   </xsl:call-template>

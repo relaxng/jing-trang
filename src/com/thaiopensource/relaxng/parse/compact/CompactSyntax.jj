@@ -3,9 +3,9 @@ options {
   UNICODE_INPUT = true;
 }
 
-PARSER_BEGIN(NonXmlSyntax)
+PARSER_BEGIN(CompactSyntax)
 
-package com.thaiopensource.relaxng.parse.nonxml;
+package com.thaiopensource.relaxng.parse.compact;
 
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Annotations;
@@ -40,7 +40,7 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class NonXmlSyntax implements Context {
+public class CompactSyntax implements Context {
 
   private static final String xmlUri = "http://www.w3.org/XML/1998/namespace";
   private static final String xmlnsUri = "http://www.w3.org/2000/xmlns";
@@ -51,7 +51,7 @@ public class NonXmlSyntax implements Context {
   private Hashtable namespaceTable = new Hashtable();
   private Hashtable datatypesTable = new Hashtable();
   private boolean hadError = false;
-  private static Localizer localizer = new Localizer(NonXmlSyntax.class);
+  private static Localizer localizer = new Localizer(CompactSyntax.class);
   private Hashtable attributeNameTable = new Hashtable();
 
   final class LocatedString {
@@ -77,7 +77,7 @@ public class NonXmlSyntax implements Context {
 
   }
 
-  public NonXmlSyntax(Reader r, String sourceUri, SchemaBuilder sb, ErrorHandler eh) {
+  public CompactSyntax(Reader r, String sourceUri, SchemaBuilder sb, ErrorHandler eh) {
     this(r);
     this.sourceUri = sourceUri;
     this.sb = sb;
@@ -335,7 +335,7 @@ public class NonXmlSyntax implements Context {
   }
 }
 
-PARSER_END(NonXmlSyntax)
+PARSER_END(CompactSyntax)
 
 ParsedPattern Input(Scope scope) :
 {

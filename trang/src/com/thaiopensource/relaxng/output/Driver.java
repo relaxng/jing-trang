@@ -6,7 +6,7 @@ import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.output.dtd.DtdOutputFormat;
 import com.thaiopensource.relaxng.output.rng.RngOutputFormat;
 import com.thaiopensource.relaxng.parse.Parseable;
-import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
+import com.thaiopensource.relaxng.parse.compact.CompactParseable;
 import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 import com.thaiopensource.relaxng.util.ErrorHandlerImpl;
 import com.thaiopensource.relaxng.util.Jaxp11XMLReaderCreator;
@@ -77,8 +77,8 @@ public class Driver {
       }
       if (inputType.equalsIgnoreCase("rng"))
         parseable = new SAXParseable(new Jaxp11XMLReaderCreator(), in, eh);
-      else if (inputType.equalsIgnoreCase("rngnx") || inputType.equalsIgnoreCase("rnx"))
-        parseable = new NonXmlParseable(in, eh);
+      else if (inputType.equalsIgnoreCase("rnc"))
+        parseable = new CompactParseable(in, eh);
       else {
         error(localizer.message("unrecognized_input_type", inputType));
         return 2;

@@ -31,21 +31,21 @@ class Driver {
   }
 
   private boolean checkId = true;
-  private boolean nonXmlSyntax = false;
+  private boolean compactSyntax = false;
   private boolean timing = false;
   private String encoding = null;
 
   public int doMain(String[] args) {
     ErrorHandlerImpl eh = new ErrorHandlerImpl(System.out);
-    OptionParser op = new OptionParser("itne:", args);
+    OptionParser op = new OptionParser("itce:", args);
     try {
       while (op.moveToNextOption()) {
         switch (op.getOptionChar()) {
         case 'i':
           checkId = false;
           break;
-        case 'n':
-          nonXmlSyntax = true;
+        case 'c':
+          compactSyntax = true;
           break;
         case 't':
           timing = true;
@@ -75,7 +75,7 @@ class Driver {
     long loadedPatternTime = -1;
     boolean hadError = false;
     try {
-      ValidationEngine engine = new ValidationEngine(new Jaxp11XMLReaderCreator(), eh, checkId, nonXmlSyntax);
+      ValidationEngine engine = new ValidationEngine(new Jaxp11XMLReaderCreator(), eh, checkId, compactSyntax);
       InputSource in = ValidationEngine.uriOrFileInputSource(args[0]);
       if (encoding != null)
         in.setEncoding(encoding);

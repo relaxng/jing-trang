@@ -3,7 +3,7 @@
    derived from the JavaCC generated ASCII_CharStream by renaming and
    removing the masking out of the hi byte. */
 
-package com.thaiopensource.relaxng.parse.nonxml;
+package com.thaiopensource.relaxng.parse.compact;
 
 public final class UCode_CharStream
 {

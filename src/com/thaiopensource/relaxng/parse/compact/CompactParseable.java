@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng.parse.nonxml;
+package com.thaiopensource.relaxng.parse.compact;
 
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.parse.ParsedPattern;
@@ -16,31 +16,31 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.net.URL;
 
-public class NonXmlParseable implements Parseable {
+public class CompactParseable implements Parseable {
   private final InputSource in;
   private final ErrorHandler eh;
 
-  public NonXmlParseable(InputSource in, ErrorHandler eh) {
+  public CompactParseable(InputSource in, ErrorHandler eh) {
     this.in = in;
     this.eh = eh;
   }
 
   public ParsedPattern parse(SchemaBuilder sb) throws BuildException, IllegalSchemaException {
-    return new NonXmlSyntax(makeReader(in), in.getSystemId(), sb, eh).parse(null);
+    return new CompactSyntax(makeReader(in), in.getSystemId(), sb, eh).parse(null);
   }
 
   public ParsedPattern parseInclude(String uri, SchemaBuilder sb, IncludedGrammar g)
           throws BuildException, IllegalSchemaException {
     InputSource tem = new InputSource(uri);
     tem.setEncoding(in.getEncoding());
-    return new NonXmlSyntax(makeReader(tem), uri, sb, eh).parseInclude(g);
+    return new CompactSyntax(makeReader(tem), uri, sb, eh).parseInclude(g);
   }
 
   public ParsedPattern parseExternal(String uri, SchemaBuilder sb, Scope scope)
           throws BuildException, IllegalSchemaException {
     InputSource tem = new InputSource(uri);
     tem.setEncoding(in.getEncoding());
-    return new NonXmlSyntax(makeReader(tem), uri, sb, eh).parse(scope);
+    return new CompactSyntax(makeReader(tem), uri, sb, eh).parse(scope);
   }
 
   private final String DEFAULT_ENCODING = "iso-8859-1";
