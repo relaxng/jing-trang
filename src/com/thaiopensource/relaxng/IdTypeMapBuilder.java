@@ -226,10 +226,8 @@ public class IdTypeMapBuilder {
    if (eh != null)
      try {
        eh.error(new SAXParseException(Localizer.message(key,
-                                                        arg1.getNamespaceUri(),
-                                                        arg1.getLocalName(),
-                                                        arg2.getNamespaceUri(),
-                                                        arg2.getLocalName()),
+                                                        NameFormatter.format(arg1),
+                                                        NameFormatter.format(arg2)),
                                       locator));
      }
      catch (SAXException e) {

@@ -103,7 +103,7 @@ public class Validator implements ContentHandler {
         error("required_elements_missing");
       else {
         next = builder.getPatternMemo(builder.makeAfter(findElement(name), memo.getPattern()));
-        error(next.isNotAllowed() ? "unknown_element" : "out_of_context_element", localName);
+        error(next.isNotAllowed() ? "unknown_element" : "out_of_context_element", name);
       }
       memo = next;
     }
@@ -112,9 +112,9 @@ public class Validator implements ContentHandler {
       Name attName = new Name(atts.getURI(i), atts.getLocalName(i));
 
       if (!setMemo(memo.startAttributeDeriv(attName)))
-	error("impossible_attribute_ignored", atts.getLocalName(i));
+	error("impossible_attribute_ignored", attName);
       else if (!setMemo(memo.dataDeriv(atts.getValue(i), prefixMapping))) {
-        error("bad_attribute_value", atts.getLocalName(i));
+        error("bad_attribute_value", attName);
         memo = memo.recoverAfter();
       }
     }
@@ -233,6 +233,10 @@ public class Validator implements ContentHandler {
       eh.error(new SAXParseException(Localizer.message(key), locator));
   }
 
+  private void error(String key, Name arg) throws SAXException {
+    error(key, NameFormatter.format(arg));
+  }
+
   private void error(String key, String arg) throws SAXException {
     if (hadError && memo.isNotAllowed())
       return;
@@ -240,26 +244,6 @@ public class Validator implements ContentHandler {
     ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
       eh.error(new SAXParseException(Localizer.message(key, arg), locator));
-  }
-
-  private void error(String key, String arg1, String arg2, Locator loc) throws SAXException {
-    if (hadError && memo.isNotAllowed())
-      return;
-    hadError = true;
-    ErrorHandler eh = xr.getErrorHandler();
-    if (eh != null)
-      eh.error(new SAXParseException(Localizer.message(key, arg1, arg2),
-				     loc));
-  }
-
-  private void error(String key, String arg1, String arg2) throws SAXException {
-    if (hadError && memo.isNotAllowed())
-      return;
-    hadError = true;
-    ErrorHandler eh = xr.getErrorHandler();
-    if (eh != null)
-      eh.error(new SAXParseException(Localizer.message(key, arg1, arg2),
-				     locator));
   }
 
   /* Return false if m is notAllowed. */
