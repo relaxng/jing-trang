@@ -63,6 +63,8 @@ import java.util.List;
 import java.util.Vector;
 import java.util.Iterator;
 import java.util.Collections;
+import java.util.Set;
+import java.util.HashSet;
 
 public class BasicBuilder {
   private static final String XSD_URI = "http://www.w3.org/2001/XMLSchema-datatypes";
@@ -237,9 +239,9 @@ public class BasicBuilder {
       List result = new Vector();
       for (Iterator iter = NameClassSplitter.split(p.getNameClass()).iterator(); iter.hasNext();)
         result.add(new Element(p.getSourceLocation(), makeName((NameNameClass)iter.next()), type));
-      Wildcard wc = WildcardBuilder.createWildcard(p.getNameClass(), inheritedNamespace);
-      if (wc != null)
-        result.add(new WildcardElement(p.getSourceLocation(), wc));
+      Wildcard[] wc = splitElementWildcard(WildcardBuilder.createWildcard(p.getNameClass(), inheritedNamespace));
+      for (int i = 0; i < wc.length; i++)
+        result.add(new WildcardElement(p.getSourceLocation(), wc[i]));
       if (result.size() == 1)
         return result.get(0);
       return new ParticleChoice(p.getSourceLocation(), result);
@@ -495,4 +497,25 @@ public class BasicBuilder {
     return ns;
   }
 
+  private static Wildcard[] splitElementWildcard(Wildcard wc) {
+    if (wc == null)
+      return new Wildcard[0];
+    if (wc.isPositive() || wc.getNamespaces().contains("") || wc.getNamespaces().size() != 1)
+      return new Wildcard[] { wc };
+    Set positiveNamespaces = new HashSet();
+    positiveNamespaces.add("");
+    Set negativeNamespaces = new HashSet();
+    negativeNamespaces.add(wc.getNamespaces().iterator().next());
+    negativeNamespaces.add("");
+    Set positiveExcludeNames = new HashSet();
+    Set negativeExcludeNames = new HashSet();
+    for (Iterator iter = wc.getExcludedNames().iterator(); iter.hasNext();) {
+      Name name = (Name)iter.next();
+     (name.getNamespaceUri().equals("") ? positiveExcludeNames : negativeExcludeNames).add(name);
+    }
+    return new Wildcard[] {
+      new Wildcard(false, negativeNamespaces, negativeExcludeNames),
+      new Wildcard(true, positiveNamespaces, positiveExcludeNames)
+    };
+  }
 }

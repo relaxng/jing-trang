@@ -4,6 +4,8 @@ combine attributes
 - combine="interleave" (if only referenced once, expand?)
 - others
 
+Take advantage of minOccurs > 1 and 1 < maxOccurs < infinity.
+
 May sometimes need to move Attribute/ElementWildcards to schema with different target namespace to
 take advantage of ##other.
 
@@ -30,6 +32,8 @@ Choose name of generated schema file better when there was no prefix.
 
 Use the last component of the namespace URI in selecting prefix when no prefix is used in the
 RELAX NG.
+
+Try using default namespace declaration to refer to things in targetNamespace.
 
 Make choice of targetNamespace not depend on order of hash table iteration.
 
