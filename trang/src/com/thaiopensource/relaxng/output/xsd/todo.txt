@@ -1,6 +1,7 @@
-<start>
+Avoid defining <group> for a <define> containing just an <element> with a single <name>.
 
 Use global element declarations
+- when only one element of particular name
 
 Avoid duplicate attributes.
 

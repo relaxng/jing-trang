@@ -28,6 +28,7 @@ import com.thaiopensource.relaxng.edit.ElementPattern;
 import com.thaiopensource.relaxng.edit.MixedPattern;
 import com.thaiopensource.relaxng.edit.NameNameClass;
 import com.thaiopensource.relaxng.edit.AttributePattern;
+import com.thaiopensource.relaxng.edit.UnaryPattern;
 
 import java.io.IOException;
 import java.util.List;
@@ -49,6 +50,7 @@ class Output {
   private final PatternVisitor typeDefParticleOutput = new TypeDefParticleOutput();
   private final PatternVisitor attributeOutput = new AttributeOutput();
   private final PatternVisitor optionalAttributeOutput = new OptionalAttributeOutput();
+  private final PatternVisitor globalElementOutput = new GlobalElementOutput();
   private final PatternVisitor occursCalculator = new OccursCalculator();
 
   static void output(SchemaInfo si, OutputDirectory od, ErrorReporter er) throws IOException {
@@ -220,46 +222,17 @@ class Output {
 
     public Object visitElement(ElementPattern p) {
       startWrapper();
-      xw.startElement(xs("element"));
-      // TODO deal with name classes
-      xw.attribute("name", ((NameNameClass)p.getNameClass()).getLocalName());
-      xw.startElement(xs("complexType"));
-      Pattern body = p.getChild();
-      ChildType ct = si.getChildType(body);
-      if (ct.contains(ChildType.ELEMENT)) {
-        if (ct.contains(ChildType.TEXT) || ct.contains(ChildType.DATA))
-          xw.attribute("mixed", "true");
-        body.accept(typeDefParticleOutput);
-        elementAttributes(body);
-      }
-      else if (ct.contains(ChildType.TEXT)) {
-        xw.attribute("mixed", "true");
-        elementAttributes(body);
-      }
-      else if (ct.contains(ChildType.DATA)) {
-        xw.startElement(xs("simpleContent"));
-        xw.startElement(xs("restriction"));
-        xw.attribute("base", xs("anyType"));
-        xw.startElement(xs("simpleType"));
-        body.accept(simpleTypeOutput);
-        xw.endElement();
-        elementAttributes(body);
-        xw.endElement();
+      if (si.isGlobal(p)) {
+        xw.startElement(xs("element"));
+        xw.attribute("ref", ((NameNameClass)p.getNameClass()).getLocalName());
         xw.endElement();
       }
       else
-        elementAttributes(body);
-      xw.endElement();
-      xw.endElement();
+        declareElement(p);
       endWrapper();
       return null;
     }
 
-    void elementAttributes(Pattern body) {
-      if (!si.getChildType(body).contains(ChildType.ATTRIBUTE))
-        return;
-      body.accept(attributeOutput);
-    }
   }
 
 
@@ -585,14 +558,30 @@ class Output {
     }
   }
 
+  class GlobalElementOutput extends AbstractVisitor {
+    public Object visitElement(ElementPattern p) {
+      if (si.isGlobal(p))
+        declareElement(p);
+      p.getChild().accept(this);
+      return null;
+    }
+
+    public Object visitComposite(CompositePattern p) {
+      p.childrenAccept(this);
+      return null;
+    }
+
+    public Object visitUnary(UnaryPattern p) {
+      return p.getChild().accept(this);
+    }
+  }
+
   class TopLevelOutput extends AbstractVisitor {
     public Object visitDefine(DefineComponent c) {
       String name = c.getName();
       Pattern body = c.getBody();
       ChildType ct = si.getChildType(body);
-      if (name == DefineComponent.START)
-        ;
-      else {
+      if (name != DefineComponent.START) {
         if (ct.contains(ChildType.ELEMENT)) {
           xw.startElement(xs("group"));
           xw.attribute("name", c.getName());
@@ -612,6 +601,7 @@ class Output {
           xw.endElement();
         }
       }
+      body.accept(globalElementOutput);
       return null;
     }
   }
@@ -637,6 +627,46 @@ class Output {
         return false;
     }
     return true;
+  }
+
+  void declareElement(ElementPattern p) {
+    xw.startElement(xs("element"));
+    // TODO deal with name classes
+    xw.attribute("name", ((NameNameClass)p.getNameClass()).getLocalName());
+    xw.startElement(xs("complexType"));
+    Pattern body = p.getChild();
+    ChildType ct = si.getChildType(body);
+    if (ct.contains(ChildType.ELEMENT)) {
+      if (ct.contains(ChildType.TEXT) || ct.contains(ChildType.DATA))
+        xw.attribute("mixed", "true");
+      body.accept(typeDefParticleOutput);
+      elementAttributes(body);
+    }
+    else if (ct.contains(ChildType.TEXT)) {
+      xw.attribute("mixed", "true");
+      elementAttributes(body);
+    }
+    else if (ct.contains(ChildType.DATA)) {
+      xw.startElement(xs("simpleContent"));
+      xw.startElement(xs("restriction"));
+      xw.attribute("base", xs("anyType"));
+      xw.startElement(xs("simpleType"));
+      body.accept(simpleTypeOutput);
+      xw.endElement();
+      elementAttributes(body);
+      xw.endElement();
+      xw.endElement();
+    }
+    else
+      elementAttributes(body);
+    xw.endElement();
+    xw.endElement();
+  }
+
+  void elementAttributes(Pattern body) {
+    if (!si.getChildType(body).contains(ChildType.ATTRIBUTE))
+      return;
+    body.accept(attributeOutput);
   }
 
 }
