@@ -85,6 +85,12 @@ class Analysis {
     "gDay"
   };
 
+  static private final String[] stringTypes = {
+    "string",
+    "normalizedString",
+    "token"
+  };
+
   private class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
     private ElementPattern ancestorPattern;
     private Set pendingRefs;
@@ -116,10 +122,15 @@ class Analysis {
         for (int i = 0; i < nmtokenTypes.length; i++)
           if (type.equals(nmtokenTypes[i])) {
             p.setType("NMTOKEN");
-            // XXX give a warning
+            er.warning("datatype_approx", type, "NMTOKEN", p.getSourceLocation());
             return Type.ATTRIBUTE_TYPE;
           }
-        // XXX give a warning if not normalizedString or token or string
+        for (int i = 0; i < stringTypes.length; i++)
+          if (type.equals(stringTypes[i])) {
+            p.setType("string");
+            return Type.ATTRIBUTE_TYPE;
+          }
+        er.warning("datatype_approx", type, "CDATA", p.getSourceLocation());
         p.setType("string");
       }
       else if (!lib.equals("")) {
