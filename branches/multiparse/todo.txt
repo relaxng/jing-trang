@@ -37,6 +37,6 @@ Better error message for wrong namespace URI.
 
 Option to be verbose.
 
-Provide regex impl based on JDK 1.4 regexes.
+Inform user about position of regex error.
 
 On output, using character escapes for things outside repertoire of character encoding.

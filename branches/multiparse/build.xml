@@ -21,9 +21,25 @@
  </delete>
 </target>
 
-<target name="compile" depends="compile-grammar">
+<target name="compile-gen" depends="init">
+  <mkdir dir="build/gen"/>
+  <javac srcdir="src" destdir="build/gen" includes="com/thaiopensource/datatype/xsd/regex/jdk1_4/gen/*.java,com/thaiopensource/xml/util/Naming.java"/>
+</target>
+
+<target name="gen" depends="compile-gen">
+  <mkdir dir="build/src/com/thaiopensource/datatype/xsd/regex/jdk1_4/gen"/>
+  <java classname="com.thaiopensource.datatype.xsd.regex.jdk1_4.gen.NamingExceptionsGen" fork="yes" failonerror="yes">
+    <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.NamingExceptions"/>
+    <arg value="build/src"/>
+    <classpath>
+      <pathelement location="build/gen"/>
+    </classpath>
+  </java>
+</target>
+
+<target name="compile" depends="compile-grammar,gen">
   <mkdir dir="build/classes"/>
-  <javac srcdir="src:build/src" destdir="build/classes"/>
+  <javac srcdir="src:build/src" destdir="build/classes" excludes="com/thaiopensource/datatype/xsd/regex/jdk1_4/gen/*.java"/>
 </target>
 
 <target name="jar" depends="compile">
@@ -144,6 +160,20 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
   <java classname="com.thaiopensource.relaxng.util.TestDriver" fork="yes" failonerror="yes">
     <arg value="build/test/out.log"/>
     <arg value="build/test"/>
+    <classpath>
+      <pathelement location="build/jing.jar"/>
+      <pathelement path="${java.class.path}"/>
+    </classpath>
+  </java>
+</target>
+
+<target name="regex-test" depends="jar">
+  <jing rngfile="test/regextest.rnc" compactsyntax="true">
+    <fileset dir="test" includes="regextest.xml"/>
+  </jing>
+  <java classname="com.thaiopensource.datatype.xsd.regex.TestDriver" fork="yes" failonerror="yes">
+    <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.RegexEngineImpl"/>
+    <arg value="test/regextest.xml"/>
     <classpath>
       <pathelement location="build/jing.jar"/>
       <pathelement path="${java.class.path}"/>

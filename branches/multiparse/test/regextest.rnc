@@ -1,0 +1,6 @@
+element testSuite {
+  element testCase {
+    (element correct { text }, element valid|invalid { text }*)
+    | element incorrect { text }
+  }*
+}
