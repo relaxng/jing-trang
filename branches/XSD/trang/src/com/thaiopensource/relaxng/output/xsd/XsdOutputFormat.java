@@ -14,6 +14,9 @@ public class XsdOutputFormat implements OutputFormat {
   public void output(SchemaCollection sc, OutputDirectory od, ErrorHandler eh) throws SAXException, IOException, OutputFailedException {
     try {
       ErrorReporter er = new ErrorReporter(eh, XsdOutputFormat.class);
+      SchemaInfo si = new SchemaInfo(sc, er);
+      if (!er.getHadError())
+        Output.output(si, od, er);
       if (er.getHadError())
         throw new OutputFailedException();
     }
