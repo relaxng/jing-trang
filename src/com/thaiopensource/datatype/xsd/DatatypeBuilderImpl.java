@@ -56,6 +56,8 @@ class DatatypeBuilderImpl implements DatatypeBuilder {
   private void addPatternParam(String value) throws DatatypeException {
     try {
       RegexEngine engine = library.getRegexEngine();
+      if (engine == null)
+        error("regex_impl_not_found");
       base = new PatternRestrictDatatype(base,
 					 engine.compile(value));
     }
