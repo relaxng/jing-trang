@@ -23,8 +23,6 @@ Support DTD compatibility use of default values.
 
 Option to do XInclude before validation.
 
-Integrate the non-XML syntax.
-
 Maybe introduce a variant of the element pattern that has a mapping
 from names to content models.
 
