@@ -242,7 +242,7 @@ public class PatternValidatorHandler implements ValidatorHandler {
       return;
     hadError = true;
     if (eh != null)
-      eh.error(new SAXParseException(Localizer.message(key), locator));
+      eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key), locator));
   }
 
   private void error(String key, Name arg) throws SAXException {
@@ -254,7 +254,7 @@ public class PatternValidatorHandler implements ValidatorHandler {
       return;
     hadError = true;
     if (eh != null)
-      eh.error(new SAXParseException(Localizer.message(key, arg), locator));
+      eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key, arg), locator));
   }
 
   /* Return false if m is notAllowed. */

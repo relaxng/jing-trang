@@ -17,6 +17,7 @@ import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.IncorrectSchemaException;
+import com.thaiopensource.util.Localizer;
 
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.DatatypeException;
@@ -44,6 +45,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
   private final ErrorHandler eh;
   private final OpenIncludes openIncludes;
   private AttributeNameClassChecker attributeNameClassChecker = new AttributeNameClassChecker();
+  static final Localizer localizer = new Localizer(SchemaBuilderImpl.class);
 
   static class OpenIncludes {
     final String uri;
@@ -690,15 +692,15 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
   }
 
   private void error(String key, Locator loc) throws BuildException {
-    error(new SAXParseException(Localizer.message(key), loc));
+    error(new SAXParseException(localizer.message(key), loc));
   }
 
   private void error(String key, String arg, Locator loc) throws BuildException {
-    error(new SAXParseException(Localizer.message(key, arg), loc));
+    error(new SAXParseException(localizer.message(key, arg), loc));
   }
 
   private void error(String key, String arg1, String arg2, Locator loc) throws BuildException {
-    error(new SAXParseException(Localizer.message(key, arg1, arg2), loc));
+    error(new SAXParseException(localizer.message(key), loc));
   }
 
   private void noteError() {

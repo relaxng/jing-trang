@@ -45,8 +45,6 @@ public class SchemaFactory {
   public SchemaFactory() {
   }
 
-  private static final boolean NEW_PARSER = true;
-
   /**
    * Creates a schema by parsing an XML document.  A non-null <code>XMLReaderCreator</code> must be specified
    * with <code>setXMLReaderCreator</code> before calling <code>createSchema</code>.  The <code>ErrorHandler</code>
@@ -75,23 +73,13 @@ public class SchemaFactory {
    */
   public Schema createSchema(InputSource in) throws IOException, SAXException, IncorrectSchemaException {
     SchemaPatternBuilder spb = new SchemaPatternBuilder();
-    Pattern start;
-    if (NEW_PARSER) {
-      Parseable parseable;
-      if (nonXmlSyntax)
-        parseable = new NonXmlParseable(in, eh);
-      else
-        parseable = new SAXParseable(xrc, in, eh);
-      start = SchemaBuilderImpl.parse(parseable, eh, dlf, spb);
-    }
-    else {
-      XMLReader xr = xrc.createXMLReader();
-      if (eh != null)
-        xr.setErrorHandler(eh);
-      start = PatternReader.readPattern(xrc, xr, spb, dlf, in);
-      if (start == null)
-        throw new IncorrectSchemaException();
-    }
+
+    Parseable parseable;
+    if (nonXmlSyntax)
+      parseable = new NonXmlParseable(in, eh);
+    else
+      parseable = new SAXParseable(xrc, in, eh);
+    Pattern start = SchemaBuilderImpl.parse(parseable, eh, dlf, spb);
     Schema schema = new PatternSchema(spb, start);
     if (spb.hasIdTypes() && checkIdIdref) {
       IdTypeMap idTypeMap = new IdTypeMapBuilder(eh, start).getIdTypeMap();

@@ -1,5 +1,3 @@
-Remove dependence of relaxng.parse.sax on relaxng.impl.
-
 Localize NonXmlParser properly.
 
 Implement >> annotations.
