@@ -593,17 +593,87 @@ public class BasicOutput {
       ComplexTypeComplexContentExtension ct = complexTypeSelector.createComplexTypeForGroup(def.getName());
       if (ct != null)
         outputComplexTypeComplexContent(ct, def.getName(), def);
-      else {
-        if (!(particle instanceof Element) || !nsm.isGlobal((Element)particle)) {
-          xw.startElement(xs("group"));
-          xw.attribute("name", def.getName());
-          outputAnnotation(def);
+      else if (particle instanceof Element && nsm.isGlobal((Element)particle))
+        ;
+      else if (!tryElementChoiceSameType(def)) {
+        xw.startElement(xs("group"));
+        xw.attribute("name", def.getName());
+        outputAnnotation(def);
+        if (!tryElementChoiceSameType(def)) {
           particleOutput.context = NAMED_GROUP_CONTEXT;
           particle.accept(particleOutput);
+        }
+        xw.endElement();
+      }
+      particle.accept(globalElementOutput);
+    }
+
+    private boolean tryElementChoiceSameType(GroupDefinition def) {
+      Particle particle = def.getParticle();
+      if (!(particle instanceof ParticleChoice))
+        return false;
+      List children = ((ParticleChoice)particle).getChildren();
+      if (children.size() <= 1)
+        return false;
+      Iterator iter = children.iterator();
+      Particle first = (Particle)iter.next();
+      if (!(first instanceof Element))
+        return false;
+      if (!((Element)first).getName().getNamespaceUri().equals(targetNamespace))
+        return false;
+      ComplexType type = ((Element)first).getComplexType();
+      do {
+        Particle tem = (Particle)iter.next();
+        if (!(tem instanceof Element))
+          return false;
+        if (!((Element)tem).getComplexType().equals(type))
+          return false;
+        if (!((Element)tem).getName().getNamespaceUri().equals(targetNamespace))
+          return false;
+      } while (iter.hasNext());
+      if (type instanceof ComplexTypeComplexContent) {
+        ComplexTypeComplexContentExtension t = complexTypeSelector.transformComplexContent((ComplexTypeComplexContent)type);
+        if (t.getBase() != null && t.getParticle() == null && !t.isMixed() && t.getAttributeUses().equals(AttributeGroup.EMPTY))
+          return false;
+        outputComplexTypeComplexContent(t, def.getName(), null);
+      }
+      else {
+        ComplexTypeSimpleContentExtension t = complexTypeSelector.transformSimpleContent((ComplexTypeSimpleContent)type);
+        if (t.getAttributeUses().equals(AttributeGroup.EMPTY)
+            && (t.getBase() != null || t.getSimpleType().accept(simpleTypeNamer) != null))
+          return false;
+        outputComplexTypeSimpleContent(t, def.getName(), null);
+      }
+      xw.startElement(xs("group"));
+      xw.attribute("name", def.getName());
+      outputAnnotation(def);
+      xw.startElement(xs("choice"));
+      for (iter = children.iterator(); iter.hasNext();) {
+        Element element = (Element)iter.next();
+        xw.startElement(xs("element"));
+        if (nsm.isGlobal(element))
+          xw.attribute("ref", qualifyName(element.getName()));
+        else {
+          xw.attribute("name", element.getName().getLocalName());
+          xw.attribute("type", def.getName());
+          outputAnnotation(element);
+        }
+        xw.endElement();
+      }
+      xw.endElement();
+      xw.endElement();
+      for (iter = children.iterator(); iter.hasNext();) {
+        Element element = (Element)iter.next();
+        if (nsm.isGlobal(element) && !globalElementsDefined.contains(element.getName())) {
+          globalElementsDefined.add(element.getName());
+          xw.startElement(xs("element"));
+          xw.attribute("name", element.getName().getLocalName());
+          xw.attribute("type", def.getName());
+          outputAnnotation(element);
           xw.endElement();
         }
       }
-      particle.accept(globalElementOutput);
+      return true;
     }
 
     public void visitSimpleType(SimpleTypeDefinition def) {
