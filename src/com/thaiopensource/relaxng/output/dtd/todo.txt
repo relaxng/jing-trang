@@ -11,16 +11,17 @@ Generate parameter entities to allow change of namespace prefix
 nested grammars
 a:documentation
 Check for non-deterministic content models
-option to protect element declarations with included section
+Option to protect attlist/element declarations with marked section
 allow mixed(repeat(NOT_ALLOWED))
 Avoid unnecessary parentheses around group members
 Pretty-print content models to avoid excessively long lines
 Prettier formatting of ATTLISTs
-Handle DTD compatibility ID/IDREF/IDREFS
+Handle DTD compatibility ID/IDREF/IDREFS datatypes
 Proper error reporting
 Approximate data in content by #PCDATA
 Order requiredParamEntities by definition order
 Bulletproof LocalOutputDirectory.
 Make LocalOutputDirectory preserve directory structure
 Bulletproof genEntityName
+Support <list>
 
