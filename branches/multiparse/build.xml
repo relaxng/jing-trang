@@ -188,7 +188,7 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
   <jing rngfile="test/regextest.rnc" compactsyntax="true">
     <fileset dir="test" includes="regextest.xml"/>
   </jing>
-  <java classname="com.thaiopensource.datatype.xsd.regex.TestDriver" fork="yes" failonerror="yes">
+  <java classname="com.thaiopensource.datatype.xsd.regex.test.TestDriver" fork="yes" failonerror="yes">
     <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.RegexEngineImpl"/>
     <arg value="test/regextest.xml"/>
     <classpath>
@@ -200,7 +200,7 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
 
 <target name="full-regex-test" depends="regex-test">
   <echo>This will take about 5 minutes on a fast machine.</echo>
-  <java classname="com.thaiopensource.datatype.xsd.regex.CategoryTest" fork="yes" failonerror="yes">
+  <java classname="com.thaiopensource.datatype.xsd.regex.test.CategoryTest" fork="yes" failonerror="yes">
     <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.RegexEngineImpl"/>
     <arg value="lib/UnicodeData-3.1.0.txt"/>
     <classpath>
@@ -214,7 +214,7 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
   <jing rngfile="test/regextest.rnc" compactsyntax="true">
     <fileset dir="test" includes="regextest.xml"/>
   </jing>
-  <java classname="com.thaiopensource.datatype.xsd.regex.TestDriver" fork="yes" failonerror="yes">
+  <java classname="com.thaiopensource.datatype.xsd.regex.test.TestDriver" fork="yes" failonerror="yes">
     <arg value="com.thaiopensource.datatype.xsd.regex.xerces2.RegexEngineImpl"/>
     <arg value="test/regextest.xml"/>
     <classpath>

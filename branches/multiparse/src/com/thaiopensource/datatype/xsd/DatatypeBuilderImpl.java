@@ -7,6 +7,8 @@ import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.DatatypeBuilder;
 import org.relaxng.datatype.ValidationContext;
 import org.relaxng.datatype.DatatypeException;
+import com.thaiopensource.datatype.xsd.regex.RegexEngine;
+import com.thaiopensource.datatype.xsd.regex.RegexSyntaxException;
 
 class DatatypeBuilderImpl implements DatatypeBuilder {
   static final private String bundleName
@@ -57,7 +59,7 @@ class DatatypeBuilderImpl implements DatatypeBuilder {
       base = new PatternRestrictDatatype(base,
 					 engine.compile(value));
     }
-    catch (InvalidRegexException e) {
+    catch (RegexSyntaxException e) {
       error("invalid_regex", e.getMessage());
     }
   }
