@@ -13,7 +13,8 @@ class EndTagDerivFunction extends AbstractPatternFunction {
 
   public Object caseChoice(ChoicePattern p) {
     return builder.makeChoice(memoApply(p.getOperand1()),
-			      memoApply(p.getOperand2()));
+			      memoApply(p.getOperand2()),
+                              true);
   }
 
   public Object caseAfter(AfterPattern p) {

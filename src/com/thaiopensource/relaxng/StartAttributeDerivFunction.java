@@ -23,7 +23,8 @@ class StartAttributeDerivFunction extends StartTagOpenDerivFunction {
 					      Pattern apply(Pattern x) {
 						return getPatternBuilder().makeGroup(p1, x);
 					      }
-				}));
+                                            }),
+                                          true);
   }
 
   public Object caseAttribute(AttributePattern p) {

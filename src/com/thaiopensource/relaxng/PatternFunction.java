@@ -15,5 +15,6 @@ interface PatternFunction {
   Object caseValue(ValuePattern p);
   Object caseText(TextPattern p);
   Object caseList(ListPattern p);
+  Object caseRef(PatternRefPattern p);
   Object caseAfter(AfterPattern p);
 }

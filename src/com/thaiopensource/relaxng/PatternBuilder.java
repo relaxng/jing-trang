@@ -26,8 +26,44 @@ final public class PatternBuilder {
   private PatternFunction recoverAfterFunction;
 
   private Hashtable patternMemoMap = new Hashtable();
+  private Hashtable choiceMap = new Hashtable();
+  private PatternFunction removeChoicesFunction = new RemoveChoicesFunction();
+  private PatternFunction noteChoicesFunction = new NoteChoicesFunction();
 
   private boolean idTypes;
+
+  private class NoteChoicesFunction extends AbstractPatternFunction {
+    public Object caseOther(Pattern p) {
+      choiceMap.put(p, p);
+      return null;
+    }
+
+    public Object caseChoice(ChoicePattern p) {
+      p.getOperand1().apply(this);
+      p.getOperand2().apply(this);
+      return null;
+    }
+  }
+
+  private class RemoveChoicesFunction extends AbstractPatternFunction {
+    public Object caseOther(Pattern p) {
+      if (choiceMap.get(p) != null)
+        return notAllowed;
+      return p;
+    }
+
+    public Object caseChoice(ChoicePattern p) {
+      Pattern p1 = p.getOperand1().applyForPattern(this);
+      Pattern p2 = p.getOperand2().applyForPattern(this);
+      if (p1 == p.getOperand1() && p2 == p.getOperand2())
+        return p;
+      if (p1 == notAllowed)
+        return p2;
+      if (p2 == notAllowed)
+        return p1;
+      return intern(new ChoicePattern(p1, p2));
+    }
+  }
 
   public PatternBuilder() {
     init();
@@ -137,38 +173,38 @@ final public class PatternBuilder {
     return intern(new DataExceptPattern(dt, except, loc));
   }
 
-  Pattern makeChoice(Pattern p1, Pattern p2) {
-    if (p1 == notAllowed)
+  Pattern makeChoice(Pattern p1, Pattern p2, boolean removeDuplicates) {
+    if (p1 == notAllowed || p1 == p2)
       return p2;
+    if (removeDuplicates) {
+      if (!(p1 instanceof ChoicePattern)) {
+        if (p2.containsChoice(p1))
+          return p2;
+      }
+      else if (!(p2 instanceof ChoicePattern)) {
+        if (p1.containsChoice(p2))
+          return p1;
+      }
+      else {
+        p1.apply(noteChoicesFunction);
+        p2 = p2.applyForPattern(removeChoicesFunction);
+        if (choiceMap.size() > 0)
+          choiceMap.clear();
+      }
+    }
     if (p2 == notAllowed)
       return p1;
-    if (p1 == empty) {
-      if (p2.isNullable())
-	return p2;
-      // Canonicalize position of notAllowed.
-      return makeChoice(p2, p1);
-    }
+    if (p1 == empty && p2.isNullable())
+      return p2;
     if (p2 == empty && p1.isNullable())
       return p1;
-    if (p1 instanceof ChoicePattern) {
-      ChoicePattern cp = (ChoicePattern)p1;
-      return makeChoice(cp.p1, makeChoice(cp.p2, p2));
-    }
-    if (p1 instanceof AfterPattern) {
-      Pattern tem = p2.combineAfter(this, (AfterPattern)p1);
-      if (tem != null)
-        return tem;
-    }
-    else if (p2.containsChoice(p1))
-      return p2;
-    if (false) {
-    if (p2 instanceof ChoicePattern) {
-      ChoicePattern cp = (ChoicePattern)p2;
-      if (p1.hashCode() > cp.p1.hashCode())
-	return makeChoice(cp.p1, makeChoice(p1, cp.p2));
-    }
-    else if (p1.hashCode() > p2.hashCode())
-      return makeChoice(p2, p1);
+    if (p1 instanceof AfterPattern && p2 instanceof AfterPattern) {
+      AfterPattern ap1 = (AfterPattern)p1;
+      AfterPattern ap2 = (AfterPattern)p2;
+      if (ap1.getOperand1() == ap2.getOperand1())
+        return makeAfter(ap1.getOperand1(), makeChoice(ap1.getOperand2(), ap2.getOperand2(), true));
+      if (ap1.getOperand2() == ap2.getOperand2())
+        return makeAfter(makeChoice(ap1.getOperand1(), ap2.getOperand1(), true), ap1.getOperand2());
     }
     return intern(new ChoicePattern(p1, p2));
   }
@@ -183,7 +219,7 @@ final public class PatternBuilder {
   }
 
   Pattern makeOptional(Pattern p) {
-    return makeChoice(p, empty);
+    return makeChoice(p, empty, true);
   }
 
   Pattern makeZeroOrMore(Pattern p) {

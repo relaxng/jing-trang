@@ -72,7 +72,7 @@ class PatternRefPattern extends Pattern {
   }
 
   Object apply(PatternFunction f) {
-    return p.apply(f);
+    return f.caseRef(this);
   }
 
   byte getReplacementStatus() {

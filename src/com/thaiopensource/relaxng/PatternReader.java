@@ -339,7 +339,7 @@ public class PatternReader implements ValidationContext {
       return new ChoiceState();
     }
     Pattern combinePattern(Pattern p1, Pattern p2) {
-      return patternBuilder.makeChoice(p1, p2);
+      return patternBuilder.makeChoice(p1, p2, false);
     }
   }
 
@@ -571,7 +571,7 @@ public class PatternReader implements ValidationContext {
       if (except == null)
 	except = pattern;
       else
-	except = patternBuilder.makeChoice(except, pattern);
+	except = patternBuilder.makeChoice(except, pattern, false);
     }
 
   }
@@ -959,7 +959,7 @@ public class PatternReader implements ValidationContext {
 						       p));
 	else
 	  prp.setPattern(patternBuilder.makeChoice(prp.getPattern(),
-						   p));
+						   p, false));
 	break;
       case PatternRefPattern.REPLACEMENT_REQUIRE:
 	prp.setReplacementStatus(PatternRefPattern.REPLACEMENT_IGNORE);

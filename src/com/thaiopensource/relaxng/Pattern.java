@@ -91,10 +91,6 @@ public abstract class Pattern {
     return this == p;
   }
 
-  Pattern combineAfter(PatternBuilder b, AfterPattern p) {
-    return null;
-  }
-
   abstract void accept(PatternVisitor visitor);
   abstract Object apply(PatternFunction f);
 

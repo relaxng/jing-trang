@@ -38,7 +38,7 @@ class EndAttributesFunction extends AbstractPatternFunction {
     Pattern q2 = memoApply(p2);
     if (p1 == q1 && p2 == q2)
       return p;
-    return builder.makeChoice(q1, q2);
+    return builder.makeChoice(q1, q2, true);
   }
 
   public Object caseOneOrMore(OneOrMorePattern p) {
