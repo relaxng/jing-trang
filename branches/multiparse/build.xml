@@ -196,6 +196,18 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
   </java>
 </target>
 
+<target name="full-regex-test" depends="regex-test">
+  <echo>This will take about 5 minutes on a fast machine.</echo>
+  <java classname="com.thaiopensource.datatype.xsd.regex.CategoryTest" fork="yes" failonerror="yes">
+    <arg value="com.thaiopensource.datatype.xsd.regex.jdk1_4.RegexEngineImpl"/>
+    <arg value="lib/UnicodeData-3.1.0.txt"/>
+    <classpath>
+      <pathelement location="build/jing.jar"/>
+      <pathelement path="${java.class.path}"/>
+    </classpath>
+  </java>
+</target>
+
 <target name="xerces-regex-test" depends="jar">
   <jing rngfile="test/regextest.rnc" compactsyntax="true">
     <fileset dir="test" includes="regextest.xml"/>
