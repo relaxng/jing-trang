@@ -1,12 +1,15 @@
 package com.thaiopensource.relaxng.output.dtd;
 
-import com.thaiopensource.relaxng.IncorrectSchemaException;
+import com.thaiopensource.relaxng.edit.AbstractVisitor;
+import com.thaiopensource.relaxng.edit.Annotated;
 import com.thaiopensource.relaxng.edit.AnyNameNameClass;
+import com.thaiopensource.relaxng.edit.AttributeAnnotation;
 import com.thaiopensource.relaxng.edit.AttributePattern;
 import com.thaiopensource.relaxng.edit.ChoiceNameClass;
 import com.thaiopensource.relaxng.edit.ChoicePattern;
 import com.thaiopensource.relaxng.edit.Component;
 import com.thaiopensource.relaxng.edit.ComponentVisitor;
+import com.thaiopensource.relaxng.edit.CompositePattern;
 import com.thaiopensource.relaxng.edit.Container;
 import com.thaiopensource.relaxng.edit.DataPattern;
 import com.thaiopensource.relaxng.edit.DefineComponent;
@@ -31,38 +34,22 @@ import com.thaiopensource.relaxng.edit.ParentRefPattern;
 import com.thaiopensource.relaxng.edit.Pattern;
 import com.thaiopensource.relaxng.edit.PatternVisitor;
 import com.thaiopensource.relaxng.edit.RefPattern;
-import com.thaiopensource.relaxng.edit.SchemaBuilderImpl;
-import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 import com.thaiopensource.relaxng.edit.TextPattern;
+import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
-import com.thaiopensource.relaxng.edit.AbstractVisitor;
-import com.thaiopensource.relaxng.edit.CompositePattern;
-import com.thaiopensource.relaxng.edit.Annotated;
-import com.thaiopensource.relaxng.edit.UnaryPattern;
-import com.thaiopensource.relaxng.edit.AttributeAnnotation;
-import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
-import com.thaiopensource.relaxng.parse.sax.SAXParseable;
-import com.thaiopensource.relaxng.util.DraconianErrorHandler;
-import com.thaiopensource.relaxng.util.ValidationEngine;
-import com.thaiopensource.relaxng.util.Jaxp11XMLReaderCreator;
-import org.relaxng.datatype.helpers.DatatypeLibraryLoader;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.io.FileOutputStream;
-import java.io.BufferedOutputStream;
-import java.io.OutputStreamWriter;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Vector;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
+import java.util.Vector;
 /* Tasks:
 Check for bad recursion
 Check single element type
@@ -85,7 +72,7 @@ Handle DTD compatibility ID/IDREF/IDREFS
 Proper error reporting
 Approximate data in content by #PCDATA
 */
-public class DtdOutput {
+class DtdOutput {
   private ErrorHandler eh;
   private Writer writer;
   private final String lineSep = System.getProperty("line.separator");
@@ -1197,18 +1184,6 @@ public class DtdOutput {
   void error(String key, SourceLocation loc) {
     hadError = true;
     System.err.println(loc.getLineNumber() + ":" + key);
-  }
-
-  static public void main(String[] args) throws IncorrectSchemaException, SAXException, IOException {
-    SchemaCollection sc = new SchemaCollection();
-    Pattern p = SchemaBuilderImpl.parse(new SAXParseable(new Jaxp11XMLReaderCreator(),
-                                                         ValidationEngine.fileInputSource(args[0]),
-                                                         new DraconianErrorHandler()),
-                                        sc,
-                                        new DatatypeLibraryLoader());
-
-    new DtdOutput(null, new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(args[1])))).output(p);
-
   }
 
   private static String getDefaultValue(AttributePattern p) {
