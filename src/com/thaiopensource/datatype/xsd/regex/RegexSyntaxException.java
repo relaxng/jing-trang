@@ -6,8 +6,13 @@ package com.thaiopensource.datatype.xsd.regex;
 public class RegexSyntaxException extends Exception {
   private int position;
 
+  /**
+   * Represents an unknown position within a string containing a regular expression.
+   */
+  static public final int UNKNOWN_POSITION = -1;
+
   public RegexSyntaxException(String detail) {
-    this(detail, -1);
+    this(detail, UNKNOWN_POSITION);
   }
 
   public RegexSyntaxException(String detail, int position) {
@@ -16,10 +21,11 @@ public class RegexSyntaxException extends Exception {
   }
 
   /**
-   * Returns the index into the regular expression where the error was detected or -1 if this
-   * is unknown.
-   * @return the index into the regular expression where the error was detected, or -1 if this
-   * is unknown
+   * Returns the index into the regular expression where the error was detected
+   * or <code>UNKNOWN_POSITION</code> if this is unknown.
+   *
+   * @return the index into the regular expression where the error was detected,
+   * or <code>UNKNOWNN_POSITION</code> if this is unknown
    */
   public int getPosition() {
     return position;
