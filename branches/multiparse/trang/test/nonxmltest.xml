@@ -1,0 +1,416 @@
+<testSuite>
+<testCase>
+<nonxml>
+<correct>
+element foo { empty }
+</correct>
+</nonxml>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <empty/>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<nonxml>
+<correct>
+element foo { text }
+</correct>
+</nonxml>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <text/>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<nonxml>
+<correct><![CDATA[
+# RELAX NG syntax expressed in non-XML syntax.
+
+default namespace rng = "http://relaxng.org/ns/structure/1.0"
+namespace local = ""
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+start = pattern
+
+pattern =
+  element element { (nameQName | nameClass), (common & pattern+) }
+  | element attribute { (nameQName | nameClass), (common & pattern?) }
+  | element group|interleave|choice|optional
+            |zeroOrMore|oneOrMore|list|mixed { common & pattern+ }
+  | element ref|parentRef { nameNCName, common }
+  | element empty|notAllowed|text { common }
+  | element data { type, param*, (common & exceptPattern?) }
+  | element value { commonAttributes, type?, xsd:string }
+  | element externalRef { href, common }
+  | element grammar { common & grammarContent* }
+
+param = element param { commonAttributes, nameNCName, xsd:string }
+
+exceptPattern = element except { common & pattern+ }
+
+grammarContent = 
+  definition
+  | element div { common & grammarContent* }
+  | element include { href, (common & includeContent*) }
+
+includeContent =
+  definition
+  | element div { common & includeContent* }
+
+definition =
+  element start { combine?, (common & pattern+) }
+  | element define { nameNCName, combine?, (common & pattern+) }
+
+combine = attribute combine { "choice" | "interleave" }
+
+nameClass = 
+  element name { commonAttributes, xsd:QName }
+  | element anyName { common & exceptNameClass? }
+  | element nsName { common & exceptNameClass? }
+  | element choice { common & nameClass+ }
+
+exceptNameClass = element except { common & nameClass+ }
+
+nameQName = attribute name { xsd:QName }
+nameNCName = attribute name { xsd:NCName }
+href = attribute href { xsd:anyURI }
+type = attribute type { xsd:NCName }
+
+common = commonAttributes, foreignElement*
+
+commonAttributes = 
+  attribute ns { xsd:string }?,
+  attribute datatypeLibrary { xsd:anyURI }?,
+  foreignAttribute*
+
+foreignElement = element * - rng:* { (anyAttribute | text | anyElement)* }
+foreignAttribute = attribute * - (rng:*|local:*) { text }
+anyElement = element * { (anyAttribute | text | anyElement)* }
+anyAttribute = attribute * { text }
+
+]]></correct>
+</nonxml>
+<xml>
+<correct>
+<!-- RELAX NG syntax expressed in non-XML syntax. -->
+<grammar xmlns:rng="http://relaxng.org/ns/structure/1.0" ns="http://relaxng.org/ns/structure/1.0" xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <ref name="pattern"/>
+  </start>
+  <define name="pattern">
+    <choice>
+      <element name="element">
+        <choice>
+          <ref name="nameQName"/>
+          <ref name="nameClass"/>
+        </choice>
+        <interleave>
+          <ref name="common"/>
+          <oneOrMore>
+            <ref name="pattern"/>
+          </oneOrMore>
+        </interleave>
+      </element>
+      <element name="attribute">
+        <choice>
+          <ref name="nameQName"/>
+          <ref name="nameClass"/>
+        </choice>
+        <interleave>
+          <ref name="common"/>
+          <optional>
+            <ref name="pattern"/>
+          </optional>
+        </interleave>
+      </element>
+      <element>
+        <choice>
+          <name>group</name>
+          <name>interleave</name>
+          <name>choice</name>
+          <name>optional</name>
+          <name>zeroOrMore</name>
+          <name>oneOrMore</name>
+          <name>list</name>
+          <name>mixed</name>
+        </choice>
+        <interleave>
+          <ref name="common"/>
+          <oneOrMore>
+            <ref name="pattern"/>
+          </oneOrMore>
+        </interleave>
+      </element>
+      <element>
+        <choice>
+          <name>ref</name>
+          <name>parentRef</name>
+        </choice>
+        <ref name="nameNCName"/>
+        <ref name="common"/>
+      </element>
+      <element>
+        <choice>
+          <name>empty</name>
+          <name>notAllowed</name>
+          <name>text</name>
+        </choice>
+        <ref name="common"/>
+      </element>
+      <element name="data">
+        <ref name="type"/>
+        <zeroOrMore>
+          <ref name="param"/>
+        </zeroOrMore>
+        <interleave>
+          <ref name="common"/>
+          <optional>
+            <ref name="exceptPattern"/>
+          </optional>
+        </interleave>
+      </element>
+      <element name="value">
+        <ref name="commonAttributes"/>
+        <optional>
+          <ref name="type"/>
+        </optional>
+        <data type="string"/>
+      </element>
+      <element name="externalRef">
+        <ref name="href"/>
+        <ref name="common"/>
+      </element>
+      <element name="grammar">
+        <interleave>
+          <ref name="common"/>
+          <zeroOrMore>
+            <ref name="grammarContent"/>
+          </zeroOrMore>
+        </interleave>
+      </element>
+    </choice>
+  </define>
+  <define name="param">
+    <element name="param">
+      <ref name="commonAttributes"/>
+      <ref name="nameNCName"/>
+      <data type="string"/>
+    </element>
+  </define>
+  <define name="exceptPattern">
+    <element name="except">
+      <interleave>
+        <ref name="common"/>
+        <oneOrMore>
+          <ref name="pattern"/>
+        </oneOrMore>
+      </interleave>
+    </element>
+  </define>
+  <define name="grammarContent">
+    <choice>
+      <ref name="definition"/>
+      <element name="div">
+        <interleave>
+          <ref name="common"/>
+          <zeroOrMore>
+            <ref name="grammarContent"/>
+          </zeroOrMore>
+        </interleave>
+      </element>
+      <element name="include">
+        <ref name="href"/>
+        <interleave>
+          <ref name="common"/>
+          <zeroOrMore>
+            <ref name="includeContent"/>
+          </zeroOrMore>
+        </interleave>
+      </element>
+    </choice>
+  </define>
+  <define name="includeContent">
+    <choice>
+      <ref name="definition"/>
+      <element name="div">
+        <interleave>
+          <ref name="common"/>
+          <zeroOrMore>
+            <ref name="includeContent"/>
+          </zeroOrMore>
+        </interleave>
+      </element>
+    </choice>
+  </define>
+  <define name="definition">
+    <choice>
+      <element name="start">
+        <optional>
+          <ref name="combine"/>
+        </optional>
+        <interleave>
+          <ref name="common"/>
+          <oneOrMore>
+            <ref name="pattern"/>
+          </oneOrMore>
+        </interleave>
+      </element>
+      <element name="define">
+        <ref name="nameNCName"/>
+        <optional>
+          <ref name="combine"/>
+        </optional>
+        <interleave>
+          <ref name="common"/>
+          <oneOrMore>
+            <ref name="pattern"/>
+          </oneOrMore>
+        </interleave>
+      </element>
+    </choice>
+  </define>
+  <define name="combine">
+    <attribute name="combine">
+      <choice>
+        <value>choice</value>
+        <value>interleave</value>
+      </choice>
+    </attribute>
+  </define>
+  <define name="nameClass">
+    <choice>
+      <element name="name">
+        <ref name="commonAttributes"/>
+        <data type="QName"/>
+      </element>
+      <element name="anyName">
+        <interleave>
+          <ref name="common"/>
+          <optional>
+            <ref name="exceptNameClass"/>
+          </optional>
+        </interleave>
+      </element>
+      <element name="nsName">
+        <interleave>
+          <ref name="common"/>
+          <optional>
+            <ref name="exceptNameClass"/>
+          </optional>
+        </interleave>
+      </element>
+      <element name="choice">
+        <interleave>
+          <ref name="common"/>
+          <oneOrMore>
+            <ref name="nameClass"/>
+          </oneOrMore>
+        </interleave>
+      </element>
+    </choice>
+  </define>
+  <define name="exceptNameClass">
+    <element name="except">
+      <interleave>
+        <ref name="common"/>
+        <oneOrMore>
+          <ref name="nameClass"/>
+        </oneOrMore>
+      </interleave>
+    </element>
+  </define>
+  <define name="nameQName">
+    <attribute name="name">
+      <data type="QName"/>
+    </attribute>
+  </define>
+  <define name="nameNCName">
+    <attribute name="name">
+      <data type="NCName"/>
+    </attribute>
+  </define>
+  <define name="href">
+    <attribute name="href">
+      <data type="anyURI"/>
+    </attribute>
+  </define>
+  <define name="type">
+    <attribute name="type">
+      <data type="NCName"/>
+    </attribute>
+  </define>
+  <define name="common">
+    <ref name="commonAttributes"/>
+    <zeroOrMore>
+      <ref name="foreignElement"/>
+    </zeroOrMore>
+  </define>
+  <define name="commonAttributes">
+    <optional>
+      <attribute name="ns">
+        <data type="string"/>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="datatypeLibrary">
+        <data type="anyURI"/>
+      </attribute>
+    </optional>
+    <zeroOrMore>
+      <ref name="foreignAttribute"/>
+    </zeroOrMore>
+  </define>
+  <define name="foreignElement">
+    <element>
+      <anyName>
+        <except>
+          <nsName/>
+        </except>
+      </anyName>
+      <zeroOrMore>
+        <choice>
+          <ref name="anyAttribute"/>
+          <text/>
+          <ref name="anyElement"/>
+        </choice>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="foreignAttribute">
+    <attribute>
+      <anyName>
+        <except>
+          <nsName/>
+          <nsName ns=""/>
+        </except>
+      </anyName>
+    </attribute>
+  </define>
+  <define name="anyElement">
+    <element>
+      <anyName/>
+      <zeroOrMore>
+        <choice>
+          <ref name="anyAttribute"/>
+          <text/>
+          <ref name="anyElement"/>
+        </choice>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="anyAttribute">
+    <attribute>
+      <anyName/>
+    </attribute>
+  </define>
+</grammar>
+</correct>
+</xml>
+</testCase>
+</testSuite>
