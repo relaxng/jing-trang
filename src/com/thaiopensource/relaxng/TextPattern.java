@@ -13,7 +13,7 @@ class TextPattern extends Pattern {
     if (a.matchesString())
       return this;
     else
-      return b.makeEmptyChoice();
+      return b.makeNotAllowed();
   }
 
   boolean samePattern(Pattern other) {

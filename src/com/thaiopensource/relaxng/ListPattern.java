@@ -41,9 +41,9 @@ class ListPattern extends Pattern {
 
   Pattern residual(PatternBuilder b, Atom a) {
     if (a.matchesList(b, p))
-      return b.makeEmptySequence();
+      return b.makeEmpty();
     else
-      return b.makeEmptyChoice();
+      return b.makeNotAllowed();
   }
 
   void checkRestrictions(int context, DuplicateAttributeDetector dad, Alphabet alpha)

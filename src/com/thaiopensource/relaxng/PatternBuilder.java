@@ -13,9 +13,9 @@ public class PatternBuilder {
   private int used;
   private int usedLimit;
 
-  private final EmptySequencePattern emptySequence;
-  private final EmptyChoicePattern emptyChoice;
+  private final EmptyPattern empty;
   private final NotAllowedPattern notAllowed;
+  private final UnexpandedNotAllowedPattern unexpandedNotAllowed;
   private final TextPattern text;
 
   private final PatternPair emptyPatternPair;
@@ -30,9 +30,9 @@ public class PatternBuilder {
     table = null;
     used = 0;
     usedLimit = 0;
-    emptySequence = new EmptySequencePattern();
-    emptyChoice = new EmptyChoicePattern();
+    empty = new EmptyPattern();
     notAllowed = new NotAllowedPattern();
+    unexpandedNotAllowed = new UnexpandedNotAllowedPattern();
     text = new TextPattern();
     emptyPatternPair = new PatternPair();
     eaTable = new Hashtable();
@@ -47,9 +47,9 @@ public class PatternBuilder {
       table = (Pattern[])table.clone();
     used = parent.used;
     usedLimit = parent.usedLimit;
-    emptySequence = parent.emptySequence;
-    emptyChoice = parent.emptyChoice;
+    empty = parent.empty;
     notAllowed = parent.notAllowed;
+    unexpandedNotAllowed = parent.unexpandedNotAllowed;
     text = parent.text;
     emptyPatternPair = parent.emptyPatternPair;
     eaTable = (Hashtable)parent.eaTable.clone();
@@ -58,38 +58,38 @@ public class PatternBuilder {
     ucpTable = (Hashtable)parent.ucpTable.clone();
   }
 
-  Pattern makeEmptySequence() {
-    return emptySequence;
-  }
-  Pattern makeEmptyChoice() {
-    return emptyChoice;
+  Pattern makeEmpty() {
+    return empty;
   }
   Pattern makeNotAllowed() {
     return notAllowed;
   }
+  Pattern makeUnexpandedNotAllowed() {
+    return unexpandedNotAllowed;
+  }
   Pattern makeError() {
     return intern(new ErrorPattern());
   }
-  Pattern makeSequence(Pattern p1, Pattern p2) {
-    if (p1 == emptySequence)
+  Pattern makeGroup(Pattern p1, Pattern p2) {
+    if (p1 == empty)
       return p2;
-    if (p2 == emptySequence)
+    if (p2 == empty)
       return p1;
-    if (p1 == emptyChoice || p2 == emptyChoice)
-      return emptyChoice;
-    if (p1 instanceof SequencePattern) {
-      SequencePattern sp = (SequencePattern)p1;
-      return makeSequence(sp.p1, makeSequence(sp.p2, p2));
+    if (p1 == notAllowed || p2 == notAllowed)
+      return notAllowed;
+    if (p1 instanceof GroupPattern) {
+      GroupPattern sp = (GroupPattern)p1;
+      return makeGroup(sp.p1, makeGroup(sp.p2, p2));
     }
-    return intern(new SequencePattern(p1, p2));
+    return intern(new GroupPattern(p1, p2));
   }
   Pattern makeInterleave(Pattern p1, Pattern p2) {
-    if (p1 == emptySequence)
+    if (p1 == empty)
       return p2;
-    if (p2 == emptySequence)
+    if (p2 == empty)
       return p1;
-    if (p1 == emptyChoice || p2 == emptyChoice)
-      return emptyChoice;
+    if (p1 == notAllowed || p2 == notAllowed)
+      return notAllowed;
     if (p1 instanceof InterleavePattern) {
       InterleavePattern ip = (InterleavePattern)p1;
       return makeInterleave(ip.p1, makeInterleave(ip.p2, p2));
@@ -121,17 +121,17 @@ public class PatternBuilder {
   }
 
   Pattern makeChoice(Pattern p1, Pattern p2) {
-    if (p1 == emptyChoice)
+    if (p1 == notAllowed)
       return p2;
-    if (p2 == emptyChoice)
+    if (p2 == notAllowed)
       return p1;
-    if (p1 == emptySequence) {
+    if (p1 == empty) {
       if (p2.isNullable())
 	return p2;
-      // Canonicalize position of emptyChoice.
+      // Canonicalize position of notAllowed.
       return makeChoice(p2, p1);
     }
-    if (p2 == emptySequence && p1.isNullable())
+    if (p2 == empty && p1.isNullable())
       return p1;
     if (p1 instanceof ChoicePattern) {
       ChoicePattern cp = (ChoicePattern)p1;
@@ -153,15 +153,15 @@ public class PatternBuilder {
 
   Pattern makeOneOrMore(Pattern p) {
     if (p == text
-	|| p == emptySequence
-	|| p == emptyChoice
+	|| p == empty
+	|| p == notAllowed
 	|| p instanceof OneOrMorePattern)
       return p;
     return intern(new OneOrMorePattern(p));
   }
 
   Pattern makeOptional(Pattern p) {
-    return makeChoice(p, emptySequence);
+    return makeChoice(p, empty);
   }
 
   Pattern makeZeroOrMore(Pattern p) {
@@ -169,7 +169,7 @@ public class PatternBuilder {
   }
 
   Pattern makeList(Pattern p, Locator loc) {
-    if (p == emptyChoice)
+    if (p == notAllowed)
       return p;
     return intern(new ListPattern(p, loc));
   }
@@ -179,7 +179,7 @@ public class PatternBuilder {
   }
 
   Pattern makeAttribute(NameClass nameClass, Pattern value, Locator loc) {
-    if (value.isEmptyChoice())
+    if (value.isNotAllowed())
       return value;
     return intern(new AttributePattern(nameClass, value, loc));
   }

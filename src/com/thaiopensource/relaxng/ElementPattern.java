@@ -25,9 +25,9 @@ class ElementPattern extends Pattern {
 
   Pattern residual(PatternBuilder b, Atom a) {
     if (a.matchesElement(nameClass, p))
-      return b.makeEmptySequence();
+      return b.makeEmpty();
     else
-      return b.makeEmptyChoice();
+      return b.makeNotAllowed();
   }
 
   void initialContentPatterns(String namespaceURI,
@@ -48,14 +48,14 @@ class ElementPattern extends Pattern {
 					  namespaceURI,
 					  localName,
 					  recoveryLevel - 1);
-    return b.makeEmptyChoice();
+    return b.makeNotAllowed();
   }
 
   PatternPair unambigContentPattern(PatternBuilder b,
 			      String namespaceURI,
 			      String localName) {
     if (nameClass.contains(namespaceURI, localName))
-      return new PatternPair(p, b.makeEmptySequence());
+      return new PatternPair(p, b.makeEmpty());
     return b.makeEmptyPatternPair();
   }
 
@@ -88,7 +88,7 @@ class ElementPattern extends Pattern {
     if (!expanded) {
       expanded = true;
       p = p.expand(b);
-      if (p.isEmptyChoice())
+      if (p.isNotAllowed())
 	nameClass = new NullNameClass();
     }
     return this;

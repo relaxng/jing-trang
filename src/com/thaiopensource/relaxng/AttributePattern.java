@@ -21,16 +21,16 @@ class AttributePattern extends Pattern {
 
   Pattern residual(PatternBuilder b, Atom a) {
     if (a.matchesAttribute(b, nameClass, p))
-      return b.makeEmptySequence();
+      return b.makeEmpty();
     else
-      return b.makeEmptyChoice();
+      return b.makeNotAllowed();
   }
 
   Pattern endAttributes(PatternBuilder b, boolean recovering) {
     if (recovering)
-      return b.makeEmptySequence();
+      return b.makeEmpty();
     else
-      return b.makeEmptyChoice();
+      return b.makeNotAllowed();
   }
 
   Pattern expand(PatternBuilder b) {

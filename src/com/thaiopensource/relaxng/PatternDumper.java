@@ -17,7 +17,7 @@ public class PatternDumper {
   private Hashtable patternTable = new Hashtable();
 
   PatternVisitor patternVisitor = new DumpPatternVisitor();
-  PatternVisitor sequencePatternVisitor = new SequenceDumpPatternVisitor();
+  PatternVisitor groupPatternVisitor = new GroupDumpPatternVisitor();
   PatternVisitor choicePatternVisitor = new ChoiceDumpPatternVisitor();
   PatternVisitor interleavePatternVisitor = new InterleaveDumpPatternVisitor();
   NameClassVisitor nameClassVisitor = new DumpNameClassVisitor();
@@ -41,13 +41,13 @@ public class PatternDumper {
     startElement("grammar");
     attribute("xmlns", PatternReader.relaxngURI);
     startElement("start");
-    p.accept(sequencePatternVisitor);
+    p.accept(groupPatternVisitor);
     endElement();
     for (int i = 0; i < patternList.size(); i++) {
       startElement("define");
       Pattern tem = (Pattern)patternList.elementAt(i);
       attribute("name", getName(tem));
-      tem.accept(sequencePatternVisitor);
+      tem.accept(groupPatternVisitor);
       endElement();
     }
     endElement();
@@ -168,12 +168,12 @@ public class PatternDumper {
   }
 
   class DumpPatternVisitor implements PatternVisitor {
-    public void visitEmptySequence() {
+    public void visitEmpty() {
       startElement("empty");
       endElement();
     }
 
-    public void visitEmptyChoice() {
+    public void visitNotAllowed() {
       startElement("notAllowed");
       endElement();
     }
@@ -183,10 +183,10 @@ public class PatternDumper {
       endElement();
     }
 
-    public void visitSequence(Pattern p1, Pattern p2) {
+    public void visitGroup(Pattern p1, Pattern p2) {
       startElement("group");
-      p1.accept(sequencePatternVisitor);
-      p2.accept(sequencePatternVisitor);
+      p1.accept(groupPatternVisitor);
+      p2.accept(groupPatternVisitor);
       endElement();
     }
 
@@ -206,7 +206,7 @@ public class PatternDumper {
 
     public void visitOneOrMore(Pattern p) {
       startElement("oneOrMore");
-      p.accept(sequencePatternVisitor);
+      p.accept(groupPatternVisitor);
       endElement();
     }
 
@@ -251,13 +251,13 @@ public class PatternDumper {
 
     public void visitList(Pattern p) {
       startElement("list");
-      p.accept(sequencePatternVisitor);
+      p.accept(groupPatternVisitor);
       endElement();
     }
   }
 
-  class SequenceDumpPatternVisitor extends DumpPatternVisitor {
-    public void visitSequence(Pattern p1, Pattern p2) {
+  class GroupDumpPatternVisitor extends DumpPatternVisitor {
+    public void visitGroup(Pattern p1, Pattern p2) {
       p1.accept(this);
       p2.accept(this);
     }

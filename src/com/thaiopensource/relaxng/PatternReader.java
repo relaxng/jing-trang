@@ -265,7 +265,7 @@ public class PatternReader implements ValidationContext {
     }
 
     Pattern combinePattern(Pattern p1, Pattern p2) {
-      return patternBuilder.makeSequence(p1, p2);
+      return patternBuilder.makeGroup(p1, p2);
     }
 
     Pattern wrapPattern(Pattern p) throws SAXException {
@@ -433,7 +433,7 @@ public class PatternReader implements ValidationContext {
     }
 
     Pattern makePattern() {
-      return patternBuilder.makeNotAllowed();
+      return patternBuilder.makeUnexpandedNotAllowed();
     }
   }
 
@@ -443,7 +443,7 @@ public class PatternReader implements ValidationContext {
     }
 
     Pattern makePattern() {
-      return patternBuilder.makeEmptySequence();
+      return patternBuilder.makeEmpty();
     }
   }
 
@@ -803,7 +803,7 @@ public class PatternReader implements ValidationContext {
 
     void end() throws SAXException {
       // need a non-null pattern to avoid error
-      parent.endChild(patternBuilder.makeEmptySequence());
+      parent.endChild(patternBuilder.makeEmpty());
     }
   }
 

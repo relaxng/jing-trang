@@ -6,9 +6,9 @@ abstract class StringPattern extends Pattern {
   }
   Pattern residual(PatternBuilder b, Atom a) {
     if (matches(b, a))
-      return b.makeEmptySequence();
+      return b.makeEmpty();
     else
-      return b.makeEmptyChoice();
+      return b.makeNotAllowed();
   }
 
   abstract boolean matches(PatternBuilder b, Atom a);

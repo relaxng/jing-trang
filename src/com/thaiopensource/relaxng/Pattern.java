@@ -12,10 +12,10 @@ public abstract class Pattern {
 
   static final int TEXT_HASH_CODE = 1;
   static final int ERROR_HASH_CODE = 3;
-  static final int EMPTY_SEQUENCE_HASH_CODE = 5;
-  static final int EMPTY_CHOICE_HASH_CODE = 7;
+  static final int EMPTY_HASH_CODE = 5;
+  static final int NOT_ALLOWED_HASH_CODE = 7;
   static final int CHOICE_HASH_CODE = 11;
-  static final int SEQUENCE_HASH_CODE = 13;
+  static final int GROUP_HASH_CODE = 13;
   static final int INTERLEAVE_HASH_CODE = 17;
   static final int ONE_OR_MORE_HASH_CODE = 19;
   static final int ELEMENT_HASH_CODE = 23;
@@ -61,7 +61,7 @@ public abstract class Pattern {
 
   abstract Pattern residual(PatternBuilder b, Atom a);
 
-  boolean isEmptyChoice() {
+  boolean isNotAllowed() {
     return false;
   }
 
@@ -73,7 +73,7 @@ public abstract class Pattern {
 				  String namespaceURI,
 				  String localName,
 				  int recoveryLevel) {
-    return b.makeEmptyChoice();
+    return b.makeNotAllowed();
   }
 
   Pattern endAttributes(PatternBuilder b, boolean recovering) {
