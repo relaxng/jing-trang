@@ -99,16 +99,30 @@ class Output {
     }
 
     void outputUnion(List patterns) {
-      xw.startElement(xs("union"));
+      int nDataChildren = 0;
+      for (int i = 0, len = patterns.size(); i < len; i++) {
+        Pattern pattern = (Pattern)patterns.get(i);
+        if (si.getChildType(pattern).contains(ChildType.DATA)
+            && nDataChildren++ > 0)
+          break;
+      }
+
+      if (nDataChildren > 1)
+        xw.startElement(xs("union"));
       // TODO use memberTypes attribute if possible
 
       for (int i = 0, len = patterns.size(); i < len; i++) {
-        xw.startElement(xs("simpleType"));
         Pattern pattern = (Pattern)patterns.get(i);
-        pattern.accept(this);
-        xw.endElement();
+        if (si.getChildType(pattern).contains(ChildType.DATA)) {
+          if (nDataChildren > 1)
+            xw.startElement(xs("simpleType"));
+          pattern.accept(this);
+          if (nDataChildren > 1)
+            xw.endElement();
+        }
       }
-      xw.endElement();
+      if (nDataChildren > 1)
+        xw.endElement();
     }
 
 
@@ -364,9 +378,12 @@ class Output {
     public Object visitDefine(DefineComponent c) {
       String name = c.getName();
       Pattern body = c.getBody();
+      ChildType ct = si.getChildType(body);
       if (name == DefineComponent.START)
         ;
-      else if (si.isSimpleType(body)) {
+      else if (ct.contains(ChildType.DATA)
+               && !ct.contains(ChildType.ELEMENT)
+               && !ct.contains(ChildType.TEXT)) {
         xw.startElement(xs("simpleType"));
         xw.attribute("name", c.getName());
         body.accept(simpleTypeOutput);

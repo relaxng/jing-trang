@@ -1,3 +1,14 @@
+ALLOW_EMPTY
+ALLOW_ELEMENT
+ALLOW_ATTRIBUTE
+ALLOW_TEXT
+ALLOW_SIMPLE
+
+ALLOW & 
+
+
+
+
 Simple fixups:
 
 Attribute name-classes
@@ -35,3 +46,11 @@ Contains attributes/text and sometimes referenced as a complexType, then
 define as complexType
 
 Sometimes referenced not as a complexType, define as a group
+
+
+sax
+java platform reliable
+two apis spec expensive
+mixed api messy
+focus on strings; cache elements
+forcing event api on top eventless api has vosy
