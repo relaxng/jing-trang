@@ -17,8 +17,10 @@
          />
  <delete quiet="true">
   <fileset dir="build/src/com/thaiopensource/relaxng/parse/compact"
-           includes="UCode_CharStream.java"/>
+           includes="UCode_UCodeESC_CharStream.java"/>
  </delete>
+ <replace file="build/src/com/thaiopensource/relaxng/parse/compact/CompactSyntaxTokenManager.java"
+   token="java.io.IOException" value="EOFException"/>
 </target>
 
 <target name="compile-gen" depends="init">

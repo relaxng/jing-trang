@@ -1,6 +1,7 @@
 options {
   STATIC = false;
   UNICODE_INPUT = true;
+  JAVA_UNICODE_ESCAPE = true;
 }
 
 PARSER_BEGIN(CompactSyntax)
@@ -93,6 +94,9 @@ public class CompactSyntax implements Context {
     catch (ParseException e) {
       error("syntax_error", e.currentToken.next);
     }
+    catch (EscapeSyntaxException e) {
+      reportEscapeSyntaxException(e);
+    }
     throw new IllegalSchemaException();
   }
 
@@ -104,6 +108,9 @@ public class CompactSyntax implements Context {
     }
     catch (ParseException e) {
       error("syntax_error", e.currentToken.next);
+    }
+    catch (EscapeSyntaxException e) {
+      reportEscapeSyntaxException(e);
     }
     throw new IllegalSchemaException();
   }
@@ -129,6 +136,21 @@ public class CompactSyntax implements Context {
       loc.setSystemId(sourceUri);
       try {
 	eh.error(new SAXParseException(message, loc));
+      }
+      catch (SAXException se) {
+	throw new BuildException(se);
+      }
+    }
+  }
+
+  private void reportEscapeSyntaxException(EscapeSyntaxException e) {
+    if (eh != null) {
+      LocatorImpl loc = new LocatorImpl();
+      loc.setLineNumber(e.getLineNumber());
+      loc.setColumnNumber(e.getColumnNumber());
+      loc.setSystemId(sourceUri);
+      try {
+	eh.error(new SAXParseException(localizer.message(e.getKey()), loc));
       }
       catch (SAXException se) {
 	throw new BuildException(se);
