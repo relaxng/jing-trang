@@ -290,6 +290,11 @@ public class NonXmlSyntax implements Context {
     }
   }
 
+  private void checkExcept(Token[] except) {
+    if (except[0] != null)
+      error("except_missing_parentheses", except[0]);
+  }
+
   private String lookupPrefix(String prefix, Token t) {
     String ns = (String)namespaceTable.get(prefix);
     if (ns == null) {
@@ -456,7 +461,7 @@ void DatatypesDecl() :
   }
 }
 
-ParsedPattern AnnotatedPrimaryExpr(Scope scope) :
+ParsedPattern AnnotatedPrimaryExpr(Scope scope, Token[] except) :
 {
   Annotations a;
   ParsedPattern p;
@@ -464,13 +469,13 @@ ParsedPattern AnnotatedPrimaryExpr(Scope scope) :
 }
 {
   a = Annotations()
-  p = PrimaryExpr(scope, a)
+  p = PrimaryExpr(scope, a, except)
   ( <FANNOTATE> e = AnnotationElement() { p = sb.annotateAfter(p, e); })*
   { return p; }
 }
 
 
-ParsedPattern PrimaryExpr(Scope scope, Annotations a) :
+ParsedPattern PrimaryExpr(Scope scope, Annotations a, Token[] except) :
 {
   ParsedPattern p;
 }
@@ -484,7 +489,7 @@ ParsedPattern PrimaryExpr(Scope scope, Annotations a) :
    | p = ParenExpr(scope, a)
    | p = IdentifierExpr(scope, a)
    | p = ParentExpr(scope, a)
-   | p = DataExpr(scope, a)
+   | p = DataExpr(scope, a, except)
    | p = ValueExpr(a)
    | p = TextExpr(a)
    | p = EmptyExpr(a)
@@ -525,16 +530,21 @@ ParsedPattern Expr(Scope scope, Token t, Annotations a) :
   ParsedPattern[] patterns = new ParsedPattern[2];
   int nPatterns = 1;
   boolean[] hadOccur = new boolean[1];
+  Token[] except = new Token[1];
 }
 {
-  p = UnaryExpr(scope, hadOccur)
+  p = UnaryExpr(scope, hadOccur, except)
   { patterns[0] = p; }
   (
-   (t = "|" p = UnaryExpr(scope, null) { patterns = addPattern(patterns, nPatterns++, p); } )+
+   { checkExcept(except); }
+   (t = "|" p = UnaryExpr(scope, null, except)
+     { patterns = addPattern(patterns, nPatterns++, p); checkExcept(except); } )+
     { p = sb.makeChoice(patterns, nPatterns, makeLocation(t), a); }
-    | (t = "&" p = UnaryExpr(scope, null) { patterns = addPattern(patterns, nPatterns++, p); } )+
+    | (t = "&" p = UnaryExpr(scope, null, except)
+     { patterns = addPattern(patterns, nPatterns++, p); checkExcept(except); } )+
     { p = sb.makeInterleave(patterns, nPatterns, makeLocation(t), a); }
-    | (t = "," p = UnaryExpr(scope, null) { patterns = addPattern(patterns, nPatterns++, p); } )+
+    | (t = "," p = UnaryExpr(scope, null, except)
+     { patterns = addPattern(patterns, nPatterns++, p); checkExcept(except); } )+
     { p = sb.makeGroup(patterns, nPatterns, makeLocation(t), a); }
   )?
   {
@@ -548,22 +558,22 @@ ParsedPattern Expr(Scope scope, Token t, Annotations a) :
   }
 }
 
-ParsedPattern UnaryExpr(Scope scope, boolean[] hadOccur) :
+ParsedPattern UnaryExpr(Scope scope, boolean[] hadOccur, Token[] except) :
 {
   ParsedPattern p;
   Token t;
   ParsedElementAnnotation e;
 }
 {
-  p = AnnotatedPrimaryExpr(scope)
+  p = AnnotatedPrimaryExpr(scope, except)
   (
    {
      if (hadOccur != null) hadOccur[0] = true;
      p = afterComments(p);
    }
-   (t = "+" { p = sb.makeOneOrMore(p, makeLocation(t), null); }
-    | t = "?" { p = sb.makeOptional(p, makeLocation(t), null); }
-    | t = "*" { p = sb.makeZeroOrMore(p, makeLocation(t), null); })
+   (t = "+" { checkExcept(except); p = sb.makeOneOrMore(p, makeLocation(t), null); }
+    | t = "?" { checkExcept(except); p = sb.makeOptional(p, makeLocation(t), null); }
+    | t = "*" { checkExcept(except); p = sb.makeZeroOrMore(p, makeLocation(t), null); })
    ( <FANNOTATE> e = AnnotationElement() { p = sb.annotateAfter(p, e); } )*
   )?
   { return p; }
@@ -1028,7 +1038,7 @@ ParsedPattern ValueExpr(Annotations a) :
   { return sb.makeValue("", "token", s.getString(), getContext(), defaultNamespace, s.getLocation(), a); }
 }
 
-ParsedPattern DataExpr(Scope scope, Annotations a) :
+ParsedPattern DataExpr(Scope scope, Annotations a, Token[] except) :
 {
   Token datatypeToken;
   Location loc;
@@ -1056,8 +1066,8 @@ ParsedPattern DataExpr(Scope scope, Annotations a) :
     { return sb.makeValue(datatypeUri, datatype, s, getContext(), defaultNamespace, loc, a); }
   )
   | ( { dpb = sb.makeDataPatternBuilder(datatypeUri, datatype, loc); }
-      ( (Params(dpb) (e = Except(scope))?)
-        | (e = Except(scope))?)
+      ( (Params(dpb) (e = Except(scope, except))?)
+        | (e = Except(scope, except))?)
       { return e == null ? dpb.makePattern(loc, a) : dpb.makePattern(e, loc, a); }))
 }
 
@@ -1121,14 +1131,20 @@ void Param(DataPatternBuilder dpb) :
   { dpb.addParam(name.getString(), value, getContext(), defaultNamespace, name.getLocation(), a); }
 }
 
-ParsedPattern Except(Scope scope) :
+ParsedPattern Except(Scope scope, Token[] except) :
 {
   Annotations a;
   ParsedPattern p;
+  Token t;
+  Token[] innerExcept = new Token[1];
 }
 {
-  "-" a = Annotations() p = PrimaryExpr(scope, a)
-  { return p; }
+  t = "-" a = Annotations() p = PrimaryExpr(scope, a, innerExcept)
+  {
+    checkExcept(innerExcept);
+    except[0] = t;
+    return p;
+  }
 }
 
 Annotations Annotations() :
