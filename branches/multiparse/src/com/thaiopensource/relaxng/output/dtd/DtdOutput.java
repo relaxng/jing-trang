@@ -229,12 +229,21 @@ class DtdOutput {
     }
 
     public Object visitInterleave(InterleavePattern p) {
-      final List list = p.getChildren();
-      for (int i = 0, len = list.size(); i < len; i++) {
-        Pattern member = (Pattern)list.get(i);
-        ContentType t = getContentType(member);
-        if (!t.isA(ContentType.EMPTY))
-          member.accept(this);
+      ContentType ct = getContentType(p);
+      if (ct == ContentType.INTERLEAVE_ZERO_OR_MORE_ELEMENT_CLASS || ct == ContentType.INTERLEAVE_MIXED_MODEL) {
+        buf.append('(');
+        p.accept(innerElementClassOutput);
+        buf.append(')');
+        buf.append('*');
+      }
+      else {
+        final List list = p.getChildren();
+        for (int i = 0, len = list.size(); i < len; i++) {
+          Pattern member = (Pattern)list.get(i);
+          ContentType t = getContentType(member);
+          if (!t.isA(ContentType.EMPTY))
+            member.accept(this);
+        }
       }
       return null;
     }
@@ -317,7 +326,7 @@ class DtdOutput {
 
     public Object visitRef(RefPattern p) {
       ContentType t = getContentType(p);
-      if (t == ContentType.MIXED_MODEL)
+      if (t.isA(ContentType.MIXED_MODEL))
         super.visitRef(p);
       else {
         buf.append('(');
@@ -391,11 +400,28 @@ class DtdOutput {
 
     public Object visitComposite(CompositePattern p) {
       List list = p.getChildren();
+      boolean needSep = false;
+      int doneIndex = -1;
       for (int i = 0, len = list.size(); i < len; i++) {
         Pattern member = (Pattern)list.get(i);
-        if (getContentType(member) != ContentType.EMPTY) {
+        ContentType ct = getContentType(member);
+        if (ct.isA(ContentType.MIXED_MODEL) || ct == ContentType.TEXT) {
           member.accept(this);
+          needSep = true;
+          doneIndex = i;
           break;
+        }
+      }
+      for (int i = 0, len = list.size(); i < len; i++) {
+        if (i != doneIndex) {
+          Pattern member = (Pattern)list.get(i);
+          if (getContentType(member) != ContentType.EMPTY) {
+            if (needSep)
+              buf.append('|');
+            else
+              needSep = true;
+            member.accept(this);
+          }
         }
       }
       return null;
@@ -403,6 +429,21 @@ class DtdOutput {
 
     public Object visitZeroOrMore(ZeroOrMorePattern p) {
       p.getChild().accept(nestedContentModelOutput);
+      return null;
+    }
+
+    public Object visitMixed(MixedPattern p) {
+      if (getContentType(p.getChild()) == ContentType.EMPTY)
+        buf.append("#PCDATA");
+      else {
+        buf.append("#PCDATA|");
+        p.getChild().accept(this);
+      }
+      return null;
+    }
+
+    public Object visitText(TextPattern p) {
+      buf.append("#PCDATA");
       return null;
     }
   }
@@ -928,7 +969,7 @@ class DtdOutput {
     boolean wrap = true;
     if (t.isA(ContentType.MODEL_GROUP) || t.isA(ContentType.NOT_ALLOWED) || t.isA(ContentType.MIXED_ELEMENT_CLASS))
       body.accept(nestedContentModelOutput);
-    else if (t == ContentType.MIXED_MODEL)
+    else if (t.isA(ContentType.MIXED_MODEL))
       body.accept(topLevelContentModelOutput);
     else if (t.isA(ContentType.EMPTY)) {
       attributeOutput.output(body);

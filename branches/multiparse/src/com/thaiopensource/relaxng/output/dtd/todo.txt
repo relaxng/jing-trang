@@ -13,7 +13,6 @@ Make LocalOutputDirectory preserve directory structure
 Approximate <list> by NMTOKENS when possible
 Have a top-level annotation indicating a redefinition point (as in DocBook)
 Recognize definitions being used as INCLUDE/IGNORE (as in TEI)
-Handle interleave where operand is a zero or more element class
 Give warnings for definitions that had to be expanded
 Closer approximation of choice of datatypes
 Approximate when single element restriction is violated
@@ -21,4 +20,5 @@ Allow choice of attributes and data
 Try to push namespace declarations down into appropriate attribute groups
 Support for ANY
 <empty/> used as a model-group hook
-
+Approximate wildcards intelligently
+Handle interleave of zero or more element class with model group
