@@ -850,6 +850,7 @@ class Translator {
     case '\\':
     case '|':
     case '.':
+    case '-':
     case '^':
     case '?':
     case '*':
