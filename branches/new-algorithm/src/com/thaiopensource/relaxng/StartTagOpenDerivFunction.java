@@ -11,7 +11,7 @@ class StartTagOpenDerivFunction extends AbstractPatternFunction {
 
   public Object caseChoice(ChoicePattern p) {
     return builder.makeChoice(memoApply(p.getOperand1()),
-			      memoApply(p.getOperand2()));
+			      memoApply(p.getOperand2()), true);
   }
 
   public Object caseGroup(GroupPattern p) {
@@ -23,7 +23,7 @@ class StartTagOpenDerivFunction extends AbstractPatternFunction {
 					    return builder.makeGroup(x, p2);
 					  }
 					});
-    return p1.isNullable() ? builder.makeChoice(tem, memoApply(p2)) : tem; 
+    return p1.isNullable() ? builder.makeChoice(tem, memoApply(p2), true) : tem;
   }
 
   public Object caseInterleave(InterleavePattern p) {
@@ -39,7 +39,7 @@ class StartTagOpenDerivFunction extends AbstractPatternFunction {
 				  Pattern apply(Pattern x) {
 				    return builder.makeInterleave(p1, x);
 				  }
-				}));
+				}), true);
   }
 
   public Object caseAfter(AfterPattern p) {

@@ -13,7 +13,8 @@ class RecoverAfterFunction extends AbstractPatternFunction {
 
   public Object caseChoice(ChoicePattern p) {
     return builder.makeChoice(p.getOperand1().applyForPattern(this),
-			      p.getOperand2().applyForPattern(this));
+			      p.getOperand2().applyForPattern(this),
+                              true);
 
   }
 

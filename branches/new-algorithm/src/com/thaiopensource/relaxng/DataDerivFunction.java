@@ -114,7 +114,8 @@ class DataDerivFunction extends AbstractPatternFunction {
 
   public Object caseChoice(ChoicePattern p) {
     return builder.makeChoice(p.getOperand1().applyForPattern(this),
-			      p.getOperand2().applyForPattern(this));
+			      p.getOperand2().applyForPattern(this),
+                              true);
   }
   
   public Object caseGroup(GroupPattern p) {
@@ -123,14 +124,14 @@ class DataDerivFunction extends AbstractPatternFunction {
     Pattern tem = builder.makeGroup(p1.applyForPattern(this), p2);
     if (!p1.isNullable())
       return tem;
-    return builder.makeChoice(tem, p2.applyForPattern(this));
+    return builder.makeChoice(tem, p2.applyForPattern(this), true);
   }
 
   public Object caseInterleave(InterleavePattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
     return builder.makeChoice(builder.makeInterleave(p1.applyForPattern(this), p2),
-			      builder.makeInterleave(p1, p2.applyForPattern(this)));
+			      builder.makeInterleave(p1, p2.applyForPattern(this)), true);
   }
 
   public Object caseOneOrMore(OneOrMorePattern p) {

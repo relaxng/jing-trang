@@ -13,29 +13,13 @@ class ChoicePattern extends BinaryPattern {
     Pattern ep1 = p1.expand(b);
     Pattern ep2 = p2.expand(b);
     if (ep1 != p1 || ep2 != p2)
-      return b.makeChoice(ep1, ep2);
+      return b.makeChoice(ep1, ep2, false);
     else
       return this;
   }
 
   boolean containsChoice(Pattern p) {
     return p1.containsChoice(p) || p2.containsChoice(p);
-  }
-
-  Pattern combineAfter(PatternBuilder b, AfterPattern p) {
-    Pattern tem = p1.combineAfter(b, p);
-    if (tem != null) {
-      if (tem == p1)
-        return this;
-      return b.makeChoice(tem, p2);
-    }
-    tem = p2.combineAfter(b, p);
-    if (tem != null) {
-      if (tem == p2)
-        return this;
-      return b.makeChoice(p1, tem);
-    }
-    return null;
   }
 
   void accept(PatternVisitor visitor) {
