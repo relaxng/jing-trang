@@ -40,6 +40,9 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+/*
+XXX Avoid losing any comments
+*/
 public class NonXmlSyntax implements Context {
 
   private static final String xmlUri = "http://www.w3.org/XML/1998/namespace";
@@ -179,11 +182,17 @@ public class NonXmlSyntax implements Context {
   }
 
   private CommentList getComments() {
-    return getComments(null);
+    return getComments(getTopLevelComments());
   }
 
   private CommentList topLevelComments = null;
    
+  private CommentList getTopLevelComments() {
+    CommentList tem = topLevelComments;
+    topLevelComments = null;
+    return tem;
+  }
+
   private void noteTopLevelComments() {
     topLevelComments = getComments(topLevelComments);
   }
@@ -358,7 +367,7 @@ ParsedPattern TopLevelGrammar(Scope scope) :
 
 Annotations TopLevelAnnotations() :
 {
-  Annotations a = sb.makeAnnotations(topLevelComments, getContext());
+  Annotations a = sb.makeAnnotations(getTopLevelComments(), getContext());
 }
 {
   (LOOKAHEAD(2) PrefixedAnnotationAttribute(a, false))*
