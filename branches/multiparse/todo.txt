@@ -1,3 +1,5 @@
+Preserve all comments in non-XML syntax.
+
 Add design.html into build file.
 
 Documentation for conv
