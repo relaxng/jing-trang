@@ -23,10 +23,14 @@ import com.thaiopensource.relaxng.edit.DivComponent;
 import com.thaiopensource.relaxng.edit.DefineComponent;
 import com.thaiopensource.relaxng.edit.IncludeComponent;
 import com.thaiopensource.relaxng.edit.RefPattern;
+import com.thaiopensource.relaxng.edit.UnaryPattern;
+import com.thaiopensource.relaxng.edit.CompositePattern;
+import com.thaiopensource.relaxng.edit.SourceLocation;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
 
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class RestrictionsChecker {
   private final SchemaInfo si;
@@ -53,13 +57,13 @@ public class RestrictionsChecker {
           DISALLOW_ATTRIBUTE|DISALLOW_ELEMENT;
 
   private final PatternVisitor startVisitor = new Visitor("start", START_DISALLOW);
-  private final PatternVisitor topLevelVisitor = new Visitor(null, 0);
+  private final PatternVisitor topLevelVisitor = new ListVisitor(null, 0);
   private final PatternVisitor elementVisitor = new ElementVisitor();
   private final PatternVisitor elementRepeatVisitor = new ElementRepeatVisitor();
   private final PatternVisitor elementRepeatGroupVisitor = new Visitor("element_repeat_group", DISALLOW_ATTRIBUTE);
   private final PatternVisitor elementRepeatInterleaveVisitor  = new Visitor("element_repeat_interleave", DISALLOW_ATTRIBUTE);
   private final PatternVisitor attributeVisitor = new Visitor("attribute", ATTRIBUTE_DISALLOW);
-  private final PatternVisitor listVisitor = new Visitor("list", LIST_DISALLOW);
+  private final PatternVisitor listVisitor = new ListVisitor("list", LIST_DISALLOW);
   private final PatternVisitor dataExceptVisitor = new Visitor("data_except", DATA_EXCEPT_DISALLOW);
 
   class Visitor extends AbstractVisitor {
@@ -81,14 +85,18 @@ public class RestrictionsChecker {
     }
 
     public Object visitGroup(GroupPattern p) {
-      if (checkContext(DISALLOW_GROUP, "group", p))
+      if (checkContext(DISALLOW_GROUP, "group", p)) {
+        checkGroup(p);
         super.visitGroup(p);
+      }
       return null;
     }
 
     public Object visitInterleave(InterleavePattern p) {
-      if (checkContext(DISALLOW_INTERLEAVE, "interleave", p))
+      if (checkContext(DISALLOW_INTERLEAVE, "interleave", p)) {
+        checkGroup(p);
         super.visitInterleave(p);
+      }
       return null;
     }
 
@@ -141,27 +149,81 @@ public class RestrictionsChecker {
     }
 
     public Object visitMixed(MixedPattern p) {
-      if (checkContext(DISALLOW_TEXT, "mixed", p))
+      if (checkContext(DISALLOW_TEXT, "mixed", p)) {
+        if (si.getChildType(p.getChild()).contains(ChildType.DATA))
+          er.error("mixed_data", p.getSourceLocation());
         super.visitMixed(p);
+      }
       return null;
     }
 
     public Object visitOneOrMore(OneOrMorePattern p) {
-      if (checkContext(DISALLOW_ONE_OR_MORE, "oneOrMore", p))
+      if (checkContext(DISALLOW_ONE_OR_MORE, "oneOrMore", p)) {
+        checkNoDataUnlessInList(p, "oneOrMore");
         super.visitOneOrMore(p);
+      }
       return null;
     }
 
     public Object visitZeroOrMore(ZeroOrMorePattern p) {
-      if (checkContext(DISALLOW_ONE_OR_MORE, "zeroOrMore", p))
+      if (checkContext(DISALLOW_ONE_OR_MORE, "zeroOrMore", p)) {
+        checkNoDataUnlessInList(p, "zeroOrMore");
         super.visitZeroOrMore(p);
+      }
       return null;
     }
 
     public Object visitRef(RefPattern p) {
       return si.getBody(p).accept(this);
     }
+
+    void checkNoDataUnlessInList(UnaryPattern p, String patternName) {
+      if (!inList() && si.getChildType(p.getChild()).contains(ChildType.DATA))
+        er.error("not_in_list", patternName, p.getSourceLocation());
+    }
+
+
+    void checkGroup(CompositePattern p) {
+      int simpleCount = 0;
+      boolean hadComplex = false;
+      for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
+        ChildType ct = si.getChildType((Pattern)iter.next());
+        boolean simple = ct.contains(ChildType.DATA);
+        boolean complex = ct.contains(ChildType.TEXT) || ct.contains(ChildType.ELEMENT);
+        if ((complex && simpleCount > 0) || (simple && hadComplex)) {
+          er.error("group_data_other_children",
+                   p instanceof GroupPattern ? "group" : "interleave",
+                   p.getSourceLocation());
+          return;
+        }
+        if (simple)
+          simpleCount++;
+        if (complex)
+          hadComplex = true;
+      }
+      if (simpleCount > 1) {
+        if (p instanceof InterleavePattern)
+          er.error("interleave_data", p.getSourceLocation());
+        else if (!inList())
+          er.error("group_data", p.getSourceLocation());
+      }
+    }
+
+    boolean inList() {
+      return false;
+    }
   }
+
+  class ListVisitor extends Visitor {
+    public ListVisitor(String contextKey, int flags) {
+      super(contextKey, flags);
+    }
+
+    boolean inList() {
+      return true;
+    }
+  }
+
 
   class ElementVisitor extends Visitor {
     ElementVisitor() {
