@@ -112,7 +112,9 @@ inherit ::= "inherit" "=" identifier
 
 followAnnotations ::= ("&gt;&gt;" annotationElement)*
 
-annotations ::= ("[" prefixedAnnotationAttribute* annotationElement* "]")?
+annotations ::= documentation* otherAnnotation?
+
+otherAnnotation ::= "[" prefixedAnnotationAttribute* annotationElement* "]"
 
 annotationAttribute ::= (identifier | CName) "=" literal
 
@@ -142,6 +144,7 @@ literal ::= literalSegment+
 literalSegment ::= '"' [^"]* '"' | "'" [^']* "'"
 nsName ::= NCName ":*"
 anyName ::= "*"
+documentation ::= "##" [^#xA]* (#xA [#x9#x20]* "##" [^#xA])*
 </pre>
 
 <p>The contents of consecutive <code>literalSegment</code>s in a
