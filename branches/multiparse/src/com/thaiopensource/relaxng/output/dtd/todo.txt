@@ -1,0 +1,27 @@
+Check for include loops
+Check for unsatisfiable dependency order with include
+Check for bad recursion
+Check single element type
+Warning when approximating datatypes
+Avoid duplicate namespace declarations for global attributes
+Option to generate namespace declarations only on start elements
+Recognize #FIXED attributes
+Include
+Support duplicate definitions with combine="interleave" for attlists
+Generate parameter entities to allow change of namespace prefix
+nested grammars
+a:documentation
+Check for non-deterministic content models
+option to protect element declarations with included section
+allow mixed(repeat(NOT_ALLOWED))
+Avoid unnecessary parentheses around group members
+Pretty-print content models to avoid excessively long lines
+Prettier formatting of ATTLISTs
+Handle DTD compatibility ID/IDREF/IDREFS
+Proper error reporting
+Approximate data in content by #PCDATA
+Order requiredParamEntities by definition order
+Bulletproof LocalOutputDirectory.
+Make LocalOutputDirectory preserve directory structure
+Bulletproof genEntityName
+

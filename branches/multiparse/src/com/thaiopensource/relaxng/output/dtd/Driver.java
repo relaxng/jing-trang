@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
+import java.io.Writer;
+import java.io.File;
 
 public class Driver {
   static public void main(String[] args) throws IncorrectSchemaException, SAXException, IOException {
@@ -24,8 +26,10 @@ public class Driver {
                                                          new DraconianErrorHandler()),
                                         sc,
                                         new DatatypeLibraryLoader());
-
-    new DtdOutput(null, new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(args[1])))).output(p);
-
+    p = (Pattern)p.accept(new Simplifier());
+    ErrorReporter er = new ErrorReporter(null);
+    Analysis analysis = new Analysis(p, sc, er);
+    if (!er.hadError)
+      DtdOutput.output(analysis, new LocalOutputDirectory(new File(args[1])));
   }
 }
