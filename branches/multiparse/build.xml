@@ -95,7 +95,7 @@ Class-Path: jing.jar
 
 </target>
 
-<target name="exegen" depends="compile,copy-resources,check-exe,xp-files,sax-files"
+<target name="exegen" depends="compile,copy-resources,check-exe,crimson-files"
         unless="exe-ok">
   <exec dir="." executable="${sdkjava.dir}\bin\jexegen" failonerror="yes">
     <arg value="/main:com.thaiopensource.relaxng.util.ExegenDriver"/>
@@ -106,10 +106,8 @@ Class-Path: jing.jar
     <arg value="*.*"/>
     <arg value="/base:build\classes"/>
     <arg value="*.class"/>
-    <arg value="/base:build\xp-files"/>
+    <arg value="/base:build\crimson-files"/>
     <arg value="*.*"/>
-    <arg value="/base:build\sax-files"/>
-    <arg value="org\xml\sax\*.*"/>
   </exec>
 </target>
 
@@ -120,25 +118,21 @@ Class-Path: jing.jar
   </uptodate>
 </target>
 
-<target name="xp-files" depends="check-xp-files" unless="xp-files-ok">
-  <mkdir dir="build/xp-files"/>
-  <unzip src="lib/xp.jar" dest="build/xp-files"/>
-  <delete dir="build/xp-files/META-INF"/>
+<target name="crimson-files" depends="check-crimson-files" unless="crimson-files-ok">
+  <mkdir dir="build/crimson-files"/>
+  <unzip src="lib/crimson.jar" dest="build/crimson-files"/>
+  <delete dir="build/crimson-files/org/w3c"/>
+  <delete dir="build/crimson-files/org/apache/crimson/tree"/>
+  <delete file="build/crimson-files/META-INF/services/javax.xml.parsers.DocumentBuilderFactory"/>
+  <delete file="build/crimson-files/javax/xml/parsers/DocumentBuilder.class"/>
+  <delete file="build/crimson-files/javax/xml/parsers/DocumentBuilderFactory.class"/>
+  <delete dir="build/crimson-files/org/apache/crimson/jaxp/DocumentBuilderImpl.class"/>
+  <delete dir="build/crimson-files/org/apache/crimson/jaxp/DocumentBuilderFactoryImpl.class"/>
 </target>
 
-<target name="sax-files" depends="check-sax-files" unless="sax-files-ok">
-  <mkdir dir="build/sax-files"/>
-  <unzip src="lib/sax.jar" dest="build/sax-files"/>
-</target>
-
-<target name="check-xp-files">
-  <available property="xp-files-ok"
-             file="build/xp-files/com/jclark/xml/sax/Driver.class"/>
-</target>
-
-<target name="check-sax-files">
-  <available property="sax-files-ok"
-             file="build/sax-files/org/xml/sax/Parser.class"/>
+<target name="check-crimson-files">
+  <available property="crimson-files-ok"
+             file="build/crimson-files/org/apache/crimson/parser/XMLReaderImpl.class"/>
 </target>
 
 <target name="validate" depends="jar">

@@ -1,12 +1,12 @@
+Documentation for conv
+
+Comply with Apache license in respect of jing.exe.
+
+Document new options for Jing
+
 Make SAX-based parser preserve element annotations.
 
-conv should have option to specify encoding.
-
-In conv, option to explicitly set input and output type.
-
 SAXParser and comment formatting.
-
-Usage error message for driver.
 
 Put location information in error messages into a standard format
 understandable by Emacs/Intellij.
@@ -19,8 +19,6 @@ Support for IDREF checking via JARV.
 
 In a big choice or interleave or attribute group, memoization for each
 binary pattern is inefficient.
-
-Use Crimson in jing.exe (but maybe not JDK 1.1 compatible).
 
 Option to recover from unknown datatype libraries.
 

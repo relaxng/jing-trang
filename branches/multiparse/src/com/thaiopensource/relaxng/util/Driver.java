@@ -20,9 +20,6 @@ import com.thaiopensource.util.OptionParser;
 import com.thaiopensource.util.Version;
 
 class Driver {
-
-  static private String className = null;
-  static private boolean isSax2 = true;
   static private String usageKey = "usage";
 
   static public void setUsageKey(String key) {
@@ -78,7 +75,7 @@ class Driver {
     long loadedPatternTime = -1;
     boolean hadError = false;
     try {
-      ValidationEngine engine = new ValidationEngine(createXMLReaderCreator(), eh, checkId, nonXmlSyntax);
+      ValidationEngine engine = new ValidationEngine(new Jaxp11XMLReaderCreator(), eh, checkId, nonXmlSyntax);
       InputSource in = ValidationEngine.uriOrFileInputSource(args[0]);
       if (encoding != null)
         in.setEncoding(encoding);
@@ -116,24 +113,4 @@ class Driver {
     return 0;
   }
 
-  static public void setParser(String cls, boolean b) {
-    className = cls;
-    isSax2 = b;
-  }
-
-  static XMLReaderCreator createXMLReaderCreator() {
-    if (className == null) {
-      className = System.getProperty("com.thaiopensource.relaxng.util.XMLReader");
-      if (className == null) {
-	className = System.getProperty("com.thaiopensource.relaxng.util.Parser");
-	isSax2 = false;
-      }
-    }
-    if (className == null)
-      return new Jaxp11XMLReaderCreator();
-    else if (isSax2)
-      return new Sax2XMLReaderCreator(className);
-    else
-      return new Sax1XMLReaderCreator(className);
-  }
 }
