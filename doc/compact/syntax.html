@@ -51,10 +51,10 @@ pattern ::=
   | particle ("&amp;" particle)+
   | exceptParticle
 
-particle ::= annotations? primary followAnnotations occurrence?
+particle ::= annotations primary followAnnotations occurrence?
 
 exceptParticle ::=
-  annotations? datatypeName params? "-" annotations? primary followAnnotations
+  annotations datatypeName params? "-" annotations primary followAnnotations
 
 primary ::=
   "(" pattern ")"
@@ -80,11 +80,11 @@ nameClass ::=
   | openNameClass "-" basicNameClass followAnnotations
 
 basicNameClass ::=
-  annotations? (identifier | CName)
+  annotations (identifier | CName)
   | openNameClass
-  | annotations? "(" nameClass ")"
+  | annotations "(" nameClass ")"
 
-openNameClass ::= annotations? (nsName | anyName)
+openNameClass ::= annotations (nsName | anyName)
 
 ref ::= identifierNotKeyword
 
@@ -92,27 +92,27 @@ datatypeName ::= CName | "string" | "token"
 
 datatypeValue ::= literal
 
-params ::= "{" (annotations? identifier "=" literal)+ "}"
+params ::= "{" (annotations identifier "=" literal)+ "}"
 
 grammar ::= (definition | include | div | annotationElementNotKeyword)*
 
-definition ::= annotations? subject ("=" | "|=" | "&amp;=") pattern
+definition ::= annotations subject ("=" | "|=" | "&amp;=") pattern
 
 subject ::= "start" | identifierNotKeyword
 
-include ::= annotations? "include" literal inherit? includeBody?
+include ::= annotations "include" literal inherit? includeBody?
 
 includeBody ::= "{" (definition | includeDiv | annotationElementNotKeyword)* "}"
 
-div ::= annotations? "div" "{" grammar "}"
+div ::= annotations "div" "{" grammar "}"
 
-includeDiv ::= annotations? "div" includeBody
+includeDiv ::= annotations "div" includeBody
 
 inherit ::= "inherit" "=" identifier
 
 followAnnotations ::= ("&gt;&gt;" annotationElement)*
 
-annotations ::= "[" prefixedAnnotationAttribute* annotationElement* "]"
+annotations ::= ("[" prefixedAnnotationAttribute* annotationElement* "]")?
 
 annotationAttribute ::= (identifier | CName) "=" literal
 
@@ -131,10 +131,10 @@ identifierNotKeyword ::= identifier - keyword
 identifier ::= NCName | escapedIdentifier
 
 keyword ::=
-  "attribute" | "default" | "datatypes" | "element" | "empty"
-  | "externalRef" | "grammar" | "include" | "inherit" | "list"
-  | "mixed" | "namespace" | "notAllowed" | "parent" | "start"
-  | "string" | "text" | "token"
+  "attribute" | "default" | "datatypes" | "div" | "element"
+  | "empty" | "externalRef" | "grammar" | "include" | "inherit"
+  | "list" | "mixed" | "namespace" | "notAllowed" | "parent"
+  | "start" | "string" | "text" | "token"
 
 CName ::= NCName ":" NCName
 escapedIdentifier ::= "\" NCName
