@@ -1,9 +1,5 @@
 More helpful syntax error messages with non-XML syntax parser.
 
-Implement >> annotations.
-
-Don't lose annotations after a left parenthesis.
-
 Support for IDREF checking via JARV.
 
 In a big choice or interleave or attribute group, memoization for each
