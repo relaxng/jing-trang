@@ -1352,6 +1352,15 @@ element foo { empty }
 </testCase>
 <testCase>
 <nonxml>
+<incorrect><![CDATA[
+namespace xm = "http://www.w3.org/XML/1998/namespace"
+[ xm:space = "default" ]
+element foo { empty }
+]]></incorrect>
+</nonxml>
+</testCase>
+<testCase>
+<nonxml>
 <correct><![CDATA[
 namespace xml = "http://www.w3.org/XML/1998/namespace"
 [ xml:space = "default" ]

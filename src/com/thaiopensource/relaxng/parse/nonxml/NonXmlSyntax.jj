@@ -433,8 +433,10 @@ void NamespaceDecl() :
         error("xmlns_prefix", prefix.getToken());
       else if (prefix.getString().equals("xml")) {
         if (!namespaceName.equals(xmlUri))
-          error("xml_prefix", prefix.getToken());
+          error("xml_prefix_bad_uri", prefix.getToken());
       }
+      else if (namespaceName.equals(xmlUri))
+        error("xml_uri_bad_prefix", prefix.getToken());
       else
         namespaceTable.put(prefix.getString(), namespaceName);
     }
