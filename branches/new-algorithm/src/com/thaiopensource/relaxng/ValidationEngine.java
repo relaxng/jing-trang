@@ -54,7 +54,7 @@ public class ValidationEngine {
     if (p == null)
       return false;
     idTypeMap = null;
-    if (checkId)
+    if (pb.hasIdTypes() && checkId)
       idTypeMap = new IdTypeMapBuilder(xr, p).getIdTypeMap();
     return true;
   }
