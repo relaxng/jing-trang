@@ -1,7 +1,6 @@
 package com.thaiopensource.relaxng;
 
 import org.xml.sax.SAXException;
-import org.xml.sax.Locator;
 
 import org.relaxng.datatype.Datatype;
 
@@ -23,6 +22,7 @@ public abstract class Pattern {
   static final int ATTRIBUTE_HASH_CODE = 29;
   static final int DATA_HASH_CODE = 31;
   static final int LIST_HASH_CODE = 37;
+  static final int AFTER_HASH_CODE = 41;
 
   static int combineHashCode(int hc1, int hc2, int hc3) {
     return hc1 * hc2 * hc3;
@@ -59,33 +59,8 @@ public abstract class Pattern {
     return nullable;
   }
 
-  abstract Pattern residual(PatternBuilder b, Atom a);
-
   boolean isNotAllowed() {
     return false;
-  }
-
-  void initialContentPatterns(String namespaceURI, String localName,
-			   PatternSet ts) {
-  }
-
-  Pattern combinedInitialContentPattern(PatternBuilder b,
-				  String namespaceURI,
-				  String localName,
-				  int recoveryLevel) {
-    return b.makeNotAllowed();
-  }
-
-  Pattern endAttributes(PatternBuilder b, boolean recovering) {
-    return this;
-  }
-
-  // Returns null for ambiguous content pattern.
-
-  PatternPair unambigContentPattern(PatternBuilder b,
-			      String namespaceURI,
-			      String localName) {
-    return b.makeEmptyPatternPair();
   }
 
   static final int START_CONTEXT = 0;
@@ -101,7 +76,7 @@ public abstract class Pattern {
     throws RestrictionViolationException {
   }
 
-  // Know that ip is same class, distinct object, not null
+  // Know that other is not null
   abstract boolean samePattern(Pattern other);
 
   final int patternHashCode() {
@@ -117,6 +92,7 @@ public abstract class Pattern {
   }
 
   abstract void accept(PatternVisitor visitor);
+  abstract Pattern apply(PatternFunction f);
 
   static boolean contentTypeGroupable(int ct1, int ct2) {
     if (ct1 == EMPTY_CONTENT_TYPE || ct2 == EMPTY_CONTENT_TYPE)
