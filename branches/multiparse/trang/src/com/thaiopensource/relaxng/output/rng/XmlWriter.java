@@ -29,10 +29,14 @@ class XmlWriter {
     }
   }
 
-  public XmlWriter(String lineSep, Writer w, String[] topLevelAttributes) {
+  public XmlWriter(String lineSep, Writer w, String[] topLevelAttributes, String encoding) {
     this.lineSep = lineSep;
     this.w = w;
     this.topLevelAttributes = topLevelAttributes;
+    write("<?xml version=\"1.0\" encoding=\"");
+    write(encoding);
+    write("\"?>");
+    newline();
   }
 
   void startElement(String name) {
