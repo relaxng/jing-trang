@@ -17,7 +17,7 @@ public class Schema extends Annotated {
   private Map groupMap;
   private Map attributeGroupMap;
   private Map simpleTypeMap;
-  private Set subSchemas;
+  private List subSchemas;
 
   public Schema(SourceLocation location, Annotation annotation, String uri) {
     super(location, annotation);
@@ -25,7 +25,7 @@ public class Schema extends Annotated {
     this.groupMap = new HashMap();
     this.attributeGroupMap = new HashMap();
     this.simpleTypeMap = new HashMap();
-    this.subSchemas = new HashSet();
+    this.subSchemas = new Vector();
     this.subSchemas.add(this);
   }
 
@@ -93,7 +93,15 @@ public class Schema extends Annotated {
       ((TopLevel)iter.next()).accept(visitor);
   }
 
-  public Set getSubSchemas() {
+  public List getSubSchemas() {
     return subSchemas;
+  }
+
+  public boolean equals(Object obj) {
+    return obj == this;
+  }
+
+  public int hashCode() {
+    return System.identityHashCode(this);
   }
 }
