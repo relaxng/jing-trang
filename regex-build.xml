@@ -1,6 +1,6 @@
 <project name="regex" default="jar" basedir=".">
 
-<property name="version" value="20020417"/>
+<property name="version" value="20020430"/>
 <property name="build.xml" value="build.xml"/>
 <property name="build.dir" value="build"/>
 <property name="classes.dir" value="${build.dir}/classes"/>
