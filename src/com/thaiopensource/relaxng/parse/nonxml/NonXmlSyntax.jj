@@ -110,7 +110,7 @@ public class NonXmlSyntax implements ValidationContext {
     doError(localizer.message(key, arg), tok);
   }
 
-   private void doError(String key, Token tok) {
+   private void doError(String message, Token tok) {
     if (eh != null) {
       LocatorImpl loc = new LocatorImpl();
       loc.setLineNumber(tok.beginLine);
