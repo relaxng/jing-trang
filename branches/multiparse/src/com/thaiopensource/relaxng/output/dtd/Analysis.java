@@ -466,7 +466,7 @@ class Analysis {
       boolean newResult = false;
       for (int i = 0, len = list.size(); i < len; i++) {
         Set tem = getAttributeNamespaces((Pattern)list.get(i));
-        if (tem != Collections.EMPTY_SET) {
+        if (tem != Collections.EMPTY_SET && !result.containsAll(tem)) {
           if (result == Collections.EMPTY_SET)
             result = tem;
           else {
