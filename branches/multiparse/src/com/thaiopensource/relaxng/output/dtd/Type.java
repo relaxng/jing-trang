@@ -8,7 +8,6 @@ class Type {
   static Type NOT_ALLOWED = new Type();
   static Type ATTRIBUTE_TYPE = new Type();
   static Type ATTRIBUTE_GROUP = new Type(COMPLEX_TYPE);
-  static Type EMPTY = new Type(ATTRIBUTE_GROUP);
   static Type TEXT = new Type(MIXED_ELEMENT_CLASS, COMPLEX_TYPE);
   static Type DIRECT_TEXT = new Type(TEXT);
   // an attribute group plus a model group
@@ -73,8 +72,6 @@ class Type {
       return MODEL_GROUP;
     if (t1.isA(COMPLEX_TYPE_MODEL_GROUP) && t2.isA(COMPLEX_TYPE_MODEL_GROUP))
       return COMPLEX_TYPE_MODEL_GROUP;
-    if (t1.isA(EMPTY) && t2.isA(EMPTY))
-      return EMPTY;
     if (t1.isA(ATTRIBUTE_GROUP) && t2.isA(ATTRIBUTE_GROUP))
       return ATTRIBUTE_GROUP;
     if (t1.isA(ATTRIBUTE_GROUP)) {
@@ -103,8 +100,6 @@ class Type {
   static Type interleave(Type t1, Type t2) {
     if (t1 == ERROR || t2 == ERROR)
       return ERROR;
-    if (t1.isA(EMPTY) && t2.isA(EMPTY))
-      return EMPTY;
     if (t1.isA(ATTRIBUTE_GROUP) && t2.isA(ATTRIBUTE_GROUP))
       return ATTRIBUTE_GROUP;
     if (t1.isA(ATTRIBUTE_GROUP)) {
