@@ -702,7 +702,7 @@ class DtdOutput {
     buf.setLength(0);
     Pattern content = p.getChild();
     if (!getType(content).isA(Type.ATTRIBUTE_GROUP))
-     content.accept(topLevelContentModelOutput);
+      content.accept(topLevelContentModelOutput);
     final String contentModel = buf.length() == 0 ? "EMPTY" : buf.toString();
     buf.setLength(0);
     content.accept(attributeOutput);
