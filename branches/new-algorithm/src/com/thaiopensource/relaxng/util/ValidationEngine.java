@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng;
+package com.thaiopensource.relaxng.util;
 
 import java.io.IOException;
 
@@ -8,8 +8,13 @@ import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
 import org.relaxng.datatype.DatatypeLibraryFactory;
+import com.thaiopensource.relaxng.XMLReaderCreator;
+import com.thaiopensource.relaxng.SchemaFactory;
+import com.thaiopensource.relaxng.ValidatorHandler;
+import com.thaiopensource.relaxng.Schema;
+import com.thaiopensource.relaxng.IncorrectSchemaException;
 
-public class ValidationEngine {
+class ValidationEngine {
   private XMLReaderCreator xrc;
   private XMLReader xr;
   private ErrorHandler eh;
