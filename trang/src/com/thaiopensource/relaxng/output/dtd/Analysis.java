@@ -37,6 +37,7 @@ import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.edit.AbstractVisitor;
 import com.thaiopensource.relaxng.edit.CompositePattern;
 import com.thaiopensource.relaxng.output.OutputDirectory;
+import com.thaiopensource.relaxng.output.common.ErrorReporter;
 import com.thaiopensource.xml.util.Naming;
 
 import java.util.List;
@@ -523,7 +524,7 @@ class Analysis {
     this.er = er;
     new Analyzer().analyzeContentType(schemas.getMainSchema());
     checkAttlists();
-    if (!er.hadError)
+    if (!er.getHadError())
       nsm.assignPrefixes();
   }
 
