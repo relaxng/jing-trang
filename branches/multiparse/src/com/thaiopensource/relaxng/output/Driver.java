@@ -28,6 +28,10 @@ public class Driver {
   static public int doMain(String[] args) throws IncorrectSchemaException, SAXException, IOException {
     ErrorHandlerImpl eh = new ErrorHandlerImpl();
     try {
+      if (args.length != 2) {
+        eh.printException(new SAXException(localizer.message("wrong_number_of_arguments")));
+        return 2;
+      }
       InputSource in = ValidationEngine.fileInputSource(args[0]);
       Parseable parseable;
       String ext = extension(args[0]);
