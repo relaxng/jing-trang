@@ -1,6 +1,6 @@
 Documentation for conv
 
-Comply with Apache license in respect of jing.exe.
+Comply with Apache license in respect of jing.exe; package as jing-win32.zip.
 
 Document new options for Jing
 
