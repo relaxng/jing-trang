@@ -3025,6 +3025,107 @@ foo = xsd:float*
 <incorrect>
 </incorrect>
 </compact>
+<testCase>
+<compact>
+<correct>
+element foo { attribute bar { text } | element bar { text } }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="bar"/>
+      </xs:sequence>
+      <xs:attribute name="bar"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="bar">
+    <xs:complexType mixed="true"/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo { attribute bar { text } | text }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType mixed="true">
+      <xs:attribute name="bar"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo { attribute bar { text } | xsd:float }
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:restriction base="xs:anyType">
+          <xs:simpleType>
+            <xs:union memberTypes="xs:float">
+              <xs:simpleType>
+                <xs:restriction base="xs:token">
+                  <xs:length value="0"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:union>
+          </xs:simpleType>
+          <xs:attribute name="bar"/>
+        </xs:restriction>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo {
+  (attribute bar { text }, element bar { empty })
+  | attribute baz { text }
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="bar"/>
+      </xs:sequence>
+      <xs:attribute name="bar"/>
+      <xs:attribute name="baz"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="bar">
+    <xs:complexType/>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 </testCase>
 <testCase>
 <compact>

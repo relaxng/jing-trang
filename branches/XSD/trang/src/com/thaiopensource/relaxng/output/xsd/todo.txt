@@ -6,7 +6,6 @@ Approximation warnings:
 - interleave
 - mixed text
 - list containing a group of two non-empty tokens
-- choice between children and attributes
 - attribute wildcard with content not text
 - wildcards
 - choice between elements and data
