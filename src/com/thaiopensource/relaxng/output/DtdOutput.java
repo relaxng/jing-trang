@@ -65,7 +65,6 @@ import java.util.HashSet;
 /*
 
 Tasks:
-Allow param entity containing <mixed>
 Catch bad recursion
 Check single element type
 Warning when approximating datatypes
@@ -139,6 +138,7 @@ public class DtdOutput {
   static Type DIRECT_TEXT = new Type(TEXT);
   // an attribute group plus a model group
   static Type COMPLEX_TYPE_MODEL_GROUP = new Type(COMPLEX_TYPE);
+  static Type MIXED_MODEL = new Type(COMPLEX_TYPE);
   static Type MODEL_GROUP = new Type(COMPLEX_TYPE_MODEL_GROUP);
   static Type ELEMENT_CLASS = new Type(MODEL_GROUP);
   static Type DIRECT_MULTI_ELEMENT = new Type(ELEMENT_CLASS);
@@ -554,9 +554,13 @@ public class DtdOutput {
     }
 
     public Object visitRef(RefPattern p) {
-      buf.append('(');
-      super.visitRef(p);
-      buf.append(')');
+      if (getType(p) == MIXED_MODEL)
+        super.visitRef(p);
+      else {
+        buf.append('(');
+        super.visitRef(p);
+        buf.append(')');
+      }
       return null;
     }
 
@@ -963,6 +967,8 @@ public class DtdOutput {
     buf.setLength(0);
     if (t.isA(MODEL_GROUP) || t.isA(NOT_ALLOWED) || t.isA(MIXED_ELEMENT_CLASS))
       body.accept(nestedContentModelOutput);
+    else if (t == MIXED_MODEL)
+      body.accept(topLevelContentModelOutput);
     else if (t.isA(ATTRIBUTE_GROUP))
       body.accept(attributeOutput);
     else if (t.isA(ENUM))
@@ -1056,7 +1062,7 @@ public class DtdOutput {
     if (t.isA(ELEMENT_CLASS))
       return ZERO_OR_MORE_ELEMENT_CLASS;
     if (t.isA(MIXED_ELEMENT_CLASS))
-      return COMPLEX_TYPE;
+      return MIXED_MODEL;
     return oneOrMore(t);
   }
 
@@ -1090,7 +1096,7 @@ public class DtdOutput {
 
   private static Type mixed(Type t) {
     if (t.isA(ZERO_OR_MORE_ELEMENT_CLASS))
-      return COMPLEX_TYPE;
+      return MIXED_MODEL;
     return null;
   }
 
