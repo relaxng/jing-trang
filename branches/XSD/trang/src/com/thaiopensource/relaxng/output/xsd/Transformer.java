@@ -275,7 +275,7 @@ class Transformer extends SchemaTransformer {
           if (common.contains(name))
             newChildren.add(tem);
           else
-            newChildren.add(new OptionalAttribute(a.getLocation(), null, tem));
+            newChildren.add(new OptionalAttribute(a.getLocation(), null, tem, null));
         }
       }
     }
@@ -293,7 +293,7 @@ class Transformer extends SchemaTransformer {
 
   private int chooseUseIndex(SingleAttributeUse[] uses) {
     for (int i = 0; i < uses.length; i++)
-      if (uses[i].getType() == null)
+      if (uses[i].getType() == null && uses[i].getDefaultValue() == null)
         return i;
     int firstIndex = -1;
     for (int i = 0; i < uses.length; i++) {
@@ -385,7 +385,7 @@ class Transformer extends SchemaTransformer {
       if (retainNames != null && !retainNames.contains(a.getName()))
         return AttributeGroup.EMPTY;
       if (requiredNames != null && !requiredNames.contains(a.getName()))
-        return new OptionalAttribute(a.getLocation(), null, a);
+        return new OptionalAttribute(a.getLocation(), null, a, null);
       return a;
     }
 

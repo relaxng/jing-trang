@@ -11,4 +11,7 @@ public abstract class SingleAttributeUse extends AttributeUse {
   public abstract Name getName();
   public abstract SimpleType getType();
   public abstract boolean isOptional();
+  public String getDefaultValue() {
+    return null;
+  }
 }

@@ -417,11 +417,14 @@ public class BasicOutput {
 
   class AttributeUseOutput extends SchemaWalker {
     boolean isOptional = false;
+    String defaultValue = null;
 
     public Object visitOptionalAttribute(OptionalAttribute a) {
       isOptional = true;
+      defaultValue = a.getDefaultValue();
       a.getAttribute().accept(this);
       isOptional = false;
+      defaultValue = null;
       return null;
     }
 
@@ -431,6 +434,8 @@ public class BasicOutput {
         xw.attribute("ref", qualifyName(a.getName()));
         if (!isOptional)
           xw.attribute("use", "required");
+        else if (defaultValue != null)
+          xw.attribute("default", defaultValue);
         xw.endElement();
       }
       else if (namespaceIsLocal(a.getName().getNamespaceUri())) {
@@ -438,6 +443,8 @@ public class BasicOutput {
         xw.attribute("name", a.getName().getLocalName());
         if (!isOptional)
           xw.attribute("use", "required");
+        else if (defaultValue != null)
+          xw.attribute("default", defaultValue);
         if (!a.getName().getNamespaceUri().equals(""))
           xw.attribute("form", "qualified");
         if (a.getType() != null)
