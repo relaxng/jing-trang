@@ -56,6 +56,7 @@ import java.util.Iterator;
 /*
 
 Tasks:
+Avoid duplicate with <start>
 Order for mixed
 Order param entities
 Check single element type
