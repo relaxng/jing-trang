@@ -1,7 +1,3 @@
-Include checking
-- Error for include loop.
-- Detect multiple inclusions of same schema.
-
 Provide annotation to control which target namespace is assigned to a file.
 
 Take advantage of minOccurs > 1 and 1 < maxOccurs < infinity.

@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 
 class SchemaInfo {
   private final SchemaCollection sc;
@@ -187,6 +188,9 @@ class SchemaInfo {
   }
 
   class GrammarVisitor implements ComponentVisitor {
+    private final Set openIncludes = new HashSet();
+    private final Set allIncludes = new HashSet();
+
     public Object visitDefine(DefineComponent c) {
       Define define = lookupDefine(c.getName());
       if (c.getCombine() == null) {
@@ -228,7 +232,17 @@ class SchemaInfo {
 
     public Object visitInclude(IncludeComponent c) {
       c.componentsAccept(new OverrideFinder());
-      getSchema(c.getHref()).componentsAccept(this);
+      String href = c.getHref();
+      if (openIncludes.contains(href))
+        er.error("include_loop", href, c.getSourceLocation());
+      else if (allIncludes.contains(href))
+        er.error("multiple_include", href, c.getSourceLocation());
+      else {
+        allIncludes.add(href);
+        openIncludes.add(href);
+        getSchema(href).componentsAccept(this);
+        openIncludes.remove(href);
+      }
       return null;
     }
   }
