@@ -20,8 +20,7 @@ public class Validator implements ContentHandler {
   private boolean hadError = false;
   private boolean collectingCharacters = false;
   private StringBuffer charBuf = new StringBuffer();
-
-  PrefixMapping prefixMapping = new PrefixMapping("xml", PatternReader.xmlURI, null);
+  private PrefixMapping prefixMapping = new PrefixMapping("xml", PatternReader.xmlURI, null);
 
   static private final class PrefixMapping implements ValidationContext {
     private final String prefix;
