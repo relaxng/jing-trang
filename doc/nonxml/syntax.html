@@ -92,7 +92,7 @@ datatypeValue ::= literal
 
 params ::= "{" (annotations? identifier "=" literal)+ "}"
 
-grammar ::= (definition | include | annotationElementNotKeyword)*
+grammar ::= (definition | include | div | annotationElementNotKeyword)*
 
 definition ::= annotations? subject ("=" | "|=" | "&amp;=") pattern
 
@@ -100,7 +100,11 @@ subject ::= "start" | identifierNotKeyword
 
 include ::= annotations? "include" literal inherit? includeBody?
 
-includeBody ::= "{" (definition | annotationElementNotKeyword)* "}"
+includeBody ::= "{" (definition | includeDiv | annotationElementNotKeyword)* "}"
+
+div ::= annotations "{" grammar "}"
+
+includeDiv ::= annotations includeBody
 
 inherit ::= "inherit" "=" identifier
 
@@ -669,10 +673,6 @@ start =
 </pre>
 
 <h2>Open issues</h2>
-
-<h3><code>div</code> element</h3>
-
-<p>The non-XML syntax cannot represent the <code>div</code> element.</p>
 
 <h3>Namespace declarations and <code>value</code></h3>
 
