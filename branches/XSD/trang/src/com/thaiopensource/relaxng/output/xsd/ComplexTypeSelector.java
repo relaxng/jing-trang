@@ -39,7 +39,7 @@ class ComplexTypeSelector extends SchemaWalker {
     Set referencingElements = new HashSet();
     Set referencingDefinitions = new HashSet();
     boolean nonTypeReference = false;
-    boolean extensionReference = false;
+    boolean desirable = false;
     boolean someReferencingElementsNotMixed = false;
   }
 
@@ -59,7 +59,7 @@ class ComplexTypeSelector extends SchemaWalker {
   private String parentDefinition;
   private Element parentElement;
   private int nonTypeReference = 0;
-  private int extensionReference = 0;
+  private int undesirable = 0;
   private boolean mixed = false;
   private Map complexTypeMap = new HashMap();
   private final Schema schema;
@@ -151,20 +151,20 @@ class ComplexTypeSelector extends SchemaWalker {
   }
 
   public void visitRoot(RootDeclaration decl) {
-    extensionReference++;
+    undesirable++;
     decl.getParticle().accept(this);
-    extensionReference--;
+    undesirable--;
   }
 
   public Object visitElement(Element p) {
     Element oldParentElement = parentElement;
     int oldNonTypeReference = nonTypeReference;
-    int oldExtensionReference = extensionReference;
+    int oldExtensionReference = undesirable;
     parentElement = p;
     nonTypeReference = 0;
-    extensionReference = 0;
+    undesirable = 0;
     p.getComplexType().accept(this);
-    extensionReference = oldExtensionReference;
+    undesirable = oldExtensionReference;
     nonTypeReference = oldNonTypeReference;
     parentElement = oldParentElement;
     return null;
@@ -172,9 +172,9 @@ class ComplexTypeSelector extends SchemaWalker {
 
   public Object visitSequence(ParticleSequence p) {
     Iterator iter = p.getChildren().iterator();
-    extensionReference++;
+    undesirable++;
     ((Particle)iter.next()).accept(this);
-    extensionReference--;
+    undesirable--;
     nonTypeReference++;
     while (iter.hasNext())
       ((Particle)iter.next()).accept(this);
@@ -254,9 +254,9 @@ class ComplexTypeSelector extends SchemaWalker {
 
   public Object visitRef(SimpleTypeRef t) {
     // Don't make it a complex type unless there are attributes
-    extensionReference++;
+    undesirable++;
     noteRef(simpleTypeMap, t.getName());
-    extensionReference--;
+    undesirable--;
     return null;
   }
 
@@ -271,8 +271,8 @@ class ComplexTypeSelector extends SchemaWalker {
     }
     else if (parentDefinition != null)
       refs.referencingDefinitions.add(parentDefinition);
-    if (extensionReference > 0)
-      refs.extensionReference = true;
+    if (undesirable == 0)
+      refs.desirable = true;
   }
 
   static private Refs lookupRefs(Map map, String name) {
@@ -307,7 +307,7 @@ class ComplexTypeSelector extends SchemaWalker {
     if (childRefs.nonTypeReference)
       return false;
     if (attributeGroupRefs == null) {
-      if (childRefs.extensionReference)
+      if (!childRefs.desirable)
         return false;
     }
     else if (!attributeGroupRefs.referencingDefinitions.equals(childRefs.referencingDefinitions)
