@@ -1,9 +1,11 @@
 package com.thaiopensource.relaxng.edit;
 
+import com.thaiopensource.relaxng.parse.ParsedElementAnnotation;
+
 import java.util.List;
 import java.util.Vector;
 
-public class ElementAnnotation extends AnnotationChild {
+public class ElementAnnotation extends AnnotationChild implements ParsedElementAnnotation {
   private String namespaceUri;
   private String localName;
   private String prefix;
