@@ -32,4 +32,8 @@ public class ExternalRefPattern extends Pattern {
   public void setBaseUri(String baseUri) {
     this.baseUri = baseUri;
   }
+
+  Object accept(PatternVisitor visitor) {
+    return visitor.visitExternalRef(this);
+  }
 }

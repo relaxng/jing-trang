@@ -41,4 +41,8 @@ public class DataPattern extends Pattern {
   public void setExcept(Pattern except) {
     this.except = except;
   }
+
+  Object accept(PatternVisitor visitor) {
+    return visitor.visitData(this);
+  }
 }

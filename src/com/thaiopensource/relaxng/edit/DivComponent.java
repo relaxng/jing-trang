@@ -9,4 +9,8 @@ public class DivComponent extends Component implements Container {
   public List getComponents() {
     return components;
   }
+
+  Object accept(ComponentVisitor visitor) {
+    return visitor.visitDiv(this);
+  }
 }

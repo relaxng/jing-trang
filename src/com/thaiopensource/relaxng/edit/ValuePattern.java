@@ -56,4 +56,8 @@ public class ValuePattern extends Pattern {
   public void setContext(Context context) {
     this.context = context;
   }
+
+  Object accept(PatternVisitor visitor) {
+    return visitor.visitValue(this);
+  }
 }
