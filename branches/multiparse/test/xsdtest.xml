@@ -69,6 +69,24 @@
 <invalid>P1YT</invalid>
 <invalid>P</invalid>
 <invalid>-P</invalid>
+<equiv>
+  <class>
+    <value>P1Y</value>
+    <value>P001Y</value>
+    <value>P001Y0M</value>
+    <value>P1Y0M0DT0H0M0.0S</value>
+  </class>
+  <class>
+    <value>P6M</value>
+  </class>
+  <class>
+    <value>PT6M</value>
+  </class>
+  <class>
+    <value>PT1S</value>
+    <value>PT1.0S</value>
+  </class>
+</equiv>
 </datatype>
 <datatype name="time">
 <valid>12:45:00</valid>
