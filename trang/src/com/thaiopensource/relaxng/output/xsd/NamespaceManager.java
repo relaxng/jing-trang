@@ -330,12 +330,17 @@ public class NamespaceManager {
       }
     }
     Map.Entry best = null;
+    boolean bestAmbig = false;
     for (Iterator iter = occurMap.entrySet().iterator(); iter.hasNext();) {
       Map.Entry tem = (Map.Entry)iter.next();
-      if (best == null || ((Integer)tem.getValue()).intValue() > ((Integer)best.getValue()).intValue())
+      if (best == null || ((Integer)tem.getValue()).intValue() > ((Integer)best.getValue()).intValue()) {
         best = tem;
+        bestAmbig = false;
+      }
+      else if (((Integer)tem.getValue()).intValue() == ((Integer)best.getValue()).intValue())
+        bestAmbig = true;
     }
-    if (best == null)
+    if (best == null || bestAmbig)
       return null;
     ns = (String)best.getKey();
     lookupSourceUri(sourceUri).targetNamespace = ns;
