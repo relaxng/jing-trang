@@ -1,12 +1,10 @@
-Element wildcards
-
 combine attributes
 - combine="choice" on <start>
 - combine in a single file
 - combine="interleave" (if only referenced once, expand?)
 - others
 
-May sometimes need to move AttributeWildcards to schema with different target namespace to
+May sometimes need to move Attribute/ElementWildcards to schema with different target namespace to
 take advantage of ##other.
 
 If expansion of a group causes the group to become unreferenced, then remove the group.

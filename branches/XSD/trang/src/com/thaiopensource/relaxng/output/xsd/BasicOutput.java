@@ -41,6 +41,7 @@ import com.thaiopensource.relaxng.output.xsd.basic.AttributeGroup;
 import com.thaiopensource.relaxng.output.xsd.basic.AbstractAttributeUseVisitor;
 import com.thaiopensource.relaxng.output.xsd.basic.Wildcard;
 import com.thaiopensource.relaxng.output.xsd.basic.WildcardAttribute;
+import com.thaiopensource.relaxng.output.xsd.basic.WildcardElement;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
@@ -233,6 +234,16 @@ public class BasicOutput {
       return needWrapper;
     }
 
+    private boolean startWrapperForAny() {
+      boolean needWrapper = context >= COMPLEX_TYPE_CONTEXT;
+      context = NORMAL_CONTEXT;
+      if (needWrapper)
+        xw.startElement(xs("sequence"));
+      xw.startElement(xs("any"));
+      outputOccurAttributes();
+      return needWrapper;
+    }
+
     private boolean startWrapperForGroupRef() {
       boolean needWrapper = context == NAMED_GROUP_CONTEXT;
       context = NORMAL_CONTEXT;
@@ -277,6 +288,14 @@ public class BasicOutput {
           xw.attribute("form", "unqualified");
         p.getComplexType().accept(complexTypeOutput);
       }
+      endWrapper(usedWrapper);
+      return null;
+    }
+
+    public Object visitWildcardElement(WildcardElement p) {
+      boolean usedWrapper = startWrapperForAny();
+      namespaceAttribute(p.getWildcard());
+      xw.attribute("processContents", "skip");
       endWrapper(usedWrapper);
       return null;
     }
@@ -479,6 +498,10 @@ public class BasicOutput {
     }
 
     public Object visitGroupRef(GroupRef p) {
+      return null;
+    }
+
+    public Object visitWildcardElement(WildcardElement p) {
       return null;
     }
 
