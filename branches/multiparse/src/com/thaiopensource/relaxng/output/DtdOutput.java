@@ -67,6 +67,7 @@ catch bad recursion
 nested grammars
 a:defaultValue
 a:documentation
+non-deterministic content models
 */
 public class DtdOutput {
   private ErrorHandler eh;
