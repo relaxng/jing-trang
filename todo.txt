@@ -1,3 +1,5 @@
+Put error messages in standard format understandable by Intellij.
+
 Make SAX-based parser preserve comments and element annotations.
 
 More helpful syntax error messages with non-XML syntax parser.
