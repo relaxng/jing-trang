@@ -1,11 +1,14 @@
 package com.thaiopensource.relaxng.edit;
 
+import java.util.Map;
+import java.util.HashMap;
+
 public class ValuePattern extends Pattern {
   private String datatypeLibrary;
   private String type;
   private String value;
-  private Context context;
   private String ns;
+  private final Map prefixMap = new HashMap();
 
   public ValuePattern(String datatypeLibrary, String type, String value) {
     this.datatypeLibrary = datatypeLibrary;
@@ -49,12 +52,8 @@ public class ValuePattern extends Pattern {
     this.ns = ns;
   }
 
-  public Context getContext() {
-    return context;
-  }
-
-  public void setContext(Context context) {
-    this.context = context;
+  public Map getPrefixMap() {
+    return prefixMap;
   }
 
   Object accept(PatternVisitor visitor) {
