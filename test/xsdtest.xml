@@ -406,6 +406,11 @@
 <valid>any thing at all!</valid>
 <equiv>
 <class>
+  <value/>
+  <value> </value>
+  <value>&#x9;&#xA;&#xD;&#x20;</value>
+</class>
+<class>
   <value>x&#x20;</value>
   <value>x&#xA;</value>
   <value>x&#xD;</value>
