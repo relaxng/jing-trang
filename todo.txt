@@ -1,3 +1,6 @@
+Test: anyUri, integer, base64Binary, hexBinary, language, decimal,
+date/time types.
+
 Document \x in compact syntax.
 
 Document ## in compact syntax.
