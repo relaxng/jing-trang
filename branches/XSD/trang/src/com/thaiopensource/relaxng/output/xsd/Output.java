@@ -29,6 +29,7 @@ import com.thaiopensource.relaxng.edit.MixedPattern;
 import com.thaiopensource.relaxng.edit.NameNameClass;
 import com.thaiopensource.relaxng.edit.AttributePattern;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
+import com.thaiopensource.relaxng.edit.NameClass;
 
 import java.io.IOException;
 import java.util.List;
@@ -213,11 +214,23 @@ class Output {
 
     public Object visitRef(RefPattern p) {
       startWrapper();
-      xw.startElement(xs("group"));
-      xw.attribute("ref", p.getName());
-      xw.endElement();
+      if (!outputGlobalElementRef(p)) {
+        xw.startElement(xs("group"));
+        xw.attribute("ref", p.getName());
+        xw.endElement();
+      }
       endWrapper();
       return null;
+    }
+
+    boolean outputGlobalElementRef(RefPattern p) {
+      String name = globalElementName(si.getBody(p));
+      if (name == null)
+        return false;
+      xw.startElement(xs("element"));
+      xw.attribute("ref", name);
+      xw.endElement();
+      return true;
     }
 
     public Object visitElement(ElementPattern p) {
@@ -583,10 +596,12 @@ class Output {
       ChildType ct = si.getChildType(body);
       if (name != DefineComponent.START) {
         if (ct.contains(ChildType.ELEMENT)) {
-          xw.startElement(xs("group"));
-          xw.attribute("name", c.getName());
-          body.accept(groupOutput);
-          xw.endElement();
+          if (globalElementName(body) == null) {
+            xw.startElement(xs("group"));
+            xw.attribute("name", c.getName());
+            body.accept(groupOutput);
+            xw.endElement();
+          }
         }
         else if (ct.contains(ChildType.DATA) && !ct.contains(ChildType.TEXT)) {
           xw.startElement(xs("simpleType"));
@@ -667,6 +682,18 @@ class Output {
     if (!si.getChildType(body).contains(ChildType.ATTRIBUTE))
       return;
     body.accept(attributeOutput);
+  }
+
+  String globalElementName(Pattern p) {
+    if (!(p instanceof ElementPattern))
+      return null;
+    ElementPattern ep = (ElementPattern)p;
+    if (!si.isGlobal(ep))
+      return null;
+    NameClass nc = ep.getNameClass();
+    if (!(nc instanceof NameNameClass))
+      return null;
+    return ((NameNameClass)nc).getLocalName();
   }
 
 }
