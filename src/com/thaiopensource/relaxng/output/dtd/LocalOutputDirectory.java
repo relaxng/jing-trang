@@ -42,6 +42,8 @@ class LocalOutputDirectory implements OutputDirectory {
       int dot = filename.lastIndexOf('.');
       if (dot > 0)
         return filename.substring(0, dot) + ext;
+      else
+        return filename + ext;
     }
     return filename;
   }
