@@ -7,17 +7,14 @@ class DataDerivFunction extends AbstractPatternFunction {
   private PatternBuilder builder;
   private ValidationContext vc;
   private String str;
-  private boolean blank;
-  private boolean stringDependent;
 
   DataDerivFunction(String str, ValidationContext vc, PatternBuilder builder) {
     this.str = str;
     this.vc = vc;
     this.builder = builder;
-    this.blank = isBlank(str);
   }
 
-  static private boolean isBlank(String str) {
+  static boolean isBlank(String str) {
     int len = str.length();
     for (int i = 0; i < len; i++) {
       switch (str.charAt(i)) {
@@ -38,10 +35,9 @@ class DataDerivFunction extends AbstractPatternFunction {
   }
 
   public Object caseList(ListPattern p) {
-    stringDependent = true;
     int len = str.length();
     int tokenStart = -1;
-    Pattern r = p.getOperand();
+    PatternMemo memo = builder.getPatternMemo(p.getOperand());
     for (int i = 0; i < len; i++) {
       switch (str.charAt(i)) {
       case '\r':
@@ -49,7 +45,7 @@ class DataDerivFunction extends AbstractPatternFunction {
       case ' ':
       case '\t':
 	if (tokenStart >= 0) {
-	  r = tokenDeriv(r, tokenStart, i);
+	  memo = tokenDeriv(memo, tokenStart, i);
 	  tokenStart = -1;
 	}
 	break;
@@ -60,19 +56,18 @@ class DataDerivFunction extends AbstractPatternFunction {
       }
     }
     if (tokenStart >= 0)
-      r = tokenDeriv(r, tokenStart, len);
-    if (r.isNullable())
+      memo = tokenDeriv(memo, tokenStart, len);
+    if (memo.getPattern().isNullable())
       return builder.makeEmpty();
     else
       return builder.makeNotAllowed();
   }
 
-  private Pattern tokenDeriv(Pattern p, int i, int j) {
-    return p.applyForPattern(new DataDerivFunction(str.substring(i, j), vc, builder));
+  private PatternMemo tokenDeriv(PatternMemo p, int i, int j) {
+    return p.dataDeriv(str.substring(i, j), vc);
   }
 
   public Object caseValue(ValuePattern p) {
-    stringDependent = true;
     Datatype dt = p.getDatatype();
     Object value = dt.createValue(str, vc);
     if (value != null && dt.sameValue(p.getValue(), value))
@@ -84,7 +79,6 @@ class DataDerivFunction extends AbstractPatternFunction {
   public Object caseData(DataPattern p) {
     if (p.allowsAnyString())
       return builder.makeEmpty();
-    stringDependent = true;
     if (p.getDatatype().isValid(str, vc))
       return builder.makeEmpty();
     else
@@ -92,50 +86,44 @@ class DataDerivFunction extends AbstractPatternFunction {
   }
 
   public Object caseDataExcept(DataExceptPattern p) {
-    stringDependent = true;
-    if (p.getDatatype().isValid(str, vc)
-	&& !p.getExcept().applyForPattern(this).isNullable())
-      return builder.makeEmpty();
-    else
+    Pattern tem = (Pattern)caseData(p);
+    if (tem.isNullable() && memoApply(p.getExcept()).isNullable())
       return builder.makeNotAllowed();
+    return tem;
   }
 
   public Object caseAfter(AfterPattern p) {
     Pattern p1 = p.getOperand1();
-    if (p1.applyForPattern(this).isNullable())
+    if (memoApply(p1).isNullable() || (p1.isNullable() && isBlank(str)))
       return p.getOperand2();
-    if (p1.isNullable()) {
-      stringDependent = true;
-      if (blank)
-        return p.getOperand2();
-    }
-    return getPatternBuilder().makeNotAllowed();
+    return builder.makeNotAllowed();
   }
 
   public Object caseChoice(ChoicePattern p) {
-    return builder.makeChoice(p.getOperand1().applyForPattern(this),
-			      p.getOperand2().applyForPattern(this),
+    return builder.makeChoice(memoApply(p.getOperand1()),
+			      memoApply(p.getOperand2()),
                               true);
   }
   
   public Object caseGroup(GroupPattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
-    Pattern tem = builder.makeGroup(p1.applyForPattern(this), p2);
+    Pattern tem = builder.makeGroup(memoApply(p1), p2);
     if (!p1.isNullable())
       return tem;
-    return builder.makeChoice(tem, p2.applyForPattern(this), true);
+    return builder.makeChoice(tem, memoApply(p2), true);
   }
 
   public Object caseInterleave(InterleavePattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
-    return builder.makeChoice(builder.makeInterleave(p1.applyForPattern(this), p2),
-			      builder.makeInterleave(p1, p2.applyForPattern(this)), true);
+    return builder.makeChoice(builder.makeInterleave(memoApply(p1), p2),
+			      builder.makeInterleave(p1, memoApply(p2)),
+                              true);
   }
 
   public Object caseOneOrMore(OneOrMorePattern p) {
-    return builder.makeGroup(p.getOperand().applyForPattern(this),
+    return builder.makeGroup(memoApply(p.getOperand()),
 			     builder.makeOptional(p));
   }
 
@@ -143,11 +131,7 @@ class DataDerivFunction extends AbstractPatternFunction {
     return builder.makeNotAllowed();
   }
 
-  PatternBuilder getPatternBuilder() {
-    return builder;
-  }
-
-  boolean isStringDependent() {
-    return stringDependent;
-  }
+  private Pattern memoApply(Pattern p) {
+     return builder.getPatternMemo(p).dataDeriv(str, vc).getPattern();
+   }
 }

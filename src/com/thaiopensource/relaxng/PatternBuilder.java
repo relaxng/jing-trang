@@ -24,6 +24,7 @@ final public class PatternBuilder {
   private PatternFunction mixedTextDerivFunction;
   private PatternFunction textOnlyFunction;
   private PatternFunction recoverAfterFunction;
+  private PatternFunction dataDerivTypeFunction;
 
   private Hashtable patternMemoMap = new Hashtable();
   private Hashtable choiceMap = new Hashtable();
@@ -97,6 +98,7 @@ final public class PatternBuilder {
     mixedTextDerivFunction = new MixedTextDerivFunction(this);
     textOnlyFunction = new TextOnlyFunction(this);
     recoverAfterFunction = new RecoverAfterFunction(this);
+    dataDerivTypeFunction = new DataDerivTypeFunction(this);
   }
 
   public boolean hasIdTypes() {
@@ -328,5 +330,9 @@ final public class PatternBuilder {
 
   PatternFunction getRecoverAfterFunction() {
     return recoverAfterFunction;
+  }
+
+  PatternFunction getDataDerivTypeFunction() {
+    return dataDerivTypeFunction;
   }
 }

@@ -3,6 +3,7 @@ package com.thaiopensource.relaxng;
 import java.util.Hashtable;
 
 import org.relaxng.datatype.ValidationContext;
+import org.relaxng.datatype.Datatype;
 
 final class PatternMemo {
   private final Pattern pattern;
@@ -13,10 +14,10 @@ final class PatternMemo {
   private PatternMemo memoEndTagDeriv;
   private PatternMemo memoMixedTextDeriv;
   private PatternMemo memoIgnoreMissingAttributes;
-  private PatternMemo memoDataDeriv;
   private Hashtable startTagOpenDerivMap;
   private Hashtable startTagOpenRecoverDerivMap;
   private Hashtable startAttributeDerivMap;
+  private DataDerivType memoDataDerivType;
 
   PatternMemo(Pattern pattern, PatternBuilder builder) {
     this.pattern = pattern;
@@ -170,14 +171,14 @@ final class PatternMemo {
     return tem;
   }
 
+  DataDerivType dataDerivType() {
+    if (memoDataDerivType == null)
+      memoDataDerivType = DataDerivTypeFunction.dataDerivType(builder, pattern).copy();
+    return memoDataDerivType;
+  }
+
   PatternMemo dataDeriv(String str, ValidationContext vc) {
-    if (memoDataDeriv != null)
-      return memoDataDeriv;
-    DataDerivFunction df = new DataDerivFunction(str, vc, builder);
-    PatternMemo tem = applyForPatternMemo(df);
-    if (!df.isStringDependent())
-      memoDataDeriv = tem;
-    return tem;
+    return dataDerivType().dataDeriv(builder, pattern, str, vc);
   }
 
   PatternMemo recoverAfter() {
