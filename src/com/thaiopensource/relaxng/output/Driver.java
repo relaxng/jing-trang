@@ -1,17 +1,14 @@
 package com.thaiopensource.relaxng.output;
 
-import com.thaiopensource.relaxng.parse.sax.SAXParseable;
-import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
-import com.thaiopensource.relaxng.edit.SchemaCollection;
+import com.thaiopensource.relaxng.IncorrectSchemaException;
 import com.thaiopensource.relaxng.edit.Pattern;
 import com.thaiopensource.relaxng.edit.SchemaBuilderImpl;
-import com.thaiopensource.relaxng.util.Jaxp11XMLReaderCreator;
+import com.thaiopensource.relaxng.edit.SchemaCollection;
+import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
 import com.thaiopensource.relaxng.util.DraconianErrorHandler;
 import com.thaiopensource.relaxng.util.ValidationEngine;
-import com.thaiopensource.relaxng.IncorrectSchemaException;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 import org.relaxng.datatype.helpers.DatatypeLibraryLoader;
+import org.xml.sax.SAXException;
 
 import java.io.IOException;
 
