@@ -1570,12 +1570,12 @@ foo = element foo { empty }
 </xml>
 </testCase>
 <testCase>
-<nonxml>
+<compact>
 <correct><![CDATA[
 # :--:---:-
 element foo { empty }
 ]]></correct>
-</nonxml>
+</compact>
 <xml>
 <correct>
 <!-- :- -:- - -:- -->
