@@ -13,7 +13,7 @@ class Type {
   static Type DIRECT_TEXT = new Type(TEXT);
   // an attribute group plus a model group
   static Type COMPLEX_TYPE_MODEL_GROUP = new Type(COMPLEX_TYPE);
-  static Type COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS = new Type(COMPLEX_TYPE);
+  static Type COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS = new Type(COMPLEX_TYPE_MODEL_GROUP);
   static Type MIXED_MODEL = new Type(COMPLEX_TYPE);
   static Type MODEL_GROUP = new Type(COMPLEX_TYPE_MODEL_GROUP);
   static Type ELEMENT_CLASS = new Type(MODEL_GROUP);
