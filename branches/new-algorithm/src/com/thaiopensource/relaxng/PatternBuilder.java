@@ -6,7 +6,7 @@ import java.util.Hashtable;
 import org.relaxng.datatype.Datatype;
 
 final public class PatternBuilder {
-  
+
   private static final int INIT_SIZE = 256;
   private static final float LOAD_FACTOR = 0.3f;
   private Pattern[] table;
@@ -97,7 +97,7 @@ final public class PatternBuilder {
     mixedTextDerivFunction = new MixedTextDerivFunction(this);
     textOnlyFunction = new TextOnlyFunction(this);
     recoverAfterFunction = new RecoverAfterFunction(this);
-  }    
+  }
 
   public boolean hasIdTypes() {
     return idTypes;
@@ -201,6 +201,10 @@ final public class PatternBuilder {
       AfterPattern ap2 = (AfterPattern)p2;
       if (ap1.getOperand1() == ap2.getOperand1())
         return makeAfter(ap1.getOperand1(), makeChoice(ap1.getOperand2(), ap2.getOperand2(), true));
+      if (ap1.getOperand1() == notAllowed)
+        return ap2;
+      if (ap2.getOperand1() == notAllowed)
+        return ap1;
       if (ap1.getOperand2() == ap2.getOperand2())
         return makeAfter(makeChoice(ap1.getOperand1(), ap2.getOperand1(), true), ap1.getOperand2());
     }
