@@ -4,10 +4,6 @@ Add design.html into build file.
 
 Documentation for conv
 
-Comply with Apache license in respect of jing.exe; package as jing-win32.zip.
-
-Document new options for Jing
-
 Make SAX-based parser preserve element annotations.
 
 SAXParser and comment formatting.

@@ -150,7 +150,7 @@ Class-Path: jing.jar
 
 <target name="validate" depends="jar">
   <jing rngfile="xhtml/xhtml-basic.rng">
-    <fileset dir="doc" includes="*.html"/>
+    <fileset dir="doc" includes="*.html,jing-win32-bin/*.html,jing--bin/*.html"/>
     <fileset dir="datatype-sample" includes="index.html"/>
     <fileset dir="test" includes="index.html"/>
   </jing>
@@ -258,6 +258,25 @@ Class-Path: jing.jar
     <fileset dir="doc/nonxml" includes="*.html"/>
   </copy>
   <replace file="build/jing.html" token="@VERSION@" value="${version}"/>
+  <mkdir dir="build/jing-win32-bin"/>
+  <copy todir="build/jing-win32-bin">
+    <fileset dir="doc/jing-win32-bin" includes="readme.html"/>
+  </copy>
+  <replace file="build/jing-win32-bin/readme.html" token="@VERSION@" value="${version}"/>
+  <zip zipfile="build/jing-win32-bin.zip">
+    <fileset dir="build/jing-win32-bin" includes="readme.html"/>
+    <fileset dir="doc/jing-win32-bin" includes="apache-license.txt"/>
+    <fileset dir="build" includes="jing.exe,copying.txt"/>
+  </zip>
+  <mkdir dir="build/jing-bin"/>
+  <copy todir="build/jing-bin">
+    <fileset dir="doc/jing-bin" includes="readme.html"/>
+  </copy>
+  <replace file="build/jing-bin/readme.html" token="@VERSION@" value="${version}"/>
+  <zip zipfile="build/jing-bin.zip">
+    <fileset dir="build/jing-bin" includes="readme.html"/>
+    <fileset dir="build" includes="jing.jar,copying.txt"/>
+  </zip>
   <unzip src="build/xhtml-rng.zip" dest="build"/>
   <copy file="build/xhtml-rng.zip" todir="build/xhtml"/>
   <zip zipfile="build/datatype-sample.zip">
@@ -273,7 +292,7 @@ Class-Path: jing.jar
     <fileset dir="eg" includes="testSuite.rng"/>
   </zip>
   <tar tarfile="build/relaxng.tar" basedir="build"
-    includes="jing.jar,jing.exe,jing-src.zip,copying.txt,*.html,*.xsl,*.rng,xhtml/**,datatype-sample.zip,testSuite.zip,jing-api.zip,api/**,nonxml/**"/>
+    includes="jing-win32-bin.zip,jing-bin.zip,jing-src.zip,copying.txt,*.html,*.xsl,*.rng,xhtml/**,datatype-sample.zip,testSuite.zip,jing-api.zip,api/**,nonxml/**"/>
 
   <gzip zipfile="build/relaxng.tar.gz" src="build/relaxng.tar"/>
 
