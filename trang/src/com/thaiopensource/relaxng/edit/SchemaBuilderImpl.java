@@ -359,6 +359,9 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       comment.setSourceLocation((SourceLocation)loc);
       list.add(comment);
     }
+    void add(CommentListImpl comments) {
+      list.addAll(comments.list);
+    }
   }
 
   public CommentList makeCommentList() {
@@ -431,6 +434,13 @@ public class SchemaBuilderImpl implements SchemaBuilder {
         elements.addAll(((CommentListImpl)comments).list);
     }
 
+    public void addLeadingComment(CommentList comments) throws BuildException {
+      if (this.comments == null)
+        this.comments = comments;
+      else if (comments != null)
+        ((CommentListImpl)this.comments).add((CommentListImpl)comments);
+    }
+
     void apply(Annotated subject) {
       subject.setContext(context);
       if (comments != null)
@@ -451,7 +461,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
 
   private static class ElementAnnotationBuilderImpl implements ElementAnnotationBuilder, ParsedElementAnnotation {
     private final ElementAnnotation element;
-    private final CommentList comments;
+    private CommentList comments;
 
     ElementAnnotationBuilderImpl(CommentList comments, ElementAnnotation element) {
       this.comments = comments;
@@ -483,6 +493,13 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     public void addComment(CommentList comments) throws BuildException {
       if (comments != null)
         element.getChildren().addAll(((CommentListImpl)comments).list);
+    }
+
+    public void addLeadingComment(CommentList comments) throws BuildException {
+      if (this.comments == null)
+        this.comments = comments;
+      else if (comments != null)
+        ((CommentListImpl)this.comments).add((CommentListImpl)comments);
     }
 
     void addTo(List elementList) {

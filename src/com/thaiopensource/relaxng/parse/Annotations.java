@@ -8,7 +8,8 @@ public interface Annotations {
           throws BuildException;
   void addElement(ParsedElementAnnotation ea) throws BuildException;
   /**
-   * Adds comments immediately preceding the annotated object.
+   * Adds comments following the last initial child element annotation.
    */
   void addComment(CommentList comments) throws BuildException;
+  void addLeadingComment(CommentList comments) throws BuildException;
 }

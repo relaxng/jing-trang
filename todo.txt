@@ -1,8 +1,8 @@
-Compact syntax documentation: \x; string literals.
+Compact syntax documentation: \x; string literals; ##
+
+## comments before declarations
 
 Comments embedded within strings.
-
-Support ## syntax.
 
 Compact syntax UTF-8/UTF-16 autodetection.
 
@@ -16,7 +16,7 @@ Make SAX-based parser preserve element annotations.
 SAXParser and comment formatting.
 
 Put location information in error messages into a standard format
-understandable by Emacs/Intellij.
+understandable by Emacs.
 
 More helpful syntax error messages with non-XML syntax parser.
 

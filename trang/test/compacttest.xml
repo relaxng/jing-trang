@@ -1804,6 +1804,98 @@ xsd:string { pattern = "foo" "|" "bar" }
 </correct>
 </xml>
 </testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+## This is a comment
+## about a foo.
+element foo { empty }
+]]></correct>
+</compact>
+<xml>
+<correct>
+<element name="foo" xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0" xmlns="http://relaxng.org/ns/structure/1.0">
+  <a:documentation>This is a comment
+about a foo.</a:documentation>
+  <empty/>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+## This is a formal comment
+## about a foo.
+# Regular comment.
+element foo { empty }
+]]></correct>
+</compact>
+<xml>
+<correct>
+<!-- Regular comment. -->
+<element name="foo" xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0" xmlns="http://relaxng.org/ns/structure/1.0">
+  <a:documentation>This is a formal comment
+about a foo.</a:documentation>
+  <empty/>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+## This is a formal comment
+## about a foo.
+start = element foo { empty }
+]]></correct>
+</compact>
+<xml>
+<correct>
+<grammar xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0" xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <a:documentation>This is a formal comment
+about a foo.</a:documentation>
+    <element name="foo">
+      <empty/>
+    </element>
+  </start>
+</grammar>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+# This is a regular comment
+## This is a formal comment
+element foo { empty }
+]]></correct>
+</compact>
+<xml>
+<correct>
+<!-- This is a regular comment -->
+<element name="foo" xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0" xmlns="http://relaxng.org/ns/structure/1.0">
+  <a:documentation>This is a formal comment</a:documentation>
+  <empty/>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct><![CDATA[element foo { empty }
+#]]></correct>
+</compact>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <empty/>
+</element>
+<!---->
+</correct>
+</xml>
+</testCase>
 <!--
 <testCase>
 <compact>

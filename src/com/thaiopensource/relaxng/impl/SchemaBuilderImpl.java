@@ -737,6 +737,10 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     // nothing needed
   }
 
+  public void addLeadingComment(CommentList comments) throws BuildException {
+    // nothing needed
+  }
+
   public void addText(String value, Location loc) {
     // nothing needed
   }
