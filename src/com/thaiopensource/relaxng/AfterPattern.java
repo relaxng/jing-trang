@@ -7,6 +7,17 @@ class AfterPattern extends BinaryPattern {
 	  p1,
 	  p2);
   }
+
+  Pattern combineAfter(PatternBuilder b, AfterPattern p) {
+    if (p == this)
+      return this;
+    if (p1 == p.p1)
+      return b.makeAfter(p1, b.makeChoice(p.p2, p2));
+    if (p2 == p.p2)
+      return b.makeAfter(b.makeChoice(p1, p.p1), p2);
+    return null;
+  }
+
   Object apply(PatternFunction f) {
     return f.caseAfter(this);
   }
