@@ -221,15 +221,46 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
     }
   }
 
+  private class ValidationContextImpl implements ValidationContext {
+    private ValidationContext vc;
+
+    ValidationContextImpl(ValidationContext vc) {
+      this.vc = vc;
+    }
+
+    public String resolveNamespacePrefix(String prefix) {
+      String ns = vc.resolveNamespacePrefix(prefix);
+      if (ns == INHERIT_NS) {
+        if (inheritNs.length() == 0)
+          return null;
+        return inheritNs;
+      }
+      return ns;
+    }
+
+    public String getBaseUri() {
+      return vc.getBaseUri();
+    }
+
+    public boolean isUnparsedEntity(String entityName) {
+      return vc.isUnparsedEntity(entityName);
+    }
+
+    public boolean isNotation(String notationName) {
+      return vc.isNotation(notationName);
+    }
+  }
+
   private class DataPatternBuilderImpl implements DataPatternBuilder {
     private DatatypeBuilder dtb;
     DataPatternBuilderImpl(DatatypeBuilder dtb) {
       this.dtb = dtb;
     }
+
     public void addParam(String name, String value, ValidationContext vc, Location loc, Annotations anno)
             throws BuildException {
       try {
-        dtb.addParameter(name, value, vc);
+        dtb.addParameter(name, value, new ValidationContextImpl(vc));
       }
       catch (DatatypeException e) {
 	String detail = e.getMessage();
@@ -297,7 +328,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
         DatatypeBuilder dtb = dl.createDatatypeBuilder(type);
         try {
           Datatype dt = dtb.createDatatype();
-          Object obj = dt.createValue(value, vc);
+          Object obj = dt.createValue(value, new ValidationContextImpl(vc));
           if (obj != null)
             return pb.makeValue(dt, obj);
           error("invalid_value", value, (Locator)loc);
