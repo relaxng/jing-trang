@@ -5,7 +5,7 @@ public class MixedPattern extends UnaryPattern {
     super(child);
   }
 
-  Object accept(PatternVisitor visitor) {
+  public Object accept(PatternVisitor visitor) {
     return visitor.visitMixed(this);
   }
 }

@@ -4,7 +4,7 @@ public class NotAllowedPattern extends Pattern {
   public NotAllowedPattern() {
   }
 
-  Object accept(PatternVisitor visitor) {
+  public Object accept(PatternVisitor visitor) {
     return visitor.visitNotAllowed(this);
   }
 }

@@ -20,7 +20,7 @@ public class NsNameNameClass extends OpenNameClass {
     this.ns = ns;
   }
 
-  Object accept(NameClassVisitor visitor) {
+  public Object accept(NameClassVisitor visitor) {
     return visitor.visitNsName(this);
   }
 }

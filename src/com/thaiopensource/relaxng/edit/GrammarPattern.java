@@ -10,7 +10,7 @@ public class GrammarPattern extends Pattern implements Container {
     return components;
   }
 
-  Object accept(PatternVisitor visitor) {
+  public Object accept(PatternVisitor visitor) {
     return visitor.visitGrammar(this);
   }
 }
