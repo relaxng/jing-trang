@@ -27,8 +27,6 @@ Recognize definitions being used as INCLUDE/IGNORE (as in TEI)
 Handle choice involving attributes (perhaps just special case where alphabets are disjoint)
 Handle interleave where operand is a zero or more element class
 Give warnings for definitions that had to be expanded
-Approximate datatypes during output not during analysis
 Closer approximation of choice of datatypes
 Better approximation of attribute choice
-Warning for non-null <except/>
 Support choice name classes in attributes

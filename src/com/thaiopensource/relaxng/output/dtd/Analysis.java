@@ -37,6 +37,7 @@ import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.edit.AbstractVisitor;
 import com.thaiopensource.relaxng.edit.CompositePattern;
 import com.thaiopensource.relaxng.output.OutputDirectory;
+import com.thaiopensource.xml.util.Naming;
 
 import java.util.List;
 import java.util.HashMap;
@@ -60,41 +61,6 @@ class Analysis {
   private Pattern pattern;
   private AttributeTyper attributeTyper = new AttributeTyper();
 
-  static private final String XSD = "http://www.w3.org/2001/XMLSchema-datatypes";
-
-  static private final String[] compatibleTypes = {
-    "ENTITIES",
-    "ENTITY",
-    "ID",
-    "IDREF",
-    "IDREFS",
-    "NMTOKEN",
-    "NMTOKENS"
-  };
-
-  // The numeric types aren't included here because they can have a leading +
-  static private final String[] nmtokenTypes = {
-    "boolean",
-    "hexBinary",
-    "QName",
-    "NOTATION",
-    "duration",
-    "dateTime",
-    "time",
-    "date",
-    "gYearMonth",
-    "gYear",
-    "gMonthDay",
-    "gMonth",
-    "gDay"
-  };
-
-  static private final String[] stringTypes = {
-    "string",
-    "normalizedString",
-    "token"
-  };
-
   private class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
     private ElementPattern ancestorPattern;
     private Set pendingRefs;
@@ -117,36 +83,14 @@ class Analysis {
     }
 
     public Object visitData(DataPattern p) {
-      String lib = p.getDatatypeLibrary();
-      if (lib.equals(XSD)) {
-        String type = p.getType();
-        for (int i = 0; i < compatibleTypes.length; i++)
-          if (type.equals(compatibleTypes[i]))
-            return ContentType.SIMPLE_TYPE;
-        for (int i = 0; i < nmtokenTypes.length; i++)
-          if (type.equals(nmtokenTypes[i])) {
-            p.setType("NMTOKEN");
-            er.warning("datatype_approx", type, "NMTOKEN", p.getSourceLocation());
-            return ContentType.SIMPLE_TYPE;
-          }
-        for (int i = 0; i < stringTypes.length; i++)
-          if (type.equals(stringTypes[i])) {
-            p.setType("string");
-            return ContentType.SIMPLE_TYPE;
-          }
-        er.warning("datatype_approx", type, "CDATA", p.getSourceLocation());
-        p.setType("string");
-      }
-      else if (!lib.equals("")) {
-        er.error("unrecognized_datatype_library", p.getSourceLocation());
-        return ContentType.ERROR;
-      }
       return ContentType.SIMPLE_TYPE;
     }
 
     public Object visitValue(ValuePattern p) {
-      // XXX check that NMTOKENS
-      return ContentType.ENUM;
+      Datatypes.Info info = Datatypes.getInfo(p.getDatatypeLibrary(), p.getType());
+      if (info.usesTokenEquality() && Naming.isNmtoken(p.getValue()))
+        return ContentType.ENUM;
+      return ContentType.SIMPLE_TYPE;
     }
 
     public Object visitElement(ElementPattern p) {
