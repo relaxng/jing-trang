@@ -1270,19 +1270,12 @@ public class Translator {
     String s = translate(args[0]);
     for (int i = 0, len = s.length(); i < len; i++) {
       char c = s.charAt(i);
-      switch (c) {
-      case '&':
-        System.err.print("&amp;");
-        break;
-      case '<':
-        System.err.print("\"");
-        break;
-      default:
-        if (c >= 0x20 && c <= 0x7e)
-          System.err.print(c);
-        else
-          System.err.print("&#x" + Integer.toHexString(c) + ";");
-        break;
+      if (c >= 0x20 && c <= 0x7e)
+        System.err.print(c);
+      else {
+        System.err.print("\\u");
+        for (int shift = 12; shift >= 0; shift -= 4)
+          System.err.print("0123456789ABCDEF".charAt((c >> shift) & 0xF));
       }
     }
     System.err.println();
