@@ -139,7 +139,7 @@ class SchemaInfo {
     }
 
     Object text() {
-      return ChildType.TEXT;
+      return ChildType.choice(ChildType.TEXT, ChildType.EMPTY);
     }
 
     Object data() {
@@ -171,7 +171,7 @@ class SchemaInfo {
     public Object visitAttribute(AttributePattern p) {
       if (getChildType(p.getChild()).equals(ChildType.NOT_ALLOWED))
         return ChildType.NOT_ALLOWED;
-      return ChildType.ATTRIBUTE;
+      return ChildType.choice(ChildType.ATTRIBUTE, ChildType.EMPTY);
     }
   }
 
