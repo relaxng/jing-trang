@@ -1,7 +1,5 @@
 package com.thaiopensource.datatype.xsd;
 
-import java.util.StringTokenizer;
-
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.ValidationContext;

@@ -5,6 +5,7 @@ import java.util.Enumeration;
 
 import com.thaiopensource.util.Service;
 import com.thaiopensource.datatype.xsd.regex.RegexEngine;
+import com.thaiopensource.datatype.xsd.regex.RegexSyntaxException;
 import org.xml.sax.XMLReader;
 
 import org.relaxng.datatype.DatatypeLibrary;
@@ -30,6 +31,7 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
   static private final String UNSIGNED_INT_MAX = "4294967295";
   static private final String UNSIGNED_SHORT_MAX = "65535";
   static private final String UNSIGNED_BYTE_MAX = "255";
+  static private final String LANGUAGE_PATTERN = "([a-zA-Z]{8}|[iI]-[a-zA-Z]+|[xX]-[a-zA-Z]{1,8})(-[a-zA-Z]{1,8})*";
 
   public DatatypeLibraryImpl() {
     this.regexEngine = findRegexEngine();
@@ -75,16 +77,17 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
 
     typeTable.put("NOTATION", new QNameDatatype());
 
+    typeTable.put("base64Binary", new Base64BinaryDatatype());
+    typeTable.put("hexBinary", new HexBinaryDatatype());
+    typeTable.put("anyURI", new AnyUriDatatype());
+    typeTable.put("language", new RegexDatatype(LANGUAGE_PATTERN));
+
     // Partially implemented
     DatatypeBase entityType = ncNameType;
     typeTable.put("ENTITY", entityType);
     typeTable.put("ENTITIES", list(entityType));
-    typeTable.put("language", new LanguageDatatype());
 
     // Not implemented yet
-    typeTable.put("anyURI", new StringDatatype());
-    typeTable.put("base64Binary", new StringDatatype());
-    typeTable.put("hexBinary", new StringDatatype());
     typeTable.put("duration", new StringDatatype());
     typeTable.put("dateTime", new StringDatatype());
     typeTable.put("time", new StringDatatype());
@@ -100,10 +103,20 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
     DatatypeBase base = (DatatypeBase)typeTable.get(localName);
     if (base == null)
       throw new DatatypeException();
+    if (base instanceof RegexDatatype) {
+      try {
+        ((RegexDatatype)base).compile(getRegexEngine());
+      }
+      catch (RegexSyntaxException e) {
+        throw new DatatypeException(DatatypeBuilderImpl.localizer.message("regex_internal_error", localName));
+      }
+    }
     return new DatatypeBuilderImpl(this, base);
   }
 
-  RegexEngine getRegexEngine() {
+  RegexEngine getRegexEngine() throws DatatypeException {
+    if (regexEngine == null)
+      throw new DatatypeException(DatatypeBuilderImpl.localizer.message("regex_impl_not_found"));
     return regexEngine;
   }
 

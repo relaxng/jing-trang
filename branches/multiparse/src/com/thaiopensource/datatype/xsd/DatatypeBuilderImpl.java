@@ -7,17 +7,16 @@ import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.DatatypeBuilder;
 import org.relaxng.datatype.ValidationContext;
 import org.relaxng.datatype.DatatypeException;
-import com.thaiopensource.datatype.xsd.regex.RegexEngine;
 import com.thaiopensource.datatype.xsd.regex.RegexSyntaxException;
 import com.thaiopensource.util.Localizer;
 
 class DatatypeBuilderImpl implements DatatypeBuilder {
-  static final private Localizer localizer = new Localizer(DatatypeBuilderImpl.class);
+  static final Localizer localizer = new Localizer(DatatypeBuilderImpl.class);
 
   private DatatypeBase base;
   private DatatypeLibraryImpl library;
 
-  DatatypeBuilderImpl(DatatypeLibraryImpl library, DatatypeBase base) {
+  DatatypeBuilderImpl(DatatypeLibraryImpl library, DatatypeBase base) throws DatatypeException {
     this.library = library;
     this.base = base;
   }
@@ -55,11 +54,8 @@ class DatatypeBuilderImpl implements DatatypeBuilder {
 
   private void addPatternParam(String value) throws DatatypeException {
     try {
-      RegexEngine engine = library.getRegexEngine();
-      if (engine == null)
-        error("regex_impl_not_found");
       base = new PatternRestrictDatatype(base,
-					 engine.compile(value));
+					 library.getRegexEngine().compile(value));
     }
     catch (RegexSyntaxException e) {
       int pos = e.getPosition();
