@@ -3,7 +3,7 @@ package com.thaiopensource.relaxng.output.xsd.basic;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.edit.SourceLocation;
 
-public class Attribute extends AttributeUse {
+public class Attribute extends AttributeUse implements Structure {
   private final Name name;
   private final SimpleType type;
   private final Use use;
@@ -44,4 +44,9 @@ public class Attribute extends AttributeUse {
   public Object accept(AttributeUseVisitor visitor) {
     return visitor.visitAttribute(this);
   }
+
+  public Object accept(StructureVisitor visitor) {
+    return visitor.visitAttribute(this);
+  }
+
 }
