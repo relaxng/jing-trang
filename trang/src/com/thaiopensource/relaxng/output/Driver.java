@@ -102,6 +102,7 @@ public class Driver {
         return 2;
       }
       SchemaCollection sc = SchemaBuilderImpl.parse(parseable,
+                                                    eh,
                                                     new DatatypeLibraryLoader());
       if (ext.length() == 0)
         ext = outputType;

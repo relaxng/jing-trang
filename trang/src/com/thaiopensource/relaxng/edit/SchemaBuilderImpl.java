@@ -20,12 +20,17 @@ import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.Context;
 import com.thaiopensource.relaxng.parse.CommentList;
+import com.thaiopensource.util.Localizer;
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.DatatypeLibrary;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 import org.relaxng.datatype.ValidationContext;
+import org.relaxng.datatype.DatatypeBuilder;
 import org.xml.sax.SAXException;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.Locator;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,11 +39,14 @@ import java.util.Vector;
 
 public class SchemaBuilderImpl implements SchemaBuilder {
   private final Parseable parseable;
+  private final ErrorHandler eh;
   private final Map schemas;
   private final DatatypeLibraryFactory dlf;
+  static final Localizer localizer = new Localizer(SchemaBuilderImpl.class);
 
-  private SchemaBuilderImpl(Parseable parseable, Map schemas, DatatypeLibraryFactory dlf) {
+  private SchemaBuilderImpl(Parseable parseable, ErrorHandler eh, Map schemas, DatatypeLibraryFactory dlf) {
     this.parseable = parseable;
+    this.eh = eh;
     this.schemas = schemas;
     this.dlf = dlf;
   }
@@ -142,16 +150,25 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   public ParsedPattern makeValue(String datatypeLibrary, String type, String value, Context context,
                                  String ns, Location loc, Annotations anno) throws BuildException {
     ValuePattern p = new ValuePattern(datatypeLibrary, type, value);
-    p.setContext(context.copy());
     DatatypeLibrary dl = dlf.createDatatypeLibrary(datatypeLibrary);
     if (dl != null) {
       try {
-        Datatype dt = dl.createDatatype(type);
-        if (dt.isContextDependent())
-          dt.checkValid(value, new TraceValidationContext(p.getPrefixMap(), context, ns));
+        DatatypeBuilder dtb = dl.createDatatypeBuilder(type);
+        try {
+          Datatype dt = dtb.createDatatype();
+          try {
+            dt.checkValid(value, dt.isContextDependent() ? new TraceValidationContext(p.getPrefixMap(), context, ns) : null);
+          }
+          catch (DatatypeException e) {
+            diagnoseDatatypeException("invalid_value_detail", "invalid_value", e, loc);
+          }
+        }
+        catch (DatatypeException e) {
+          diagnoseDatatypeException("invalid_params_detail", "invalid_params", e, loc);
+        }
       }
       catch (DatatypeException e) {
-        // XXX print an error
+        diagnoseDatatypeException("unsupported_datatype_detail", "unknown_datatype", e, loc);
       }
     }
     return finishPattern(p, loc, anno);
@@ -369,11 +386,28 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     return new CommentListImpl();
   }
 
-  private static class DataPatternBuilderImpl implements DataPatternBuilder {
+  private class DataPatternBuilderImpl implements DataPatternBuilder {
     private DataPattern p;
+    private DatatypeBuilder dtb = null;
 
-    DataPatternBuilderImpl(DataPattern p) {
+    DataPatternBuilderImpl(DataPattern p) throws BuildException {
       this.p = p;
+      DatatypeLibrary dl = dlf.createDatatypeLibrary(p.getDatatypeLibrary());
+      if (dl != null) {
+        try {
+          dtb = dl.createDatatypeBuilder(p.getType());
+        }
+        catch (DatatypeException e) {
+          String datatypeLibrary = p.getDatatypeLibrary();
+          String type = p.getType();
+          SourceLocation loc = p.getSourceLocation();
+          String detail = e.getMessage();
+          if (detail != null)
+            error("unsupported_datatype_detail", datatypeLibrary, type, detail, loc);
+          else
+            error("unknown_datatype", datatypeLibrary, type, loc);
+        }
+      }
     }
 
     public void addParam(String name, String value, Context context, String ns, Location loc, Annotations anno)
@@ -382,10 +416,26 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       param.setContext(context.copy());
       finishAnnotated(param, loc, anno);
       p.getParams().add(param);
+      if (dtb != null) {
+        try {
+          dtb.addParameter(name, value, context);
+        }
+        catch (DatatypeException e) {
+          diagnoseDatatypeException("invalid_param_detail", "invalid_param", e, loc);
+        }
+      }
     }
 
     public ParsedPattern makePattern(Location loc, Annotations anno)
             throws BuildException {
+      if (dtb != null) {
+        try {
+          dtb.createDatatype();
+        }
+        catch (DatatypeException e){
+          diagnoseDatatypeException("invalid_params_detail", "invalid_params", e, loc);
+        }
+      }
       return finishPattern(p, loc, anno);
     }
 
@@ -397,7 +447,9 @@ public class SchemaBuilderImpl implements SchemaBuilder {
   }
 
   public DataPatternBuilder makeDataPatternBuilder(String datatypeLibrary, String type, Location loc) throws BuildException {
-    return new DataPatternBuilderImpl(new DataPattern(datatypeLibrary, type));
+    DataPattern pattern = new DataPattern(datatypeLibrary, type);
+    pattern.setSourceLocation((SourceLocation)loc);
+    return new DataPatternBuilderImpl(pattern);
   }
 
   public ParsedPattern makeErrorPattern() {
@@ -535,11 +587,11 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     return ns;
   }
 
-  static public SchemaCollection parse(Parseable parseable, DatatypeLibraryFactory dlf)
+  static public SchemaCollection parse(Parseable parseable, ErrorHandler eh, DatatypeLibraryFactory dlf)
           throws IncorrectSchemaException, IOException, SAXException {
     try {
       SchemaCollection sc = new SchemaCollection();
-      sc.setMainSchema((Pattern)parseable.parse(new SchemaBuilderImpl(parseable, sc.getSchemas(), dlf), new ScopeImpl()));
+      sc.setMainSchema((Pattern)parseable.parse(new SchemaBuilderImpl(parseable, eh, sc.getSchemas(), dlf), new ScopeImpl()));
       return sc;
     }
     catch (IllegalSchemaException e) {
@@ -561,4 +613,64 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     }
   }
 
+  private void error(SAXParseException message) throws BuildException {
+    try {
+      if (eh != null)
+        eh.error(message);
+    }
+    catch (SAXException e) {
+      throw new BuildException(e);
+    }
+  }
+
+  private void diagnoseDatatypeException(String detailKey, String noDetailKey, DatatypeException e, Location loc)
+    throws BuildException {
+    String detail = e.getMessage();
+    if (detail != null)
+      error(detailKey, detail, (SourceLocation)loc);
+    else
+      error(noDetailKey, (SourceLocation)loc);
+  }
+
+  static private Locator makeLocator(final SourceLocation loc) {
+    return new Locator() {
+      public String getPublicId() {
+        return null;
+      }
+
+      public int getColumnNumber() {
+        if (loc == null)
+          return -1;
+        return loc.getColumnNumber();
+      }
+
+      public String getSystemId() {
+        if (loc == null)
+          return null;
+        return loc.getUri();
+      }
+
+      public int getLineNumber() {
+        if (loc == null)
+          return -1;
+        return loc.getLineNumber();
+      }
+    };
+  }
+
+  private void error(String key, SourceLocation loc) throws BuildException {
+    error(new SAXParseException(localizer.message(key), makeLocator(loc)));
+  }
+
+  private void error(String key, String arg, SourceLocation loc) throws BuildException {
+    error(new SAXParseException(localizer.message(key, arg), makeLocator(loc)));
+  }
+
+  private void error(String key, String arg1, String arg2, SourceLocation loc) throws BuildException {
+    error(new SAXParseException(localizer.message(key, arg1, arg2), makeLocator(loc)));
+  }
+
+  private void error(String key, String arg1, String arg2, String arg3, SourceLocation loc) throws BuildException {
+    error(new SAXParseException(localizer.message(key, new Object[]{arg1, arg2, arg3}), makeLocator(loc)));
+  }
 }
