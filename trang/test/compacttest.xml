@@ -1569,6 +1569,22 @@ foo = element foo { empty }
 </correct>
 </xml>
 </testCase>
+<testCase>
+<nonxml>
+<correct><![CDATA[
+# :--:---:-
+element foo { empty }
+]]></correct>
+</nonxml>
+<xml>
+<correct>
+<!-- :- -:- - -:- -->
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <empty/>
+</element>
+</correct>
+</xml>
+</testCase>
 <!--
 <testCase>
 <compact>
