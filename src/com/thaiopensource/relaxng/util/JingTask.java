@@ -31,7 +31,8 @@ public class JingTask extends Task {
   private File rngFile;
   private File src;
   private Vector filesets = new Vector();
-  private boolean checkid = false;
+  private boolean checkid = true;
+  private boolean nonxmlsyntax = false;
 
   public void execute() throws BuildException {
     if (rngFile == null)
@@ -46,7 +47,7 @@ public class JingTask extends Task {
     boolean hadError = false;
 
     try {
-      ValidationEngine engine = new ValidationEngine(new Jaxp11XMLReaderCreator(), eh, checkid);
+      ValidationEngine engine = new ValidationEngine(new Jaxp11XMLReaderCreator(), eh, checkid, nonxmlsyntax);
       if (!engine.loadSchema(ValidationEngine.fileInputSource(rngFile)))
 	hadError = true;
       else {
@@ -98,6 +99,15 @@ public class JingTask extends Task {
    */
   public void setCheckid(boolean checkid) {
     this.checkid = checkid;
+  }
+
+  /**
+   * Handles the <code>nonxmlsyntax</code> attribute.
+   *
+   * @param nonxmlsyntax the attribute value converted to a boolean
+   */
+  public void setNonxmlsyntax(boolean nonxmlsyntax) {
+    this.nonxmlsyntax = nonxmlsyntax;
   }
 
   public void addFileset(FileSet set) {
