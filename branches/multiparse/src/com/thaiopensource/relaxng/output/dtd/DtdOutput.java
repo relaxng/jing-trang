@@ -485,11 +485,14 @@ class DtdOutput {
     }
 
     public Object visitRef(RefPattern p) {
-      if (getContentType(p) == ContentType.ENUM) {
+      ContentType t = getContentType(p);
+      if (t == ContentType.ENUM) {
         buf.append('(');
         super.visitRef(p);
         buf.append(')');
       }
+      else if (t == ContentType.TEXT)
+        buf.append("CDATA");
       else
         super.visitRef(p);
       return null;
