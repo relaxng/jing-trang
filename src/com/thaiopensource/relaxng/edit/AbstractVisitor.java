@@ -16,7 +16,8 @@ public class AbstractVisitor implements ComponentVisitor, PatternVisitor, NameCl
   public Object visitComponent(Component c) {
     return null;
   }
- public Object visitElement(ElementPattern p) {
+
+  public Object visitElement(ElementPattern p) {
     return visitNameClassed(p);
   }
 
@@ -57,39 +58,39 @@ public class AbstractVisitor implements ComponentVisitor, PatternVisitor, NameCl
   }
 
   public Object visitRef(RefPattern p) {
-    return visitRef(p);
+    return visitPattern(p);
   }
 
   public Object visitParentRef(ParentRefPattern p) {
-    return visitParentRef(p);
+    return visitPattern(p);
   }
 
   public Object visitValue(ValuePattern p) {
-    return visitValue(p);
+    return visitPattern(p);
   }
 
   public Object visitData(DataPattern p) {
-    return visitData(p);
+    return visitPattern(p);
   }
 
   public Object visitMixed(MixedPattern p) {
-    return visitMixed(p);
+    return visitUnary(p);
   }
 
   public Object visitList(ListPattern p) {
-    return visitList(p);
+    return visitUnary(p);
   }
 
   public Object visitText(TextPattern p) {
-    return visitText(p);
+    return visitPattern(p);
   }
 
   public Object visitEmpty(EmptyPattern p) {
-    return visitEmpty(p);
+    return visitPattern(p);
   }
 
   public Object visitNotAllowed(NotAllowedPattern p) {
-    return visitNotAllowed(p);
+    return visitPattern(p);
   }
 
   public Object visitNameClassed(NameClassedPattern p) {
@@ -117,7 +118,7 @@ public class AbstractVisitor implements ComponentVisitor, PatternVisitor, NameCl
   }
 
   public Object visitNsName(NsNameNameClass nc) {
-    return visitNsName(nc);
+    return visitNameClass(nc);
   }
 
   public Object visitName(NameNameClass nc) {
