@@ -354,7 +354,12 @@ public class SchemaBuilderImpl implements SchemaBuilder {
 
     void apply(Annotated subject) {
       subject.getAttributeAnnotations().addAll(attributes);
-      subject.getChildElementAnnotations().addAll(elements);
+      List list;
+      if (subject.mayContainText())
+        list = subject.getFollowingElementAnnotations();
+      else
+        list = subject.getChildElementAnnotations();
+      list.addAll(elements);
     }
   }
 
