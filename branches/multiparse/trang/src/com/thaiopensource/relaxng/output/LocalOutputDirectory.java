@@ -17,7 +17,7 @@ public class LocalOutputDirectory implements OutputDirectory {
   // maps URIs to filenames
   private Map uriMap = new HashMap();
 
-  LocalOutputDirectory(File mainOutputFile, String extension, String encoding) {
+  public LocalOutputDirectory(File mainOutputFile, String extension, String encoding) {
     this.mainOutputFile = mainOutputFile;
     this.extension = extension;
     this.encoding = encoding;
