@@ -15,11 +15,11 @@ public class WildcardElement extends Particle {
   }
 
   public boolean equals(Object obj) {
-    return obj instanceof WildcardElement && ((WildcardElement)obj).wildcard.equals(wildcard);
+    return super.equals(obj) && ((WildcardElement)obj).wildcard.equals(wildcard);
   }
 
   public int hashCode() {
-    return wildcard.hashCode();
+    return super.hashCode() ^ wildcard.hashCode();
   }
 
   public Object accept(ParticleVisitor visitor) {

@@ -38,7 +38,7 @@ public class Facet extends Annotated {
   }
 
   public boolean equals(Object obj) {
-    if (!(obj instanceof Facet))
+    if (!super.equals(obj))
       return false;
     Facet other = (Facet)obj;
     return (this.name.equals(other.name)
@@ -48,6 +48,6 @@ public class Facet extends Annotated {
   }
 
   public int hashCode() {
-    return name.hashCode() ^ value.hashCode();
+    return super.hashCode() ^ name.hashCode() ^ value.hashCode();
   }
 }

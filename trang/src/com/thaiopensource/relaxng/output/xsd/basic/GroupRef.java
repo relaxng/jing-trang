@@ -19,10 +19,10 @@ public class GroupRef extends Particle {
   }
 
   public boolean equals(Object obj) {
-    return obj instanceof GroupRef && name.equals(((GroupRef)obj).name);
+    return super.equals(obj) && name.equals(((GroupRef)obj).name);
   }
 
   public int hashCode() {
-    return name.hashCode();
+    return super.hashCode() ^ name.hashCode();
   }
 }

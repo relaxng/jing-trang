@@ -17,7 +17,11 @@ public abstract class ParticleGroup extends Particle {
     return children;
   }
 
+  public boolean equals(Object obj) {
+    return super.equals(obj) && ((ParticleGroup)obj).children.equals(children);
+  }
+
   public int hashCode() {
-    return getChildren().hashCode();
+    return super.hashCode() ^ getChildren().hashCode();
   }
 }

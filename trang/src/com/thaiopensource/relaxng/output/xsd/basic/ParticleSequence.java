@@ -12,8 +12,4 @@ public class ParticleSequence extends ParticleGroup {
   public Object accept(ParticleVisitor visitor) {
     return visitor.visitSequence(this);
   }
-
-  public boolean equals(Object obj) {
-    return obj instanceof ParticleSequence && ((ParticleSequence)obj).getChildren().equals(getChildren());
-  }
 }

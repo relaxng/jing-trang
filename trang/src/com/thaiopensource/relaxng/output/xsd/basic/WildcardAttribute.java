@@ -15,11 +15,11 @@ public class WildcardAttribute extends AttributeUse {
   }
 
   public boolean equals(Object obj) {
-    return obj instanceof WildcardAttribute && ((WildcardAttribute)obj).wildcard.equals(wildcard);
+    return super.equals(obj) && ((WildcardAttribute)obj).wildcard.equals(wildcard);
   }
 
   public int hashCode() {
-    return wildcard.hashCode();
+    return super.hashCode() ^ wildcard.hashCode();
   }
 
   public Object accept(AttributeUseVisitor visitor) {

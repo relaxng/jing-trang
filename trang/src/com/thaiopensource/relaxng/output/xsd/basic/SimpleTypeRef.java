@@ -19,10 +19,10 @@ public class SimpleTypeRef extends SimpleType {
   }
 
   public boolean equals(Object obj) {
-    return obj instanceof SimpleTypeRef && ((SimpleTypeRef)obj).name.equals(name);
+    return super.equals(obj) && ((SimpleTypeRef)obj).name.equals(name);
   }
 
   public int hashCode() {
-    return name.hashCode();
+    return super.hashCode() ^ name.hashCode();
   }
 }

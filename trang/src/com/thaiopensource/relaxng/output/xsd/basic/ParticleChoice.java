@@ -12,8 +12,4 @@ public class ParticleChoice extends ParticleGroup {
   public Object accept(ParticleVisitor visitor) {
     return visitor.visitChoice(this);
   }
-
-  public boolean equals(Object obj) {
-    return obj instanceof ParticleChoice && ((ParticleChoice)obj).getChildren().equals(getChildren());
-  }
 }

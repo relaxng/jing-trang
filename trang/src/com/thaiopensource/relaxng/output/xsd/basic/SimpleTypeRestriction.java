@@ -33,13 +33,13 @@ public class SimpleTypeRestriction extends SimpleType {
   }
 
   public boolean equals(Object obj) {
-    if (!(obj instanceof SimpleTypeRestriction))
+    if (!super.equals(obj))
       return false;
     SimpleTypeRestriction other = (SimpleTypeRestriction)obj;
     return this.name.equals(other.name) && this.facets.equals(other.facets);
   }
 
   public int hashCode() {
-    return name.hashCode() ^ facets.hashCode();
+    return super.hashCode() ^ name.hashCode() ^ facets.hashCode();
   }
 }
