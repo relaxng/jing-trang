@@ -5,8 +5,6 @@ Support for IDREF checking via JARV.
 In a big choice or interleave or attribute group, memoization for each
 binary pattern is inefficient.
 
-Distinguish error for unknown datatype library and unknown datatype.
-
 Use Crimson in jing.exe (but maybe not JDK 1.1 compatible).
 
 Option to recover from unknown datatype libraries.
