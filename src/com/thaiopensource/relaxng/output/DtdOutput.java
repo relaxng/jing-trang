@@ -37,6 +37,10 @@ import com.thaiopensource.relaxng.edit.SourceLocation;
 import com.thaiopensource.relaxng.edit.TextPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
+import com.thaiopensource.relaxng.edit.AbstractVisitor;
+import com.thaiopensource.relaxng.edit.CompositePattern;
+import com.thaiopensource.relaxng.edit.Annotated;
+import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
 import com.thaiopensource.relaxng.util.DraconianErrorHandler;
 import com.thaiopensource.relaxng.util.ValidationEngine;
@@ -47,20 +51,29 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Vector;
+import java.util.Iterator;
 /*
 
 Tasks:
+Order for mixed
+Order param entities
 Check single element type
 Handle name class choice
 Non-local namespaces
 Include
-combine
+combine/suppress definition corresponding to ATTLIST
 catch bad recursion
 nested grammars
+a:defaultValue
+a:documentation
 */
 public class DtdOutput {
   private ErrorHandler eh;
   private boolean hadError = false;
+  private Grammar grammar = null;
+  private GrammarPattern grammarPattern;
+  private Type startType = ERROR;
 
   public DtdOutput(ErrorHandler eh) {
     this.eh = eh;
@@ -101,9 +114,6 @@ public class DtdOutput {
   static Type ATTRIBUTE_TYPE = new Type();
   static Type ATTRIBUTE_GROUP = new Type(COMPLEX_TYPE);
   static Type EMPTY = new Type(ATTRIBUTE_GROUP);
-  // <empty/> not via a ref
-  static Type DIRECT_EMPTY = new Type(EMPTY);
-  static Type DIRECT_NOT_ALLOWED = new Type(NOT_ALLOWED);
   static Type TEXT = new Type(MIXED_ELEMENT_CLASS, COMPLEX_TYPE);
   static Type DIRECT_TEXT = new Type(TEXT);
   static Type MODEL_GROUP = new Type(COMPLEX_TYPE);
@@ -152,19 +162,9 @@ public class DtdOutput {
   }
 
   class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
-    private final Grammar grammar;
-    private Type startType = ERROR;
-
-    Analyzer() {
-      grammar = null;
-    }
-
-    Analyzer(Grammar grammar) {
-      this.grammar = grammar;
-    }
 
     public Object visitEmpty(EmptyPattern p) {
-      return DIRECT_EMPTY;
+      return EMPTY;
     }
 
     public Object visitData(DataPattern p) {
@@ -196,7 +196,7 @@ public class DtdOutput {
     }
 
     public Object visitNotAllowed(NotAllowedPattern p) {
-      return DIRECT_NOT_ALLOWED;
+      return NOT_ALLOWED;
     }
 
     public Object visitText(TextPattern p) {
@@ -259,9 +259,10 @@ public class DtdOutput {
         error("sorry_nested_grammar", p.getSourceLocation());
         return ERROR;
       }
-      Analyzer a = new Analyzer(new Grammar(p));
-      a.visitContainer(p);
-      return a.startType;
+      grammar = new Grammar(p);
+      grammarPattern = p;
+      visitContainer(p);
+      return startType;
     }
 
     public Object visitExternalRef(ExternalRefPattern p) {
@@ -327,12 +328,463 @@ public class DtdOutput {
     }
   }
 
+  StringBuffer buf = new StringBuffer();
+  List elementQueue = new Vector();
+
+  PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
+  PatternVisitor nestedContentModelOutput = new ContentModelOutput();
+  PatternVisitor attributeOutput = new AttributeOutput();
+  AttributeOutput optionalAttributeOutput = new OptionalAttributeOutput();
+  PatternVisitor topLevelAttributeTypeOutput = new TopLevelAttributeTypeOutput();
+  PatternVisitor nestedAttributeTypeOutput = new AttributeTypeOutput();
+  GrammarOutput grammarOutput = new GrammarOutput();
+
+  class ContentModelOutput extends AbstractVisitor {
+    public Object visitElement(ElementPattern p) {
+      buf.append(((NameNameClass)p.getNameClass()).getLocalName());
+      elementQueue.add(p);
+      return null;
+    }
+
+    public Object visitRef(RefPattern p) {
+      Pattern def = grammar.getBody(p.getName());
+      if (getType(def) == DIRECT_SINGLE_ELEMENT)
+        buf.append(((NameNameClass)((ElementPattern)def).getNameClass()).getLocalName());
+      else {
+        buf.append('%');
+        buf.append(p.getName());
+        buf.append(';');
+      }
+      return null;
+    }
+
+    public Object visitZeroOrMore(ZeroOrMorePattern p) {
+      buf.append('(');
+      p.getChild().accept(nestedContentModelOutput);
+      buf.append(')');
+      buf.append('*');
+      return null;
+    }
+
+    public Object visitOneOrMore(OneOrMorePattern p) {
+      buf.append('(');
+      p.getChild().accept(nestedContentModelOutput);
+      buf.append(')');
+      buf.append('+');
+      return null;
+    }
+
+    public Object visitOptional(OptionalPattern p) {
+      buf.append('(');
+      p.getChild().accept(nestedContentModelOutput);
+      buf.append(')');
+      buf.append('?');
+      return null;
+    }
+
+    public Object visitText(TextPattern p) {
+      buf.append("#PCDATA");
+      return null;
+    }
+
+    public Object visitGroup(GroupPattern p) {
+      List list = p.getChildren();
+      boolean needSep = false;
+      final int len = list.size();
+      for (int i = 0; i < len; i++) {
+        Pattern member = (Pattern)list.get(i);
+        Type t = getType(member);
+        if (!t.isA(ATTRIBUTE_GROUP)) {
+          if (needSep)
+            buf.append(", ");
+          else
+            needSep = true;
+          buf.append('(');
+          member.accept(nestedContentModelOutput);
+          buf.append(')');
+        }
+      }
+      return null;
+    }
+
+    public Object visitInterleave(InterleavePattern p) {
+      final List list = p.getChildren();
+      for (int i = 0, len = list.size(); i < len; i++) {
+        Pattern member = (Pattern)list.get(i);
+        Type t = getType(member);
+        if (!t.isA(ATTRIBUTE_GROUP))
+          member.accept(this);
+      }
+      return null;
+    }
+
+    public Object visitChoice(ChoicePattern p) {
+      // XXX do mixed first
+      List list = p.getChildren();
+      boolean needSep = false;
+      final int len = list.size();
+      for (int i = 0; i < len; i++) {
+        Pattern member = (Pattern)list.get(i);
+        Type t = getType(member);
+        if (t != NOT_ALLOWED) {
+          if (needSep)
+            buf.append('|');
+          else
+            needSep = true;
+          // XXX need brackets unless a class
+          member.accept(nestedContentModelOutput);
+        }
+      }
+      for (int i = 0; i < len; i++) {
+        Pattern member = (Pattern)list.get(i);
+        Type t = getType(member);
+        if (t == NOT_ALLOWED) {
+          if (needSep)
+            buf.append(' ');
+          else
+            needSep = true;
+          member.accept(nestedContentModelOutput);
+        }
+      }
+      return null;
+    }
+
+    public Object visitGrammar(GrammarPattern p) {
+      return grammar.getBody(DefineComponent.START).accept(this);
+    }
+  }
+
+  class TopLevelContentModelOutput extends ContentModelOutput {
+    public Object visitRef(RefPattern p) {
+      buf.append('(');
+      super.visitRef(p);
+      buf.append(')');
+      return null;
+    }
+
+    public Object visitChoice(ChoicePattern p) {
+      buf.append('(');
+      p.accept(nestedContentModelOutput);
+      buf.append(')');
+      return null;
+    }
+
+    public Object visitText(TextPattern p) {
+      buf.append('(');
+      p.accept(nestedContentModelOutput);
+      buf.append(')');
+      return null;
+    }
+
+    public Object visitGroup(GroupPattern p) {
+      List list = p.getChildren();
+      Pattern main = null;
+      for (int i = 0, len = list.size(); i < len; i++) {
+        Pattern member = (Pattern)list.get(i);
+        if (!getType(member).isA(ATTRIBUTE_GROUP)) {
+          if (main == null)
+            main = member;
+          else {
+            buf.append('(');
+            nestedContentModelOutput.visitGroup(p);
+            buf.append(')');
+            return null;
+          }
+        }
+      }
+      if (main != null)
+        main.accept(this);
+      return null;
+    }
+
+  }
+
+  class AttributeOutput extends AbstractVisitor {
+    void indent() {
+      buf.append("\n  ");
+    }
+
+    public Object visitComposite(CompositePattern p) {
+      List list = p.getChildren();
+      for (int i = 0, len = list.size(); i < len; i++)
+        ((Pattern)list.get(i)).accept(this);
+      return null;
+    }
+
+    public Object visitRef(RefPattern p) {
+      if (getType(p).isA(ATTRIBUTE_GROUP)) {
+        indent();
+        buf.append('%');
+        buf.append(p.getName());
+        buf.append(';');
+      }
+      return null;
+    }
+
+    public Object visitAttribute(AttributePattern p) {
+      indent();
+      buf.append(((NameNameClass)p.getNameClass()).getLocalName());
+      buf.append(" ");
+      p.getChild().accept(topLevelAttributeTypeOutput);
+      buf.append(isRequired() ? " #REQUIRED" : " #IMPLIED");
+      return null;
+    }
+
+    boolean isRequired() {
+      return true;
+    }
+
+    public Object visitChoice(CompositePattern p) {
+      if (getType(p) == OPTIONAL_ATTRIBUTE)
+        optionalAttributeOutput.visitComposite(p);
+      else
+        visitPattern(p);
+      return null;
+    }
+
+    public Object visitOptional(OptionalPattern p) {
+      return p.getChild().accept(optionalAttributeOutput);
+    }
+  }
+
+  class OptionalAttributeOutput extends AttributeOutput {
+    boolean isRequired() {
+      return false;
+    }
+  }
+
+  class AttributeTypeOutput extends AbstractVisitor {
+    public Object visitText(TextPattern p) {
+      buf.append("CDATA");
+      return null;
+    }
+
+    public Object visitValue(ValuePattern p) {
+      buf.append(p.getValue());
+      return null;
+    }
+
+    public Object visitRef(RefPattern p) {
+      buf.append('%');
+      buf.append(p.getName());
+      buf.append(';');
+      return null;
+    }
+
+    public Object visitData(DataPattern p) {
+      String type = p.getType();
+      if (type.equals("string"))
+        type = "CDATA";
+      buf.append(type);
+      return null;
+    }
+
+    public Object visitChoice(ChoicePattern p) {
+      List list = p.getChildren();
+      boolean needSep = false;
+      final int len = list.size();
+      for (int i = 0; i < len; i++) {
+        Pattern member = (Pattern)list.get(i);
+        Type t = getType(member);
+        if (t != NOT_ALLOWED) {
+          if (needSep)
+            buf.append('|');
+          else
+            needSep = true;
+          member.accept(this);
+        }
+      }
+      for (int i = 0; i < len; i++) {
+        Pattern member = (Pattern)list.get(i);
+        Type t = getType(member);
+        if (t == NOT_ALLOWED) {
+          if (needSep)
+            buf.append(' ');
+          else
+            needSep = true;
+          member.accept(this);
+        }
+      }
+      return null;
+    }
+
+  }
+
+  class TopLevelAttributeTypeOutput extends AttributeTypeOutput {
+    public Object visitValue(ValuePattern p) {
+      buf.append('(');
+      super.visitValue(p);
+      buf.append(')');
+      return null;
+    }
+
+    public Object visitChoice(ChoicePattern p) {
+      if (getType(p) == ENUM) {
+        buf.append('(');
+        nestedAttributeTypeOutput.visitChoice(p);
+        buf.append(')');
+      }
+      else
+        super.visitChoice(p);
+      return null;
+    }
+
+    public Object visitRef(RefPattern p) {
+      if (getType(p) == ENUM) {
+        buf.append('(');
+        super.visitRef(p);
+        buf.append(')');
+      }
+      else
+        super.visitRef(p);
+      return null;
+    }
+
+  }
+
+  class GrammarOutput extends AbstractVisitor {
+    public void visitContainer(Container c) {
+      final List list = c.getComponents();
+      for (int i = 0, len = list.size(); i < len; i++)
+        ((Component)list.get(i)).accept(this);
+    }
+
+    public Object visitDiv(DivComponent c) {
+      visitContainer(c);
+      return null;
+    }
+
+    public Object visitDefine(DefineComponent c) {
+      if (c.getName() == DefineComponent.START) {
+        c.getBody().accept(nestedContentModelOutput);
+      }
+      else {
+        Pattern body = c.getBody();
+        Type t = getType(body);
+        if (t == DIRECT_SINGLE_ELEMENT) {
+          // XXX deal with DIRECT_CHOICE
+          outputElement((ElementPattern)body);
+        }
+        else {
+          write("<!ENTITY % ");
+          write(c.getName());
+          write(' ');
+          write('"');
+          buf.setLength(0);
+          if (t.isA(MODEL_GROUP) || t.isA(NOT_ALLOWED))
+            body.accept(nestedContentModelOutput);
+          else if (t.isA(ATTRIBUTE_GROUP))
+            body.accept(attributeOutput);
+          else if (t.isA(ENUM))
+            body.accept(nestedAttributeTypeOutput);
+          else if (t.isA(ATTRIBUTE_TYPE))
+            body.accept(topLevelAttributeTypeOutput);
+          write(buf.toString());
+          write('"');
+          write('>');
+          newline();
+        }
+      }
+      outputQueuedElements();
+      return null;
+    }
+  }
+
+  class Simplifier extends AbstractVisitor {
+    public Object visitGrammar(GrammarPattern p) {
+      return visitContainer(p);
+    }
+
+    public Object visitContainer(Container c) {
+      List list = c.getComponents();
+      for (int i = 0, len = list.size(); i < len; i++)
+        ((Component)list.get(i)).accept(this);
+      return c;
+    }
+
+    public Object visitInclude(IncludeComponent c) {
+      return visitContainer(c);
+    }
+
+    public Object visitDiv(DivComponent c) {
+      return visitContainer(c);
+    }
+
+    public Object visitDefine(DefineComponent c) {
+      c.setBody((Pattern)c.getBody().accept(this));
+      return c;
+    }
+
+    public Object visitChoice(ChoicePattern p) {
+      boolean hadEmpty = false;
+      for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
+        Pattern child = (Pattern)iter.next();
+        if (child instanceof NotAllowedPattern)
+          iter.remove();
+        else if (child instanceof EmptyPattern) {
+          hadEmpty = true;
+          iter.remove();
+        }
+      }
+      if (p.getChildren().size() == 0)
+        return copy(new NotAllowedPattern(), p);
+      Pattern tem;
+      if (p.getChildren().size() == 1)
+        tem = (Pattern)p.getChildren().get(0);
+      else
+        tem = p;
+      if (hadEmpty) {
+        tem = new OptionalPattern(tem);
+        copy(tem, p);
+      }
+      return tem;
+    }
+
+    public Object visitComposite(CompositePattern p) {
+      for (Iterator iter = p.getChildren().iterator(); iter.hasNext();) {
+        Pattern child = (Pattern)iter.next();
+        if (child instanceof EmptyPattern)
+          iter.remove();
+      }
+      if (p.getChildren().size() == 0)
+        return copy(new EmptyPattern(), p);
+      if (p.getChildren().size() == 1)
+        return (Pattern)p.getChildren().get(0);
+      return p;
+    }
+
+    public Object visitUnary(UnaryPattern p) {
+      p.setChild((Pattern)p.getChild().accept(this));
+      return p;
+    }
+
+    private Annotated copy(Annotated to, Annotated from) {
+      to.setSourceLocation(from.getSourceLocation());
+      return to;
+    }
+
+    public Object visitPattern(Pattern p) {
+      return p;
+    }
+  }
+
+  void outputQueuedElements() {
+    for (int i = 0; i < elementQueue.size(); i++)
+      outputElement((ElementPattern)elementQueue.get(i));
+    elementQueue.clear();
+  }
+
   HashMap patternTypes = new HashMap();
 
-  void analyze(Pattern p) {
+  void output(Pattern p) {
+    p = (Pattern)p.accept(new Simplifier());
     analyzeType(new Analyzer(), p);
-    if (!hadError)
-      System.err.println("OK");
+    if (!hadError) {
+      p.accept(nestedContentModelOutput);
+      outputQueuedElements();
+      if (grammarPattern != null)
+        grammarOutput.visitContainer(grammarPattern);
+    }
   }
 
   HashMap seenTable = new HashMap();
@@ -360,6 +812,50 @@ public class DtdOutput {
     return ERROR;
   }
 
+  Type getType(Pattern p) {
+    return (Type)patternTypes.get(p);
+  }
+
+
+
+  void outputElement(ElementPattern p) {
+    String name = ((NameNameClass)p.getNameClass()).getLocalName();
+    buf.setLength(0);
+    Pattern content = p.getChild();
+    if (!getType(content).isA(ATTRIBUTE_GROUP))
+     content.accept(topLevelContentModelOutput);
+    write("<!ELEMENT ");
+    write(name);
+    write(' ');
+    if (buf.length() == 0)
+      write("EMPTY");
+    else
+      write(buf.toString());
+    write('>');
+    newline();
+    buf.setLength(0);
+    content.accept(attributeOutput);
+    if (buf.length() != 0) {
+      write("<!ATTLIST ");
+      write(name);
+      write(buf.toString());
+      write('>');
+      newline();
+    }
+  }
+
+  void newline() {
+    System.out.println();
+  }
+
+  void write(String s) {
+    System.out.print(s);
+  }
+
+  void write(char c) {
+    System.out.print(c);
+  }
+
   private static Type repeat(Type t) {
     if (t == ERROR)
       return ERROR;
@@ -377,10 +873,6 @@ public class DtdOutput {
       return ERROR;
     if (t1.isA(MODEL_GROUP) && t2.isA(MODEL_GROUP))
       return MODEL_GROUP;
-    if (t1 == DIRECT_EMPTY)
-      return t2;
-    if (t2 == DIRECT_EMPTY)
-      return t1;
     if (t1.isA(EMPTY) && t2.isA(EMPTY))
       return EMPTY;
     if (t1.isA(ATTRIBUTE_GROUP) && t2.isA(ATTRIBUTE_GROUP))
@@ -397,10 +889,6 @@ public class DtdOutput {
     if ((t1 == DIRECT_TEXT && t2.isA(REPEAT_ELEMENT_CLASS))
             || (t2 == DIRECT_TEXT && t1.isA(REPEAT_ELEMENT_CLASS)))
       return COMPLEX_TYPE;
-    if (t1 == DIRECT_EMPTY)
-      return t2;
-    if (t2 == DIRECT_EMPTY)
-      return t1;
     if (t1.isA(EMPTY) && t2.isA(EMPTY))
       return EMPTY;
     if (t1.isA(ATTRIBUTE_GROUP) && t2.isA(ATTRIBUTE_GROUP))
@@ -422,8 +910,6 @@ public class DtdOutput {
       return MODEL_GROUP;
     if (t.isA(MIXED_ELEMENT_CLASS))
       return MIXED_ELEMENT_CLASS;
-    if (t == DIRECT_EMPTY)
-      return DIRECT_EMPTY;
     if (t == NOT_ALLOWED)
       return MODEL_GROUP;
     return null;
@@ -433,10 +919,6 @@ public class DtdOutput {
   private static Type choice(Type t1, Type t2) {
     if (t1 == ERROR || t2 == ERROR)
       return ERROR;
-    if (t1 == DIRECT_EMPTY)
-      return optional(t2);
-    if (t1 == DIRECT_NOT_ALLOWED)
-      return t2;
     if (t1 == NOT_ALLOWED) {
       if (t2 == NOT_ALLOWED)
         return NOT_ALLOWED;
@@ -450,7 +932,7 @@ public class DtdOutput {
         return ENUM;
       return null;
     }
-    if (t2 == DIRECT_EMPTY || t2 == DIRECT_NOT_ALLOWED || t2 == NOT_ALLOWED)
+    if (t2 == NOT_ALLOWED)
       return choice(t2, t1);
     if (t1.isA(ELEMENT_CLASS) && t2.isA(ELEMENT_CLASS))
       return ELEMENT_CLASS;
@@ -467,10 +949,6 @@ public class DtdOutput {
   private static Type ref(Type t) {
     if (t == DIRECT_TEXT)
       return TEXT;
-    if (t == DIRECT_EMPTY)
-      return EMPTY;
-    if (t == DIRECT_NOT_ALLOWED)
-      return NOT_ALLOWED;
     if (t == DIRECT_SINGLE_ATTRIBUTE)
       return ATTRIBUTE_GROUP;
     if (t == DIRECT_SINGLE_ELEMENT)
@@ -485,16 +963,12 @@ public class DtdOutput {
     System.err.println(loc.getLineNumber() + ":" + key);
   }
 
-  static public void output(Pattern p) {
-    new DtdOutput(null).analyze(p);
-  }
-
   static public void main(String[] args) throws IncorrectSchemaException, SAXException, IOException {
     SchemaCollection sc = new SchemaCollection();
     Pattern p = SchemaBuilderImpl.parse(new NonXmlParseable(ValidationEngine.fileInputSource(args[0]),
                                                             new DraconianErrorHandler()),
                                         sc,
                                         new DatatypeLibraryLoader());
-    output(p);
+    new DtdOutput(null).output(p);
   }
 }
