@@ -83,6 +83,10 @@ public class Compare {
       this.value = value;
     }
 
+    String getQName() {
+      return qName;
+    }
+
     public boolean equals(Object obj) {
       if (!(obj instanceof Attribute))
         return false;
@@ -155,22 +159,25 @@ public class Compare {
       return eventList;
     }
 
-    void flushWhitespace() {
+    void flushWhitespace(boolean endElement) {
       int len = eventList.size();
       if (len == 0)
         return;
-      if (((Event)eventList.get(len - 1)).isWhitespace())
-        eventList.remove(len - 1);
+      if (!((Event)eventList.get(len - 1)).isWhitespace())
+        return;
+      if (endElement && len > 1 && eventList.get(len - 2) instanceof StartElement)
+        return;
+      eventList.remove(len - 1);
     }
 
     public void startElement(String ns, String localName, String qName, Attributes attributes) {
-      flushWhitespace();
+      flushWhitespace(false);
       eventList.add(new StartElement(qName));
       for (int i = 0, len = attributes.getLength(); i < len; i++)
         attributeList.add(new Attribute(attributes.getQName(i), attributes.getValue(i)));
       Collections.sort(attributeList, new Comparator() {
         public int compare(Object o1, Object o2) {
-          return ((Attribute)o1).qName.compareTo(((Attribute)o2).qName);
+          return ((Attribute)o1).getQName().compareTo(((Attribute)o2).getQName());
         }
       });
       eventList.addAll(attributeList);
@@ -178,7 +185,7 @@ public class Compare {
     }
 
     public void endElement(String ns, String localName, String qName) {
-      flushWhitespace();
+      flushWhitespace(true);
       eventList.add(new EndElement());
     }
 
@@ -193,11 +200,11 @@ public class Compare {
     }
 
     public void endDocument() {
-      flushWhitespace();
+      flushWhitespace(false);
     }
 
     void comment(String value) {
-      flushWhitespace();
+      flushWhitespace(false);
       eventList.add(new Comment(value));
     }
   }
