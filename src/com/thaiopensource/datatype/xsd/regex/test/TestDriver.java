@@ -1,23 +1,22 @@
 package com.thaiopensource.datatype.xsd.regex.test;
 
-import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.Attributes;
-import org.xml.sax.Locator;
-import org.xml.sax.XMLReader;
-import org.xml.sax.InputSource;
-
-import java.io.IOException;
-import java.util.Enumeration;
-
-import com.thaiopensource.relaxng.XMLReaderCreator;
-import com.thaiopensource.relaxng.util.Jaxp11XMLReaderCreator;
-import com.thaiopensource.util.UriOrFile;
-import com.thaiopensource.util.Service;
-import com.thaiopensource.util.Utf16;
 import com.thaiopensource.datatype.xsd.regex.Regex;
 import com.thaiopensource.datatype.xsd.regex.RegexEngine;
 import com.thaiopensource.datatype.xsd.regex.RegexSyntaxException;
+import com.thaiopensource.util.Service;
+import com.thaiopensource.util.UriOrFile;
+import com.thaiopensource.util.Utf16;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.Locator;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.util.Enumeration;
 
 public class TestDriver extends DefaultHandler {
   private final StringBuffer buf = new StringBuffer();
@@ -27,13 +26,15 @@ public class TestDriver extends DefaultHandler {
   private Locator loc;
   private RegexEngine engine;
 
-  static public void main(String[] args) throws SAXException, IOException {
+  static public void main(String[] args) throws SAXException, IOException, ParserConfigurationException {
     if (args.length != 2) {
       System.err.println("usage: TestDriver class testfile");
       System.exit(2);
     }
-    XMLReaderCreator xrc = new Jaxp11XMLReaderCreator();
-    XMLReader xr = xrc.createXMLReader();
+    SAXParserFactory factory = SAXParserFactory.newInstance();
+    factory.setNamespaceAware(true);
+    factory.setValidating(false);
+    XMLReader xr = factory.newSAXParser().getXMLReader();
 
     Enumeration e = new Service(RegexEngine.class).getProviders();
     RegexEngine engine;
