@@ -74,10 +74,10 @@ class Driver {
     boolean hadError = false;
     try {
       ValidationEngine engine = new ValidationEngine(createXMLReaderCreator(), eh, checkId, nonXmlSyntax);
-      if (engine.loadSchema(ValidationEngine.fileInputSource(args[0]))) {
+      if (engine.loadSchema(ValidationEngine.uriOrFileInputSource(args[0]))) {
         loadedPatternTime = System.currentTimeMillis();
 	for (int i = 1; i < args.length; i++) {
-	  if (!engine.validate(ValidationEngine.fileInputSource(args[i])))
+	  if (!engine.validate(ValidationEngine.uriOrFileInputSource(args[i])))
 	    hadError = true;
 	}
       }

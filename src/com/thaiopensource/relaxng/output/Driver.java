@@ -12,6 +12,7 @@ import com.thaiopensource.relaxng.util.ErrorHandlerImpl;
 import com.thaiopensource.relaxng.util.Jaxp11XMLReaderCreator;
 import com.thaiopensource.relaxng.util.ValidationEngine;
 import com.thaiopensource.util.Localizer;
+import com.thaiopensource.util.UriOrFile;
 import org.relaxng.datatype.helpers.DatatypeLibraryLoader;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -32,7 +33,7 @@ public class Driver {
         eh.printException(new SAXException(localizer.message("wrong_number_of_arguments")));
         return 2;
       }
-      InputSource in = ValidationEngine.fileInputSource(args[0]);
+      InputSource in = new InputSource(UriOrFile.toUri(args[0]));
       Parseable parseable;
       String ext = extension(args[0]);
       if (ext.equalsIgnoreCase(".rng"))
