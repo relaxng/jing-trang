@@ -82,21 +82,20 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
     typeTable.put("anyURI", new AnyUriDatatype());
     typeTable.put("language", new RegexDatatype(LANGUAGE_PATTERN));
 
+    typeTable.put("dateTime", new DateTimeDatatype("Y-M-DTt"));
+    typeTable.put("time", new DateTimeDatatype("t"));
+    typeTable.put("date", new DateTimeDatatype("Y-M-D"));
+    typeTable.put("gYearMonth", new DateTimeDatatype("Y-M"));
+    typeTable.put("gYear", new DateTimeDatatype("Y"));
+    typeTable.put("gMonthDay", new DateTimeDatatype("--M-D"));
+    typeTable.put("gDay", new DateTimeDatatype("---D"));
+    typeTable.put("gMonth", new DateTimeDatatype("--M"));
+
     // Partially implemented
     DatatypeBase entityType = ncNameType;
     typeTable.put("ENTITY", entityType);
     typeTable.put("ENTITIES", list(entityType));
-
-    typeTable.put("dateTime", new DateTimeDatatype());
-    // Not implemented yet
-    typeTable.put("duration", new StringDatatype());
-    typeTable.put("time", new StringDatatype());
-    typeTable.put("date", new StringDatatype());
-    typeTable.put("gYearMonth", new StringDatatype());
-    typeTable.put("gYear", new StringDatatype());
-    typeTable.put("gMonthDay", new StringDatatype());
-    typeTable.put("gDay", new StringDatatype());
-    typeTable.put("gMonth", new StringDatatype());
+    typeTable.put("duration", new DurationDatatype());
   }
 
   public DatatypeBuilder createDatatypeBuilder(String localName) throws DatatypeException {

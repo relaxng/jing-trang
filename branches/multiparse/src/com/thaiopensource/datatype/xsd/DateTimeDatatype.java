@@ -8,13 +8,52 @@ import java.util.Calendar;
 import java.util.Date;
 
 class DateTimeDatatype extends RegexDatatype implements OrderRelation {
-  static private final String DATE_PATTERN = "([1-9][0-9]*)?[0-9]{4}-[0-9]{2}-[0-9]{2}";
-  static private final String TIME_PATTERN = "[0-9]{2}:[0-9]{2}:[0-9]{2}";
+  static private final String YEAR_PATTERN = "-?([1-9][0-9]*)?[0-9]{4}";
+  static private final String MONTH_PATTERN = "[0-9]{2}";
+  static private final String DAY_OF_MONTH_PATTERN = "[0-9]{2}";
+  static private final String TIME_PATTERN = "[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]*)?";
   static private final String TZ_PATTERN = "(Z|[+\\-]([01][0-9]|2[0-3]):[0-5][0-9])?";
-  static private final String PATTERN = "-?" + DATE_PATTERN + "T" + TIME_PATTERN + TZ_PATTERN;
 
-  DateTimeDatatype() {
-    super(PATTERN);
+  private final String template;
+
+  /**
+   * The argument specifies the lexical representation accepted:
+   * Y specifies a year with optional preceding minus
+   * M specifies a two digit month
+   * D specifies a two digit day of month
+   * t specifies a time (hh:mm:ss.sss)
+   * any other character stands for itself.
+   * All lexical representations are implicitly followed by an optional time zone.
+   */
+  DateTimeDatatype(String template) {
+    super(makePattern(template));
+    this.template = template;
+  }
+
+  static private String makePattern(String template) {
+    StringBuffer pattern = new StringBuffer();
+    for (int i = 0, len = template.length(); i < len; i++) {
+      char c = template.charAt(i);
+      switch (c) {
+      case 'Y':
+        pattern.append(YEAR_PATTERN);
+        break;
+      case 'M':
+        pattern.append(MONTH_PATTERN);
+        break;
+      case 'D':
+        pattern.append(DAY_OF_MONTH_PATTERN);
+        break;
+      case 't':
+        pattern.append(TIME_PATTERN);
+        break;
+      default:
+        pattern.append(c);
+        break;
+      }
+    }
+    pattern.append(TZ_PATTERN);
+    return pattern.toString();
   }
 
   boolean allowsValue(String str, ValidationContext vc) {
@@ -61,40 +100,68 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
   // XXX Check leap second validity?
   // XXX Allow 24:00:00?
   Object getValue(String str, ValidationContext vc) {
-    int yearStartIndex = str.charAt(0) == '-' ? 1 : 0;
-    int yearEndIndex = str.indexOf('-', yearStartIndex);
-    int secondFractionStartIndex = yearEndIndex + 15;
+    boolean negative = false;
+    int year = 2000; // any leap year will do
+    int month = 1;
+    int day = 1;
+    int hours = 0;
+    int minutes = 0;
+    int seconds = 0;
+    int milliseconds = 0;
+    int pos = 0;
     int len = str.length();
-    int timeZoneStartIndex = secondFractionStartIndex;
-    for (; timeZoneStartIndex < len; timeZoneStartIndex++) {
-      char c = str.charAt(timeZoneStartIndex);
-      if (c == '+' || c == '-' || c == 'Z')
+    for (int templateIndex = 0, templateLength = template.length();
+         templateIndex < templateLength;
+         templateIndex++) {
+      char templateChar = template.charAt(templateIndex);
+      switch (templateChar) {
+      case 'Y':
+        negative = str.charAt(pos) == '-';
+        int yearStartIndex = negative ? pos + 1 : pos;
+        pos = skipDigits(str, yearStartIndex);
+        try {
+          year = Integer.parseInt(str.substring(yearStartIndex, pos));
+        }
+        catch (NumberFormatException e) {
+          return null;
+        }
         break;
+      case 'M':
+        month = parse2Digits(str, pos);
+        pos += 2;
+        break;
+      case 'D':
+        day = parse2Digits(str, pos);
+        pos += 2;
+        break;
+      case 't':
+        hours = parse2Digits(str, pos);
+        pos += 3;
+        minutes = parse2Digits(str, pos);
+        pos += 3;
+        seconds = parse2Digits(str, pos);
+        pos += 2;
+        if (pos < len && str.charAt(pos) == '.') {
+          int end = skipDigits(str, ++pos);
+          for (int j = 0; j < 3; j++) {
+            milliseconds *= 10;
+            if (pos < end)
+              milliseconds += str.charAt(pos++) - '0';
+          }
+          pos = end;
+        }
+        break;
+      default:
+        pos++;
+        break;
+      }
     }
-    boolean hasTimeZone = timeZoneStartIndex < len;
+    boolean hasTimeZone = pos < len;
     String gmtOffset;
-    if (hasTimeZone && str.charAt(timeZoneStartIndex) != 'Z')
-      gmtOffset = str.substring(timeZoneStartIndex);
+    if (hasTimeZone && str.charAt(pos) != 'Z')
+      gmtOffset = str.substring(pos);
     else
       gmtOffset = "+0";
-    GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT" + gmtOffset));
-    cal.setLenient(false);
-    cal.setGregorianChange(new Date(Long.MIN_VALUE));
-    cal.clear();
-    cal.set(Calendar.ERA, yearStartIndex == 0 ? GregorianCalendar.AD : GregorianCalendar.BC);
-
-    int milliseconds = 0;
-    if (secondFractionStartIndex < len && str.charAt(secondFractionStartIndex) == '.') {
-      for (int i = 0; i < 3; i++) {
-        milliseconds *= 10;
-        if (secondFractionStartIndex + i + 1 < timeZoneStartIndex)
-          milliseconds += str.charAt(secondFractionStartIndex) - '0';
-      }
-      if (secondFractionStartIndex + 4 < timeZoneStartIndex
-              && str.charAt(secondFractionStartIndex) >= '6')
-        milliseconds++;
-    }
-    int seconds = parse2Digits(str, yearEndIndex + 13);
     int leapMilliseconds;
     if (seconds == 60) {
       leapMilliseconds = milliseconds + 1;
@@ -103,19 +170,16 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
     }
     else
       leapMilliseconds = 0;
+    GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT" + gmtOffset));
+    cal.setLenient(false);
+    cal.setGregorianChange(new Date(Long.MIN_VALUE));
+    cal.clear();
+    cal.set(Calendar.ERA, negative ? GregorianCalendar.BC : GregorianCalendar.AD);
+    // months in ISO8601 start with 1; months in Java start with 0
+    cal.set(year, month - 1, day, hours, minutes, seconds);
+    cal.set(Calendar.MILLISECOND, milliseconds);
     try {
-      cal.set(Integer.parseInt(str.substring(yearStartIndex, yearEndIndex)),  // year
-              // months in Java start from 0, in ISO 8601 from 1
-              parse2Digits(str, yearEndIndex + 1) - 1, // month
-              parse2Digits(str, yearEndIndex + 4), // day of month
-              parse2Digits(str, yearEndIndex + 7), // hour
-              parse2Digits(str, yearEndIndex + 10), // minute
-              seconds); // second
-      cal.set(Calendar.MILLISECOND, milliseconds);
       return new DateTime(cal.getTime(), leapMilliseconds, hasTimeZone);
-    }
-    catch (NumberFormatException e) {
-      return null;
     }
     catch (IllegalArgumentException e) {
       return null;
@@ -124,6 +188,14 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
 
   static private int parse2Digits(String str, int i) {
     return (str.charAt(i) - '0')*10 + (str.charAt(i + 1) - '0');
+  }
+
+  static private int skipDigits(String str, int i) {
+    for (int len = str.length(); i < len; i++) {
+      if ("0123456789".indexOf(str.charAt(i)) < 0)
+        break;
+    }
+    return i;
   }
 
   OrderRelation getOrderRelation() {
