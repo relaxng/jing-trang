@@ -1123,7 +1123,9 @@ public class Translator {
       throw makeException("should_quote", new String(new char[]{curChar}));
     }
     CharClass tem;
-    if (Utf16.isSurrogate1(curChar)) {
+    if (Utf16.isSurrogate(curChar)) {
+      if (!Utf16.isSurrogate1(curChar))
+        throw makeException("invalid_surrogate");
       char c1 = curChar;
       advance();
       if (!Utf16.isSurrogate2(curChar))
