@@ -20,6 +20,7 @@ Proper error reporting
 Approximate data in content by #PCDATA
 Order requiredParamEntities by definition order
 Bulletproof LocalOutputDirectory.
+Customizable indentation.
 Make LocalOutputDirectory preserve directory structure
 Bulletproof genEntityName
 Support <list>
