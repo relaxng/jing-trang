@@ -99,7 +99,7 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
       if (type == null || type != a.getType())
         return new Attribute(a.getLocation(), a.getName(), type, a.getUse());
     }
-    return type;
+    return a;
   }
 
   public Object visitAttributeGroupRef(AttributeGroupRef a) {
@@ -128,7 +128,7 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     return t;
   }
 
-  List transformAttributeUseList(List list) {
+  public List transformAttributeUseList(List list) {
     List transformed = null;
     for (int i = 0, len = list.size(); i < len; i++) {
       Object obj = ((AttributeUse)list.get(i)).accept(this);
@@ -146,7 +146,7 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     return transformed;
   }
 
-  List transformParticleList(List list) {
+  public List transformParticleList(List list) {
     List transformed = null;
     for (int i = 0, len = list.size(); i < len; i++) {
       Object obj = ((Particle)list.get(i)).accept(this);
@@ -164,7 +164,7 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     return transformed;
   }
 
-  List transformSimpleTypeList(List list) {
+  public List transformSimpleTypeList(List list) {
     List transformed = null;
     for (int i = 0, len = list.size(); i < len; i++) {
       Object obj = ((SimpleType)list.get(i)).accept(this);
