@@ -110,4 +110,8 @@ public class ErrorReporter {
                                  loc.getLineNumber(),
                                  loc.getColumnNumber());
   }
+
+  public Localizer getLocalizer() {
+    return localizer;
+  }
 }

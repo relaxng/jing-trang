@@ -19,10 +19,13 @@ public class XsdOutputFormat implements OutputFormat {
       if (!er.getHadError()) {
         RefChecker.check(si, er);
         if (!er.getHadError()) {
-          Schema schema = BasicBuilder.buildBasicSchema(si, er);
+          RestrictionsChecker.check(si, er);
           if (!er.getHadError()) {
-            new Transformer(schema).transform();
-            BasicOutput.output(schema, new PrefixManager(si), od, er);
+            Schema schema = BasicBuilder.buildBasicSchema(si, er);
+            if (!er.getHadError()) {
+              new Transformer(schema).transform();
+              BasicOutput.output(schema, new PrefixManager(si), od, er);
+            }
           }
         }
       }

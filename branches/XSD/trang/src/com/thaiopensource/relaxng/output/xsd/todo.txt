@@ -1,4 +1,8 @@
-Check for RNG contextual constraints
+Check for string sequencing constraints
+
+Check for duplicate attributes.
+
+Check for violations of interleave restriction.
 
 Approximation warnings:
 - interleave

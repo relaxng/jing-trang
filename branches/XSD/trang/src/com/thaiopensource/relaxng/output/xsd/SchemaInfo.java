@@ -301,6 +301,10 @@ class SchemaInfo {
     return ct;
   }
 
+  Pattern getStart() {
+    return lookupDefine(DefineComponent.START).pattern;
+  }
+
   Pattern getBody(RefPattern p) {
     return lookupDefine(p.getName()).pattern;
   }
