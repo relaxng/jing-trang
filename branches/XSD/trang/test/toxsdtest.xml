@@ -1482,6 +1482,98 @@ element eg:foo { attribute * - (eg:*|local:*) { text }* }
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+namespace eg1 = "http://www.example.com/1"
+namespace eg2 = "http://www.example.com/2"
+
+start = element foo { eg1, eg2 }
+
+eg1 = attribute eg1:* { text } *
+eg2 = attribute eg2:* { text } *
+
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:anyAttribute namespace="http://www.example.com/2 http://www.example.com/1" processContents="skip"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:attributeGroup name="eg1">
+    <xs:anyAttribute namespace="http://www.example.com/1" processContents="skip"/>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="eg2">
+    <xs:anyAttribute namespace="http://www.example.com/2" processContents="skip"/>
+  </xs:attributeGroup>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+namespace eg1 = "http://www.example.com/1"
+namespace eg2 = "http://www.example.com/2"
+
+start = element foo { eg1, eg2 }
+
+eg1 = attribute eg1:*|eg2:* { text } *
+eg2 = attribute eg2:* { text } *
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:attributeGroup ref="eg1"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:attributeGroup name="eg1">
+    <xs:anyAttribute namespace="http://www.example.com/2 http://www.example.com/1" processContents="skip"/>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="eg2">
+    <xs:anyAttribute namespace="http://www.example.com/2" processContents="skip"/>
+  </xs:attributeGroup>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+namespace eg1 = "http://www.example.com/1"
+namespace eg2 = "http://www.example.com/2"
+
+start = element foo { eg1, eg2 }
+
+eg1 = attribute eg1:* { text } *
+eg2 = attribute eg1:*|eg2:* { text } *
+
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:attributeGroup ref="eg2"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:attributeGroup name="eg1">
+    <xs:anyAttribute namespace="http://www.example.com/1" processContents="skip"/>
+  </xs:attributeGroup>
+  <xs:attributeGroup name="eg2">
+    <xs:anyAttribute namespace="http://www.example.com/2 http://www.example.com/1" processContents="skip"/>
+  </xs:attributeGroup>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>
