@@ -59,7 +59,9 @@ class DtdOutput {
 
   PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
   PatternVisitor nestedContentModelOutput = new ContentModelOutput();
+  PatternVisitor expandedContentModelOutput = new ExpandedContentModelOutput();
   PatternVisitor innerElementClassOutput = new InnerElementClassOutput();
+  PatternVisitor expandedInnerElementClassOutput = new ExpandedInnerElementClassOutput();
   AttributeOutput attributeOutput = new AttributeOutput();
   AttributeOutput optionalAttributeOutput = new OptionalAttributeOutput();
   PatternVisitor topLevelSimpleTypeOutput = new TopLevelSimpleTypeOutput();
@@ -302,9 +304,16 @@ class DtdOutput {
     }
   }
 
+  class ExpandedContentModelOutput extends ContentModelOutput {
+    public Object visitElement(ElementPattern p) {
+      p.getNameClass().accept(this);
+      return null;
+    }
+  }
+
   class InnerElementClassOutput extends AbstractVisitor {
     public Object visitRef(RefPattern p) {
-      getBody(p.getName()).accept(this);
+      getBody(p.getName()).accept(expandedInnerElementClassOutput);
       return null;
     }
 
@@ -322,6 +331,13 @@ class DtdOutput {
 
     public Object visitZeroOrMore(ZeroOrMorePattern p) {
       p.getChild().accept(nestedContentModelOutput);
+      return null;
+    }
+  }
+
+  class ExpandedInnerElementClassOutput extends InnerElementClassOutput {
+    public Object visitZeroOrMore(ZeroOrMorePattern p) {
+      p.getChild().accept(expandedContentModelOutput);
       return null;
     }
   }
