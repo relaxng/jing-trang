@@ -7,6 +7,7 @@ import java.util.Vector;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.Set;
 
 public class Schema extends Located {
   private final String uri;
@@ -84,5 +85,9 @@ public class Schema extends Located {
   public void accept(SchemaVisitor visitor) {
     for (Iterator iter = topLevel.iterator(); iter.hasNext();)
       ((TopLevel)iter.next()).accept(visitor);
+  }
+
+  public Set subSchemas() {
+    return null;
   }
 }
