@@ -60,9 +60,8 @@ Interleave
 - Optimize nested choices in expanding <interleave>.
 - Optimize eg x* & (a, b, c) into x*, (a, x*), (b, x*), (c, x*)
 
-NOTATION datatypes
-- Map to QName
-- Generate an appropriate xs:notation declaration based on annotations
+For a <value type="NOTATION"/>, map to NOTATION and generate an appropriate xs:notation declaration
+based on annotations.
 
 Use complexType in place of group: <define> that contains both
 attributes or text and elements and sometimes referenced as a
