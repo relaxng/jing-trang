@@ -17,7 +17,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-public class PrefixManager {
+public class PrefixManager implements SourceUriGenerator {
 
   private final Map prefixMap = new HashMap();
   private final Set usedPrefixes = new HashSet();
@@ -136,10 +136,18 @@ public class PrefixManager {
     if (prefix == null) {
       do {
         prefix = "ns" + Integer.toString(nextGenIndex++);
-      } while (!usedPrefixes.contains(prefix));
+      } while (usedPrefixes.contains(prefix));
       usedPrefixes.add(prefix);
       prefixMap.put(namespace, prefix);
     }
     return prefix;
+  }
+
+  public String generateSourceUri(String ns) {
+    // TODO add method to OutputDirectory to do this properly
+    if (ns.equals(""))
+      return "local";
+    else
+      return "/" + getPrefix(ns);
   }
 }

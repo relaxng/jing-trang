@@ -128,6 +128,7 @@ public class BasicOutput {
     }
   }
 
+  // TODO deal with different particle output in complexType and namedGroup
 
   class ParticleOutput implements ParticleVisitor {
     private Occurs occ = Occurs.EXACTLY_ONE;
@@ -141,7 +142,7 @@ public class BasicOutput {
       else if (!namespaceIsLocal(p.getName().getNamespaceUri())) {
         xw.startElement(xs("group"));
         xw.attribute("ref", qualifyName(p.getName().getNamespaceUri(),
-                                        nsm.getProxy(p)));
+                                        nsm.getProxyName(p)));
         outputOccurAttributes();
         xw.endElement();
       }
@@ -262,7 +263,7 @@ public class BasicOutput {
         xw.startElement(xs("attributeGroup"));
         xw.attribute("ref",
                      qualifyName(a.getName().getNamespaceUri(),
-                                 nsm.getProxy(a)));
+                                 nsm.getProxyName(a)));
         xw.endElement();
       }
       return null;
@@ -366,18 +367,20 @@ public class BasicOutput {
 
   class MovedStructureOutput implements StructureVisitor {
     public Object visitElement(Element element) {
+      // TODO
       return null;
     }
 
     public Object visitAttribute(Attribute attribute) {
+      // TODO
       return null;
     }
   }
 
   static void output(Schema schema, PrefixManager pm, OutputDirectory od, ErrorReporter er) throws IOException {
-    NamespaceManager nsm = new NamespaceManager(schema);
+    NamespaceManager nsm = new NamespaceManager(schema, pm);
     try {
-      for (Iterator iter = schema.subSchemas().iterator(); iter.hasNext();)
+      for (Iterator iter = schema.getSubSchemas().iterator(); iter.hasNext();)
         new BasicOutput((Schema)iter.next(), er, od, nsm, pm).output();
     }
     catch (XmlWriter.WrappedException e) {

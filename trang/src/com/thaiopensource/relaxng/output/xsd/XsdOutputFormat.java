@@ -3,6 +3,7 @@ package com.thaiopensource.relaxng.output.xsd;
 import com.thaiopensource.relaxng.output.OutputFormat;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.output.OutputFailedException;
+import com.thaiopensource.relaxng.output.xsd.basic.Schema;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
 import com.thaiopensource.relaxng.edit.SchemaCollection;
 import org.xml.sax.ErrorHandler;
@@ -15,8 +16,11 @@ public class XsdOutputFormat implements OutputFormat {
     try {
       ErrorReporter er = new ErrorReporter(eh, XsdOutputFormat.class);
       SchemaInfo si = new SchemaInfo(sc, er);
-      if (!er.getHadError())
-        Output.output(si, od, er);
+      if (!er.getHadError()) {
+        Schema schema = BasicBuilder.buildBasicSchema(si, er);
+        if (!er.getHadError())
+          BasicOutput.output(schema, new PrefixManager(si), od, er);
+      }
       if (er.getHadError())
         throw new OutputFailedException();
     }
