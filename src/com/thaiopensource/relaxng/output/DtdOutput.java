@@ -246,7 +246,7 @@ public class DtdOutput {
         error("undefined_ref", p.getSourceLocation());
         return ERROR;
       }
-      return checkType("sorry_ref", ref(analyzeType(this, def)), p);
+      return ref(analyzeType(this, def));
     }
 
     public Object visitParentRef(ParentRefPattern p) {
@@ -476,7 +476,7 @@ public class DtdOutput {
     if (t == DIRECT_SINGLE_ELEMENT)
       return ELEMENT_CLASS;
     if (t == COMPLEX_TYPE)
-      return null;
+      return ERROR;
     return t;
   }
 
