@@ -286,11 +286,31 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       }
       catch (DatatypeException e) {
 	String detail = e.getMessage();
-	if (detail != null)
+        int pos = e.getIndex();
+        String displayedParam;
+        if (pos == DatatypeException.UNKNOWN)
+          displayedParam = null;
+        else
+          displayedParam = displayParam(value, pos);
+        if (displayedParam != null) {
+          if (detail != null)
+            error("invalid_param_detail_display", detail, displayedParam, (Locator)loc);
+          else
+            error("invalid_param_display", displayedParam, (Locator)loc);
+        }
+	else if (detail != null)
 	  error("invalid_param_detail", detail, (Locator)loc);
 	else
 	  error("invalid_param", (Locator)loc);
       }
+    }
+
+    String displayParam(String value, int pos) {
+      if (pos < 0)
+        pos = 0;
+      else if (pos > value.length())
+        pos = value.length();
+      return localizer.message("display_param", value.substring(0, pos), value.substring(pos));
     }
 
     public ParsedPattern makePattern(Location loc, Annotations anno)
@@ -783,7 +803,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
   }
 
   private void error(String key, String arg1, String arg2, Locator loc) throws BuildException {
-    error(new SAXParseException(localizer.message(key), loc));
+    error(new SAXParseException(localizer.message(key, arg1, arg2), loc));
   }
 
   private void noteError() {
