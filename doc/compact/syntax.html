@@ -148,8 +148,8 @@ documentation ::= "##" [^#xA]* (#xA [#x9#x20]* "##" [^#xA])*
 <p>The contents of consecutive <code>literalSegment</code>s in a
 <code>literal</code> are concatenated.</p>
 
-<p>Comments start with a <code>#</code> and continue to the end of the
-line.</p>
+<p>Comments start with a <code>#</code> followed by anything other than <code>#</code>
+and continue to the end of the line.</p>
 
 <p><code>element</code> is defined in the <a
 href="http://www.w3.org/TR/REC-xml#NT-element">XML 1.0 Recommendation</a>;
@@ -161,6 +161,24 @@ Recommendation</a>.</p>
 of a definition, the keyword must be escaped with <code>\</code>.  It
 is not necessary to escape a keyword that is used as the name of an
 element, attribute or datatype parameter.</p>
+
+<h2>Character escapes</h2>
+
+<p>Before parsing against the above grammar, the input string is first
+preprocessed by interpreting escapes. A sequence of characters
+<code>\x{<var>N</var>}</code>, where <code><var>N</var></code>
+consists of one or more hexadecimal digits, is replaced by the Unicode
+character with code <code><var>N</var></code>. For example,</p>
+
+<pre>
+element \x{66}\x{6f}\x{6f} { empty }
+</pre>
+
+<p>is equivalent to</p>
+
+<pre>
+element foo { empty }
+</pre>
 
 <h2>Mapping to RELAX NG Syntax</h2>
 
@@ -671,6 +689,29 @@ start =
     &lt;/element>
   &lt;/start>
 &lt;/grammar>
+</pre>
+
+<p>In addition, there is a special syntax for specifying
+<code>documentation</code> elements from the
+<code>http://relaxng.org/ns/compatibility/annotations/1.0</code>
+namespace as described in <a
+href="http://www.oasis-open.org/committees/relax-ng/compatibility.html#IDAC1YR"
+>RELAX NG DTD Compatibility</a>.  For example,</p>
+
+<pre>
+## Represents a foo
+element foo { empty }
+</pre>
+
+<p>turns into</p>
+
+<pre>
+&lt;element name="foo"
+    xmlns="http://relaxng.org/ns/structure/1.0"
+    xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
+  &lt;a:documentation>Represents a foo&lt;/a:documentation>
+  &lt;empty/>
+&lt;/element>
 </pre>
 
 <h2>Open issues</h2>
