@@ -388,4 +388,17 @@ foo = attribute foo { xsd:double } | element foo { xsd:double }
 </correct>
 </xsd>
 </testCase>
+<!--
+<testCase>
+<compact>
+<correct>
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0"></xs:schema>
+</correct>
+</xsd>
+</testCase>
+-->
 </testSuite>
