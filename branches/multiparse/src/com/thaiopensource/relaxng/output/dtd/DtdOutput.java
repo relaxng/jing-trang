@@ -650,6 +650,15 @@ class DtdOutput {
       case '"':
         buf.append("&quot;");
         break;
+      case '\r':
+        buf.append("&#xD;");
+        break;
+      case '\n':
+        buf.append("&#xA;");
+        break;
+      case '\t':
+        buf.append("&#9;");
+        break;
       default:
         buf.append(c);
         break;
