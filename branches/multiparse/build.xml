@@ -293,6 +293,7 @@ Main-Class: com/thaiopensource/relaxng/util/Driver
   <zip zipfile="build/jing-src.zip">
     <fileset dir="src" includes="**/*.java,**/*.properties,META-INF/services/*"/>
     <fileset dir="build/src" includes="**/*.java"/>
+    <zipfileset dir="build" includes="jing-manifest.txt" fullpath="META-INF/MANIFEST.MF"/>
   </zip>
   <zip zipfile="build/xhtml-rng.zip">
     <fileset dir="." includes="xhtml/**/*.rng,xhtml/index.html"/>
