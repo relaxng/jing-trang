@@ -139,6 +139,10 @@ class Transformer extends SchemaTransformer {
     public Object visitRepeat(ParticleRepeat p) {
       return p.getChild().accept(this);
     }
+
+    public Object visitElement(Element p) {
+      return Transformer.this.visitElement(p);
+    }
   }
 
 
