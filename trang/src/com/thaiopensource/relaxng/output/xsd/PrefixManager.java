@@ -9,6 +9,7 @@ import com.thaiopensource.relaxng.edit.DivComponent;
 import com.thaiopensource.relaxng.edit.ElementPattern;
 import com.thaiopensource.relaxng.edit.NameNameClass;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
+import com.thaiopensource.relaxng.edit.IncludeComponent;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,6 +35,7 @@ public class PrefixManager {
     PrefixSelector(SchemaInfo si) {
       this.si = si;
       this.inheritedNamespace = "";
+      si.getGrammar().componentsAccept(this);
     }
 
     public Object visitElement(ElementPattern p) {
@@ -88,6 +90,14 @@ public class PrefixManager {
 
     public Object visitDiv(DivComponent c) {
       c.componentsAccept(this);
+      return null;
+    }
+
+    public Object visitInclude(IncludeComponent c) {
+      String saveInheritedNamespace = inheritedNamespace;
+      inheritedNamespace = c.getNs();
+      si.getSchema(c.getHref()).componentsAccept(this);
+      inheritedNamespace = saveInheritedNamespace;
       return null;
     }
 
