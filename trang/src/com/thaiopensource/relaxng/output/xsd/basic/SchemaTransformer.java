@@ -129,7 +129,7 @@ public class SchemaTransformer implements SchemaVisitor, ParticleVisitor, Comple
     Attribute attribute = (Attribute)a.getAttribute().accept(this);
     if (attribute == a.getAttribute())
       return a;
-    return new OptionalAttribute(a.getLocation(), a.getAnnotation(), attribute);
+    return new OptionalAttribute(a.getLocation(), a.getAnnotation(), attribute, a.getDefaultValue());
   }
 
   public Object visitAttributeGroup(AttributeGroup a) {

@@ -392,7 +392,9 @@ public class BasicBuilder {
                                       makeName(((NameNameClass)iter.next())),
                                       value);
         if (!singleChoice || isOptional())
-          choices.add(new OptionalAttribute(att.getLocation(), null, att));
+          choices.add(new OptionalAttribute(att.getLocation(), null, att,
+                                            p.getAttributeAnnotation(WellKnownNamespaces.RELAX_NG_COMPATIBILITY_ANNOTATIONS,
+                                                                     "defaultValue")));
         else
           choices.add(att);
       }

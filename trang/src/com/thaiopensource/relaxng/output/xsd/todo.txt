@@ -65,8 +65,6 @@ Deal with element type consistent restriction
 
 Deal with ambiguous content model restriction
 
-Support attribute defaults (should be field on OptionalAttribute).
-
 Avoid redundant imports and redundant namespace declarations.
 
 With combine attributes, maybe insert <ref> to preserve file structure.

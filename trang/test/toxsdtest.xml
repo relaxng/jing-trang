@@ -3360,6 +3360,69 @@ element foo {
 <incorrect>
 </incorrect>
 </compact>
+<testCase>
+<compact>
+<correct>
+</correct>
+<testCase>
+<compact>
+<correct>
+namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
+
+element foo {
+  [ a:defaultValue="xyzzy" ]
+  attribute bar { text }?
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:attribute name="bar" default="xyzzy"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
+
+element foo {
+  [ a:defaultValue="en" ]
+  attribute xml:lang { xsd:language }?
+}
+</correct>
+</compact>
+<xsd>
+<resource name="xml.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.w3.org/XML/1998/namespace">
+  <xs:import schemaLocation="c.xsd"/>
+  <xs:attribute name="lang" type="xs:language"/>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:attribute ref="xml:lang" default="en"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+</compact>
+<xsd>
+<correct>
+</correct>
+</xsd>
+</testCase>
 </testCase>
 <testCase>
 <compact>
