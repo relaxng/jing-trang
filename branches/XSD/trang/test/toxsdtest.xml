@@ -2405,6 +2405,27 @@ atts &= attribute baz { text }
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<resource name="foo.rnc">
+include "foo.rnc"
+</resource>
+<incorrect>
+include "foo.rnc"
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<resource name="foo.rnc">
+foo |= element foo { empty }
+</resource>
+<incorrect>
+include "foo.rnc"
+include "foo.rnc"
+</incorrect>
+</compact>
+</testCase>
 <!--
 <testCase>
 <compact>
