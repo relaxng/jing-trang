@@ -2020,6 +2020,54 @@ element eg:foo {
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<correct>
+element foo {
+  attribute format { xsd:NOTATION "bar" },
+  text
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType mixed="true">
+      <xs:attribute name="format" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:QName">
+            <xs:enumeration value="bar"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo {
+  attribute format { xsd:NOTATION },
+  text
+}
+</correct>
+</compact>
+<xsd>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0">
+  <xs:element name="foo">
+    <xs:complexType mixed="true">
+      <xs:attribute name="format" use="required" type="xs:QName"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>

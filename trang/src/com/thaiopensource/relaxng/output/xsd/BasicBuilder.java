@@ -98,6 +98,8 @@ public class BasicBuilder {
         er.warning("unsupported_datatype_library", library, location);
       }
       else {
+        if (type.equals("NOTATION"))
+          type = "QName";
         for (Iterator iter = p.getParams().iterator(); iter.hasNext();) {
           Param param = (Param)iter.next();
           facets.add(new Facet(param.getSourceLocation(),
@@ -117,8 +119,11 @@ public class BasicBuilder {
         type = "string";
         er.warning("unsupported_datatype_library", library, location);
       }
-      else
+      else {
+        if (type.equals("NOTATION"))
+          type = "QName";
         facets.add(new Facet(location, "enumeration", p.getValue()));
+      }
       return new SimpleTypeRestriction(location, type, facets);
     }
 
