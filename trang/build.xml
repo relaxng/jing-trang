@@ -1,0 +1,40 @@
+<project name="trang" default="jar" basedir=".">
+
+<property name="build.dir" value="build"/>
+<property name="jing.classes" value="../build/classes"/>
+<property name="dist.dir" value="build"/>
+
+<target name="init">
+  <mkdir dir="${build.dir}"/>
+</target>
+
+<target name="compile" depends="init">
+  <mkdir dir="${build.dir}/classes"/>
+  <javac srcdir="src" destdir="${build.dir}/classes"
+         classpath="${jing.classes}"/>
+</target>
+
+<target name="jar" depends="compile">
+
+  <echo file="${build.dir}/trang-manifest.txt">Manifest-Version: 1.0
+Main-Class: com/thaiopensource/relaxng/output/Driver
+Class-Path: jing.jar
+</echo>
+
+  <jar jarfile="${dist.dir}/trang.jar" manifest="${build.dir}/trang-manifest.txt">
+    <fileset dir="${build.dir}/classes"/>
+    <fileset dir="src" includes="**/*.properties"/>
+  </jar>
+
+</target>
+
+<target name="split" depends="init">
+  <delete dir="${build.dir}/test"/>
+  <mkdir dir="${build.dir}/test"/>
+  <style basedir="test" destdir="${build.dir}/test" includes="todtdtest.xml" extension=".stamp" style="../test/split.xsl">
+    <param name="dir" expression="${build.dir}/test"/>
+  </style>
+</target>
+
+
+</project>
