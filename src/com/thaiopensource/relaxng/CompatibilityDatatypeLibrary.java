@@ -6,7 +6,7 @@ import org.relaxng.datatype.DatatypeBuilder;
 import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 
-public class CompatibilityDatatypeLibrary implements DatatypeLibrary {
+class CompatibilityDatatypeLibrary implements DatatypeLibrary {
   private final DatatypeLibraryFactory factory;
   private DatatypeLibrary xsdDatatypeLibrary = null;
 

@@ -6,11 +6,11 @@ import org.xml.sax.SAXException;
 import org.xml.sax.Attributes;
 import org.xml.sax.ErrorHandler;
 
-public class CombineValidatorHandler implements ValidatorHandler {
+class CombineValidatorHandler implements ValidatorHandler {
   private final ValidatorHandler vh1;
   private final ValidatorHandler vh2;
 
-  public CombineValidatorHandler(ValidatorHandler ch1, ValidatorHandler ch2) {
+  CombineValidatorHandler(ValidatorHandler ch1, ValidatorHandler ch2) {
     this.vh1 = ch1;
     this.vh2 = ch2;
   }
