@@ -22,6 +22,7 @@ public class XsdOutputFormat implements OutputFormat {
           Schema schema = BasicBuilder.buildBasicSchema(si, er);
           if (!er.getHadError()) {
             new Transformer(schema).transform();
+            new ComplexTypeSelector().assignComplexTypeGroups(schema);
             BasicOutput.output(schema, new PrefixManager(si), od, er);
           }
         }
