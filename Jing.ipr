@@ -6,7 +6,7 @@
       <useEmacsModeOutput value="true" />
       <useCustomJdk value="false" />
       <useJavaw value="false" />
-      <includeProjectClasspath value="false" />
+      <includeProjectClasspath value="true" />
       <maximumHeapSize value="128" />
     </buildFile>
   </component>
@@ -71,11 +71,11 @@
     <Commit>
       <option name="NON_RECURSIVE" value="false" />
       <option name="REVISION_TAG" value="" />
-      <option name="LOG_MESSAGE" value="" />
+      <option name="LOG_MESSAGE" value="Add missing declarations of containsSpecificity" />
       <option name="ADDITIONAL_OPTIONS" value="" />
     </Commit>
     <Diff>
-      <option name="REVISION_TAG" value="HEAD" />
+      <option name="REVISION_TAG" value="" />
       <option name="DATE_TAG" value="" />
       <option name="IGNORE_WHITESPACE" value="false" />
     </Diff>
@@ -99,7 +99,7 @@
     <Remove>
       <option name="NON_RECURSIVE" value="false" />
       <option name="FORCE_RECURSIVE" value="false" />
-      <option name="DELETE_FILE" value="false" />
+      <option name="DELETE_FILE" value="true" />
     </Remove>
     <Log>
       <option name="DEFAULT_BRANCH" value="false" />
@@ -118,8 +118,8 @@
     <option name="WORKING_FILES_READONLY" value="false" />
     <option name="COMPRESSION_LEVEL" value="3" />
     <option name="ADDITIONAL_OPTIONS" value="" />
-    <option name="REUSE_LAST_LOG_MESSAGE" value="false" />
-    <option name="PUT_FOCUS_INTO_LOG_MESSAGE" value="false" />
+    <option name="REUSE_LAST_LOG_MESSAGE" value="true" />
+    <option name="PUT_FOCUS_INTO_LOG_MESSAGE" value="true" />
     <option name="SHOW_PROJECT_ROOTS" value="true" />
     <option name="SHOW_UPDATE_OPTIONS" value="true" />
     <option name="SHOW_COMMIT_OPTIONS" value="true" />
@@ -133,11 +133,11 @@
     <option name="SHOW_EDITORS_OPTIONS" value="true" />
     <option name="HIDE_UNKNOWN_FILES" value="false" />
     <option name="HIDE_MISSING_FILES" value="false" />
-    <option name="HIDE_UP_TO_DATE_FILES" value="false" />
+    <option name="HIDE_UP_TO_DATE_FILES" value="true" />
   </component>
   <component class="com.intellij.cvsSupport.CvsManager">
     <expanded_paths>
-      <path value="$PROJECT_DIR$" />
+      <path value="$PROJECT_DIR$/src/com/thaiopensource/relaxng" />
     </expanded_paths>
   </component>
   <component class="com.intellij.debugger.Debugger">
@@ -247,7 +247,14 @@
       <option name="PORT" value="5000" />
     </configuration>
   </component>
-  <component class="com.intellij.ide.SelectInManager" />
+  <component class="com.intellij.ide.SelectInManager">
+    <target name="CVS View" />
+    <target name="Project" />
+    <target name="File Structure" />
+    <target name="Source" />
+    <target name="Classpath View" />
+    <target name="Commander" />
+  </component>
   <component class="com.intellij.ide.bookmarks.BookmarkManager" />
   <component class="com.intellij.ide.commander.Commander">
     <leftPanel view="Project" active="true" url="file://$PROJECT_DIR$/src" />
@@ -256,23 +263,34 @@
   </component>
   <component class="com.intellij.ide.desktop.IdeDocumentManager">
     <recent_files>
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/AfterPattern.java" column="6" line="2" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/InterleavePattern.java" column="42" line="21" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/DuplicateAttributeDetector.java" column="6" line="4" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/BuiltinDatatypeLibrary.java" column="13" line="7" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/PatternReader.java" column="74" line="41" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/TextOnlyFunction.java" column="3" line="8" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/Validator.java" column="13" line="14" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/PatternMemo.java" column="19" line="147" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/PatternRefPattern.java" column="10" line="57" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/util/TestDriver.java" column="6" line="19" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/util/resources/Messages.properties" column="62" line="15" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/util/Driver.java" column="42" line="42" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/PatternBuilder.java" column="19" line="206" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/IdSoundnessChecker.java" column="13" line="16" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/Localizer.java" column="3" line="21" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/resources/Messages.properties" column="70" line="118" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/IdTypeMapBuilder.java" column="83" line="229" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/Validator.java" column="22" line="16" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/DataPattern.java" column="3" line="33" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/NameFormatter.java" column="112" line="12" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/ErrorNameClass.java" column="27" line="8" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/NullNameClass.java" column="27" line="8" />
     </recent_files>
     <open_files>
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/PatternReader.java" column="74" line="41" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/InterleavePattern.java" column="42" line="21" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/DuplicateAttributeDetector.java" column="6" line="4" />
-      <active_file url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/DuplicateAttributeDetector.java" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/BuiltinDatatypeLibrary.java" column="13" line="7" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/Validator.java" column="13" line="14" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/TextOnlyFunction.java" column="3" line="8" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/AfterPattern.java" column="6" line="2" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/DataPattern.java" column="3" line="33" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/PatternBuilder.java" column="19" line="206" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/Validator.java" column="22" line="16" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/IdSoundnessChecker.java" column="13" line="16" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/IdTypeMapBuilder.java" column="83" line="229" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/Localizer.java" column="3" line="21" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/NameFormatter.java" column="112" line="12" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/ErrorNameClass.java" column="27" line="8" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/resources/Messages.properties" column="70" line="118" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/NullNameClass.java" column="27" line="8" />
+      <active_file url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/NullNameClass.java" />
     </open_files>
   </component>
   <component class="com.intellij.ide.hierarchy.HierarchyBrowserManager">
@@ -284,11 +302,14 @@
   <component class="com.intellij.ide.navigator.impl.ProjectNavigatorSettings">
     <navigator id="ClasspathNavigator" flattenPackages="false" showMembers="false" />
     <navigator id="ProjectNavigator" flattenPackages="true" showMembers="false">
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/resources" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$" />
     </navigator>
     <navigator id="SourcepathNavigator" flattenPackages="true" showMembers="false">
       <expanded_node type="directory" url="file://$PROJECT_DIR$/src" />
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/datatype/xsd/regex/xerces" />
     </navigator>
   </component>
   <component class="com.intellij.ide.structureView.StructureViewFactory">
@@ -318,7 +339,7 @@
     <option name="OPEN_IN_BROWSER" value="false" />
   </component>
   <component class="com.intellij.projectRoots.ProjectRootContainer">
-    <jdk name="java version &quot;1.3.0&quot;" />
+    <jdk name="java version &quot;1.3.1_02&quot;" />
     <root file="file://$PROJECT_DIR$/classes">
       <property name="type" value="outputPath" />
     </root>
@@ -332,6 +353,9 @@
       <property name="type" value="classPathEntry" />
     </root>
     <root file="file://$PROJECT_DIR$/src">
+      <property name="type" value="classPathEntry" />
+    </root>
+    <root file="jar://$PROJECT_DIR$/lib/saxon.jar!/">
       <property name="type" value="classPathEntry" />
     </root>
     <root file="file://$PROJECT_DIR$">
