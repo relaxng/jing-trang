@@ -317,18 +317,21 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
     return pb.makeError();
   }
 
-  class GrammarImpl implements Grammar, Div, IncludedGrammar {
+  static class GrammarImpl implements Grammar, Div, IncludedGrammar {
+    private final SchemaBuilderImpl sb;
     private final Hashtable defines;
     private final RefPattern startRef;
     private final Scope parent;
 
-    private GrammarImpl(Scope parent) {
+    private GrammarImpl(SchemaBuilderImpl sb, Scope parent) {
+      this.sb = sb;
       this.parent = parent;
       this.defines = new Hashtable();
       this.startRef = new RefPattern(null);
     }
 
-    protected GrammarImpl(GrammarImpl g) {
+    protected GrammarImpl(SchemaBuilderImpl sb, GrammarImpl g) {
+      this.sb = sb;
       parent = g.parent;
       startRef = g.startRef;
       defines = g.defines;
@@ -340,14 +343,14 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
         String name = (String)enum.nextElement();
         RefPattern rp = (RefPattern)defines.get(name);
         if (rp.getPattern() == null) {
-          error("reference_to_undefined", name, rp.getRefLocator());
-          rp.setPattern(pb.makeError());
+          sb.error("reference_to_undefined", name, rp.getRefLocator());
+          rp.setPattern(sb.pb.makeError());
         }
       }
       Pattern start = startRef.getPattern();
       if (start == null) {
-        error("missing_start_element", (Locator)loc);
-        start = pb.makeError();
+        sb.error("missing_start_element", (Locator)loc);
+        start = sb.pb.makeError();
       }
       return start;
     }
@@ -372,9 +375,9 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
         if (combine == null) {
           if (rp.isCombineImplicit()) {
             if (rp.getName() == null)
-              error("duplicate_start", (Locator)loc);
+              sb.error("duplicate_start", (Locator)loc);
             else
-              error("duplicate_define", rp.getName(), (Locator)loc);
+              sb.error("duplicate_define", rp.getName(), (Locator)loc);
           }
           else
             rp.setCombineImplicit();
@@ -384,9 +387,9 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
           if (rp.getCombineType() != RefPattern.COMBINE_NONE
               && rp.getCombineType() != combineType) {
             if (rp.getName() == null)
-              error("conflict_combine_start", (Locator)loc);
+              sb.error("conflict_combine_start", (Locator)loc);
             else
-              error("conflict_combine_define", rp.getName(), (Locator)loc);
+              sb.error("conflict_combine_define", rp.getName(), (Locator)loc);
           }
           rp.setCombineType(combineType);
         }
@@ -394,9 +397,9 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
         if (rp.getPattern() == null)
           rp.setPattern(p);
         else if (rp.getCombineType() == RefPattern.COMBINE_INTERLEAVE)
-          rp.setPattern(pb.makeInterleave(rp.getPattern(), p));
+          rp.setPattern(sb.pb.makeInterleave(rp.getPattern(), p));
         else
-          rp.setPattern(pb.makeChoice(rp.getPattern(), p));
+          rp.setPattern(sb.pb.makeChoice(rp.getPattern(), p));
         break;
       case RefPattern.REPLACEMENT_REQUIRE:
         rp.setReplacementStatus(RefPattern.REPLACEMENT_IGNORE);
@@ -440,7 +443,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
     }
 
     public Include makeInclude() {
-      return new IncludeImpl(this);
+      return new IncludeImpl(sb, this);
     }
 
   }
@@ -457,11 +460,13 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
   }
 
 
-  private class IncludeImpl implements Include, Div {
+  private static class IncludeImpl implements Include, Div {
+    private SchemaBuilderImpl sb;
     private Override overrides;
     private GrammarImpl grammar;
 
-    private IncludeImpl(GrammarImpl grammar) {
+    private IncludeImpl(SchemaBuilderImpl sb, GrammarImpl grammar) {
+      this.sb = sb;
       this.grammar = grammar;
     }
 
@@ -487,11 +492,11 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
 
     public void endInclude(String uri, String ns,
                            Location loc, Annotations anno) throws BuildException {
-      for (OpenIncludes inc = openIncludes;
+      for (OpenIncludes inc = sb.openIncludes;
            inc != null;
            inc = inc.parent) {
         if (inc.uri.equals(uri)) {
-          error("recursive_include", uri, (Locator)loc);
+          sb.error("recursive_include", uri, (Locator)loc);
           return;
         }
       }
@@ -501,18 +506,19 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
         o.prp.setReplacementStatus(RefPattern.REPLACEMENT_REQUIRE);
       }
       try {
-        parseable.parseInclude(uri, new SchemaBuilderImpl(ns, uri, SchemaBuilderImpl.this), grammar);
+        SchemaBuilderImpl isb = new SchemaBuilderImpl(ns, uri, sb);
+        sb.parseable.parseInclude(uri, isb, new GrammarImpl(isb, grammar));
         for (Override o = overrides; o != null; o = o.next) {
           if (o.prp.getReplacementStatus() == RefPattern.REPLACEMENT_REQUIRE) {
             if (o.prp.getName() == null)
-              error("missing_start_replacement", (Locator)loc);
+              sb.error("missing_start_replacement", (Locator)loc);
             else
-              error("missing_define_replacement", o.prp.getName(), (Locator)loc);
+              sb.error("missing_define_replacement", o.prp.getName(), (Locator)loc);
           }
         }
       }
       catch (IllegalSchemaException e) {
-        noteError();
+        sb.noteError();
       }
       finally {
         for (Override o = overrides; o != null; o = o.next)
@@ -526,7 +532,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
   }
 
   public Grammar makeGrammar(Scope parent) {
-    return new GrammarImpl(parent);
+    return new GrammarImpl(this, parent);
   }
 
   public ParsedPattern annotateAfter(ParsedPattern p, ElementAnnotation e) throws BuildException {
@@ -552,6 +558,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, Annotations {
       return parseable.parseExternal(uri, new SchemaBuilderImpl(ns, uri, this), scope);
     }
     catch (IllegalSchemaException e) {
+      noteError();
       return pb.makeError();
     }
   }
