@@ -79,10 +79,14 @@ class Output {
 
   // TODO NOTATION
   // TODO multiple pattern facets
-  // TODO deal with notAllowed
-  // TODO deal with empty
   // TODO deal with <ref> including <ref> to sequence
   // TODO determine when representation of list is an approximation and give a warning
+  /**
+   * Preconditions for calling visit methods in this class are that the child type
+   * - contains DATA
+   * - does not contains ELEMENT
+   * - does not contain TEXT
+   */
   class SimpleTypeOutput extends AbstractVisitor {
     public Object visitChoice(ChoicePattern p) {
       List patterns = p.getChildren();
@@ -169,43 +173,40 @@ class Output {
 
     public Object visitList(ListPattern p) {
       Pattern content = p.getChild();
-      Occurs occurs = (Occurs)content.accept(occursCalculator);
-      boolean occurRestricted = occurs.min != 0 || occurs.max != UNBOUNDED;
-      if (occurRestricted) {
+      if (si.getChildType(content).equals(ChildType.EMPTY)) {
         xw.startElement(xs("restriction"));
-        xw.startElement(xs("simpleType"));
-      }
-      xw.startElement(xs("list"));
-      // TODO use itemTypes attribute where possible
-      List itemTypes = new Itemizer().computeItemTypes(content);
-      int nItemTypes = itemTypes.size();
-      if (nItemTypes != 1) {
-        xw.startElement(xs("simpleType"));
-        xw.startElement(xs("union"));
-      }
-      for (int i = 0; i < nItemTypes; i++) {
-        xw.startElement(xs("simpleType"));
-        ((Pattern)itemTypes.get(i)).accept(this);
+        xw.attribute("base", xs("token"));
+        xw.startElement(xs("length"));
+        xw.attribute("value", "0");
+        xw.endElement();
         xw.endElement();
       }
-      if (nItemTypes != 1) {
-        xw.endElement(); // union
-        xw.endElement(); // simpleType
-      }
-      xw.endElement();
-      if (occurRestricted) {
+      else {
+        Occurs occurs = (Occurs)content.accept(occursCalculator);
+        boolean occurRestricted = occurs.min != 0 || occurs.max != UNBOUNDED;
+        if (occurRestricted) {
+          xw.startElement(xs("restriction"));
+          xw.startElement(xs("simpleType"));
+        }
+        xw.startElement(xs("list"));
+        xw.startElement(xs("simpleType"));
+        content.accept(this);
         xw.endElement();
-        if (occurs.min != 0) {
-          xw.startElement(xs("minLength"));
-          xw.attribute("value", Integer.toString(occurs.min));
+        xw.endElement();
+        if (occurRestricted) {
+          xw.endElement();
+          if (occurs.min != 0) {
+            xw.startElement(xs("minLength"));
+            xw.attribute("value", Integer.toString(occurs.min));
+            xw.endElement();
+          }
+          if (occurs.max != UNBOUNDED) {
+            xw.startElement(xs("maxLength"));
+            xw.attribute("value", Integer.toString(occurs.max));
+            xw.endElement();
+          }
           xw.endElement();
         }
-        if (occurs.max != UNBOUNDED) {
-          xw.startElement(xs("maxLength"));
-          xw.attribute("value", Integer.toString(occurs.max));
-          xw.endElement();
-        }
-        xw.endElement();
       }
       return null;
     }
@@ -311,66 +312,6 @@ class Output {
 
     public Object visitRef(RefPattern p) {
       return si.getBody(p).accept(this);
-    }
-  }
-
-  class Itemizer extends AbstractVisitor {
-    private List itemTypes = new Vector();
-
-    List computeItemTypes(Pattern p) {
-      p.accept(this);
-      return itemTypes;
-    }
-
-    public Object visitData(DataPattern p) {
-      itemTypes.add(p);
-      return null;
-    }
-
-    public Object visitValue(ValuePattern p) {
-      itemTypes.add(p);
-      return null;
-    }
-
-    public Object visitChoice(ChoicePattern p) {
-      if (canOutputChoiceAsRestriction(p))
-        itemTypes.add(p);
-      else
-        compositePattern(p);
-      return null;
-    }
-
-    public Object visitGroup(GroupPattern p) {
-      compositePattern(p);
-      return null;
-    }
-
-    public Object visitInterleave(InterleavePattern p) {
-      compositePattern(p);
-      return null;
-    }
-
-    public Object visitZeroOrMore(ZeroOrMorePattern p) {
-      return p.getChild().accept(this);
-    }
-
-    public Object visitOneOrMore(OneOrMorePattern p) {
-      return p.getChild().accept(this);
-    }
-
-    public Object visitOptional(OptionalPattern p) {
-      return p.getChild().accept(this);
-    }
-
-    public Object visitRef(RefPattern p) {
-      itemTypes.add(p);
-      return null;
-    }
-
-    private void compositePattern(CompositePattern p) {
-      List children = p.getChildren();
-      for (int i = 0, len = children.size(); i < len; i++)
-        ((Pattern)children.get(i)).accept(this);
     }
   }
 
