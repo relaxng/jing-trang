@@ -1,10 +1,8 @@
 package com.thaiopensource.relaxng;
 
-import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.Attributes;
-import org.xml.sax.XMLReader;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.LocatorImpl;
@@ -14,11 +12,12 @@ import java.util.Hashtable;
 import java.util.Vector;
 import java.util.Enumeration;
 
-public class IdSoundnessChecker implements ContentHandler {
-  private boolean hadError;
-  private Locator locator;
+class IdSoundnessChecker implements ValidatorHandler {
   private final IdTypeMap idTypeMap;
-  private final XMLReader xr;
+  private ErrorHandler eh;
+  private boolean hadError;
+  private boolean complete;
+  private Locator locator;
   private final Hashtable table = new Hashtable();
 
   private static class Entry {
@@ -27,13 +26,32 @@ public class IdSoundnessChecker implements ContentHandler {
     boolean hadId;
   }
 
-  public IdSoundnessChecker(IdTypeMap idTypeMap, XMLReader xr) {
+  IdSoundnessChecker(IdTypeMap idTypeMap, ErrorHandler eh) {
     this.idTypeMap = idTypeMap;
-    this.xr = xr;
+    this.eh = eh;
   }
 
-  public boolean getSound() {
+  public void reset() {
+    table.clear();
+    locator = null;
+    hadError = false;
+    complete = false;
+  }
+
+  public boolean isValid() {
     return !hadError;
+  }
+
+  public boolean isComplete() {
+    return complete;
+  }
+
+  public void setErrorHandler(ErrorHandler eh) {
+    this.eh = eh;
+  }
+
+  public ErrorHandler getErrorHandler() {
+    return eh;
   }
 
   public void setDocumentLocator(Locator locator) {
@@ -52,6 +70,7 @@ public class IdSoundnessChecker implements ContentHandler {
           error("missing_id", token, (Locator)f.nextElement());
       }
     }
+    complete = true;
   }
 
   public void startPrefixMapping(String s, String s1) throws SAXException {
@@ -144,21 +163,18 @@ public class IdSoundnessChecker implements ContentHandler {
 
   private void error(String key) throws SAXException {
     hadError = true;
-    ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
       eh.error(new SAXParseException(Localizer.message(key), locator));
   }
 
   private void error(String key, String arg) throws SAXException {
     hadError = true;
-    ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
       eh.error(new SAXParseException(Localizer.message(key, arg), locator));
   }
 
   private void error(String key, String arg, Locator loc) throws SAXException {
     hadError = true;
-    ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
       eh.error(new SAXParseException(Localizer.message(key, arg),
                                      loc));

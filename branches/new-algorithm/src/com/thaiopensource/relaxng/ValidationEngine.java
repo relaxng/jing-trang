@@ -13,17 +13,16 @@ public class ValidationEngine {
   private XMLReaderCreator xrc;
   private XMLReader xr;
   private ErrorHandler eh;
-  private DatatypeLibraryFactory dlf;
-  private SchemaPatternBuilder spb;
-  private ValidatorPatternBuilder vpb;
-  private Pattern p;
-  private boolean checkId;
-  private IdTypeMap idTypeMap;
+  private SchemaFactory factory;
+  private ValidatorHandler vh;
+  private Schema schema;
+
+  public ValidationEngine() {
+    factory = new SchemaFactory();
+  }
 
   public void setXMLReaderCreator(XMLReaderCreator xrc) {
     this.xrc = xrc;
-    if (eh != null)
-      xr.setErrorHandler(eh);
   }
   
   /**
@@ -31,72 +30,48 @@ public class ValidationEngine {
    */
   public void setErrorHandler(ErrorHandler eh) {
     this.eh = eh;
-    if (xr != null)
+    if (xr != null && eh != null)
       xr.setErrorHandler(eh);
+    factory.setErrorHandler(eh);
   }
 
   public void setDatatypeLibraryFactory(DatatypeLibraryFactory dlf) {
-    this.dlf = dlf;
+    factory.setDatatypeLibraryFactory(dlf);
   }
 
   public void setCheckId(boolean checkId) {
-    this.checkId = checkId;
+    factory.setCheckIdIdref(checkId);
   }
 
   /**
    * setXMLReaderCreator must be called before any call to loadPattern
    */
   public boolean loadPattern(InputSource in) throws SAXException, IOException {
-    spb = new SchemaPatternBuilder();
-    vpb = null;
-    xr = xrc.createXMLReader();
-    xr.setErrorHandler(eh);
-    p = null;
-    p = PatternReader.readPattern(xrc, xr, spb, dlf, in);
-    if (p == null)
-      return false;
-    idTypeMap = null;
-    if (spb.hasIdTypes() && checkId) {
-      idTypeMap = new IdTypeMapBuilder(xr, p).getIdTypeMap();
-      if (idTypeMap == null)
-        return false;
+    schema = null;
+    try {
+      schema = factory.createSchema(in);
+      return true;
     }
-    return true;
+    catch (IncorrectSchemaException e) {
+      return false;
+    }
   }
 
   /**
    * loadPattern must be called before any call to validate
    */
   public boolean validate(InputSource in) throws SAXException, IOException {
-    if (vpb == null)
-     vpb = new ValidatorPatternBuilder(spb);
-    return validate1(new Validator(p, vpb, xr), in);
-  }
-
-  /**
-   * loadPattern must be called before any call to validateMultiThread
-   * validateMultiThread can safely be called for a single
-   * ValidationEngine from multiple threads simultaneously
-   */
-  public boolean validateMultiThread(InputSource in)
-    throws SAXException, IOException {
-    XMLReader xr = xrc.createXMLReader();
-    Validator v = new Validator(p, new ValidatorPatternBuilder(spb), xr);
-    return validate1(v, in);
-  }
-
-  private boolean validate1(Validator v, InputSource in)
-      throws SAXException, IOException {
-    if (idTypeMap != null) {
-      IdSoundnessChecker idSoundnessChecker = new IdSoundnessChecker(idTypeMap, xr);
-      xr.setContentHandler(new SplitContentHandler(v, idSoundnessChecker));
-      xr.parse(in);
-      return v.getValid() && idSoundnessChecker.getSound();
+    if (vh == null)
+     vh = schema.createValidator(eh);
+    else
+      vh.reset();
+    if (xr == null) {
+      xr = xrc.createXMLReader();
+      if (eh != null)
+        xr.setErrorHandler(eh);
     }
-    else {
-      xr.setContentHandler(v);
-      xr.parse(in);
-      return v.getValid();
-    }
+    xr.setContentHandler(vh);
+    xr.parse(in);
+    return vh.isValid();
   }
 }

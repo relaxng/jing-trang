@@ -3,10 +3,8 @@ package com.thaiopensource.relaxng;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.SAXException;
 import org.xml.sax.Locator;
-import org.xml.sax.XMLReader;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.helpers.LocatorImpl;
 
@@ -14,17 +12,18 @@ import org.relaxng.datatype.ValidationContext;
 
 import java.util.Hashtable;
 
-public class Validator implements ContentHandler {
+class Validator implements ValidatorHandler {
   private final ValidatorPatternBuilder builder;
-  private Locator locator;
-  private final XMLReader xr;
-  private Pattern start;
+  private final Pattern start;
+  private ErrorHandler eh;
   private Hashtable recoverPatternTable;
   private PatternMemo memo;
-  private boolean hadError = false;
-  private boolean collectingCharacters = false;
+  private boolean hadError;
+  private boolean complete;
+  private boolean collectingCharacters;
   private StringBuffer charBuf = new StringBuffer();
   private PrefixMapping prefixMapping = new PrefixMapping("xml", PatternReader.xmlURI, null);
+  private Locator locator;
 
   static private final class PrefixMapping implements ValidationContext {
     private final String prefix;
@@ -193,7 +192,10 @@ public class Validator implements ContentHandler {
       error("text_not_allowed");
   }
 
-  public void endDocument() { }
+  public void endDocument() {
+    // XXX maybe check that memo.isNullable if !hadError
+    complete = true;
+  }
 
   public void setDocumentLocator(Locator loc) {
     locator = loc;
@@ -213,22 +215,34 @@ public class Validator implements ContentHandler {
     prefixMapping = prefixMapping.getPrevious();
   }
 
-  public Validator(Pattern pattern, ValidatorPatternBuilder builder, XMLReader xr) {
-    this.builder = builder;
-    this.xr = xr;
-    this.memo = builder.getPatternMemo(pattern);
+  Validator(Pattern pattern, ValidatorPatternBuilder builder, ErrorHandler eh) {
     this.start = pattern;
+    this.builder = builder;
+    this.eh = eh;
+    reset();
   }
 
-  public boolean getValid() {
+  public void reset() {
+    hadError = false;
+    complete = false;
+    collectingCharacters = false;
+    locator = null;
+    memo = builder.getPatternMemo(start);
+    prefixMapping = new PrefixMapping("xml", PatternReader.xmlURI, null);
+  }
+
+  public boolean isValid() {
     return !hadError;
+  }
+
+  public boolean isComplete() {
+    return complete;
   }
 
   private void error(String key) throws SAXException {
     if (hadError && memo.isNotAllowed())
       return;
     hadError = true;
-    ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
       eh.error(new SAXParseException(Localizer.message(key), locator));
   }
@@ -241,7 +255,6 @@ public class Validator implements ContentHandler {
     if (hadError && memo.isNotAllowed())
       return;
     hadError = true;
-    ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
       eh.error(new SAXParseException(Localizer.message(key, arg), locator));
   }
@@ -265,5 +278,13 @@ public class Validator implements ContentHandler {
       recoverPatternTable.put(name, p);
     }
     return p;
+  }
+
+  public ErrorHandler getErrorHandler() {
+    return eh;
+  }
+
+  public void setErrorHandler(ErrorHandler eh) {
+    this.eh = eh;
   }
 }
