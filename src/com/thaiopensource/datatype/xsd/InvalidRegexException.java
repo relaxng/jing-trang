@@ -9,7 +9,7 @@ public class InvalidRegexException extends Exception {
 
   public InvalidRegexException(String detail, int position) {
     super(detail);
-    this.position = -1;
+    this.position = position;
   }
 
   /**
