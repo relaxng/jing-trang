@@ -24,9 +24,9 @@ class OneOrMorePattern extends Pattern {
 
   Pattern residual(PatternBuilder b, Atom a) {
     Pattern tr = b.memoizedResidual(p, a);
-    if (tr.isEmptyChoice())
+    if (tr.isNotAllowed())
       return tr;
-    return b.makeSequence(tr, b.makeZeroOrMore(p));
+    return b.makeGroup(tr, b.makeZeroOrMore(p));
   }
 
   PatternPair unambigContentPattern(PatternBuilder b,
@@ -36,7 +36,7 @@ class OneOrMorePattern extends Pattern {
     if (cp == null || cp.isEmpty())
       return cp;
     return new PatternPair(cp.getContentPattern(),
-			b.makeSequence(cp.getResidualPattern(),
+			b.makeGroup(cp.getResidualPattern(),
 				       b.makeZeroOrMore(p)));
   }
 

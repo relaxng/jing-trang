@@ -118,8 +118,8 @@ public class Validator {
 						   namespaceURI,
 						   localName,
 						   0);
-      if (childCombinedState.isEmptyChoice()
-	  && !combinedState.isEmptyChoice()) {
+      if (childCombinedState.isNotAllowed()
+	  && !combinedState.isNotAllowed()) {
 	error("impossible_element", localName);
 	for (int level = 1; level <= RECOVERY_ATTEMPTS; level++) {
 	  childCombinedState 
@@ -127,7 +127,7 @@ public class Validator {
 						       namespaceURI,
 						       localName,
 						       level);
-	  if (!childCombinedState.isEmptyChoice())
+	  if (!childCombinedState.isNotAllowed())
 	    break;
 	}
       }
@@ -152,7 +152,7 @@ public class Validator {
 	collectingCharacters = false;
 	string(new StringAtom(charBuf.toString(), prefixMapping));
       }
-      if (!combinedState.isNullable() && !combinedState.isEmptyChoice())
+      if (!combinedState.isNullable() && !combinedState.isNotAllowed())
 	error("unfinished_element");
       parent.set();
     }
@@ -263,8 +263,8 @@ public class Validator {
     // Return true if we need to give an error message.
 
     private boolean updateState(Pattern nextCombinedState) {
-      if (nextCombinedState.isEmptyChoice())
-	return combinedState.isEmptyChoice();
+      if (nextCombinedState.isNotAllowed())
+	return combinedState.isNotAllowed();
       else {
 	combinedState = nextCombinedState;
 	return true;
