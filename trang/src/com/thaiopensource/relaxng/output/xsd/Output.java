@@ -30,10 +30,13 @@ import com.thaiopensource.relaxng.edit.NameNameClass;
 import com.thaiopensource.relaxng.edit.AttributePattern;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.NameClass;
+import com.thaiopensource.relaxng.edit.DivComponent;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
+import java.util.Set;
+import java.util.Iterator;
 
 /**
  * prefix for "xs" needs to be chosen dynamically to avoid conflict
@@ -44,7 +47,10 @@ class Output {
   private final SchemaInfo si;
   private final ErrorReporter er;
   private final XmlWriter xw;
+  private final String sourceUri;
+  private final OutputDirectory od;
   private final ComponentVisitor topLevelOutput = new TopLevelOutput();
+  private final ComponentVisitor includeOutput = new IncludeOutput();
   private final PatternVisitor simpleTypeOutput = new SimpleTypeOutput();
   private final PatternVisitor groupOutput = new GroupOutput();
   private final PatternVisitor particleOutput = new ParticleOutput();
@@ -56,21 +62,26 @@ class Output {
 
   static void output(SchemaInfo si, OutputDirectory od, ErrorReporter er) throws IOException {
     try {
-      new Output(si,
-                 er,
-                 new XmlWriter(od.getLineSeparator(),
-                               od.open(od.MAIN), new String[0],
-                               od.getEncoding())).outputSchema(si.getGrammar());
+      new Output(si, er, od, OutputDirectory.MAIN).outputSchema(si.getGrammar());
+      for (Iterator iter = si.getSourceUris().iterator(); iter.hasNext();) {
+        String sourceUri = (String)iter.next();
+        new Output(si, er, od, sourceUri).outputSchema(si.getSchema(sourceUri));
+      }
     }
     catch (XmlWriter.WrappedException e) {
       throw e.getIOException();
     }
   }
 
-  private Output(SchemaInfo si, ErrorReporter er, XmlWriter xw) {
+  private Output(SchemaInfo si, ErrorReporter er, OutputDirectory od, String sourceUri) throws IOException {
     this.si = si;
     this.er = er;
-    this.xw = xw;
+    this.od = od;
+    this.sourceUri = sourceUri;
+    xw = new XmlWriter(od.getLineSeparator(),
+                       od.open(sourceUri),
+                       new String[0],
+                       od.getEncoding());
   }
 
   private String xs(String name) {
@@ -82,9 +93,8 @@ class Output {
     xw.attribute("xmlns:xs", "http://www.w3.org/2001/XMLSchema");
     xw.attribute("elementFormDefault", "qualified");
     xw.attribute("version", "1.0");
-    List components = grammar.getComponents();
-    for (int i = 0, len = components.size(); i < len; i++)
-      ((Component)components.get(i)).accept(topLevelOutput);
+    grammar.componentsAccept(includeOutput);
+    grammar.componentsAccept(topLevelOutput);
     xw.endElement();
     xw.close();
   }
@@ -589,6 +599,20 @@ class Output {
     }
   }
 
+  class IncludeOutput extends AbstractVisitor {
+    public Object visitInclude(IncludeComponent c) {
+      xw.startElement(xs("include"));
+      xw.attribute("schemaLocation", od.reference(sourceUri, c.getHref()));
+      xw.endElement();
+      return null;
+    }
+
+    public Object visitDiv(DivComponent c) {
+      c.componentsAccept(this);
+      return null;
+    }
+  }
+
   class TopLevelOutput extends AbstractVisitor {
     public Object visitDefine(DefineComponent c) {
       String name = c.getName();
@@ -619,6 +643,13 @@ class Output {
       body.accept(globalElementOutput);
       return null;
     }
+
+    public Object visitDiv(DivComponent c) {
+      c.componentsAccept(this);
+      return null;
+    }
+
+
   }
 
   static boolean canOutputChoiceAsRestriction(ChoicePattern p) {

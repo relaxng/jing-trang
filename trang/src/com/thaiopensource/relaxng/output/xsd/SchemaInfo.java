@@ -26,6 +26,7 @@ import com.thaiopensource.relaxng.edit.DefineComponent;
 import com.thaiopensource.relaxng.edit.DivComponent;
 import com.thaiopensource.relaxng.edit.CompositePattern;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
+import com.thaiopensource.relaxng.edit.IncludeComponent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -189,6 +190,11 @@ class SchemaInfo {
       c.componentsAccept(this);
       return null;
     }
+
+    public Object visitInclude(IncludeComponent c) {
+      getSchema(c.getHref()).componentsAccept(this);
+      return null;
+    }
   }
 
   class RootMarker extends AbstractVisitor {
@@ -220,33 +226,47 @@ class SchemaInfo {
     public Object visitRef(RefPattern p) {
       return getBody(p).accept(this);
     }
+
+    public Object visitInclude(IncludeComponent c) {
+      getSchema(c.getHref()).componentsAccept(this);
+      return null;
+    }
   }
 
   SchemaInfo(SchemaCollection sc, ErrorReporter er) {
     this.sc = sc;
     this.er = er;
-    Pattern p = sc.getMainSchema();
-    if (p instanceof GrammarPattern) {
-      grammar = (GrammarPattern)p;
-      grammar.componentsAccept(new GrammarVisitor());
-      grammar.componentsAccept(new RootMarker());
-    }
-    else {
-      grammar = new GrammarPattern();
-      grammar.setSourceLocation(p.getSourceLocation());
-      DefineComponent dc = new DefineComponent(DefineComponent.START, p);
-      dc.setSourceLocation(p.getSourceLocation());
-      grammar.getComponents().add(dc);
-      p.accept(new RootMarker());
-    }
+    forceGrammar();
+    grammar = (GrammarPattern)sc.getMainSchema();
+    grammar.componentsAccept(new GrammarVisitor());
+    grammar.componentsAccept(new RootMarker());
+  }
+
+  void forceGrammar() {
+    sc.setMainSchema(convertToGrammar(sc.getMainSchema()));
+  }
+
+  GrammarPattern convertToGrammar(Pattern p) {
+    if (p instanceof GrammarPattern)
+      return (GrammarPattern)p;
+    GrammarPattern g = new GrammarPattern();
+    g.setSourceLocation(p.getSourceLocation());
+    DefineComponent dc = new DefineComponent(DefineComponent.START, p);
+    dc.setSourceLocation(p.getSourceLocation());
+    g.getComponents().add(dc);
+    return g;
   }
 
   GrammarPattern getGrammar() {
     return grammar;
   }
 
-  Pattern getSchema(String sourceUri) {
-    return (Pattern)sc.getSchemas().get(sourceUri);
+  GrammarPattern getSchema(String sourceUri) {
+    return (GrammarPattern)sc.getSchemas().get(sourceUri);
+  }
+
+  Set getSourceUris() {
+    return sc.getSchemas().keySet();
   }
 
   ChildType getChildType(Pattern p) {

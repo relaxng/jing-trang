@@ -1,6 +1,7 @@
 Use global element declarations
 - when only one element of particular name
 - when multiple elements, but only one occurs as the sole content of a define
+- when there's something we want to use in a subsitution group
 
 Avoid duplicate attributes.
 
@@ -16,19 +17,17 @@ Nested grammars
 - handle some cases
 - expand when necessary
 
-Check for single namespace constraint
-
 Allow attribute names with empty namespace or target namespace
 
 Allow local elements with empty namespace
 
 Namespaces
+- check for single namespace
+- allow multiple namespaces but not mixed in a file
+- split files based on namespace
 
-Split files based on namespace
-
-Include
+Include overrides
 - Check and give error
-- Handle without overrides
 - Handle overrides
 
 combine attributes
@@ -36,6 +35,9 @@ combine attributes
 - others
 
 externalRef
+- detect and give error
+- handle
+- remember problem with parentRef in externalRef
 
 Check for ref loops
 
