@@ -1,10 +1,10 @@
-Avoid duplicate attributes.
-
-Deal with <ref> to attributes inside optional.
-
 <start>
 
 Use global element declarations
+
+Avoid duplicate attributes.
+
+Deal with <ref> to attributes inside optional.
 
 Name classes
 - choice
@@ -49,8 +49,10 @@ NOTATION datatypes
 
 Multiple pattern parameters
 
-Use complexType in place of group: contains attributes/text and sometimes referenced as a complexType, then
-define as complexType
+Use complexType in place of group: <define> that contains both
+attributes or text and elements and sometimes referenced as a
+complexType, then define as complexType.
+
+Deal with xsi attributes.
 
 Make use of element substitution groups.
-
