@@ -83,6 +83,7 @@ Avoid unnecessary parentheses around group members
 Pretty-print content models to avoid excessively long lines
 Prettier formatting of ATTLISTs
 Handle DTD compatibility ID/IDREF/IDREFS
+Proper error reporting
 */
 public class DtdOutput {
   private ErrorHandler eh;
