@@ -839,12 +839,10 @@ class SchemaParser {
 
     void endAttributes() throws SAXException {
       super.endAttributes();
-      if (scope.getParent() == null)
-	error("parent_ref_outside_grammar");
     }
 
     ParsedPattern makePattern() {
-      return makePattern(scope == null ? null : scope.getParent());
+      return scope.makeParentRef(name, startLocation, null);
     }
   }
 
