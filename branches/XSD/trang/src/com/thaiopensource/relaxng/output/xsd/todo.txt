@@ -73,28 +73,3 @@ Deal with ambiguous content model restriction
 Support attribute defaults.
 
 Avoid redundant imports and redundant namespace declarations.
-
------
-
-Strategy for handling namespaces
-
-- assign a target namespace to each source URI based on counting attribute and element declarations
-in the file (what if no attribute or element declarations?); don't count declarations within
-element and attribute declarations
-
-- assign a unique prefix to each target namespace
-
-- for each target namespace, there must be an output schema to serve as the head of that namespace;
-if one of the source files with that target namespace directly or indirectly contains all other
-files with that target namespace, use that source file as the head; otherwise create a new
-file to be the head whose name is based on the prefix
-
-- if a declaration of an element or attribute with some target namespace occurs in a file
-which has been assigned a different target namespace, add to list of orphaned elements/attributes
-
-- when outputting, add orphanned elements/attributes to head
-
-- if a file F with target namespace x includes a file G with another target namespace, pretend that
-the includes of G occured in F
-
-- generate imports to the heads of all target namespaces
