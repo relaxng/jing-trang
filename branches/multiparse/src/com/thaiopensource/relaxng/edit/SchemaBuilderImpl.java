@@ -297,6 +297,18 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       ((AnnotationsImpl)anno).apply(a);
   }
 
+  public ParsedNameClass annotate(ParsedNameClass nc, Annotations anno) throws BuildException {
+    if (anno != null)
+      ((AnnotationsImpl)anno).apply((Annotated)nc);
+    return nc;
+  }
+
+  public ParsedPattern annotate(ParsedPattern p, Annotations anno) throws BuildException {
+    if (anno != null)
+      ((AnnotationsImpl)anno).apply((Annotated)p);
+    return p;
+  }
+
   public ParsedPattern annotateAfter(ParsedPattern p, ParsedElementAnnotation e) throws BuildException {
     addAfterAnnotation((Pattern)p, e);
     return p;

@@ -39,7 +39,12 @@ import com.thaiopensource.relaxng.edit.IncludeComponent;
 import com.thaiopensource.relaxng.edit.Annotated;
 import com.thaiopensource.relaxng.edit.Container;
 import com.thaiopensource.relaxng.edit.Component;
+import com.thaiopensource.relaxng.edit.AnnotationChild;
+import com.thaiopensource.relaxng.edit.ElementAnnotation;
+import com.thaiopensource.relaxng.edit.TextAnnotation;
+import com.thaiopensource.relaxng.edit.AttributeAnnotation;
 import com.thaiopensource.relaxng.output.OutputDirectory;
+import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 
 import java.util.Map;
 import java.util.Iterator;
@@ -83,12 +88,16 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
     for (Iterator iter = prefixMap.entrySet().iterator(); iter.hasNext();) {
       Map.Entry entry = (Map.Entry)iter.next();
       String prefix = (String)entry.getKey();
-      if (prefix.equals(""))
-        atts[i++] = "ns";
-      else
-        atts[i++] = "xmlns:" + prefix;
-      atts[i++] = (String)entry.getValue();
+      if (!prefix.equals("xml")) {
+        if (prefix.equals(""))
+          atts[i++] = "ns";
+        else
+          atts[i++] = "xmlns:" + prefix;
+        atts[i++] = (String)entry.getValue();
+      }
     }
+    atts[i++] = "xmlns";
+    atts[i++] = SAXParseable.URI;
     if (datatypeLibrary != null) {
       atts[i++] = "datatypeLibrary";
       atts[i++] = datatypeLibrary;
@@ -404,11 +413,47 @@ class Output implements PatternVisitor, NameClassVisitor, ComponentVisitor {
   }
 
   public void innerAnnotations(Annotated subject) {
-    // XXX
+    annotationAttributes(subject.getAttributeAnnotations());
+    annotationChildren(subject.getChildElementAnnotations(), true);
   }
 
   public void outerAnnotations(Annotated subject) {
-    // XXX
+    annotationChildren(subject.getFollowingElementAnnotations(), true);
+  }
+
+  private void annotationAttributes(List list) {
+    for (int i = 0, len = list.size(); i < len; i++) {
+      AttributeAnnotation att = (AttributeAnnotation)list.get(i);
+      String name = att.getLocalName();
+      String prefix = att.getPrefix();
+      xw.attribute(prefix == null ? name : prefix + ":" + name,
+                   att.getValue());
+    }
+  }
+
+  private void annotationChildren(List list, boolean haveDefaultNamespace) {
+    for (int i = 0, len = list.size(); i < len; i++) {
+      AnnotationChild child = (AnnotationChild)list.get(i);
+      if (child instanceof ElementAnnotation) {
+        ElementAnnotation elem = (ElementAnnotation)child;
+        String name = elem.getLocalName();
+        String prefix = elem.getPrefix();
+        if (prefix == null) {
+          xw.startElement(name);
+          if (haveDefaultNamespace) {
+            xw.attribute("xmlns", "");
+            haveDefaultNamespace = false;
+          }
+        }
+        else
+          xw.startElement(prefix + ":" + name);
+        annotationAttributes(elem.getAttributes());
+        annotationChildren(elem.getChildren(), haveDefaultNamespace);
+        xw.endElement();
+      }
+      else
+        xw.text(((TextAnnotation)child).getValue());
+    }
   }
 
   private void end(Annotated subject) {

@@ -20,6 +20,8 @@ public interface SchemaBuilder {
   ParsedPattern makeValue(String datatypeLibrary, String type, String value, Context c, String ns,
                           Location loc, Annotations anno) throws BuildException;
   Grammar makeGrammar(Scope parent);
+  ParsedPattern annotate(ParsedPattern p, Annotations anno) throws BuildException;
+  ParsedNameClass annotate(ParsedNameClass nc, Annotations anno) throws BuildException;
   ParsedPattern annotateAfter(ParsedPattern p, ParsedElementAnnotation e) throws BuildException;
   ParsedNameClass annotateAfter(ParsedNameClass nc, ParsedElementAnnotation e) throws BuildException;
   ParsedPattern makeExternalRef(String uri, String ns, Scope scope,

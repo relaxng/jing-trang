@@ -343,28 +343,34 @@
   </component>
   <component class="com.intellij.ide.desktop.IdeDocumentManager">
     <recent_files>
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/Grammar.java" column="40" line="2" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/GrammarSection.java" column="6" line="26" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/parse/Include.java" column="7" line="3" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/AttlistMapper.java" column="0" line="43" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/NamespaceManager.java" column="0" line="69" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/ErrorReporter.java" column="2" line="7" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/Simplifier.java" column="6" line="26" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/GrammarPart.java" column="3" line="77" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/Analysis.java" column="106" line="14" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/edit/SchemaBuilderImpl.java" column="0" line="468" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/DtdOutput.java" column="36" line="585" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/todo.txt" column="43" line="23" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/edit/SchemaBuilderImpl.java" column="9" line="388" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/edit/AttributeAnnotation.java" column="13" line="2" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/edit/ElementAnnotation.java" column="13" line="8" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/edit/Annotated.java" column="0" line="0" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/rng/RngOutputFormat.java" column="63" line="14" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/NamespaceManager.java" column="1" line="13" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/rng/Output.java" column="70" line="415" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/rng/Analyzer.java" column="33" line="199" />
     </recent_files>
     <open_files>
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/GrammarPart.java" column="3" line="77" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/ErrorReporter.java" column="2" line="7" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/DtdOutput.java" column="36" line="585" />
       <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/todo.txt" column="43" line="23" />
-      <active_file url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/todo.txt" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/edit/SchemaBuilderImpl.java" column="0" line="468" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/Simplifier.java" column="6" line="26" />
-      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/Analysis.java" column="106" line="14" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/rng/Output.java" column="70" line="415" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/rng/Analyzer.java" column="33" line="199" />
+      <active_file url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/rng/Analyzer.java" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd/NamespaceManager.java" column="1" line="13" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/rng/RngOutputFormat.java" column="63" line="14" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/edit/ElementAnnotation.java" column="13" line="8" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/edit/Annotated.java" column="0" line="0" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/edit/AttributeAnnotation.java" column="13" line="2" />
+      <file_info url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/edit/SchemaBuilderImpl.java" column="9" line="388" />
     </open_files>
   </component>
   <component class="com.intellij.ide.hierarchy.HierarchyBrowserManager">
@@ -379,10 +385,11 @@
       <expanded_node type="directory" url="file://$PROJECT_DIR$" />
     </navigator>
     <navigator id="SourcepathNavigator" flattenPackages="true" showMembers="false">
-      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/edit" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/rng" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/src" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output/dtd" />
       <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/util" />
+      <expanded_node type="directory" url="file://$PROJECT_DIR$/src/com/thaiopensource/relaxng/output" />
     </navigator>
   </component>
   <component class="com.intellij.ide.structureView.StructureViewFactory">
