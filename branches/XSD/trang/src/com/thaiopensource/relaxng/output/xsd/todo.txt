@@ -1,5 +1,3 @@
-Choose name of proxy groups and attribute groups better
-
 If expansion of a group causes the group to become unreferenced, then remove the group.
 
 Optimize nested choices in expanding <interleave>.
