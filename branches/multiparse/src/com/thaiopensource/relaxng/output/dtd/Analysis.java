@@ -164,8 +164,8 @@ class Analysis {
       else
         er.error("sorry_attribute_name_class", p.getNameClass().getSourceLocation());
       ContentType t = analyzeContentType(p.getChild());
-      if (!t.isA(ContentType.SIMPLE_TYPE) && t != ContentType.TEXT && t != ContentType.ERROR)
-        er.error("sorry_attribute_type", p.getSourceLocation());
+      if (t.isA(ContentType.MODEL_GROUP) || t == ContentType.MIXED_ELEMENT_CLASS || t == ContentType.MIXED_MODEL)
+        er.error("bad_attribute_type", p.getSourceLocation());
       if (ancestorPattern != null)
         am.noteAttribute(ancestorPattern);
       return ContentType.EMPTY;
