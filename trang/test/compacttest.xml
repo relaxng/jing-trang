@@ -1595,6 +1595,117 @@ element x:* - y:z { empty }
 ]]></incorrect>
 </compact>
 </bug>
+<testCase>
+<compact>
+<correct><![CDATA[
+\xxxxx = element foo { empty }
+start = \xxxxx]]></correct>
+</compact>
+<xml>
+<correct>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+<define name="xxxxx">
+  <element name="foo">
+    <empty/>
+  </element>
+</define>
+<start>
+  <ref name="xxxxx"/>
+</start>
+</grammar>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<incorrect><![CDATA[
+element foo { "\x{D800}" }
+]]></incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect><![CDATA[
+element foo { "\x{110000}" }
+]]></incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect><![CDATA[
+element foo { empty \x{7d]]></incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect><![CDATA[
+element foo { empty \x{7d }
+]]></incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect><![CDATA[
+element foo { "\x{}" }
+]]></incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<correct>
+\x{65}l\xxxxx{00065}ment\x{20}foo { empty \x{7d}
+</correct>
+</compact>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <empty/>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+element \\x{66}oo { empty }
+]]></correct>
+</compact>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <empty/>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct><![CDATA[
+element \xx\x{66}oo { empty }
+]]></correct>
+</compact>
+<xml>
+<correct>
+<element name="xxfoo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <empty/>
+</element>
+</correct>
+</xml>
+</testCase>
+<testCase>
+<compact>
+<correct>
+element foo { "\x{10300}" }
+</correct>
+</compact>
+<xml>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <value>&#x10300;</value>
+</element>
+</correct>
+</xml>
+</testCase>
 <!--
 <testCase>
 <compact>

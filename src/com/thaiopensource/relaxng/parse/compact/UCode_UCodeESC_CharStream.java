@@ -3,15 +3,21 @@
    has been edited to fix some bugs. */
 package com.thaiopensource.relaxng.parse.compact;
 
+import com.thaiopensource.util.Utf16;
+import com.thaiopensource.relaxng.parse.BuildException;
+
+import java.io.IOException;
+
 /**
  * An implementation of interface CharStream, where the stream is assumed to
  * contain 16-bit unicode characters.
  */
 
+// XXX must normalize newlines
 public final class UCode_UCodeESC_CharStream {
   public static final boolean staticFlag = false;
 
-  static final int hexval(char c) throws java.io.IOException {
+  static final int hexval(char c) {
     switch (c) {
     case '0':
       return 0;
@@ -53,8 +59,7 @@ public final class UCode_UCodeESC_CharStream {
     case 'F':
       return 15;
     }
-
-    throw new java.io.IOException(); // signal an invalid escape sequence
+    return -1;
   }
 
   public int bufpos = -1;
@@ -68,6 +73,7 @@ public final class UCode_UCodeESC_CharStream {
   private int line = 1;
 
   private java.io.Reader inputStream;
+  private boolean closed = false;
 
   private boolean prevCharIsCR = false;
   private boolean prevCharIsLF = false;
@@ -116,41 +122,41 @@ public final class UCode_UCodeESC_CharStream {
     tokenBegin = 0;
   }
 
-  private final void FillBuff() throws java.io.IOException {
+  private final void FillBuff() throws EOFException {
     int i;
     if (maxNextCharInd == 4096)
       maxNextCharInd = nextCharInd = 0;
 
+    if (closed)
+      throw new EOFException();
     try {
       if ((i = inputStream.read(nextCharBuf, maxNextCharInd, 4096 - maxNextCharInd)) == -1) {
+        closed = true;
         inputStream.close();
-        throw new java.io.IOException();
+        throw new EOFException();
       }
       else
         maxNextCharInd += i;
-      return;
     }
-    catch (java.io.IOException e) {
-      if (bufpos != 0) {
-        --bufpos;
-        backup(0);
-      }
-      else {
-        bufline[bufpos] = line;
-        bufcolumn[bufpos] = column;
-      }
-      throw e;
+    catch (IOException e) {
+      throw new BuildException(e);
     }
   }
 
-  private final char ReadChar() throws java.io.IOException {
+  private final char ReadChar() throws EOFException {
     if (++nextCharInd >= maxNextCharInd)
       FillBuff();
 
     return nextCharBuf[nextCharInd];
   }
 
-  public final char BeginToken() throws java.io.IOException {
+  private final char PeekChar() throws EOFException {
+    char c = ReadChar();
+    --nextCharInd;
+    return c;
+  }
+
+  public final char BeginToken() throws EOFException {
     if (inBuf > 0) {
       --inBuf;
       return buffer[tokenBegin = (bufpos == bufsize - 1) ? (bufpos = 0)
@@ -215,80 +221,102 @@ public final class UCode_UCodeESC_CharStream {
     bufcolumn[bufpos] = column;
   }
 
-  public final char readChar() throws java.io.IOException {
+  public final char readChar() throws EOFException {
     if (inBuf > 0) {
       --inBuf;
       return buffer[(bufpos == bufsize - 1) ? (bufpos = 0) : ++bufpos];
     }
 
     char c;
-
-    if (++bufpos == available)
-      AdjustBuffSize();
-
-    if (((buffer[bufpos] = c = ReadChar()) == '\\')) {
-      UpdateLineColumn(c);
-
-      int backSlashCnt = 1;
-
-      for (; ;) // Read all the backslashes
-      {
+    try {
+      c = ReadChar();
+    }
+    catch (EOFException e) {
+      if (bufpos == -1) {
         if (++bufpos == available)
           AdjustBuffSize();
-
-        try {
-          if ((buffer[bufpos] = c = ReadChar()) != '\\') {
-            UpdateLineColumn(c);
-            // found a non-backslash char.
-            if ((c == 'u') && ((backSlashCnt & 1) == 1)) {
-              if (--bufpos < 0)
-                bufpos = bufsize - 1;
-
-              break;
-            }
-
-            backup(backSlashCnt);
-            return '\\';
-          }
-        }
-        catch (java.io.IOException e) {
-          if (backSlashCnt > 1)
-            backup(backSlashCnt);
-
-          return '\\';
-        }
-
-        UpdateLineColumn(c);
-        backSlashCnt++;
+        bufline[bufpos] = line;
+        bufcolumn[bufpos] = column;
       }
-
-      // Here, we have seen an odd number of backslash's followed by a 'u'
-      try {
-        while ((c = ReadChar()) == 'u')
-          ++column;
-
-        buffer[bufpos] = c = (char) (hexval(c) << 12 |
-                hexval(ReadChar()) << 8 |
-                hexval(ReadChar()) << 4 |
-                hexval(ReadChar()));
-
-        column += 4;
-      }
-      catch (java.io.IOException e) {
-        throw new Error("Invalid escape character at line " + line +
-                        " column " + column + ".");
-      }
-
-      if (backSlashCnt == 1)
+      throw e;
+    }
+    if (++bufpos == available)
+      AdjustBuffSize();
+    buffer[bufpos] = c;
+    UpdateLineColumn(c);
+    try {
+      if (c != '\\' || PeekChar() != 'x')
         return c;
-      else {
-        backup(backSlashCnt - 1);
+    }
+    catch (EOFException e) {
+      return c;
+    }
+
+    int xCnt = 1;
+    for (;;) {
+      ReadChar();
+      if (++bufpos == available)
+        AdjustBuffSize();
+      buffer[bufpos] = 'x';
+      UpdateLineColumn('x');
+      try {
+        c = PeekChar();
+      }
+      catch (EOFException e) {
+        backup(xCnt);
         return '\\';
       }
+      if (c == '{') {
+        ReadChar();
+        column++;
+        // backup past the 'x's
+        bufpos -= xCnt;
+        if (bufpos < 0)
+          bufpos += bufsize;
+        break;
+      }
+      if (c != 'x') {
+        backup(xCnt);
+        return '\\';
+      }
+      xCnt++;
     }
-    else {
-      UpdateLineColumn(c);
-      return (c);
+    try {
+      int scalarValue = hexval(ReadChar());
+      column++;
+      if (scalarValue < 0)
+        throw new EscapeSyntaxException("illegal_hex_digit", line, column);
+      while ((c = ReadChar()) != '}') {
+        column++;
+        int n = hexval(c);
+        if (n < 0)
+          throw new EscapeSyntaxException("illegal_hex_digit", line, column);
+        scalarValue <<= 4;
+        scalarValue |= n;
+        if (scalarValue >= 0x110000)
+          throw new EscapeSyntaxException("char_code_too_big", line, column);
+      }
+      column++; // for the '}'
+      if (scalarValue <= 0xFFFF) {
+        c = (char)scalarValue;
+        if (Utf16.isSurrogate(c))
+          throw new EscapeSyntaxException("illegal_char_code", line, column);
+        buffer[bufpos] = c;
+        return c;
+      }
+      c = Utf16.surrogate1(scalarValue);
+      buffer[bufpos] = c;
+      int bufpos1 = bufpos;
+      if (++bufpos == bufsize)
+        bufpos = 0;
+      buffer[bufpos] = Utf16.surrogate2(scalarValue);
+      bufline[bufpos] = bufline[bufpos1];
+      bufcolumn[bufpos] = bufcolumn[bufpos1];
+      backup(1);
+      return c;
+    }
+    catch (EOFException e) {
+      throw new EscapeSyntaxException("incomplete_escape", line, column);
     }
   }
 
@@ -354,6 +382,7 @@ public final class UCode_UCodeESC_CharStream {
   public void ReInit(java.io.Reader dstream,
                      int startline, int startcolumn, int buffersize) {
     inputStream = dstream;
+    closed = false;
     line = startline;
     column = startcolumn - 1;
 
