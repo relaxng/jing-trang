@@ -63,13 +63,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
-/*
-
-Tasks:
+/* Tasks:
 Check for bad recursion
 Check single element type
 Warning when approximating datatypes
-Non-local namespaces
+Avoid duplicate namespace declarations for global attributes
+Option to generate namespace declarations only on start elements
 Recognize #FIXED attributes
 Include
 Support duplicate definitions with combine="interleave" for attlists
@@ -101,6 +100,9 @@ public class DtdOutput {
   private Map seenTable = new HashMap();
   private Map elementToAttlistMap = new HashMap();
   private Map paramEntityToElementMap = new HashMap();
+  private String defaultNamespaceUri = null;
+  // map namespace URIs to non-empty prefix
+  private Map namespaceUriMap = new HashMap();
 
   PatternVisitor topLevelContentModelOutput = new TopLevelContentModelOutput();
   PatternVisitor nestedContentModelOutput = new ContentModelOutput();
@@ -223,8 +225,12 @@ public class DtdOutput {
     }
 
     public Object visitAttribute(AttributePattern p) {
-      if (p.getNameClass().accept(this) == Type.DIRECT_MULTI_ELEMENT)
-        error("sorry_attribute_choice_name_class", p.getNameClass().getSourceLocation());
+      if (p.getNameClass() instanceof NameNameClass) {
+        NameNameClass nc = (NameNameClass)p.getNameClass();
+        noteName(nc, false);
+      }
+      else
+        error("sorry_attribute_name_class", p.getNameClass().getSourceLocation());
       Type t = analyzeType(this, p.getChild());
       if (!t.isA(Type.ATTRIBUTE_TYPE) && t != Type.DIRECT_TEXT && t != Type.ERROR)
         error("sorry_attribute_type", p.getSourceLocation());
@@ -365,8 +371,7 @@ public class DtdOutput {
 
     public Object visitName(NameNameClass nc) {
       String ns = nc.getNamespaceUri();
-      if (ns != NameClass.INHERIT_NS && ns.length() != 0)
-        error("sorry_namespace", nc.getSourceLocation());
+      noteName(nc, true);
       return Type.DIRECT_SINGLE_ELEMENT;
     }
   }
@@ -601,7 +606,15 @@ public class DtdOutput {
 
     public Object visitAttribute(AttributePattern p) {
       indent();
-      buf.append(((NameNameClass)p.getNameClass()).getLocalName());
+      NameNameClass nnc = (NameNameClass)p.getNameClass();
+      String ns = nnc.getNamespaceUri();
+      String prefix = null;
+      if (!ns.equals("") && ns != NameClass.INHERIT_NS) {
+        prefix = (String)namespaceUriMap.get(ns);
+        buf.append(prefix);
+        buf.append(':');
+      }
+      buf.append(nnc.getLocalName());
       buf.append(" ");
       p.getChild().accept(topLevelAttributeTypeOutput);
       if (isRequired())
@@ -612,29 +625,15 @@ public class DtdOutput {
           buf.append(" #IMPLIED");
         else {
           buf.append(' ');
-          buf.append('\'');
-          for (int i = 0, len = dv.length(); i < len; i++) {
-            char c = dv.charAt(i);
-            switch (c) {
-            case '<':
-              buf.append("&lt;");
-              break;
-            case '&':
-              buf.append("&amp;");
-              break;
-            case '\'':
-              buf.append("&apos;");
-              break;
-            case '"':
-              buf.append("&quot;");
-              break;
-            default:
-              buf.append(c);
-              break;
-            }
-          }
-          buf.append('\'');
+          attributeValueLiteral(dv);
         }
+      }
+      if (prefix != null) {
+        indent();
+        buf.append("xmlns:");
+        buf.append(prefix);
+        buf.append(" CDATA #FIXED ");
+        attributeValueLiteral(ns);
       }
       return null;
     }
@@ -889,12 +888,12 @@ public class DtdOutput {
     elementQueue.clear();
   }
 
-
   void output(Pattern p) throws IOException {
     try {
       p = (Pattern)p.accept(new Simplifier());
       analyzeType(new Analyzer(), p);
       if (!hadError) {
+        assignPrefixes();
         if (p == grammarPattern)
           grammarOutput.includeStart = true;
         else {
@@ -969,6 +968,53 @@ public class DtdOutput {
     return ((NameNameClass)nc).getLocalName();
   }
 
+  private Set usedPrefixes = new HashSet();
+  private Set unassignedNamespaceUris = new HashSet();
+
+  void noteName(NameNameClass nc, boolean defaultable) {
+    String ns = nc.getNamespaceUri();
+    if (ns.equals("") || ns == NameClass.INHERIT_NS) {
+      if (defaultable)
+        defaultNamespaceUri = "";
+      return;
+    }
+    String assignedPrefix = (String)namespaceUriMap.get(ns);
+    if (assignedPrefix != null)
+      return;
+    String prefix = nc.getPrefix();
+    if (prefix == null) {
+      if (defaultNamespaceUri == null && defaultable)
+        defaultNamespaceUri = ns;
+      unassignedNamespaceUris.add(ns);
+    }
+    else {
+      if (usedPrefixes.contains(prefix))
+        unassignedNamespaceUris.add(ns);
+      else {
+        usedPrefixes.add(prefix);
+        namespaceUriMap.put(ns, prefix);
+        unassignedNamespaceUris.remove(ns);
+      }
+    }
+  }
+
+  void assignPrefixes() {
+    if (defaultNamespaceUri == null)
+      defaultNamespaceUri = "";
+    int n = 0;
+    for (Iterator iter = unassignedNamespaceUris.iterator(); iter.hasNext();) {
+      String ns = (String)iter.next();
+      for (;;) {
+        ++n;
+        String prefix = "ns" + Integer.toString(n);
+        if (!usedPrefixes.contains(prefix)) {
+          namespaceUriMap.put(ns, prefix);
+          break;
+        }
+      }
+    }
+  }
+
   void paramEntityRef(RefPattern p) {
     String name = p.getName();
     buf.append('%');
@@ -976,6 +1022,31 @@ public class DtdOutput {
     buf.append(';');
     if (!doneParamEntitySet.contains(name))
       requiredParamEntities.add(name);
+  }
+
+  void attributeValueLiteral(String value) {
+    buf.append('\'');
+    for (int i = 0, len = value.length(); i < len; i++) {
+      char c = value.charAt(i);
+      switch (c) {
+      case '<':
+        buf.append("&lt;");
+        break;
+      case '&':
+        buf.append("&amp;");
+        break;
+      case '\'':
+        buf.append("&apos;");
+        break;
+      case '"':
+        buf.append("&quot;");
+        break;
+      default:
+        buf.append(c);
+        break;
+      }
+    }
+    buf.append('\'');
   }
 
   void outputRequiredParamEntities() {
@@ -1044,15 +1115,40 @@ public class DtdOutput {
     final NameClass nc = p.getNameClass();
     nc.accept(new NameClassWalker() {
       public Object visitName(NameNameClass nc) {
+        String ns = nc.getNamespaceUri();
+        String name;
+        String prefix;
+        if (ns.equals("") || ns.equals(defaultNamespaceUri) || ns == NameClass.INHERIT_NS) {
+          name = nc.getLocalName();
+          prefix = null;
+        }
+        else {
+          prefix = (String)namespaceUriMap.get(ns);
+          name = prefix + ":" + nc.getLocalName();
+        }
         write("<!ELEMENT ");
-        write(nc.getLocalName());
+        write(name);
         write(' ');
         write(contentModel);
         write('>');
         newline();
-        if (atts.length() != 0) {
+        if (atts.length() != 0 || ns != NameClass.INHERIT_NS) {
           write("<!ATTLIST ");
-          write(nc.getLocalName());
+          write(name);
+          if (ns != NameClass.INHERIT_NS) {
+            newline();
+            write("  ");
+            if (prefix != null) {
+              write("xmlns:");
+              write(prefix);
+            }
+            else
+              write("xmlns");
+            write(" CDATA #FIXED ");
+            buf.setLength(0);
+            attributeValueLiteral(ns);
+            write(buf.toString());
+          }
           write(atts);
           write('>');
           newline();
