@@ -44,6 +44,10 @@ public class NamespaceManager {
     Map movedStructureNameMap = new HashMap();
     Set movedElementNameSet = new HashSet();
     Set movedAttributeNameSet = new HashSet();
+    boolean movedOtherElement = false;
+    boolean movedOtherAttribute = false;
+    String otherElementName;
+    String otherAttributeName;
   }
 
   static class NameInfo {
@@ -266,6 +270,26 @@ public class NamespaceManager {
     public void visitInclude(Include include) {
       new StructureMover(include.getIncludedSchema());
     }
+
+    public Object visitWildcardElement(WildcardElement p) {
+      return visitWildcard(p.getWildcard(), true);
+    }
+
+    public Object visitWildcardAttribute(WildcardAttribute a) {
+      return visitWildcard(a.getWildcard(), false);
+    }
+
+    private Object visitWildcard(Wildcard wc, boolean isElement) {
+      String ns = otherNamespace(wc);
+      if (ns != null && !ns.equals(currentNamespace)) {
+        TargetNamespace tn = lookupTargetNamespace(ns);
+        if (isElement)
+          tn.movedOtherElement = true;
+        else
+          tn.movedOtherAttribute = true;
+      }
+      return null;
+    }
   }
 
   NamespaceManager(Schema schema, SourceUriGenerator sug) {
@@ -361,29 +385,49 @@ public class NamespaceManager {
     TargetNamespace tn = lookupTargetNamespace(ns);
     String name = (String)tn.movedStructureNameMap.get(struct);
     if (name == null) {
-      Set movedStructureNameSet = (struct instanceof Element
-                                   ? tn.movedElementNameSet
-                                   : tn.movedAttributeNameSet);
-      String base = struct.getName().getLocalName();
-      name = base;
-      for (int n = 1;; n++) {
-        if (!movedStructureNameSet.contains(name)) {
-          Definition def;
-          if (struct instanceof Element)
-            def = schema.getGroup(name);
-          else
-            def = schema.getAttributeGroup(name);
-          if (def == null
-              || !getTargetNamespace(def.getParentSchema().getUri()).equals(ns)
-              || (def instanceof GroupDefinition
-                  && willElide((GroupDefinition)def)))
-            break;
-        }
-        name = base + Integer.toString(n);
-      }
-      movedStructureNameSet.add(name);
+      name = generateName(ns, tn, struct.getName().getLocalName(), struct instanceof Element);
       tn.movedStructureNameMap.put(struct, name);
     }
+    return name;
+  }
+
+  String getOtherElementName(String ns) {
+    TargetNamespace tn = lookupTargetNamespace(ns);
+    if (!tn.movedOtherElement)
+      return null;
+    if (tn.otherElementName == null)
+      tn.otherElementName = generateName(ns, tn, "local", true);
+    return tn.otherElementName;
+  }
+
+  String getOtherAttributeName(String ns) {
+    TargetNamespace tn = lookupTargetNamespace(ns);
+    if (!tn.movedOtherAttribute)
+      return null;
+    if (tn.otherAttributeName == null)
+      tn.otherAttributeName = generateName(ns, tn, "local", false);
+    return tn.otherAttributeName;
+  }
+
+  private String generateName(String ns, TargetNamespace tn, String base, boolean isElement) {
+    Set movedStructureNameSet = isElement ? tn.movedElementNameSet : tn.movedAttributeNameSet;
+    String name = base;
+    for (int n = 1;; n++) {
+      if (!movedStructureNameSet.contains(name)) {
+        Definition def;
+        if (isElement)
+          def = schema.getGroup(name);
+        else
+          def = schema.getAttributeGroup(name);
+        if (def == null
+            || !getTargetNamespace(def.getParentSchema().getUri()).equals(ns)
+            || (def instanceof GroupDefinition
+                && willElide((GroupDefinition)def)))
+          break;
+      }
+      name = base + Integer.toString(n);
+    }
+    movedStructureNameSet.add(name);
     return name;
   }
 

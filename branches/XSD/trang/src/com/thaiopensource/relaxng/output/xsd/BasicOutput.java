@@ -293,9 +293,17 @@ public class BasicOutput {
     }
 
     public Object visitWildcardElement(WildcardElement p) {
-      boolean usedWrapper = startWrapperForAny();
-      namespaceAttribute(p.getWildcard());
-      xw.attribute("processContents", "skip");
+      String ns = NamespaceManager.otherNamespace(p.getWildcard());
+      boolean usedWrapper;
+      if (ns != null && !ns.equals(targetNamespace)) {
+        usedWrapper = startWrapperForGroupRef();
+        xw.attribute("ref", qualifyName(ns, nsm.getOtherElementName(ns)));
+      }
+      else {
+        usedWrapper = startWrapperForAny();
+        namespaceAttribute(p.getWildcard());
+        xw.attribute("processContents", "skip");
+      }
       endWrapper(usedWrapper);
       return null;
     }
@@ -450,12 +458,20 @@ public class BasicOutput {
 
   class AttributeWildcardOutput extends SchemaWalker {
     public Object visitWildcardAttribute(WildcardAttribute a) {
-       xw.startElement(xs("anyAttribute"));
-       namespaceAttribute(a.getWildcard());
-       xw.attribute("processContents", "skip");
-       xw.endElement();
-       return null;
-     }
+      String ns = NamespaceManager.otherNamespace(a.getWildcard());
+      if (ns != null && !ns.equals(targetNamespace)) {
+        xw.startElement(xs("attributeGroup"));
+        xw.attribute("ref", qualifyName(ns, nsm.getOtherAttributeName(ns)));
+        xw.endElement();
+      }
+      else {
+        xw.startElement(xs("anyAttribute"));
+        namespaceAttribute(a.getWildcard());
+        xw.attribute("processContents", "skip");
+        xw.endElement();
+      }
+      return null;
+    }
   }
 
   class GlobalElementOutput implements ParticleVisitor, ComplexTypeVisitor {
@@ -664,9 +680,11 @@ public class BasicOutput {
         outputImport(ns, nsm.getRootSchema(ns));
     }
     schema.accept(schemaOutput);
-
-    for (Iterator iter = nsm.getMovedStructures(targetNamespace).iterator(); iter.hasNext();)
-      ((Structure)iter.next()).accept(movedStructureOutput);
+    if (nsm.getRootSchema(targetNamespace).equals(sourceUri)) {
+      for (Iterator iter = nsm.getMovedStructures(targetNamespace).iterator(); iter.hasNext();)
+        ((Structure)iter.next()).accept(movedStructureOutput);
+      outputOther();
+    }
     xw.endElement();
     xw.close();
   }
@@ -701,7 +719,7 @@ public class BasicOutput {
       xw.attribute("namespace", buf.toString());
     }
     else {
-      if (wc.getNamespaces().contains("") && wc.getNamespaces().contains(targetNamespace))
+      if (targetNamespace.equals(NamespaceManager.otherNamespace(wc)))
         xw.attribute("namespace", "##other");
     }
   }
@@ -718,6 +736,31 @@ public class BasicOutput {
     if (ns.equals(""))
       return localName;
     return pm.getPrefix(ns) + ":" + localName;
+  }
+
+  void outputOther() {
+    String name = nsm.getOtherElementName(targetNamespace);
+    if (name != null) {
+      xw.startElement(xs("group"));
+      xw.attribute("name", name);
+      xw.startElement(xs("sequence"));
+      xw.startElement(xs("any"));
+      xw.attribute("namespace", "##other");
+      xw.attribute("processContents", "skip");
+      xw.endElement();
+      xw.endElement();
+      xw.endElement();
+    }
+    name = nsm.getOtherAttributeName(targetNamespace);
+    if (name != null) {
+      xw.startElement(xs("attributeGroup"));
+      xw.attribute("name", name);
+      xw.startElement(xs("anyAttribute"));
+      xw.attribute("namespace", "##other");
+      xw.attribute("processContents", "skip");
+      xw.endElement();
+      xw.endElement();
+    }
   }
 
   void outputInclude(String href) {
