@@ -2,7 +2,9 @@
 
 <property name="sdkjava.dir" value="c:\Program Files\Microsoft SDK for Java 4.0"/>
 
-<property name="javacc.dir" value="lib"/>
+<property name="convfiles"
+          value="com/thaiopensource/relaxng/output/**,
+                 com/thaiopensource/relaxng/edit/**"/>
 
 <target name="all" depends="jar, exegen, test, validate"/>
 
@@ -11,11 +13,15 @@
   <property file="src/com/thaiopensource/relaxng/util/resources/Version.properties"/>
 </target>
 
+<target name="init-conv" depends="init">
+  <mkdir dir="build/conv"/>
+</target>
+
 <target name="compile-grammar" depends="init">
  <mkdir dir="build/src/com/thaiopensource/relaxng/parse/nonxml"/>
  <javacc target="src/com/thaiopensource/relaxng/parse/nonxml/NonXmlSyntax.jj"
          outputdirectory="build/src/com/thaiopensource/relaxng/parse/nonxml"
-         javacchome="${javacc.dir}"
+         javacchome="lib"
          />
  <delete quiet="true">
   <fileset dir="build/src/com/thaiopensource/relaxng/parse/nonxml"
@@ -24,18 +30,47 @@
 </target>
 
 <target name="compile" depends="compile-grammar">
-
   <mkdir dir="build/classes"/>
-  <javac srcdir="src:build/src" destdir="build/classes"/>
-
+  <javac srcdir="src:build/src" destdir="build/classes"
+         excludes="${convfiles}"/>
 </target>
 
-<target name="jar" depends="compile">
+<target name="conv-compile" depends="compile,init-conv">
+  <mkdir dir="build/conv/classes"/>
+  <javac srcdir="src" destdir="build/conv/classes"
+         classpath="build/classes"
+         includes="${convfiles}"/>
+</target>
 
-  <jar jarfile="build/jing.jar" manifest="src/META-INF/MANIFEST.MF">
-    <fileset dir="build/classes"/>
-    <fileset dir="src" includes="**/*.properties"/>
+<target name="copy-resources" depends="init">
+  <mkdir dir="build/resources"/>
+  <copy todir="build/resources" includeEmptyDirs="no">
+    <fileset dir="src"
+       includes="**/*.properties"
+       excludes="${convfiles}"/>
     <fileset dir="src" includes="META-INF/services/*"/>
+  </copy>
+</target>
+
+<target name="conv-copy-resources" depends="init-conv">
+  <mkdir dir="build/conv/resources"/>
+  <copy todir="build/conv/resources" includeEmptyDirs="no">
+    <fileset dir="src" includes="${convfiles}" excludes="**/*.java,**/*.txt"/>
+  </copy>
+  <delete>
+    <fileset dir="build/conv/resources" excludes="**/*.properties"/>
+  </delete>
+</target>
+
+<target name="jar" depends="compile,copy-resources">
+
+  <echo file="build/jing-manifest.txt">Manifest-Version: 1.0
+Main-Class: com/thaiopensource/relaxng/util/Driver
+</echo>
+
+  <jar jarfile="build/jing.jar" manifest="build/jing-manifest.txt">
+    <fileset dir="build/classes"/>
+    <fileset dir="build/resources"/>
   </jar>
 
   <taskdef name="jing" classname="com.thaiopensource.relaxng.util.JingTask">
@@ -46,16 +81,29 @@
 
 </target>
 
-<target name="exegen" depends="compile,check-exe,xp-files,sax-files"
+<target name="conv-jar" depends="conv-compile,conv-copy-resources">
+
+  <echo file="build/conv-manifest.txt">Manifest-Version: 1.0
+Main-Class: com/thaiopensource/relaxng/output/Driver
+Class-Path: jing.jar
+</echo>
+
+  <jar jarfile="build/conv.jar" manifest="build/conv-manifest.txt">
+    <fileset dir="build/conv/classes"/>
+    <fileset dir="build/conv/resources"/>
+  </jar>
+
+</target>
+
+<target name="exegen" depends="compile,copy-resources,check-exe,xp-files,sax-files"
         unless="exe-ok">
   <exec dir="." executable="${sdkjava.dir}\bin\jexegen" failonerror="yes">
     <arg value="/main:com.thaiopensource.relaxng.util.ExegenDriver"/>
     <arg value="/nologo"/>
     <arg value="/out:build\jing.exe"/>
     <arg value="/r"/>
-    <arg value="/base:src"/>
-    <arg value="*.properties"/>
-    <arg value="META-INF\services\*"/>
+    <arg value="/base:build\resources"/>
+    <arg value="*.*"/>
     <arg value="/base:build\classes"/>
     <arg value="*.class"/>
     <arg value="/base:build\xp-files"/>
@@ -187,7 +235,7 @@
 
 <target name="dist" depends="jar, exegen, validate, test, javadoc, datatype-sample, doc">
   <zip zipfile="build/jing-src.zip">
-    <fileset dir="src" includes="**/*.java,**/*.properties"/>
+    <fileset dir="src" includes="**/*.java,**/*.properties" excludes="${convfiles}"/>
   </zip>
   <zip zipfile="build/xhtml-rng.zip">
     <fileset dir="." includes="xhtml/**/*.rng,xhtml/index.html"/>
