@@ -1,8 +1,4 @@
-Finish trang.html.
-
 Make SAX-based parser preserve element annotations.
-
-Preserve all comments in non-XML syntax.
 
 SAXParser and comment formatting.
 
@@ -11,7 +7,7 @@ understandable by Emacs/Intellij.
 
 More helpful syntax error messages with non-XML syntax parser.
 
-Namespace declarations in element annotations.
+Namespace declarations in element annotations (also issue for TC).
 
 Support for IDREF checking via JARV.
 
