@@ -28,6 +28,8 @@ import com.thaiopensource.relaxng.output.xsd.basic.AbstractAttributeUseVisitor;
 import com.thaiopensource.relaxng.output.xsd.basic.WildcardAttribute;
 import com.thaiopensource.relaxng.output.xsd.basic.Wildcard;
 import com.thaiopensource.relaxng.output.xsd.basic.WildcardElement;
+import com.thaiopensource.relaxng.output.xsd.basic.ComplexType;
+import com.thaiopensource.relaxng.output.xsd.basic.ComplexTypeComplexContent;
 import com.thaiopensource.relaxng.output.common.Name;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
 
@@ -44,6 +46,7 @@ class Transformer extends SchemaTransformer {
   private final AttributeMapper attributeMapper = new AttributeMapper();
   private final Set transformedAttributeGroups = new HashSet();
   private final ErrorReporter er;
+  private boolean preserveAllGroup = false;
 
   Transformer(Schema schema, ErrorReporter er) {
     super(schema);
@@ -140,6 +143,10 @@ class Transformer extends SchemaTransformer {
 
 
   public Object visitAll(ParticleAll p) {
+    if (preserveAllGroup) {
+      preserveAllGroup = false;
+      return super.visitAll(p);
+    }
     return new ParticleRepeat(p.getLocation(),
                               p.getAnnotation(),
                               new ParticleChoice(p.getLocation(),
@@ -447,4 +454,33 @@ class Transformer extends SchemaTransformer {
     return def.getAttributeUses();
   }
 
+  public Object visitElement(Element p) {
+    if (containsLegalAllGroup(p))
+      preserveAllGroup = true;
+    return super.visitElement(p);
+  }
+
+  private static boolean containsLegalAllGroup(Element p) {
+    ComplexType t = p.getComplexType();
+    if (!(t instanceof ComplexTypeComplexContent))
+      return false;
+    Particle particle = ((ComplexTypeComplexContent)t).getParticle();
+    if (!(particle instanceof ParticleAll))
+      return false;
+    String ns = p.getName().getNamespaceUri();
+    for (Iterator iter = ((ParticleAll)particle).getChildren().iterator(); iter.hasNext();) {
+      Particle child = (Particle)iter.next();
+      if (child instanceof ParticleRepeat) {
+        Occurs occur = ((ParticleRepeat)child).getOccurs();
+        if (occur.getMin() > 1 || occur.getMax() > 1)
+          return false;
+        child = ((ParticleRepeat)child).getChild();
+      }
+      if (!(child instanceof Element))
+        return false;
+      if (!((Element)child).getName().getNamespaceUri().equals(ns))
+        return false;
+    }
+    return true;
+  }
 }

@@ -55,7 +55,6 @@ Handle externalRef (remember problem with parentRef in externalRef)
 
 Interleave
 - Avoid introducing ambiguities when approximating <interleave>, eg x & (y, y).
-- Take advantage of xs:all.
 - Optimize nested choices in expanding <interleave>.
 - Optimize eg x* & (a, b, c) into x*, (a, x*), (b, x*), (c, x*)
 
