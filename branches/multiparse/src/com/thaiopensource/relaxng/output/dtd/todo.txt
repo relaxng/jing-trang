@@ -14,6 +14,7 @@ allow mixed(repeat(NOT_ALLOWED))
 Avoid unnecessary parentheses around group members
 Pretty-print content models to avoid excessively long lines
 Prettier formatting of ATTLISTs
+Add some blank lines for prettiness
 Handle DTD compatibility ID/IDREF/IDREFS datatypes
 Proper error reporting
 Approximate data in content by #PCDATA
