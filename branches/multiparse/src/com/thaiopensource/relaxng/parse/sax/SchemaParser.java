@@ -1229,7 +1229,6 @@ class SchemaParser {
 
   void error(SAXParseException e) throws SAXException {
     hadError = true;
-    ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
       eh.error(e);
   }
@@ -1260,7 +1259,6 @@ class SchemaParser {
   }
 
   void warning(SAXParseException e) throws SAXException {
-    ErrorHandler eh = xr.getErrorHandler();
     if (eh != null)
       eh.warning(e);
   }
@@ -1275,6 +1273,8 @@ class SchemaParser {
     this.eh = eh;
     this.schemaBuilder = schemaBuilder;
     this.ncNameDatatype = ncNameDatatype;
+    if (eh != null)
+      xr.setErrorHandler(eh);
     initPatternTable();
     initNameClassTable();
     prefixMapping = new PrefixMapping("xml", xmlURI, null);
