@@ -10,7 +10,7 @@ public class ChoiceNameClass extends NameClass {
     return children;
   }
 
-  Object accept(NameClassVisitor visitor) {
+  public Object accept(NameClassVisitor visitor) {
     return visitor.visitChoice(this);
   }
 }

@@ -42,7 +42,7 @@ public class DataPattern extends Pattern {
     this.except = except;
   }
 
-  Object accept(PatternVisitor visitor) {
+  public Object accept(PatternVisitor visitor) {
     return visitor.visitData(this);
   }
 }

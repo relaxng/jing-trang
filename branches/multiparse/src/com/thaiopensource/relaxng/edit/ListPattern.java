@@ -5,7 +5,7 @@ public class ListPattern extends UnaryPattern {
     super(child);
   }
 
-  Object accept(PatternVisitor visitor) {
+  public Object accept(PatternVisitor visitor) {
     return visitor.visitList(this);
   }
 }

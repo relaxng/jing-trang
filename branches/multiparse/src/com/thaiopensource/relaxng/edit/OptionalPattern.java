@@ -5,7 +5,7 @@ public class OptionalPattern extends UnaryPattern {
     super(child);
   }
 
-  Object accept(PatternVisitor visitor) {
+  public Object accept(PatternVisitor visitor) {
     return visitor.visitOptional(this);
   }
 }

@@ -56,7 +56,7 @@ public class ValuePattern extends Pattern {
     return prefixMap;
   }
 
-  Object accept(PatternVisitor visitor) {
+  public Object accept(PatternVisitor visitor) {
     return visitor.visitValue(this);
   }
 }

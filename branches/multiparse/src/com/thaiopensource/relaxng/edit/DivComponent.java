@@ -10,7 +10,7 @@ public class DivComponent extends Component implements Container {
     return components;
   }
 
-  Object accept(ComponentVisitor visitor) {
+  public Object accept(ComponentVisitor visitor) {
     return visitor.visitDiv(this);
   }
 }

@@ -1,37 +1,34 @@
 package com.thaiopensource.relaxng.edit;
 
+import com.thaiopensource.relaxng.IncorrectSchemaException;
 import com.thaiopensource.relaxng.parse.Annotations;
 import com.thaiopensource.relaxng.parse.BuildException;
 import com.thaiopensource.relaxng.parse.DataPatternBuilder;
 import com.thaiopensource.relaxng.parse.Div;
-import com.thaiopensource.relaxng.parse.ParsedElementAnnotation;
+import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
 import com.thaiopensource.relaxng.parse.Grammar;
 import com.thaiopensource.relaxng.parse.GrammarSection;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.Include;
+import com.thaiopensource.relaxng.parse.IncludedGrammar;
 import com.thaiopensource.relaxng.parse.Location;
+import com.thaiopensource.relaxng.parse.Parseable;
+import com.thaiopensource.relaxng.parse.ParsedElementAnnotation;
 import com.thaiopensource.relaxng.parse.ParsedNameClass;
 import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
-import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
-import com.thaiopensource.relaxng.parse.Parseable;
-import com.thaiopensource.relaxng.parse.IncludedGrammar;
-import com.thaiopensource.relaxng.parse.sax.SAXParseable;
-import com.thaiopensource.relaxng.parse.nonxml.NonXmlParseable;
-import com.thaiopensource.relaxng.util.DraconianErrorHandler;
-import com.thaiopensource.relaxng.util.Jaxp11XMLReaderCreator;
-import org.relaxng.datatype.ValidationContext;
-import org.relaxng.datatype.DatatypeLibraryFactory;
-import org.relaxng.datatype.DatatypeLibrary;
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.DatatypeException;
-import org.relaxng.datatype.helpers.DatatypeLibraryLoader;
-import org.xml.sax.InputSource;
+import org.relaxng.datatype.DatatypeLibrary;
+import org.relaxng.datatype.DatatypeLibraryFactory;
+import org.relaxng.datatype.ValidationContext;
+import org.xml.sax.SAXException;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Vector;
 import java.util.Map;
+import java.util.Vector;
 
 public class SchemaBuilderImpl implements SchemaBuilder {
   private final Parseable parseable;
@@ -423,18 +420,28 @@ public class SchemaBuilderImpl implements SchemaBuilder {
     return ns;
   }
 
-  static public Pattern parse(Parseable parseable, SchemaCollection sc, DatatypeLibraryFactory dlf) throws IllegalSchemaException {
-    return (Pattern)parseable.parse(new SchemaBuilderImpl(parseable, sc.getSchemas(), dlf));
+  static public Pattern parse(Parseable parseable, SchemaCollection sc, DatatypeLibraryFactory dlf)
+          throws IncorrectSchemaException, IOException, SAXException {
+    try {
+      return (Pattern)parseable.parse(new SchemaBuilderImpl(parseable, sc.getSchemas(), dlf));
+    }
+    catch (IllegalSchemaException e) {
+      throw new IncorrectSchemaException();
+    }
+    catch (BuildException e) {
+      Throwable t = e.getCause();
+      if (t instanceof IOException)
+        throw (IOException)t;
+      if (t instanceof RuntimeException)
+        throw (RuntimeException)t;
+      if (t instanceof IllegalSchemaException)
+        throw new IncorrectSchemaException();
+      if (t instanceof SAXException)
+        throw (SAXException)t;
+      if (t instanceof Exception)
+        throw new SAXException((Exception)t);
+      throw new SAXException(t.getClass().getName() + " thrown");
+    }
   }
 
-  static public void main(String[] args) throws IllegalSchemaException {
-    SchemaCollection sc = new SchemaCollection();
-    Pattern p = parse(new SAXParseable(new Jaxp11XMLReaderCreator(), new InputSource(args[0]), new DraconianErrorHandler()),
-                      sc,
-                      new DatatypeLibraryLoader());
-    dump(p, sc);
-  }
-
-  static public void dump(Pattern p, SchemaCollection sc) {
-  }
 }
