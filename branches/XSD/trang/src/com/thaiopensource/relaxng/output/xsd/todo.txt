@@ -1,3 +1,17 @@
+For each group name
+- set of names of groups in which referenced in head position
+- set of elements in which referenced in head position
+- flag saying whether referenced not in head position
+
+For each attrubute group name
+- set of elements in which referenced
+- set of names of attibute groups in whch referenced
+
+For each simple type name
+- set of elements in which referenced
+- set of names of simple types in which referenced as only thing
+
+
 Check for RNG contextual constraints
 
 Approximation warnings:
@@ -28,6 +42,10 @@ Map
   xyzzy
 </xs:complexType>
 
+Use complexType in place of group: <define> that contains both
+attributes or text and elements and sometimes referenced as a
+complexType, then define as complexType.
+
 Use the last component of the namespace URI in selecting prefix and generated schema file when no prefix is used in the
 RELAX NG.
 
@@ -37,7 +55,7 @@ Make choice of targetNamespace not depend on order of hash table iteration.
 
 Handle nested grammars (use different namespace for different grammars).
 
-Handle include overrides (1) resolve (2) turn into <redefine>.
+Handle include overrides: (1) resolve (2) turn into <redefine>.
 
 Preserve definitions that are equivalent to empty or notAllowed.
 
@@ -51,10 +69,6 @@ Interleave
 
 For a <value type="NOTATION"/>, map to NOTATION and generate an appropriate xs:notation declaration
 based on annotations.
-
-Use complexType in place of group: <define> that contains both
-attributes or text and elements and sometimes referenced as a
-complexType, then define as complexType.
 
 Deal with xsi attributes.
 
@@ -70,6 +84,6 @@ Deal with element type consistent restriction
 
 Deal with ambiguous content model restriction
 
-Support attribute defaults.
+Support attribute defaults (should be field on OptionalAttribute).
 
 Avoid redundant imports and redundant namespace declarations.
