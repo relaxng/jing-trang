@@ -1699,6 +1699,148 @@ element foo {
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<resource name="eg1.rnc">
+foo2 = element foo2 { bar }
+</resource>
+<resource name="eg2.rnc">
+namespace e2 = "http://www.example.com/2"
+
+bar = element e2:bar1 { element baz { empty } }
+      | element e2:bar2 { element baz { text } }
+</resource>
+<correct>
+default namespace = "http://www.example.com/1"
+
+include "eg1.rnc"
+include "eg2.rnc"
+
+start = element foo1 { bar } | foo2
+</correct>
+</compact>
+<xsd>
+<resource name="eg1.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:e2="http://www.example.com/2" xmlns:ns1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/2" schemaLocation="eg2.xsd"/>
+  <xs:element name="foo2">
+    <xs:complexType>
+      <xs:group ref="e2:bar"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</resource>
+<resource name="eg2.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:e2="http://www.example.com/2" xmlns:ns1="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/1" schemaLocation="c.xsd"/>
+  <xs:group name="bar">
+    <xs:choice>
+      <xs:element ref="e2:bar1"/>
+      <xs:element ref="e2:bar2"/>
+    </xs:choice>
+  </xs:group>
+  <xs:element name="bar1">
+    <xs:complexType>
+      <xs:group ref="ns1:baz"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="bar2">
+    <xs:complexType>
+      <xs:group ref="ns1:baz1"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:e2="http://www.example.com/2" xmlns:ns1="http://www.example.com/1">
+  <xs:include schemaLocation="eg1.xsd"/>
+  <xs:import namespace="http://www.example.com/2" schemaLocation="eg2.xsd"/>
+  <xs:element name="foo1">
+    <xs:complexType>
+      <xs:group ref="e2:bar"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:group name="baz">
+    <xs:sequence>
+      <xs:element name="baz">
+        <xs:complexType/>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:group name="baz1">
+    <xs:sequence>
+      <xs:element name="baz">
+        <xs:complexType mixed="true"/>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
+<testCase>
+<compact>
+<correct>
+namespace eg1 = "http://www.example.com/1"
+namespace eg2 = "http://www.example.com/2"
+namespace eg3 = "http://www.example.com/3"
+
+element eg2:foo {
+  element * - eg1:* { text },
+  element * - eg2:* { text },
+  element * - eg3:* { text }
+}
+</correct>
+</compact>
+<xsd>
+<resource name="ns1.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/3" xmlns:ns1="http://www.example.com/3" xmlns:eg2="http://www.example.com/2" xmlns:ns2="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/2" schemaLocation="c.xsd"/>
+  <xs:import namespace="http://www.example.com/1" schemaLocation="ns2.xsd"/>
+  <xs:group name="local">
+    <xs:sequence>
+      <xs:any namespace="##other" processContents="skip"/>
+    </xs:sequence>
+  </xs:group>
+</xs:schema>
+</resource>
+<resource name="ns2.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/1" xmlns:ns1="http://www.example.com/3" xmlns:eg2="http://www.example.com/2" xmlns:ns2="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/3" schemaLocation="ns1.xsd"/>
+  <xs:import namespace="http://www.example.com/2" schemaLocation="c.xsd"/>
+  <xs:group name="local">
+    <xs:sequence>
+      <xs:any namespace="##other" processContents="skip"/>
+    </xs:sequence>
+  </xs:group>
+</xs:schema>
+</resource>
+<correct>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://www.example.com/2" xmlns:ns1="http://www.example.com/3" xmlns:eg2="http://www.example.com/2" xmlns:ns2="http://www.example.com/1">
+  <xs:import namespace="http://www.example.com/3" schemaLocation="ns1.xsd"/>
+  <xs:import namespace="http://www.example.com/1" schemaLocation="ns2.xsd"/>
+  <xs:element name="foo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:group ref="ns2:local"/>
+          <xs:any namespace="##local" processContents="skip"/>
+        </xs:choice>
+        <xs:choice>
+          <xs:any namespace="##other" processContents="skip"/>
+          <xs:any namespace="##local" processContents="skip"/>
+        </xs:choice>
+        <xs:choice>
+          <xs:group ref="ns1:local"/>
+          <xs:any namespace="##local" processContents="skip"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+</correct>
+</xsd>
+</testCase>
 <!--
 <testCase>
 <compact>

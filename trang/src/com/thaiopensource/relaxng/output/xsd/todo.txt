@@ -6,9 +6,6 @@ combine attributes
 
 Take advantage of minOccurs > 1 and 1 < maxOccurs < infinity.
 
-May sometimes need to move Attribute/ElementWildcards to schema with different target namespace to
-take advantage of ##other.
-
 If expansion of a group causes the group to become unreferenced, then remove the group.
 
 Map
