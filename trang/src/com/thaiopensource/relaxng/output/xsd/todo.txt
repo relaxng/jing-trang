@@ -18,6 +18,8 @@ Take advantage of minOccurs > 1 and 1 < maxOccurs < infinity.
 
 If expansion of a group causes the group to become unreferenced, then remove the group.
 
+If define referenced only in something that is unreachable because of notAllowed, remove the define.
+
 Map
 
   foo = element bar|baz { xyzzy }
@@ -45,7 +47,7 @@ Make choice of targetNamespace not depend on order of hash table iteration.
 
 Handle nested grammars (use different namespace for different grammars).
 
-Handle include overrides: (1) resolve (2) turn into <redefine>.
+Turn overrides into <redefine>.
 
 Preserve definitions that are equivalent to empty or notAllowed.
 
@@ -77,3 +79,5 @@ Deal with ambiguous content model restriction
 Support attribute defaults (should be field on OptionalAttribute).
 
 Avoid redundant imports and redundant namespace declarations.
+
+With combine attributes, maybe insert <ref> to preserve file structure.
