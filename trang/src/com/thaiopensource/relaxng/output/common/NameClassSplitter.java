@@ -11,7 +11,7 @@ import java.util.Vector;
 public class NameClassSplitter extends AbstractVisitor {
   private List names = new Vector();
 
-  static List split(NameClass nc) {
+  static public List split(NameClass nc) {
     NameClassSplitter splitter = new NameClassSplitter();
     nc.accept(splitter);
     return splitter.names;
