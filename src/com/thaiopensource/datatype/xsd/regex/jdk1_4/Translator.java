@@ -2,7 +2,7 @@ package com.thaiopensource.datatype.xsd.regex.jdk1_4;
 
 import com.thaiopensource.util.Utf16;
 import com.thaiopensource.util.Localizer;
-import com.thaiopensource.datatype.xsd.InvalidRegexException;
+import com.thaiopensource.datatype.xsd.regex.RegexSyntaxException;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -10,7 +10,13 @@ import java.util.List;
 import java.util.Vector;
 import java.math.BigDecimal;
 
-class Translator {
+/**
+ * Translates XML Schema regexes into <code>java.util.regex</code> regexes.
+ *
+ * @see java.util.regex.Pattern
+ * @see <a href="http://www.w3.org/TR/xmlschema-2/#regexs">XML Schema Part 2</a>
+ */
+public class Translator {
   private String regExp;
   private int pos = 0;
   private int length;
@@ -196,8 +202,19 @@ class Translator {
     advance();
   }
 
-  static public String translate(String regExp) throws InvalidRegexException {
-    Translator tr = new Translator(regExp);
+  /**
+   * Translates a regular expression in the syntax of XML Schemas Part 2 into a regular
+   * expression in the syntax of <code>java.util.regex.Pattern</code>.
+   *
+   * @param regexp a String containing a regular expression in the syntax of XML Schemas Part 2
+   * @return a String containing a regular expression in the syntax of java.util.regex.Pattern
+   * @throws InvalidRegexExpression if <code>regexp</code> is not a regular expression in the
+   * syntax of XML Schemas Part 2
+   * @see java.util.regex.Pattern
+   * @see <a href="http://www.w3.org/TR/xmlschema-2/#regexs">XML Schema Part 2</a>
+   */
+  static public String translate(String regexp) throws RegexSyntaxException {
+    Translator tr = new Translator(regexp);
     tr.translateTop();
     return tr.result.toString();
   }
@@ -211,13 +228,13 @@ class Translator {
     }
   }
 
-  private void translateTop() throws InvalidRegexException {
+  private void translateTop() throws RegexSyntaxException {
     translateRegExp();
     if (curChar != EOS)
       throw makeException("expected_eos");
   }
 
-  private void translateRegExp() throws InvalidRegexException {
+  private void translateRegExp() throws RegexSyntaxException {
     translateBranch();
     while (curChar == '|') {
       copyCurChar();
@@ -225,12 +242,12 @@ class Translator {
     }
   }
 
-  private void translateBranch() throws InvalidRegexException {
+  private void translateBranch() throws RegexSyntaxException {
     while (translateAtom())
       translateQuantifier();
   }
 
-  private void translateQuantifier() throws InvalidRegexException {
+  private void translateQuantifier() throws RegexSyntaxException {
     switch (curChar) {
     case '*':
     case '?':
@@ -245,7 +262,7 @@ class Translator {
     }
   }
 
-  private void translateQuantity() throws InvalidRegexException {
+  private void translateQuantity() throws RegexSyntaxException {
     String lower = parseQuantExact();
     int lowerValue = -1;
     try {
@@ -275,7 +292,7 @@ class Translator {
     }
   }
 
-  private String parseQuantExact() throws InvalidRegexException {
+  private String parseQuantExact() throws RegexSyntaxException {
     StringBuffer buf = new StringBuffer();
     do {
       if ("0123456789".indexOf(curChar) < 0)
@@ -286,7 +303,7 @@ class Translator {
     return buf.toString();
   }
 
-  private void copyCurChar() throws InvalidRegexException {
+  private void copyCurChar() throws RegexSyntaxException {
     result.append(curChar);
     advance();
   }
@@ -829,7 +846,7 @@ class Translator {
     }
   }
 
-  boolean translateAtom() throws InvalidRegexException {
+  private boolean translateAtom() throws RegexSyntaxException {
     switch (curChar) {
     case EOS:
     case '?':
@@ -904,7 +921,7 @@ class Translator {
     return new Subtraction(new Union(includeList), new Union(excludeList));
   }
 
-  private CharClass parseEsc() throws InvalidRegexException {
+  private CharClass parseEsc() throws RegexSyntaxException {
     switch (curChar) {
     case 'n':
       advance();
@@ -974,7 +991,7 @@ class Translator {
     return tem;
   }
 
-  private CharClass parseProp() throws InvalidRegexException {
+  private CharClass parseProp() throws RegexSyntaxException {
     expect('{');
     int start = pos;
     for (;;) {
@@ -1030,12 +1047,12 @@ class Translator {
     return false;
   }
 
-  void expect(char c) throws InvalidRegexException {
+  private void expect(char c) throws RegexSyntaxException {
     if (curChar != c)
       throw makeException("expected", new String(new char[]{c}));
   }
 
-  private CharClass parseCharClassExpr() throws InvalidRegexException {
+  private CharClass parseCharClassExpr() throws RegexSyntaxException {
     boolean compl;
     if (curChar == '^') {
       advance();
@@ -1081,7 +1098,7 @@ class Translator {
     return result;
   }
 
-  CharClass parseCharClassEscOrXmlChar() throws InvalidRegexException {
+  private CharClass parseCharClassEscOrXmlChar() throws RegexSyntaxException {
     switch (curChar) {
     case EOS:
       expect(']');
@@ -1108,12 +1125,12 @@ class Translator {
     return tem;
   }
 
-  private InvalidRegexException makeException(String key) {
-    return new InvalidRegexException(localizer.message(key), pos - 1);
+  private RegexSyntaxException makeException(String key) {
+    return new RegexSyntaxException(localizer.message(key), pos - 1);
   }
 
-  private InvalidRegexException makeException(String key, String arg) {
-    return new InvalidRegexException(localizer.message(key, arg), pos - 1);
+  private RegexSyntaxException makeException(String key, String arg) {
+    return new RegexSyntaxException(localizer.message(key, arg), pos - 1);
   }
 
   static private boolean isJavaMetaChar(char c) {
@@ -1231,7 +1248,7 @@ class Translator {
     return new Union(classes);
   }
 
-  static CharClass makeCharClass(String members) {
+  private static CharClass makeCharClass(String members) {
     List list = new Vector();
     for (int i = 0, len = members.length(); i < len; i++)
       list.add(new SingleChar(members.charAt(i)));

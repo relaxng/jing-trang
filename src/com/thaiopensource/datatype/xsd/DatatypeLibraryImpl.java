@@ -4,6 +4,7 @@ import java.util.Hashtable;
 import java.util.Enumeration;
 
 import com.thaiopensource.util.Service;
+import com.thaiopensource.datatype.xsd.regex.RegexEngine;
 import org.xml.sax.XMLReader;
 
 import org.relaxng.datatype.DatatypeLibrary;
