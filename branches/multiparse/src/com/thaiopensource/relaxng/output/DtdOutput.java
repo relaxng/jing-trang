@@ -62,7 +62,7 @@ Check single element type
 Handle name class choice
 Non-local namespaces
 Include
-combine/suppress definition corresponding to ATTLIST
+combine attribute/suppress definition corresponding to ATTLIST
 catch bad recursion
 nested grammars
 a:defaultValue
