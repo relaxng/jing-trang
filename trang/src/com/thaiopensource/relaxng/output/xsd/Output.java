@@ -24,6 +24,9 @@ import com.thaiopensource.relaxng.edit.OneOrMorePattern;
 import com.thaiopensource.relaxng.edit.RefPattern;
 import com.thaiopensource.relaxng.edit.OptionalPattern;
 import com.thaiopensource.relaxng.edit.IncludeComponent;
+import com.thaiopensource.relaxng.edit.ElementPattern;
+import com.thaiopensource.relaxng.edit.MixedPattern;
+import com.thaiopensource.relaxng.edit.NameNameClass;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,6 +43,9 @@ class Output {
   private final XmlWriter xw;
   private final ComponentVisitor topLevelOutput = new TopLevelOutput();
   private final PatternVisitor simpleTypeOutput = new SimpleTypeOutput();
+  private final PatternVisitor groupOutput = new GroupOutput();
+  private final PatternVisitor particleOutput = new ParticleOutput();
+  private final PatternVisitor typeDefParticleOutput = new TypeDefParticleOutput();
   private final PatternVisitor occursCalculator = new OccursCalculator();
 
   static void output(SchemaInfo si, OutputDirectory od, ErrorReporter er) throws IOException {
@@ -75,6 +81,191 @@ class Output {
       ((Component)components.get(i)).accept(topLevelOutput);
     xw.endElement();
     xw.close();
+  }
+
+  /**
+   * Precondition for calling visit methods in this class is that the child type
+   * contains ELEMENT.
+   */
+  class ParticleOutput extends AbstractVisitor {
+    void startWrapper() { }
+    void endWrapper() { }
+
+    public Object visitZeroOrMore(ZeroOrMorePattern p) {
+      startWrapper();
+      xw.startElement(xs("sequence"));
+      xw.attribute("minOccurs", "0");
+      xw.attribute("maxOccurs", "unbounded");
+      p.getChild().accept(particleOutput);
+      xw.endElement();
+      endWrapper();
+      return null;
+    }
+
+    public Object visitOneOrMore(OneOrMorePattern p) {
+      startWrapper();
+      xw.startElement(xs("sequence"));
+      xw.attribute("maxOccurs", "unbounded");
+      p.getChild().accept(particleOutput);
+      xw.endElement();
+      endWrapper();
+      return null;
+    }
+
+    public Object visitOptional(OptionalPattern p) {
+      startWrapper();
+      xw.startElement(xs("sequence"));
+      xw.attribute("minOccurs", "0");
+      p.getChild().accept(particleOutput);
+      xw.endElement();
+      endWrapper();
+      return null;
+    }
+
+    public Object visitChoice(ChoicePattern p) {
+      int nChildren = 0;
+      boolean optional = false;
+      List children = p.getChildren();
+      int len = children.size();
+      for (int i = 0; i < len; i++) {
+        Pattern child = (Pattern)children.get(i);
+        ChildType ct = si.getChildType(child);
+        if (ct.contains(ChildType.ELEMENT))
+          nChildren++;
+        else if (!ct.equals(ChildType.NOT_ALLOWED))
+          optional = true;
+      }
+      if (optional)
+        startWrapper();
+      if (nChildren != 1 || optional) {
+        xw.startElement(xs("choice"));
+        if (optional)
+          xw.attribute("minOccurs", "0");
+      }
+      for (int i = 0; i < len; i++) {
+        Pattern child = (Pattern)children.get(i);
+        ChildType ct = si.getChildType(child);
+        if (ct.contains(ChildType.ELEMENT))
+          child.accept(nChildren == 1 && !optional ? this : particleOutput);
+      }
+      if (nChildren != 1 || optional)
+        xw.endElement();
+      if (optional)
+        endWrapper();
+      return null;
+    }
+
+    public Object visitGroup(GroupPattern p) {
+      int nChildren = 0;
+      List children = p.getChildren();
+      int len = children.size();
+      for (int i = 0; i < len; i++) {
+        Pattern child = (Pattern)children.get(i);
+        ChildType ct = si.getChildType(child);
+        if (ct.contains(ChildType.ELEMENT))
+          nChildren++;
+      }
+      if (nChildren != 1)
+        xw.startElement(xs("sequence"));
+      for (int i = 0; i < len; i++) {
+        Pattern child = (Pattern)children.get(i);
+        ChildType ct = si.getChildType(child);
+        if (ct.contains(ChildType.ELEMENT))
+          child.accept(nChildren == 1 ? this : particleOutput);
+      }
+      if (nChildren != 1)
+        xw.endElement();
+      return null;
+    }
+
+    public Object visitInterleave(InterleavePattern p) {
+      int nChildren = 0;
+      List children = p.getChildren();
+      int len = children.size();
+      for (int i = 0; i < len; i++) {
+        Pattern child = (Pattern)children.get(i);
+        ChildType ct = si.getChildType(child);
+        if (ct.contains(ChildType.ELEMENT))
+          nChildren++;
+      }
+      // TODO this won't always work
+      if (nChildren != 1)
+        xw.startElement(xs("all"));
+      for (int i = 0; i < len; i++) {
+        Pattern child = (Pattern)children.get(i);
+        ChildType ct = si.getChildType(child);
+        if (ct.contains(ChildType.ELEMENT))
+          child.accept(nChildren == 1 ? this : particleOutput);
+      }
+      if (nChildren != 1)
+        xw.endElement();
+      return null;
+    }
+
+    public Object visitMixed(MixedPattern p) {
+      return p.getChild().accept(this);
+    }
+
+    public Object visitRef(RefPattern p) {
+      startWrapper();
+      xw.startElement(xs("group"));
+      xw.attribute("ref", p.getName());
+      xw.endElement();
+      endWrapper();
+      return null;
+    }
+
+    public Object visitElement(ElementPattern p) {
+      startWrapper();
+      xw.startElement(xs("element"));
+      // TODO deal with name classes
+      xw.attribute("name", ((NameNameClass)p.getNameClass()).getLocalName());
+      xw.startElement(xs("complexType"));
+      Pattern body = p.getChild();
+      ChildType ct = si.getChildType(body);
+      if (ct.contains(ChildType.ELEMENT)) {
+        if (ct.contains(ChildType.TEXT) || ct.contains(ChildType.DATA))
+          xw.attribute("mixed", "true");
+        body.accept(typeDefParticleOutput);
+      }
+      else if (ct.contains(ChildType.TEXT))
+        xw.attribute("mixed", "true");
+      else if (ct.contains(ChildType.DATA)) {
+        xw.startElement(xs("simpleContent"));
+        xw.startElement(xs("restriction"));
+        xw.attribute("base", xs("anyType"));
+        xw.startElement(xs("simpleType"));
+        body.accept(simpleTypeOutput);
+        xw.endElement();
+        // attributes go here
+        xw.endElement();
+        xw.endElement();
+      }
+      xw.endElement();
+      xw.endElement();
+      endWrapper();
+      return null;
+    }
+  }
+
+
+  class GroupOutput extends ParticleOutput {
+    void startWrapper() {
+      xw.startElement(xs("sequence"));
+    }
+
+    void endWrapper() {
+      xw.endElement();
+    }
+  }
+
+  class TypeDefParticleOutput extends ParticleOutput {
+    public Object visitElement(ElementPattern p) {
+      xw.startElement(xs("sequence"));
+      particleOutput.visitElement(p);
+      xw.endElement();
+      return null;
+    }
   }
 
   // TODO NOTATION
@@ -322,13 +513,21 @@ class Output {
       ChildType ct = si.getChildType(body);
       if (name == DefineComponent.START)
         ;
-      else if (ct.contains(ChildType.DATA)
-               && !ct.contains(ChildType.ELEMENT)
-               && !ct.contains(ChildType.TEXT)) {
-        xw.startElement(xs("simpleType"));
-        xw.attribute("name", c.getName());
-        body.accept(simpleTypeOutput);
-        xw.endElement();
+      else {
+        if (ct.contains(ChildType.ELEMENT)) {
+          xw.startElement(xs("group"));
+          xw.attribute("name", c.getName());
+          body.accept(groupOutput);
+          xw.endElement();
+        }
+        else if (ct.contains(ChildType.DATA) && !ct.contains(ChildType.TEXT)) {
+          xw.startElement(xs("simpleType"));
+          xw.attribute("name", c.getName());
+          body.accept(simpleTypeOutput);
+          xw.endElement();
+        }
+        if (ct.contains(ChildType.ATTRIBUTE)) {
+        }
       }
       return null;
     }
