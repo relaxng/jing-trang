@@ -1,3 +1,5 @@
+Remove dependence of relaxng.parse.sax on relaxng.impl.
+
 Support for IDREF checking via JARV.
 
 In a big choice or interleave or attribute group, memoization for each
