@@ -838,6 +838,7 @@ class DtdOutput {
     sub.subOutput(g);
     requiredParamEntities.addAll(sub.externallyRequiredParamEntities);
     outputRequiredComponents();
+    outputLeadingComments(inc);
     String entityName = genEntityName(inc);
     newline();
     write("<!ENTITY % ");
@@ -853,6 +854,7 @@ class DtdOutput {
     write(entityName);
     write(';');
     newline();
+    outputFollowingComments(inc);
     doneIncludes.add(href);
     pendingIncludes.remove(href);
   }
@@ -879,7 +881,7 @@ class DtdOutput {
     }
     if (entityName == null)
       entityName = "ent";
-    if (reserveEntityName(entityName)) {
+    if (!reserveEntityName(entityName)) {
       for (int i = 1;; i++) {
         String tem = entityName + Integer.toString(i);
         if (reserveEntityName(tem)) {
