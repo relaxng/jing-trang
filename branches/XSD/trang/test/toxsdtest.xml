@@ -2184,6 +2184,55 @@ element foo {
 </correct>
 </xsd>
 </testCase>
+<testCase>
+<compact>
+<incorrect>
+start = element foo { x }
+x = element bar { empty }, x?
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect>
+start = element foo { empty }
+x = element bar { empty }, x?
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect>
+start = element foo { x }
+y = element bar { z }
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<resource name="x.rnc">
+element foo { empty }
+</resource>
+<incorrect>
+externalRef "x.rnc"
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect>
+start = grammar { start = element foo { empty } }
+</incorrect>
+</compact>
+</testCase>
+<testCase>
+<compact>
+<incorrect>
+start = element foo { parent x }
+x = empty
+</incorrect>
+</compact>
+</testCase>
 <!--
 <testCase>
 <compact>

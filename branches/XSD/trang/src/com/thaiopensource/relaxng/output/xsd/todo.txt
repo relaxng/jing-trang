@@ -1,3 +1,8 @@
+Include checking
+- Error for include loop.
+- Detect multiple inclusions of same schema.
+- Check for overrides
+
 Errors in SchemaBuilderImpl should be reflected in exit code
 
 combine attributes
@@ -32,25 +37,13 @@ Try using default namespace declaration to refer to things in targetNamespace.
 
 Make choice of targetNamespace not depend on order of hash table iteration.
 
-Nested grammars
-- check and give an error
-- handle some cases
-- expand when necessary
+Handle nested grammars (use different namespace for different grammars).
 
-Include overrides
-- Check and give error
-- Handle overrides
+Handle include overrides
 
 Preserve definitions that are equivalent to empty or notAllowed.
 
-externalRef
-- detect and give error
-- handle
-- remember problem with parentRef in externalRef
-
-Check for ref loops
-
-Check for undefined refs
+Handle externalRef (remember problem with parentRef in externalRef)
 
 Check for RNG contextual constraints
 
@@ -91,6 +84,7 @@ Deal with ambiguous content model restriction
 Support attribute defaults.
 
 Avoid redundant imports and redundant namespace declarations.
+
 -----
 
 Strategy for handling namespaces
