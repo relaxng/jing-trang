@@ -1585,6 +1585,16 @@ element foo { empty }
 </correct>
 </xml>
 </testCase>
+<bug>
+<compact>
+<incorrect><![CDATA[
+namespace x = ""
+namespace y = inherit
+
+element x:* - y:z { empty }
+]]></incorrect>
+</compact>
+</bug>
 <!--
 <testCase>
 <compact>
