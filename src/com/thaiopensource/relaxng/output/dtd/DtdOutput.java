@@ -485,13 +485,6 @@ class DtdOutput {
             attributeValueLiteral(dv);
           }
         }
-        if (prefix != null && !prefix.equals("xml")) {
-          indent();
-          buf.append("xmlns:");
-          buf.append(prefix);
-          buf.append(" CDATA #FIXED ");
-          attributeValueLiteral(ns);
-        }
       }
       return null;
     }
@@ -889,6 +882,7 @@ class DtdOutput {
         newline();
         write("<!ATTLIST ");
         write(elementName);
+        outputAttributeNamespaces(body);
         write(replacement);
         write('>');
         newline();
@@ -953,10 +947,17 @@ class DtdOutput {
       write(contentModel);
       write('>');
       newline();
-      if (atts.length() != 0 || ns != NameClass.INHERIT_NS) {
+      boolean needXmlns;
+      if (ns == NameClass.INHERIT_NS)
+        needXmlns = false;
+      else if (prefix == null)
+        needXmlns = true;
+      else
+        needXmlns = !analysis.getAttributeNamespaces(content).contains(ns);
+      if (atts.length() != 0 || needXmlns) {
         write("<!ATTLIST ");
         write(qName);
-        if (ns != NameClass.INHERIT_NS) {
+        if (needXmlns) {
           newline();
           write("  ");
           if (prefix != null) {
@@ -970,10 +971,28 @@ class DtdOutput {
           attributeValueLiteral(ns);
           write(buf.toString());
         }
+        if (atts.length() != 0)
+          outputAttributeNamespaces(content);
         write(atts);
         write('>');
         newline();
       }
+    }
+  }
+
+  void outputAttributeNamespaces(Pattern p) {
+    Set namespaces = analysis.getAttributeNamespaces(p);
+    for (Iterator iter = namespaces.iterator(); iter.hasNext();) {
+      String ns = (String)iter.next();
+      String prefix = analysis.getPrefixForNamespaceUri(ns);
+      newline();
+      write("  ");
+      write("xmlns:");
+      write(prefix);
+      write(" CDATA #FIXED ");
+      buf.setLength(0);
+      attributeValueLiteral(ns);
+      write(buf.toString());
     }
   }
 

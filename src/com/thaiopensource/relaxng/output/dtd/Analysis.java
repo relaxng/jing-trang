@@ -54,6 +54,7 @@ class Analysis {
   private Map contentTypes = new HashMap();
   private Map attributeTypes = new HashMap();
   private Map attributeAlphabets = new HashMap();
+  private Map attributeNamespaces = new HashMap();
   private Map defines = null;
   private Map parts = new HashMap();
   private Map seenTable = new HashMap();
@@ -65,6 +66,7 @@ class Analysis {
   private Pattern pattern;
   private AttributeTyper attributeTyper = new AttributeTyper();
   private AttributeAlphabetComputer attributeAlphabetComputer = new AttributeAlphabetComputer();
+  private AttributeNamespacesComputer attributeNamespacesComputer = new AttributeNamespacesComputer();
   private IncludeContentChecker includeContentChecker = new IncludeContentChecker();
 
   private class Analyzer implements PatternVisitor, ComponentVisitor, NameClassVisitor {
@@ -437,6 +439,71 @@ class Analysis {
     }
   }
 
+  class AttributeNamespacesComputer extends AbstractVisitor {
+    public Object visitPattern(Pattern p) {
+      return Collections.EMPTY_SET;
+    }
+
+    public Object visitMixed(MixedPattern p) {
+      return getAttributeNamespaces(p.getChild());
+    }
+
+    public Object visitOneOrMore(OneOrMorePattern p) {
+      return getAttributeNamespaces(p.getChild());
+    }
+
+    public Object visitZeroOrMore(ZeroOrMorePattern p) {
+      return getAttributeNamespaces(p.getChild());
+    }
+
+    public Object visitOptional(OptionalPattern p) {
+      return getAttributeNamespaces(p.getChild());
+    }
+
+    public Object visitComposite(CompositePattern p) {
+      List list = p.getChildren();
+      Set result = Collections.EMPTY_SET;
+      boolean newResult = false;
+      for (int i = 0, len = list.size(); i < len; i++) {
+        Set tem = getAttributeNamespaces((Pattern)list.get(i));
+        if (tem != Collections.EMPTY_SET) {
+          if (result == Collections.EMPTY_SET)
+            result = tem;
+          else {
+            if (!newResult) {
+              result = new HashSet(result);
+              newResult = true;
+            }
+            result.addAll(tem);
+          }
+        }
+      }
+      if (newResult)
+        result = Collections.unmodifiableSet(result);
+      return result;
+    }
+
+    public Object visitAttribute(AttributePattern p) {
+      Set result = null;
+      List names = NameClassSplitter.split(p.getNameClass());
+      for (int i = 0, len = names.size(); i < len; i++) {
+        String ns = ((NameNameClass)names.get(i)).getNamespaceUri();
+        if (ns.length() != 0 && ns != NameClass.INHERIT_NS && !ns.equals(NamespaceManager.xmlURI)) {
+          if (result == null)
+            result = new HashSet();
+          result.add(ns);
+        }
+      }
+      if (result == null)
+        return Collections.EMPTY_SET;
+      return Collections.unmodifiableSet(result);
+    }
+
+    public Object visitRef(RefPattern p) {
+      return getAttributeNamespaces(getBody(p.getName()));
+    }
+  }
+
   private boolean seen(Pattern p) {
     if (seenTable.get(p) != null)
       return true;
@@ -486,6 +553,16 @@ class Analysis {
     if (aa == null) {
       aa = Collections.unmodifiableSet((Set)p.accept(attributeAlphabetComputer));
       attributeAlphabets.put(p, aa);
+    }
+    return aa;
+  }
+
+
+  Set getAttributeNamespaces(Pattern p) {
+    Set aa = (Set)attributeNamespaces.get(p);
+    if (aa == null) {
+      aa = (Set)p.accept(attributeNamespacesComputer);
+      attributeNamespaces.put(p, aa);
     }
     return aa;
   }
