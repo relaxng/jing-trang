@@ -1,3 +1,5 @@
+Add design.html into build file.
+
 Documentation for conv
 
 Comply with Apache license in respect of jing.exe; package as jing-win32.zip.
