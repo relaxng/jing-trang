@@ -13,6 +13,7 @@ class Type {
   static Type DIRECT_TEXT = new Type(TEXT);
   // an attribute group plus a model group
   static Type COMPLEX_TYPE_MODEL_GROUP = new Type(COMPLEX_TYPE);
+  static Type COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS = new Type(COMPLEX_TYPE);
   static Type MIXED_MODEL = new Type(COMPLEX_TYPE);
   static Type MODEL_GROUP = new Type(COMPLEX_TYPE_MODEL_GROUP);
   static Type ELEMENT_CLASS = new Type(MODEL_GROUP);
@@ -20,7 +21,7 @@ class Type {
   static Type DIRECT_SINGLE_ELEMENT = new Type(DIRECT_MULTI_ELEMENT);
   static Type DIRECT_SINGLE_ATTRIBUTE = new Type(ATTRIBUTE_GROUP);
   static Type OPTIONAL_ATTRIBUTE = new Type(ATTRIBUTE_GROUP);
-  static Type ZERO_OR_MORE_ELEMENT_CLASS = new Type(MODEL_GROUP);
+  static Type ZERO_OR_MORE_ELEMENT_CLASS = new Type(MODEL_GROUP, COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS);
   static Type ENUM = new Type(ATTRIBUTE_TYPE);
   static Type ERROR = new Type();
 
@@ -76,18 +77,26 @@ class Type {
       return EMPTY;
     if (t1.isA(ATTRIBUTE_GROUP) && t2.isA(ATTRIBUTE_GROUP))
       return ATTRIBUTE_GROUP;
-    if ((t1.isA(COMPLEX_TYPE_MODEL_GROUP) && t2.isA(ATTRIBUTE_GROUP))
-            || t2.isA(COMPLEX_TYPE_MODEL_GROUP) && t1.isA(ATTRIBUTE_GROUP))
-      return COMPLEX_TYPE_MODEL_GROUP;
-    if ((t1.isA(COMPLEX_TYPE) && t2.isA(ATTRIBUTE_GROUP))
-            || t2.isA(COMPLEX_TYPE) && t1.isA(ATTRIBUTE_GROUP))
-      return COMPLEX_TYPE;
+    if (t1.isA(ATTRIBUTE_GROUP)) {
+      if (t2.isA(COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS))
+        return COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS;
+      if (t2.isA(COMPLEX_TYPE_MODEL_GROUP))
+        return COMPLEX_TYPE_MODEL_GROUP;
+      if (t2.isA(COMPLEX_TYPE))
+        return COMPLEX_TYPE;
+    }
+    else if (t2.isA(ATTRIBUTE_GROUP))
+      return group(t1, t2);
     return null;
   }
 
   static Type mixed(Type t) {
+    if (t.isA(ATTRIBUTE_GROUP))
+      return COMPLEX_TYPE;
     if (t.isA(ZERO_OR_MORE_ELEMENT_CLASS))
       return MIXED_MODEL;
+    if (t.isA(COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS))
+      return COMPLEX_TYPE;
     return null;
   }
 
@@ -98,12 +107,16 @@ class Type {
       return EMPTY;
     if (t1.isA(ATTRIBUTE_GROUP) && t2.isA(ATTRIBUTE_GROUP))
       return ATTRIBUTE_GROUP;
-    if ((t1.isA(COMPLEX_TYPE_MODEL_GROUP) && t2.isA(ATTRIBUTE_GROUP))
-            || t2.isA(COMPLEX_TYPE_MODEL_GROUP) && t1.isA(ATTRIBUTE_GROUP))
-      return COMPLEX_TYPE_MODEL_GROUP;
-    if ((t1.isA(COMPLEX_TYPE) && t2.isA(ATTRIBUTE_GROUP))
-            || t2.isA(COMPLEX_TYPE) && t1.isA(ATTRIBUTE_GROUP))
-      return COMPLEX_TYPE;
+    if (t1.isA(ATTRIBUTE_GROUP)) {
+      if (t2.isA(COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS))
+        return COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS;
+      if (t2.isA(COMPLEX_TYPE_MODEL_GROUP))
+        return COMPLEX_TYPE_MODEL_GROUP;
+      if (t2.isA(COMPLEX_TYPE))
+        return COMPLEX_TYPE;
+    }
+    else if (t2.isA(ATTRIBUTE_GROUP))
+      return interleave(t1, t2);
     return null;
   }
 
@@ -162,8 +175,8 @@ class Type {
       return ELEMENT_CLASS;
     if (t == ZERO_OR_MORE_ELEMENT_CLASS)
       return MODEL_GROUP;
-    if (t == COMPLEX_TYPE)
-      return ERROR;
+    if (t == COMPLEX_TYPE_ZERO_OR_MORE_ELEMENT_CLASS)
+      return COMPLEX_TYPE;
     return t;
   }
 }
