@@ -16,7 +16,6 @@ Pretty-print content models to avoid excessively long lines
 Prettier formatting of ATTLISTs
 Add some blank lines for prettiness
 Handle DTD compatibility ID/IDREF/IDREFS datatypes
-Proper error reporting
 Approximate data in content by #PCDATA
 Order requiredParamEntities by definition order
 Bulletproof LocalOutputDirectory.

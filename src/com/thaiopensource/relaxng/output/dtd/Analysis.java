@@ -139,7 +139,7 @@ class Analysis {
       if (!seen(p.getChild())) {
         Type t = new Analyzer(p).analyzeType(p.getChild());
         if (!t.isA(Type.COMPLEX_TYPE) && t != Type.ERROR)
-          er.error("bad_element_type", p.getSourceLocation());
+          er.error("sorry_element_type", p.getSourceLocation());
       }
       return ret;
     }
