@@ -1,0 +1,41 @@
+Auto-detect compact/XML syntax.
+
+Compact syntax parser should provide encoding information.
+
+Give a warning for a list containing a single token.
+
+Give a more helpful message for sequence of strings
+outside a list.
+
+Handle comments embedded within strings better.
+
+Put location information in error messages into a standard format
+understandable by Emacs.
+
+More helpful syntax error messages with compact syntax parser.
+
+Support for IDREF checking via JARV.
+
+In a big choice or interleave or attribute group, memoization for each
+binary pattern is inefficient.
+
+Option to recover from unknown datatype libraries.
+
+More helpful error message for duplicate attributes.
+
+Implement ValidationContext.getBaseUri in the instance.
+
+Support infoset modification for ID/IDREF/IDREFS.
+
+Support DTD compatibility use of default values.
+
+Option to do XInclude before validation.
+
+Maybe introduce a variant of the element pattern that has a mapping
+from names to content models.
+
+Better error message for wrong namespace URI.
+
+Option to be verbose.
+
+Streaming validation of data.
