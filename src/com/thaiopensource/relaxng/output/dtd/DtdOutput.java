@@ -682,6 +682,8 @@ class DtdOutput {
 
     public Object visitDefine(DefineComponent c) {
       if (c.getName() == DefineComponent.START) {
+        outputLeadingComments(c);
+        outputFollowingComments(c);
         if (analysis.getPattern() == analysis.getGrammarPattern())
           c.getBody().accept(nestedContentModelOutput);
       }
