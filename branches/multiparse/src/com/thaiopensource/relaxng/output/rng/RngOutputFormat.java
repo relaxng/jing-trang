@@ -16,7 +16,6 @@ import java.util.Map;
 Specify indent
 Specify encoding
 Annotations
-Multiple files
 */
 public class RngOutputFormat implements OutputFormat {
   public void output(SchemaCollection sc, OutputDirectory od, ErrorHandler eh) throws IOException {
