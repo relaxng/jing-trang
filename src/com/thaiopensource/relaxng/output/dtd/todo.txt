@@ -1,8 +1,8 @@
 Error for <include> content
 Check single element type
+Recognize #FIXED attributes
 Avoid duplicate namespace declarations for global attributes
 Option to generate namespace declarations only on start elements
-Recognize #FIXED attributes
 Support duplicate definitions with combine="interleave" for attlists
 Generate parameter entities to allow change of namespace prefix
 nested grammars
@@ -13,7 +13,6 @@ allow mixed(repeat(NOT_ALLOWED))
 Avoid unnecessary parentheses around group members
 Pretty-print content models to avoid excessively long lines
 Prettier formatting of ATTLISTs
-Add some blank lines for prettiness
 Handle DTD compatibility ID/IDREF/IDREFS datatypes
 Approximate data in content by #PCDATA
 Order requiredParamEntities by definition order
