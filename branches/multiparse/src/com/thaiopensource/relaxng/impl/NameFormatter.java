@@ -8,6 +8,6 @@ class NameFormatter {
     if (namespaceUri.equals(""))
       return SchemaBuilderImpl.localizer.message("name_absent_namespace", localName);
     else
-      return SchemaBuilderImpl.localizer.message("name_with_namespace");
+      return SchemaBuilderImpl.localizer.message("name_with_namespace", namespaceUri, localName);
   }
 }
