@@ -8,13 +8,11 @@ import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.IncludedGrammar;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.XMLReaderCreator;
-import com.thaiopensource.datatype.xsd.NCNameDatatype;
 import org.xml.sax.InputSource;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.XMLReader;
 import org.xml.sax.SAXException;
 import org.xml.sax.EntityResolver;
-import org.relaxng.datatype.Datatype;
 
 import java.io.IOException;
 
@@ -23,7 +21,6 @@ public class SAXParseable implements Parseable {
   private XMLReaderCreator xrc;
   private InputSource in;
   private ErrorHandler eh;
-  private Datatype ncNameDatatype = new NCNameDatatype();
 
   public SAXParseable(XMLReaderCreator xrc, InputSource in, ErrorHandler eh) {
     this.xrc = xrc;
@@ -34,7 +31,7 @@ public class SAXParseable implements Parseable {
   public ParsedPattern parse(SchemaBuilder schemaBuilder) throws BuildException, IllegalSchemaException {
     try {
       XMLReader xr = xrc.createXMLReader();
-      SchemaParser sp = new SchemaParser(xr, eh, schemaBuilder, ncNameDatatype, null, null);
+      SchemaParser sp = new SchemaParser(xr, eh, schemaBuilder, null, null);
       xr.parse(in);
       return sp.getStartPattern();
     }
@@ -50,7 +47,7 @@ public class SAXParseable implements Parseable {
           throws BuildException, IllegalSchemaException {
     try {
       XMLReader xr = xrc.createXMLReader();
-      SchemaParser sp = new SchemaParser(xr, eh, schemaBuilder, ncNameDatatype, g, g);
+      SchemaParser sp = new SchemaParser(xr, eh, schemaBuilder, g, g);
       xr.parse(makeInputSource(xr, uri));
       return sp.getStartPattern();
     }
@@ -66,7 +63,7 @@ public class SAXParseable implements Parseable {
           throws BuildException, IllegalSchemaException {
     try {
       XMLReader xr = xrc.createXMLReader();
-      SchemaParser sp = new SchemaParser(xr, eh, schemaBuilder, ncNameDatatype, null, s);
+      SchemaParser sp = new SchemaParser(xr, eh, schemaBuilder, null, s);
       xr.parse(makeInputSource(xr, uri));
       return sp.getStartPattern();
     }

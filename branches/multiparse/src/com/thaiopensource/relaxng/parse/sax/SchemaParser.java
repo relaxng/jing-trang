@@ -16,6 +16,7 @@ import com.thaiopensource.relaxng.parse.Context;
 import com.thaiopensource.relaxng.parse.CommentList;
 import com.thaiopensource.util.Uri;
 import com.thaiopensource.util.Localizer;
+import com.thaiopensource.xml.util.Naming;
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.ValidationContext;
 import org.xml.sax.Attributes;
@@ -59,7 +60,6 @@ class SchemaParser extends AbstractLexicalHandler {
 
   Hashtable patternTable;
   Hashtable nameClassTable;
-  Datatype ncNameDatatype;
 
   static class PrefixMapping {
     final String prefix;
@@ -1342,13 +1342,11 @@ class SchemaParser extends AbstractLexicalHandler {
   SchemaParser(XMLReader xr,
                ErrorHandler eh,
                SchemaBuilder schemaBuilder,
-               Datatype ncNameDatatype,
                IncludedGrammar grammar,
                Scope scope) throws SAXException {
     this.xr = xr;
     this.eh = eh;
     this.schemaBuilder = schemaBuilder;
-    this.ncNameDatatype = ncNameDatatype;
     if (eh != null)
       xr.setErrorHandler(eh);
     if (schemaBuilder.usesComments()) {
@@ -1406,7 +1404,7 @@ class SchemaParser extends AbstractLexicalHandler {
   }
 
   String checkNCName(String str) throws SAXException {
-    if (!ncNameDatatype.isValid(str, null))
+    if (!Naming.isNcname(str))
       error("invalid_ncname", str);
     return str;
   }
