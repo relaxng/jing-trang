@@ -1,4 +1,5 @@
 #summary Overview of the structure of the source code.
+#labels Featured
 
 The source code is divided into a number of modules which live in the [http://code.google.com/p/jing-trang/source/browse/#svn/trunk/mod mod] directory.
 
