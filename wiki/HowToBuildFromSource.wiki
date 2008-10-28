@@ -1,0 +1,6 @@
+#summary How to build Jing and Trang from source
+#labels Featured
+
+ # [http://code.google.com/p/jing-trang/source/checkout Check out] the source from the project's repository.
+
+ # Follow the instructions in [http://jing-trang.googlecode.com/svn/trunk/readme.txt readme.txt].
