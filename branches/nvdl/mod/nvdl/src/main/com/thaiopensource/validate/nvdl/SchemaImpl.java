@@ -60,6 +60,12 @@ class SchemaImpl extends AbstractSchema {
   private final Hashtable modeMap = new Hashtable();
   
   /**
+   * A hash with the triggers on namespace.
+   * Element names are stored concatenated in a string, each name preceded by #.
+   */
+  private final Triggers triggers = new Triggers();
+    
+  /**
    * The start mode.
    */
   private Mode startMode;
@@ -368,6 +374,8 @@ class SchemaImpl extends AbstractSchema {
         parseContext(attributes);
       else if (localName.equals("option"))
         parseOption(attributes);
+      else if (localName.equals("trigger"))
+        parseTrigger(attributes);
       else
         throw new RuntimeException("unexpected element \"" + localName + "\"");
     }
@@ -648,6 +656,23 @@ class SchemaImpl extends AbstractSchema {
       }
     }
 
+    /**
+     * Parse a trigger element.
+     * @param attributes The trigger element attributes.
+     * @throws SAXException
+     */
+    private void parseTrigger(Attributes attributes) throws SAXException {
+      // get the ns and nameList
+      String ns = attributes.getValue("", "ns");
+      String nameList = attributes.getValue("", "nameList");
+      if (ns != null && nameList != null) {
+        String errors = triggers.addTrigger(ns, nameList);
+        if (errors!=null) {
+          error ("invalid_nodeList", errors, locator);
+        }
+      }
+    }
+    
     /**
      * Parse an attach action.
      * @param attributes The attach element attributes.
@@ -960,7 +985,7 @@ class SchemaImpl extends AbstractSchema {
    * @param properties properties.
    */
   public Validator createValidator(PropertyMap properties) {
-    return new ValidatorImpl(startMode, properties);
+    return new ValidatorImpl(startMode, triggers, properties);
   }
 
   /**
