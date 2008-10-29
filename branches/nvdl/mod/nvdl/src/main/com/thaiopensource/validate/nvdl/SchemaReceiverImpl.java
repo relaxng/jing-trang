@@ -32,7 +32,19 @@ class SchemaReceiverImpl implements SchemaReceiver {
    * Relax NG schema for nvdl schemas.
    */
   private static final String NVDL_SCHEMA = "nvdl.rng";
-  private static final String RNC_MEDIA_TYPE = "application/x-rnc";
+  /**
+   * The type used for specifying RNC schemas.
+   */
+  private static final String RNC_MEDIA_TYPE = "application/relax-ng-compact-syntax";
+
+  /**
+   * Alternative type used for specifying RNC schemas.
+   */
+  private static final String RNC_MEDIA_TYPE_ALT = "application/x-rnc";
+  
+  /**
+   * Properties.
+   */
   private final PropertyMap properties;
   
   /**
@@ -163,6 +175,6 @@ class SchemaReceiverImpl implements SchemaReceiver {
     if (schemaType == null)
       return false;
     schemaType = schemaType.trim();
-    return schemaType.equals(RNC_MEDIA_TYPE);
+    return schemaType.equals(RNC_MEDIA_TYPE) || schemaType.equals(RNC_MEDIA_TYPE_ALT);
   }
 }
