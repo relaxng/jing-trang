@@ -7,26 +7,58 @@ import com.thaiopensource.validate.nvdl.Mode;
 import java.util.Vector;
 import java.util.Enumeration;
 
+/**
+ * Stores mode usage information.
+ */
 class ModeUsage {
+  /**
+   * The use mode.
+   */
   private final Mode mode;
+  /**
+   * The current mode used until now.
+   */
   private final Mode currentMode;
+  /**
+   * Modes depending on context.
+   */
   private ContextMap modeMap;
   private int attributeProcessing = -1;
 
+  /**
+   * Creates a use mode.
+   * @param mode The mode to be used.
+   * @param currentMode The mode used until the new mode.
+   */
   ModeUsage(Mode mode, Mode currentMode) {
     this(mode, currentMode, null);
   }
 
+  /**
+   * Creates a use mode.
+   * @param mode The mode to be used.
+   * @param currentMode The mode used until now.
+   * @param modeMap Modes to be used depending on context.
+   */
   private ModeUsage(Mode mode, Mode currentMode, ContextMap modeMap) {
     this.mode = mode;
     this.currentMode = currentMode;
     this.modeMap = modeMap;
   }
 
+  /**
+   * Gets a new mode usage with a different current mode
+   * but with the same mode and modeMap as this one.
+   * @param currentMode The new current mode.
+   * @return A new mode usage with the changed current mode.
+   */
   ModeUsage changeCurrentMode(Mode currentMode) {
     return new ModeUsage(mode, currentMode, modeMap);
   }
 
+  /**
+   * Check to see if this mode usage is equals with another mode usage.
+   */
   public boolean equals(Object obj) {
     if (!(obj instanceof ModeUsage))
       return false;
@@ -34,6 +66,9 @@ class ModeUsage {
     return this.mode == other.mode && this.currentMode == other.currentMode && Equal.equal(this.modeMap, other.modeMap);
   }
 
+  /**
+   * Gets a hash code for this mode usage.
+   */
   public int hashCode() {
     int hc = mode.hashCode() ^ currentMode.hashCode();
     if (modeMap != null)
@@ -41,10 +76,21 @@ class ModeUsage {
     return hc;
   }
 
+  /**
+   * Resolves the Mode.CURRENT to the currentMode for this mode usage.
+   * If not Mode.CURRENT passed as argument then the same mode is returned.
+   * @param mode The mode to be resolved.
+   * @return Either the current mode mode usage or the same mode passed as argument.
+   */
   private Mode resolve(Mode mode) {
     return mode == Mode.CURRENT ? currentMode : mode;
   }
 
+  /**
+   * Get the maximum attribute processing value from the default mode and
+   * from all the modes specified in the contexts.
+   * @return The attribute processing value.
+   */
   int getAttributeProcessing() {
     if (attributeProcessing == -1) {
       attributeProcessing = resolve(mode).getAttributeProcessing();
@@ -59,19 +105,38 @@ class ModeUsage {
     return attributeProcessing;
   }
 
+  /**
+   * Check if we have context dependent modes.
+   * @return true if the modeMap exists.
+   */
   boolean isContextDependent() {
     return modeMap != null;
   }
 
+  /**
+   * Get the mode to be used for a specific context.
+   * @param context The current context.
+   * @return A mode.
+   */
   Mode getMode(Vector context) {
+    // first look in the modeMap if exists.
     if (modeMap != null) {
       Mode m = (Mode)modeMap.get(context);
       if (m != null)
         return resolve(m);
     }
+    // if no modeMap or no context specific mode found then
+    // return the default mode for this mode usage.
     return resolve(mode);
   }
 
+  /**
+   * Adds a new context (isRoot, path --> mode).
+   * @param isRoot Flag indicating that the path starts or not with /
+   * @param names The local names that form the path.
+   * @param mode The mode for this path.
+   * @return true if we do not have a duplicate path.
+   */
   boolean addContext(boolean isRoot, Vector names, Mode mode) {
     if (modeMap == null)
       modeMap = new ContextMap();
