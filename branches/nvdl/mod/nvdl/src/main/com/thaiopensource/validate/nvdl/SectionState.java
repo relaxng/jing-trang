@@ -1,7 +1,6 @@
 package com.thaiopensource.validate.nvdl;
 
 import com.thaiopensource.validate.Schema;
-import com.thaiopensource.validate.nvdl.ModeUsage;
 import org.xml.sax.SAXException;
 import org.xml.sax.ContentHandler;
 

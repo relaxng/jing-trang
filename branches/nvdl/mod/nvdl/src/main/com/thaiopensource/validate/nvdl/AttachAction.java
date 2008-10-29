@@ -1,8 +1,5 @@
 package com.thaiopensource.validate.nvdl;
 
-import com.thaiopensource.validate.Validator;
-import com.thaiopensource.validate.nvdl.Mode;
-import com.thaiopensource.validate.nvdl.ModeUsage;
 import org.xml.sax.ContentHandler;
 
 /**

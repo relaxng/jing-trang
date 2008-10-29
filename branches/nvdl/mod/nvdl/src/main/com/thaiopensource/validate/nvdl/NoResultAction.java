@@ -1,9 +1,5 @@
 package com.thaiopensource.validate.nvdl;
 
-import com.thaiopensource.validate.Validator;
-import com.thaiopensource.validate.nvdl.Action;
-import com.thaiopensource.validate.nvdl.Mode;
-import com.thaiopensource.validate.nvdl.ModeUsage;
 import org.xml.sax.SAXException;
 /**
  * No result action. These actions are the validations, either validate, allow or reject.
