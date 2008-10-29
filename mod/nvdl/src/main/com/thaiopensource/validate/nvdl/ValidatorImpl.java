@@ -48,6 +48,12 @@ class ValidatorImpl extends DefaultHandler implements Validator {
   private final PropertyMap properties;
 
   /**
+   * Triggers.
+   * Specifies elements that start a new section.
+   */
+  private final Triggers triggers;
+  
+  /**
    * Source locator.
    */
   private Locator locator;
@@ -115,6 +121,11 @@ class ValidatorImpl extends DefaultHandler implements Validator {
    */
   private final Mode startMode;
 
+  /**
+   * Stores the element local names. Used for triggers.
+   */
+  private final Stack elementsLocalNameStack;
+  
   /**
    * Namespace context. Alinked list of proxy namespace
    * mapping linking to parent.
@@ -308,12 +319,15 @@ class ValidatorImpl extends DefaultHandler implements Validator {
    * Creates a NVDL validator. The initial mode is specified by the mode parameter.
    * Initializes the current section.
    * @param mode The start mode.
+   * param triggers The triggers specified by the NVDL script.
    * @param properties Validation properties.
    */
-  ValidatorImpl(Mode mode, PropertyMap properties) {
+  ValidatorImpl(Mode mode, Triggers triggers, PropertyMap properties) {
     this.properties = properties;
+    this.triggers = triggers;
     this.eh = ValidateProperty.ERROR_HANDLER.get(properties);
     this.startMode = mode;
+    this.elementsLocalNameStack = new Stack();
     initCurrentSection();
   }
 
@@ -374,6 +388,11 @@ class ValidatorImpl extends DefaultHandler implements Validator {
     // then we start a new section on the new namespace.
     if (!uri.equals(currentSection.ns))
       startSection(uri);
+    else
+    if (triggers.trigger(uri, localName, String.valueOf(elementsLocalNameStack.peek())))
+      startSection(uri);
+    
+    elementsLocalNameStack.push(localName);
     // increase the depth in the current section as we have a new element
     currentSection.depth++;
     // if the current section contains context dependent mode usages then
@@ -646,7 +665,8 @@ class ValidatorImpl extends DefaultHandler implements Validator {
    */
   public void endElement(String uri, String localName, String qName)
           throws SAXException {
-    
+	  
+	  elementsLocalNameStack.pop();
     // iterate the active handlers from the current section and call
     // endElement on them
     for (int i = 0, len = currentSection.activeHandlers.size(); i < len; i++)
