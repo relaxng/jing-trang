@@ -1,10 +1,6 @@
 package com.thaiopensource.validate.nvdl;
 
 import com.thaiopensource.validate.Schema;
-import com.thaiopensource.validate.nvdl.Mode;
-import com.thaiopensource.validate.nvdl.ModeUsage;
-import com.thaiopensource.validate.nvdl.NoResultAction;
-import com.thaiopensource.validate.nvdl.SectionState;
 import org.xml.sax.SAXException;
 
 /**

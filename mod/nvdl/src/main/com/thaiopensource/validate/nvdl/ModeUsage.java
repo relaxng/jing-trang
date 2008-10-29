@@ -1,8 +1,6 @@
 package com.thaiopensource.validate.nvdl;
 
 import com.thaiopensource.util.Equal;
-import com.thaiopensource.validate.nvdl.ContextMap;
-import com.thaiopensource.validate.nvdl.Mode;
 
 import java.util.Vector;
 import java.util.Enumeration;

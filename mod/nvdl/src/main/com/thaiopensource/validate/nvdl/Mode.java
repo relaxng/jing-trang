@@ -6,8 +6,6 @@ import org.xml.sax.helpers.LocatorImpl;
 import java.util.Hashtable;
 import java.util.Enumeration;
 
-import com.thaiopensource.validate.nvdl.ActionSet;
-import com.thaiopensource.validate.nvdl.AttributeActionSet;
 
 class Mode {
   static final String ANY_NAMESPACE = "##any";
