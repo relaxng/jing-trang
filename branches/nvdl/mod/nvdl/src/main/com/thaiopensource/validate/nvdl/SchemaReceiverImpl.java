@@ -24,12 +24,12 @@ import java.io.IOException;
 import java.net.URL;
 
 /**
- * Schema receiver implementation for NVDL schemas. 
+ * Schema receiver implementation for NVDL scripts. 
  *
  */
 class SchemaReceiverImpl implements SchemaReceiver {
   /**
-   * Relax NG schema for nvdl schemas.
+   * Relax NG schema for NVDL scripts.
    */
   private static final String NVDL_SCHEMA = "nvdl.rng";
   /**
@@ -38,9 +38,9 @@ class SchemaReceiverImpl implements SchemaReceiver {
   private static final String RNC_MEDIA_TYPE = "application/relax-ng-compact-syntax";
 
   /**
-   * Alternative type used for specifying RNC schemas.
+   * Legacy type used for specifying RNC schemas.
    */
-  private static final String RNC_MEDIA_TYPE_ALT = "application/x-rnc";
+  static final String LEGACY_RNC_MEDIA_TYPE = "application/x-rnc";
   
   /**
    * Properties.
@@ -52,6 +52,7 @@ class SchemaReceiverImpl implements SchemaReceiver {
    * that means the root element is just a placeholder for the attributes.
    */
   private final Name attributeOwner;
+  
   /**
    * The schema reader capable of parsing the input schema file.
    * It will be an auto schema reader as NVDL is XML.
@@ -175,6 +176,6 @@ class SchemaReceiverImpl implements SchemaReceiver {
     if (schemaType == null)
       return false;
     schemaType = schemaType.trim();
-    return schemaType.equals(RNC_MEDIA_TYPE) || schemaType.equals(RNC_MEDIA_TYPE_ALT);
+    return schemaType.equals(RNC_MEDIA_TYPE) || schemaType.equals(LEGACY_RNC_MEDIA_TYPE);
   }
 }
