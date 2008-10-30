@@ -30,10 +30,12 @@ import org.xml.sax.helpers.LocatorImpl;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 /**
@@ -668,7 +670,12 @@ class SchemaImpl extends AbstractSchema {
       // get the ns and nameList, we know they are not null as we validate against the nvdl.rng schema.
       String ns = attributes.getValue("", "ns");
       String nameList = attributes.getValue("", "nameList");
-      triggers.add(new Trigger(ns, Arrays.asList(nameList.split(" "))));
+      StringTokenizer st = new StringTokenizer(nameList);
+      Set names = new HashSet(st.countTokens());
+      while (st.hasMoreTokens()) {
+        names.add(st.nextToken());
+      }
+      triggers.add(new Trigger(ns, names));
     }
     
     /**
