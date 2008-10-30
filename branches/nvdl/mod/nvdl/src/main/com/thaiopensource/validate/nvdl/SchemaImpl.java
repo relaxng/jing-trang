@@ -29,8 +29,11 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.LocatorImpl;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Vector;
 
 /**
@@ -63,7 +66,7 @@ class SchemaImpl extends AbstractSchema {
    * A hash with the triggers on namespace.
    * Element names are stored concatenated in a string, each name preceded by #.
    */
-  private final Triggers triggers = new Triggers();
+  private final List triggers = new ArrayList();
     
   /**
    * The start mode.
@@ -662,15 +665,10 @@ class SchemaImpl extends AbstractSchema {
      * @throws SAXException
      */
     private void parseTrigger(Attributes attributes) throws SAXException {
-      // get the ns and nameList
+      // get the ns and nameList, we know they are not null as we validate against the nvdl.rng schema.
       String ns = attributes.getValue("", "ns");
       String nameList = attributes.getValue("", "nameList");
-      if (ns != null && nameList != null) {
-        String errors = triggers.addTrigger(ns, nameList);
-        if (errors!=null) {
-          error ("invalid_nodeList", errors, locator);
-        }
-      }
+      triggers.add(new Trigger(ns, Arrays.asList(nameList.split(" "))));
     }
     
     /**
