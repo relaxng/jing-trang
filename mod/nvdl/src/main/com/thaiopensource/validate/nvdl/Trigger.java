@@ -1,6 +1,6 @@
 package com.thaiopensource.validate.nvdl;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Stores trigger information.
@@ -14,7 +14,7 @@ public class Trigger {
   /**
    * List with local names.
    */
-  List elementNames;
+  Set elementNames;
   
   /**
    * Creates a trigger to store the elements that break sections
@@ -22,7 +22,7 @@ public class Trigger {
    * @param namespace The namespace for all the elements.
    * @param elementNames A list of local element names.
    */
-  Trigger(String namespace, List elementNames) {
+  Trigger(String namespace, Set elementNames) {
     this.elementNames = elementNames;
     this.namespace = namespace;
   }
