@@ -535,6 +535,8 @@ class SchemaImpl extends AbstractSchema {
       // if no schemaType attribute, use the default schema type.
       if (schemaType == null)
         schemaType = defaultSchemaType;
+      if (SchemaReceiverImpl.LEGACY_RNC_MEDIA_TYPE.equals(schemaType))
+        warning("legacy_rnc_media_type", locator);
       // if we matched on elements create a mode usage.
       if (actions != null)
         modeUsage = getModeUsage(attributes);
@@ -915,7 +917,18 @@ class SchemaImpl extends AbstractSchema {
         return;
       eh.error(new SAXParseException(localizer.message(key, arg1, arg2), locator));
     }
-
+    
+    /**
+     * Report a no argument warning with location.
+     * @param key The warning key.
+     * @param locator The location.
+     * @throws SAXException
+     */
+    void warning(String key, Locator locator) throws SAXException {
+      if (eh == null)
+        return;
+      eh.warning(new SAXParseException(localizer.message(key), locator));
+    }
   }
   /**
    * Creates a NVDL schema implementation.
