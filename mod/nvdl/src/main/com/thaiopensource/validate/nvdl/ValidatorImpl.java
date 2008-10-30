@@ -17,6 +17,8 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Stack;
 import java.util.Vector;
 
@@ -51,7 +53,7 @@ class ValidatorImpl extends DefaultHandler implements Validator {
    * Triggers.
    * Specifies elements that start a new section.
    */
-  private final Triggers triggers;
+  private final List triggers;
   
   /**
    * Source locator.
@@ -322,7 +324,7 @@ class ValidatorImpl extends DefaultHandler implements Validator {
    * param triggers The triggers specified by the NVDL script.
    * @param properties Validation properties.
    */
-  ValidatorImpl(Mode mode, Triggers triggers, PropertyMap properties) {
+  ValidatorImpl(Mode mode, List triggers, PropertyMap properties) {
     this.properties = properties;
     this.triggers = triggers;
     this.eh = ValidateProperty.ERROR_HANDLER.get(properties);
@@ -389,7 +391,7 @@ class ValidatorImpl extends DefaultHandler implements Validator {
     if (!uri.equals(currentSection.ns))
       startSection(uri);
     else
-    if (triggers.trigger(uri, localName, String.valueOf(elementsLocalNameStack.peek())))
+    if (trigger(uri, localName, String.valueOf(elementsLocalNameStack.peek())))
       startSection(uri);
     
     elementsLocalNameStack.push(localName);
@@ -416,6 +418,25 @@ class ValidatorImpl extends DefaultHandler implements Validator {
     }
   }
 
+  /**
+   * Checks if a trigger matches.
+   * @param ns The namespace.
+   * @param name The local name.
+   * @param parent The local name of the parent.
+   * @return true if we have a trigger set, otherwise false.
+   */
+  private boolean trigger(String namespace, String name, String parent) {
+    // iterate triggers
+    Iterator i = triggers.iterator();
+    while (i.hasNext()) {
+      Trigger t = (Trigger)i.next();
+      if ((t.namespace.equals(namespace) && t.elementNames.contains(name) && !t.elementNames.contains(parent))) {
+        return true;
+      }
+    }
+    return false;
+  }  
+  
   /**
    * Get the filtered attributes.
    * It checks if we want all the attributes and in that case returns the initial attributes,
