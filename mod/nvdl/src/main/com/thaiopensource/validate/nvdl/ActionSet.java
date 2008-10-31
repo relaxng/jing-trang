@@ -15,6 +15,12 @@ class ActionSet {
    * The no result actions.
    */
   private NoResultAction[] noResultActions = new NoResultAction[0];
+
+  /**
+   * Cancel nested actions flag.
+   */
+  private boolean cancelNestedActions;
+  
   /**
    * Getter for the result action.
    * @return The result action.
@@ -49,6 +55,22 @@ class ActionSet {
   NoResultAction[] getNoResultActions() {
     return noResultActions;
   }
+
+  /**
+   * Getter for the cancel nested actions flag. 
+   */
+  boolean getCancelNestedActions() {
+    return cancelNestedActions;
+  }
+  
+  /**
+   * Set the cancel nested actions flag.
+   * @param cancelNestedActions The new value.
+   */
+  void setCancelNestedActions(boolean cancelNestedActions) {
+    this.cancelNestedActions = cancelNestedActions;
+  }
+  
   
   /**
    * Gets a new ActionSet containing all the actions with the

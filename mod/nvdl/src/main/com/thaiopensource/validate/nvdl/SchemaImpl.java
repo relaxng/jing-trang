@@ -381,6 +381,8 @@ class SchemaImpl extends AbstractSchema {
         parseOption(attributes);
       else if (localName.equals("trigger"))
         parseTrigger(attributes);
+      else if (localName.equals("cancelNestedActions"))
+        parseCancelNestedActions(attributes);
       else
         throw new RuntimeException("unexpected element \"" + localName + "\"");
     }
@@ -751,6 +753,28 @@ class SchemaImpl extends AbstractSchema {
       // if attribute actions, set the reject flag.
       if (attributeActions != null)
         attributeActions.setReject(true);
+    }
+
+    /**
+     * Parse a cancel nested actions action.
+     * 
+     * @param attributes The cancelNestedActions element attributes.
+     */
+    private void parseCancelNestedActions(Attributes attributes) {
+      // if we match on elements, create the mode usage and add a 
+      // cancelNestedActions action.
+      if (actions != null) {
+        modeUsage = getModeUsage(attributes);
+        actions.setCancelNestedActions(true);
+      } 
+      // no actions, no mode usage.
+      else
+        modeUsage = null;
+      
+      // if attribute actions set the cancelNestedActions flag.
+      if (attributeActions != null) {
+        attributeActions.setCancelNestedActions(true);        
+      }
     }
 
     /**

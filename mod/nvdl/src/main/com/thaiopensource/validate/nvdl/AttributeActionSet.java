@@ -18,6 +18,11 @@ class AttributeActionSet {
   private boolean reject;
   
   /**
+   * Cancel nested actions flag.
+   */
+  private boolean cancelNestedActions;
+  
+  /**
    * An array of schemas.
    */
   private Schema[] schemas = new Schema[0];
@@ -55,6 +60,21 @@ class AttributeActionSet {
     this.reject = reject;
   }
 
+  /**
+   * Getter for the cancel nested actions flag. 
+   */
+  boolean getCancelNestedActions() {
+    return cancelNestedActions;
+  }
+  
+  /**
+   * Set the cancel nested actions flag.
+   * @param cancelNestedActions The new value.
+   */
+  void setCancelNestedActions(boolean cancelNestedActions) {
+    this.cancelNestedActions = cancelNestedActions;
+  }
+  
   /**
    * Get the schemas array.
    * @return The array of Schema objects.
