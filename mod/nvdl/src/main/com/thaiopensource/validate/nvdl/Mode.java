@@ -8,7 +8,6 @@ import java.util.Enumeration;
 
 
 class Mode {
-  static final String ANY_NAMESPACE = "##any";
   static final int ATTRIBUTE_PROCESSING_NONE = 0;
   static final int ATTRIBUTE_PROCESSING_QUALIFIED = 1;
   static final int ATTRIBUTE_PROCESSING_FULL = 2;
@@ -118,7 +117,7 @@ class Mode {
   ActionSet getElementActions(String ns) {
     ActionSet actions = getElementActionsExplicit(ns);
     if (actions == null) {
-      actions = getElementActionsExplicit(ANY_NAMESPACE);
+      actions = getElementActionsExplicit(NamespaceSpecification.ANY_NAMESPACE);
       // this is not correct: it breaks a derived mode that use anyNamespace
       // elementMap.put(ns, actions);
     }
@@ -157,7 +156,7 @@ class Mode {
   AttributeActionSet getAttributeActions(String ns) {
     AttributeActionSet actions = getAttributeActionsExplicit(ns);
     if (actions == null) {
-      actions = getAttributeActionsExplicit(ANY_NAMESPACE);
+      actions = getAttributeActionsExplicit(NamespaceSpecification.ANY_NAMESPACE);
       // this is not correct: it breaks a derived mode that use anyNamespace
       // attributeMap.put(ns, actions);
     }
@@ -206,7 +205,7 @@ class Mode {
         if (!actions.getAttach()
             || actions.getReject()
             || actions.getSchemas().length > 0)
-          attributeProcessing = ((ns.equals("") || ns.equals(ANY_NAMESPACE))
+          attributeProcessing = ((ns.equals("") || ns.equals(NamespaceSpecification.ANY_NAMESPACE))
                                 ? ATTRIBUTE_PROCESSING_FULL
                                 : ATTRIBUTE_PROCESSING_QUALIFIED);
       }

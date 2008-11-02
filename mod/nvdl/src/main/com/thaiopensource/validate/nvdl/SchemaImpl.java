@@ -468,7 +468,7 @@ class SchemaImpl extends AbstractSchema {
         // the attributes will be validated further in the real schema start mode.
         ActionSet actions = new ActionSet();
         actions.addNoResultAction(new AllowAction(new ModeUsage(startMode, startMode)));
-        wrapper.bindElement(Mode.ANY_NAMESPACE, actions);
+        wrapper.bindElement(NamespaceSpecification.ANY_NAMESPACE, actions);
         wrapper.noteDefined(null);
         // we use the wrapper mode as the start mode.
         startMode = wrapper;
@@ -517,7 +517,7 @@ class SchemaImpl extends AbstractSchema {
      */
     private void parseAnyNamespace(Attributes attributes) throws SAXException {
       md.anyNamespace = true;
-      parseRule(Mode.ANY_NAMESPACE, attributes);
+      parseRule(NamespaceSpecification.ANY_NAMESPACE, attributes);
     }
 
     /**
@@ -533,7 +533,7 @@ class SchemaImpl extends AbstractSchema {
       if (md.match.containsAttributes()) {
         md.attributeActions = new AttributeActionSet();
         if (!md.currentMode.bindAttribute(ns, md.attributeActions)) {
-          if (ns.equals(Mode.ANY_NAMESPACE))
+          if (ns.equals(NamespaceSpecification.ANY_NAMESPACE))
             error("duplicate_attribute_action_any_namespace");
           else
             error("duplicate_attribute_action", ns);
@@ -542,7 +542,7 @@ class SchemaImpl extends AbstractSchema {
       if (md.match.containsElements()) {
         md.actions = new ActionSet();
         if (!md.currentMode.bindElement(ns, md.actions)) {
-          if (ns.equals(Mode.ANY_NAMESPACE))
+          if (ns.equals(NamespaceSpecification.ANY_NAMESPACE))
             error("duplicate_element_action_any_namespace");
           else
             error("duplicate_element_action", ns);
@@ -1036,7 +1036,7 @@ class SchemaImpl extends AbstractSchema {
     else
       actions.addNoResultAction(new RejectAction(modeUsage));
     // set the actions on any namespace.
-    mode.bindElement(Mode.ANY_NAMESPACE, actions);
+    mode.bindElement(NamespaceSpecification.ANY_NAMESPACE, actions);
     // the mode is not defined in the script explicitelly
     mode.noteDefined(null);
     // creates attribute actions
@@ -1049,7 +1049,7 @@ class SchemaImpl extends AbstractSchema {
     else
       attributeActions.setAttach(true);
     // set the attribute actions on any namespace
-    mode.bindAttribute(Mode.ANY_NAMESPACE, attributeActions);
+    mode.bindAttribute(NamespaceSpecification.ANY_NAMESPACE, attributeActions);
     return mode;
   }
 
