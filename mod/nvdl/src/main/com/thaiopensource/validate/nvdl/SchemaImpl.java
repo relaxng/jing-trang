@@ -508,7 +508,7 @@ class SchemaImpl extends AbstractSchema {
         // the attributes will be validated further in the real schema start mode.
         ActionSet actions = new ActionSet();
         actions.addNoResultAction(new AllowAction(new ModeUsage(startMode, startMode)));
-        wrapper.bindElement(NamespaceSpecification.ANY_NAMESPACE, actions);
+        wrapper.bindElement(NamespaceSpecification.ANY_NAMESPACE, NamespaceSpecification.DEFAULT_WILDCARD, actions);
         wrapper.noteDefined(null);
         // we use the wrapper mode as the start mode.
         startMode = wrapper;
@@ -610,18 +610,34 @@ class SchemaImpl extends AbstractSchema {
       // gets the value of the match attribute, defaults to match elements only.
       md.match = toElementsOrAttributes(attributes.getValue("", "match"),
                                      ElementsOrAttributes.ELEMENTS);
+      String wildcard = attributes.getValue("", "wildCard");
+      if (wildcard==null) {
+        wildcard = NamespaceSpecification.DEFAULT_WILDCARD;
+      }
+      
+      // check if match attributes
       if (md.match.containsAttributes()) {
+        // creates an empty attributes action set.
         md.attributeActions = new AttributeActionSet();
-        if (!md.currentMode.bindAttribute(ns, md.attributeActions)) {
+        // if we already have attribute actions for this namespace 
+        // signal an error.
+        if (!md.currentMode.bindAttribute(ns, wildcard, md.attributeActions)) {
           if (ns.equals(NamespaceSpecification.ANY_NAMESPACE))
             error("duplicate_attribute_action_any_namespace");
           else
             error("duplicate_attribute_action", ns);
         }
-      }
+      } else
+        md.attributeActions = null;
+      // XXX: george // } else md.attributeActions=null; //???
+      
+      // check if match elements
       if (md.match.containsElements()) {
+        // creates an empty action set.
         md.actions = new ActionSet();
-        if (!md.currentMode.bindElement(ns, md.actions)) {
+        // if we already have actions for this namespace 
+        // signal an error.
+        if (!md.currentMode.bindElement(ns, wildcard, md.actions)) {
           if (ns.equals(NamespaceSpecification.ANY_NAMESPACE))
             error("duplicate_element_action_any_namespace");
           else
@@ -1150,7 +1166,7 @@ class SchemaImpl extends AbstractSchema {
     else
       actions.addNoResultAction(new RejectAction(modeUsage));
     // set the actions on any namespace.
-    mode.bindElement(NamespaceSpecification.ANY_NAMESPACE, actions);
+    mode.bindElement(NamespaceSpecification.ANY_NAMESPACE, NamespaceSpecification.DEFAULT_WILDCARD, actions);
     // the mode is not defined in the script explicitelly
     mode.noteDefined(null);
     // creates attribute actions
@@ -1163,7 +1179,7 @@ class SchemaImpl extends AbstractSchema {
     else
       attributeActions.setAttach(true);
     // set the attribute actions on any namespace
-    mode.bindAttribute(NamespaceSpecification.ANY_NAMESPACE, attributeActions);
+    mode.bindAttribute(NamespaceSpecification.ANY_NAMESPACE, NamespaceSpecification.DEFAULT_WILDCARD, attributeActions);
     return mode;
   }
 
