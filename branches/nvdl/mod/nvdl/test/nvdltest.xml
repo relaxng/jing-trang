@@ -864,14 +864,25 @@ xmlns:c="http://www.example.org/c" att1="val2" c:att2="val2"/>
 <rules startMode="root" xmlns="http://purl.oclc.org/dsdl/nvdl/ns/structure/1.0">
   <mode name="root">
     <namespace ns="http://www.w3.org/1999/xhtml">
-      <validate schema="xhtml.rng" useMode="#attach">
+      <validate schema="xhtml.rng">
+        <mode>
+          <anyNamespace>
+            <attach/>
+          </anyNamespace>
+        </mode>
         <context path="head" useMode="rdf"/>
       </validate>
     </namespace>
   </mode>
   <mode name="rdf">
     <namespace ns="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-      <validate schema="rdfxml.rng" useMode="#attach"/>
+      <validate schema="rdfxml.rng">
+        <mode>
+          <anyNamespace>
+            <attach/>
+          </anyNamespace>
+        </mode>
+      </validate>
     </namespace>
   </mode>
 </rules>
