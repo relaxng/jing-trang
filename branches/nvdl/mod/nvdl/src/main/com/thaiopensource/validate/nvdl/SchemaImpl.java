@@ -373,6 +373,8 @@ class SchemaImpl extends AbstractSchema {
         parseAttach(attributes);
       else if (localName.equals("unwrap"))
         parseUnwrap(attributes);
+      else if (localName.equals("attachPlaceholder"))
+        parseAttachPlaceholder(attributes);
       else if (localName.equals("allow"))
         parseAllow(attributes);
       else if (localName.equals("context"))
@@ -718,6 +720,23 @@ class SchemaImpl extends AbstractSchema {
         modeUsage = null;
     }
 
+    /**
+     * Parse an attachPlaceholder action.
+     * @param attributes The attachPlaceholder element attributes.
+     */
+    private void parseAttachPlaceholder(Attributes attributes) {
+      // this makes sense only on elements
+      // if we have element actions, create the mode usage and add
+      // an attachPlaceholder action with this mode usage.
+      if (actions != null) {
+        modeUsage = getModeUsage(attributes);
+        actions.setResultAction(new AttachPlaceholderAction(modeUsage));
+      }
+      // no element actions, no modeUsage.
+      else
+        modeUsage = null;
+    }
+    
     /**
      * Parse an allow action.
      * 

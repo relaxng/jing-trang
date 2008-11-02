@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Stack;
 import java.util.Vector;
 
+import org.xml.sax.helpers.AttributesImpl;
+
 /**
  * Implementation of a validator of XML documents against NVDL scripts.
  */
@@ -207,6 +209,15 @@ class ValidatorImpl extends DefaultHandler implements Validator {
     int attributeProcessing = Mode.ATTRIBUTE_PROCESSING_NONE;
 
     /**
+     * Stores the attach placeholder handlers.
+     */
+    final Vector placeholderHandlers = new Vector();
+    /**
+     * Stores the attach place holder mode usages.
+     */
+    final Vector placeholderModeUsages = new Vector();
+        
+    /**
      * Creates a section for a given namespace and links to to its parent section.
      * 
      * @param ns The section namespace.
@@ -289,6 +300,11 @@ class ValidatorImpl extends DefaultHandler implements Validator {
                                        locator));
     }
 
+    public void attachPlaceholder(ModeUsage modeUsage, ContentHandler handler) {
+      placeholderHandlers.add(handler);
+      placeholderModeUsages.add(modeUsage);
+    }
+    
   }
 
   /**
@@ -416,6 +432,16 @@ class ValidatorImpl extends DefaultHandler implements Validator {
                            // otherwise just pass all the attributes
                            : attributes);
     }
+    if (currentSection.depth==1 && currentSection.placeholderHandlers.size()>0) {
+      AttributesImpl atts = new AttributesImpl();
+      atts.addAttribute("", "ns", "ns", "", uri);
+      atts.addAttribute("", "localName", "localName", "", localName);
+      for (int i = 0, len = currentSection.placeholderHandlers.size(); i < len; i++) {
+        ContentHandler handler = (ContentHandler)(currentSection.placeholderHandlers.elementAt(i));
+        handler.startPrefixMapping("", "http://purl.oclc.org/dsdl/nvdl/ns/instance/1.0");
+        handler.startElement("http://purl.oclc.org/dsdl/nvdl/ns/instance/1.0", "placeholder", "placeholder", atts);
+      }
+    }    
   }
 
   /**
@@ -699,8 +725,14 @@ class ValidatorImpl extends DefaultHandler implements Validator {
     if (currentSection.contextDependent)
       currentSection.context.pop();
     // if we have zero depth then the current section was ended, so we call endSection
-    if (currentSection.depth == 0)
+    if (currentSection.depth == 0) {
+      for (int i = 0, len = currentSection.placeholderHandlers.size(); i < len; i++) {
+        ContentHandler handler = (ContentHandler)(currentSection.placeholderHandlers.elementAt(i));
+        handler.endPrefixMapping("");
+        handler.endElement("http://purl.oclc.org/dsdl/nvdl/ns/instance/1.0", "placeholder", "placeholder");
+      }    
       endSection();
+    }
   }
 
   /**
