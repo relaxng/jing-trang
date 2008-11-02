@@ -19,4 +19,5 @@ interface SectionState {
   void addActiveHandler(ContentHandler handler, ModeUsage attributeModeUsage);
   void addAttributeValidationModeUsage(ModeUsage modeUsage);
   void reject() throws SAXException;
+  void attachPlaceholder(ModeUsage modeUsage, ContentHandler handler);
 }
