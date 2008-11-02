@@ -261,12 +261,28 @@ class SchemaImpl extends AbstractSchema {
 	     */
 	    private boolean anyNamespace;
 	    
+	    /**
+	     * The lastMode stores the last created mode.
+	     * For example when we have an action we need to create the 
+	     * ModeUsage for it and lastMode points to the mode for that action.
+	     * It is possible that lastMode is created without having encountered 
+	     * its definition, in the case of nested modes. In that case we have
+	     * no useMode attribute but a mode element can appear further inside 
+	     * the action (a nested mode). If no mode appears inside the action then
+	     * we need to resolve the anonymous mode that is not defined to the current mode.
+	     */
+	    private Mode lastMode;
     }
     
     /**
      * Stores mode data.
      */
     ModeData md = new ModeData();
+    
+    /**
+     * Keeps the mode data stack.
+     */
+    private Stack modeDataStack = new Stack();
     
     /**
      * Keeps the elements from NVDL representing the current context.
@@ -379,9 +395,17 @@ class SchemaImpl extends AbstractSchema {
       // dispatch based on the element name
       if (localName.equals("rules"))
         parseRules(attributes);
-      else if (localName.equals("mode"))
-        parseMode(attributes);
-      else if (localName.equals("namespace"))
+      else if (localName.equals("mode")) {
+      	String parent = (String)nvdlStack.peek();
+        if ("rules".equals(parent))
+          parseMode(attributes);
+        else if ("mode".equals(parent))
+          // mode inside mode - included mode.
+          parseIncludedMode(attributes);
+        else
+          // nested mode
+          parseNestedMode(attributes);
+      } else if (localName.equals("namespace"))
         parseNamespace(attributes);
       else if (localName.equals("anyNamespace"))
         parseAnyNamespace(attributes);
@@ -409,7 +433,7 @@ class SchemaImpl extends AbstractSchema {
         parseCancelNestedActions(attributes);
       else if (localName.equals("message")) {
     	  // noop;
-      } 
+      }
       else
         throw new RuntimeException("unexpected element \"" + localName + "\"");
       // add the NVDL element on the stack
@@ -443,6 +467,17 @@ class SchemaImpl extends AbstractSchema {
       // dispatch based on element name.
       if (localName.equals("validate"))
         finishValidate();
+      else if (localName.equals("mode")) {
+        String parent = (String)nvdlStack.peek();
+        if ("rules".equals(parent))
+          finishMode(); 
+        else if ("mode".equals(parent))
+          // mode inside mode - included mode.
+          finishIncludedMode();
+        else
+          // nested mode.
+          finishNestedMode();
+      }
     }
 
     /**
@@ -505,6 +540,46 @@ class SchemaImpl extends AbstractSchema {
       }
     }
 
+    /**
+     * Parse a mode element.
+     * @param attributes The element attributes.
+     * @throws SAXException
+     */
+    private void parseIncludedMode(Attributes attributes) throws SAXException {
+      // Create an anonymous mode.
+      Mode parent = md.currentMode;
+      modeDataStack.push(md);
+      md = new ModeData();      
+      md.currentMode = new Mode(defaultBaseMode);;
+      md.currentMode.noteDefined(locator);
+      parent.addIncludedMode(md.currentMode);
+    }
+
+    /**
+     * Parse a mode element.
+     * @param attributes The element attributes.
+     * @throws SAXException
+     */
+    private void parseNestedMode(Attributes attributes) throws SAXException {
+      // Nested mode is an anonymous mode inside an action. The action does
+    	// not have a useMode attribute and we alrady have the mode for that 
+    	// created in the current mode data lastMode, so we use that and define it
+    	// as this nested mode.
+      ModeData oldMd = md;
+      modeDataStack.push(md);
+      md = new ModeData();
+      md.currentMode = oldMd.lastMode;
+      // If already defined, report errors.
+      if (md.currentMode.isDefined()) {
+        error("duplicate_mode", md.currentMode.getName());
+        error("first_mode", md.currentMode.getName(), md.currentMode.getWhereDefined());
+      }
+      else {
+        // record the location where this mode is defined.
+        md.currentMode.noteDefined(locator);
+      }
+    }
+    
     /**
      * Parse a namespace rule. 
      * @param attributes The namespace element attributes.
@@ -611,6 +686,29 @@ class SchemaImpl extends AbstractSchema {
       }
     }
 
+    /**
+     * Notification that the mode element ends.
+     * @throws SAXException
+     */
+    private void finishMode() throws SAXException {
+    }
+    
+    /**
+     * Notification that the mode element ends.
+     * @throws SAXException
+     */
+    private void finishIncludedMode() throws SAXException {
+      md = (ModeData)modeDataStack.pop();
+    }
+    
+    /**
+     * Notification that the mode element ends.
+     * @throws SAXException
+     */
+    private void finishNestedMode() throws SAXException {
+      md = (ModeData)modeDataStack.pop();
+    }
+    
     /**
      * Creates a sub schema for the ending validate action (this is 
      * called from finishValidate).
@@ -841,6 +939,7 @@ class SchemaImpl extends AbstractSchema {
       }
       // Get the mode to be used further on this context.
       Mode mode = getUseMode(attributes);
+      md.lastMode = mode;
       try {
         // parse the path value into a list of Path objects
         // and add them to the mode usage
@@ -916,7 +1015,8 @@ class SchemaImpl extends AbstractSchema {
      * by the useMode attribute.
      */
     private ModeUsage getModeUsage(Attributes attributes) {
-      return new ModeUsage(getUseMode(attributes), md.currentMode);
+      md.lastMode = getUseMode(attributes);
+      return new ModeUsage(md.lastMode, md.currentMode);
     }
 
     /**
@@ -928,7 +1028,7 @@ class SchemaImpl extends AbstractSchema {
     private Mode getUseMode(Attributes attributes) {
       Mode mode = getModeAttribute(attributes, "useMode");
       if (mode == null)
-        return Mode.CURRENT;
+        return new Mode(defaultBaseMode);
       mode.noteUsed(locator);
       return mode;
     }

@@ -13,10 +13,12 @@ class ModeUsage {
    * The use mode.
    */
   private final Mode mode;
+  
   /**
    * The current mode used until now.
    */
   private final Mode currentMode;
+  
   /**
    * Modes depending on context.
    */
@@ -76,12 +78,26 @@ class ModeUsage {
 
   /**
    * Resolves the Mode.CURRENT to the currentMode for this mode usage.
-   * If not Mode.CURRENT passed as argument then the same mode is returned.
+   * If Mode.CURRENT is not passed as argument then the same mode is returned
+   * with the exception of an anonymous mode that is not defined, when we
+   * get also the current mode.
    * @param mode The mode to be resolved.
    * @return Either the current mode mode usage or the same mode passed as argument.
    */
   private Mode resolve(Mode mode) {
-    return mode == Mode.CURRENT ? currentMode : mode;
+    if (mode == Mode.CURRENT) { 
+      return currentMode;
+    }
+    // For an action that does not specify the useMode attribute
+    // we create an anonymous next mode that becomes defined if we
+    // have a nested mode element inside the action.
+    // If we do not have a nested mode then the anonymous mode
+    // is not defined and basically that means we should use the
+    // current mode to perform that action.
+    if (mode.isAnonymous() && !mode.isDefined()) {
+      return currentMode;
+    }
+    return mode;
   }
 
   /**
