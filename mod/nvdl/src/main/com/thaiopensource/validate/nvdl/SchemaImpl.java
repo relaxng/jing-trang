@@ -266,7 +266,7 @@ class SchemaImpl extends AbstractSchema {
     /**
      * Stores mode data.
      */
-    ModeData md = new ModeData();    
+    ModeData md = new ModeData();
     
     /**
      * Keeps the elements from NVDL representing the current context.
@@ -403,6 +403,8 @@ class SchemaImpl extends AbstractSchema {
         parseOption(attributes);
       else if (localName.equals("trigger"))
         parseTrigger(attributes);
+      else if (localName.equals("schema"))
+        error("embedded_schemas");
       else if (localName.equals("cancelNestedActions"))
         parseCancelNestedActions(attributes);
       else
