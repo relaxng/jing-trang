@@ -6,6 +6,7 @@ import org.xml.sax.helpers.LocatorImpl;
 import java.util.Hashtable;
 import java.util.Enumeration;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -171,11 +172,19 @@ class Mode {
         elementMap.put(ns, actions);
       }
     }
-    
-    if (actions!=null && actions.getCancelNestedActions()) {
-      actions = null;
+    // Look into the included modes
+    if (actions == null && includedModes != null) {
+      Iterator i = includedModes.iterator();
+      while (actions == null && i.hasNext()) {
+        Mode includedMode = (Mode)i.next();
+        actions = includedMode.getElementActionsExplicit(ns);
+      }
+      if (actions != null) {
+        actions = actions.changeCurrentMode(this);                    
+        elementMap.put(ns, actions);
+      }
     }
-    
+        
     // No actions specified, look into the base mode.
     if (actions == null && baseMode != null) {
       actions = baseMode.getElementActionsExplicit(ns);
@@ -184,6 +193,11 @@ class Mode {
         elementMap.put(ns, actions);
       }
     }
+
+    if (actions!=null && actions.getCancelNestedActions()) {
+      actions = null;
+    }
+    
     return actions;
   }
 
@@ -230,15 +244,26 @@ class Mode {
         attributeMap.put(ns, actions);
       }
     }
-    
-    if (actions!=null && actions.getCancelNestedActions()) {
-      actions = null;
+    // Look into the included modes
+    if (actions == null && includedModes != null) {
+      Iterator i = includedModes.iterator();
+      while (actions == null && i.hasNext()) {
+        Mode includedMode = (Mode)i.next();
+        actions = includedMode.getAttributeActionsExplicit(ns);
+      }
+      if (actions != null) {
+        attributeMap.put(ns, actions);
+      }
     }
     
     if (actions == null && baseMode != null) {
       actions = baseMode.getAttributeActionsExplicit(ns);
       if (actions != null)
         attributeMap.put(ns, actions);
+    }
+    
+    if (actions!=null && actions.getCancelNestedActions()) {
+      actions = null;
     }
     return actions;
   }
