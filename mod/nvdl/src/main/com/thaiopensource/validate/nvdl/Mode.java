@@ -5,6 +5,8 @@ import org.xml.sax.helpers.LocatorImpl;
 
 import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.ArrayList;
+import java.util.List;
 
 
 class Mode {
@@ -64,6 +66,15 @@ class Mode {
   private final Hashtable attributeMap = new Hashtable();
   private int attributeProcessing = -1;
 
+  /**
+   * List with included modes.
+   */
+  private List includedModes = new ArrayList();
+  
+  void addIncludedMode(Mode mode) {
+    includedModes.add(mode);
+  }
+  
   /**
    * Creates a mode extending a base mode.
    * @param name The new mode name.
