@@ -1479,7 +1479,12 @@ attribute a:y { text }
 </resource>
 <correct>
 <rules xmlns="http://purl.oclc.org/dsdl/nvdl/ns/structure/1.0" startMode="start">
-<mode name="start" extends="c">
+<mode name="start">
+  <mode>
+    <namespace ns="http://www.example.org/c">
+      <allow/>
+    </namespace>
+  </mode>
   <namespace ns="http://www.example.org/a">
     <validate schema="ab.mns" useMode="cover"/>
   </namespace>
@@ -1487,17 +1492,17 @@ attribute a:y { text }
     <validate schema="ab.mns" useMode="cover"/>
   </namespace>
 </mode>
-<mode name="cover" extends="c">
+<mode name="cover">
+  <mode>
+    <namespace ns="http://www.example.org/c">
+      <allow/>
+    </namespace>
+  </mode>
   <namespace ns="http://www.example.org/a">
     <attach/>
   </namespace>
   <namespace ns="http://www.example.org/b">
     <attach/>
-  </namespace>
-</mode>
-<mode name="c">
-  <namespace ns="http://www.example.org/c">
-    <allow/>
   </namespace>
 </mode>
 </rules>
