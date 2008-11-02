@@ -587,25 +587,27 @@ class SchemaImpl extends AbstractSchema {
      * @throws SAXException
      */
     private void finishValidate() throws SAXException {
-      try {
-        // if we had attribute actions, that is matching attributes
-        // we add a schema to the attributes action set.
-        if (md.attributeActions != null) {
-          Schema schema = createSubSchema(true);
-          md.attributeActions.addSchema(schema);
-        }
-        // if we had element actions, that is macting elements
-        // we add a validate action with the schema and the specific mode usage.
-        if (md.actions != null) {
-          Schema schema = createSubSchema(false);
-          md.actions.addNoResultAction(new ValidateAction(md.modeUsage, schema));
-        }
-      }
-      catch (IncorrectSchemaException e) {
-        hadError = true;
-      }
-      catch (IOException e) {
-        throw new WrappedIOException(e);
+      if (md.schemaUri != null) {
+	      try {
+	        // if we had attribute actions, that is matching attributes
+	        // we add a schema to the attributes action set.
+	        if (md.attributeActions != null) {
+	          Schema schema = createSubSchema(true);
+	          md.attributeActions.addSchema(schema);
+	        }
+	        // if we had element actions, that is macting elements
+	        // we add a validate action with the schema and the specific mode usage.
+	        if (md.actions != null) {
+	          Schema schema = createSubSchema(false);
+	          md.actions.addNoResultAction(new ValidateAction(md.modeUsage, schema));
+	        }
+	      }
+	      catch (IncorrectSchemaException e) {
+	        hadError = true;
+	      }
+	      catch (IOException e) {
+	        throw new WrappedIOException(e);
+	      }
       }
     }
 
@@ -867,10 +869,17 @@ class SchemaImpl extends AbstractSchema {
      */
     private String getSchema(Attributes attributes) throws SAXException {
       String schemaUri = attributes.getValue("", "schema");
-      if (Uri.hasFragmentId(schemaUri))
-        error("schema_fragment_id");
-      return Uri.resolve(xmlBaseHandler.getBaseUri(),
-                         Uri.escapeDisallowedChars(schemaUri));
+      if ("".equals(schemaUri)) {
+        error("no_schema");
+        schemaUri = null;
+      }
+      if (schemaUri != null) {
+        if (Uri.hasFragmentId(schemaUri))
+          error("schema_fragment_id");
+        return Uri.resolve(xmlBaseHandler.getBaseUri(),
+                           Uri.escapeDisallowedChars(schemaUri));
+      }
+      return null;
     }
 
     /**
