@@ -67,6 +67,16 @@ class Mode {
   private int attributeProcessing = -1;
 
   /**
+   * Namespace specification elements map.
+   */
+  private final Hashtable nssElementMap = new Hashtable();
+
+  /**
+   * Namespace specification attributes map.
+   */
+  private final Hashtable nssAttributeMap = new Hashtable();
+  
+  /**
    * List with included modes.
    */
   private List includedModes = new ArrayList();
@@ -147,6 +157,26 @@ class Mode {
    */
   private ActionSet getElementActionsExplicit(String ns) {
     ActionSet actions = (ActionSet)elementMap.get(ns);
+    if (actions==null) {
+      // iterate namespace specifications.
+      for (Enumeration e = nssElementMap.keys(); e.hasMoreElements() && actions==null;) {
+        NamespaceSpecification nssI = (NamespaceSpecification)e.nextElement();
+        // If a namespace specification convers the current namespace URI then we get those actions.
+        if (nssI.covers(ns)) {
+          actions = (ActionSet)nssElementMap.get(nssI);
+        }
+      }
+      // Store them in the element Map for faster access next time.
+      if (actions!=null) {
+        elementMap.put(ns, actions);
+      }
+    }
+    
+    if (actions!=null && actions.getCancelNestedActions()) {
+      actions = null;
+    }
+    
+    // No actions specified, look into the base mode.
     if (actions == null && baseMode != null) {
       actions = baseMode.getElementActionsExplicit(ns);
       if (actions != null) {
@@ -186,6 +216,25 @@ class Mode {
    */
    private AttributeActionSet getAttributeActionsExplicit(String ns) {
     AttributeActionSet actions = (AttributeActionSet)attributeMap.get(ns);
+    if (actions==null) {
+      // iterate namespace specifications.
+      for (Enumeration e = nssAttributeMap.keys(); e.hasMoreElements() && actions==null;) {
+        NamespaceSpecification nssI = (NamespaceSpecification)e.nextElement();
+        // If a namespace specification convers the current namespace URI then we get those actions.
+        if (nssI.covers(ns)) {
+          actions = (AttributeActionSet)nssAttributeMap.get(nssI);
+        }
+      }
+      // Store them in the element Map for faster access next time.
+      if (actions!=null) {
+        attributeMap.put(ns, actions);
+      }
+    }
+    
+    if (actions!=null && actions.getCancelNestedActions()) {
+      actions = null;
+    }
+    
     if (actions == null && baseMode != null) {
       actions = baseMode.getAttributeActionsExplicit(ns);
       if (actions != null)
@@ -210,13 +259,13 @@ class Mode {
         attributeProcessing = baseMode.getAttributeProcessing();
       else
         attributeProcessing = ATTRIBUTE_PROCESSING_NONE;
-      for (Enumeration e = attributeMap.keys(); e.hasMoreElements() && attributeProcessing != ATTRIBUTE_PROCESSING_FULL;) {
-        String ns = (String)e.nextElement();
-        AttributeActionSet actions = (AttributeActionSet)attributeMap.get(ns);
+      for (Enumeration e = nssAttributeMap.keys(); e.hasMoreElements() && attributeProcessing != ATTRIBUTE_PROCESSING_FULL;) {
+        NamespaceSpecification nss = (NamespaceSpecification)e.nextElement();
+        AttributeActionSet actions = (AttributeActionSet)nssAttributeMap.get(nss);
         if (!actions.getAttach()
             || actions.getReject()
             || actions.getSchemas().length > 0)
-          attributeProcessing = ((ns.equals("") || ns.equals(NamespaceSpecification.ANY_NAMESPACE))
+          attributeProcessing = ((nss.ns.equals("") || nss.ns.equals(NamespaceSpecification.ANY_NAMESPACE))
                                 ? ATTRIBUTE_PROCESSING_FULL
                                 : ATTRIBUTE_PROCESSING_QUALIFIED);
       }
@@ -276,18 +325,53 @@ class Mode {
       whereDefined = new LocatorImpl(locator);
   }
 
-  boolean bindElement(String ns, ActionSet actions) {
-    if (elementMap.get(ns) != null)
+  /**
+   * Adds a set of element actions to be performed in this mode
+   * for elements in a specified namespace.
+   *  
+   * @param ns The namespace pattern.
+   * @param wildcard The wildcard character.
+   * @param actions The set of element actions.
+   * @return true if successfully added, that is the namespace was
+   * not already present in the elementMap, otherwise false, the 
+   * caller should signal a script error in this case.
+   */
+  boolean bindElement(String ns, String wildcard, ActionSet actions) {
+    NamespaceSpecification nss = new NamespaceSpecification(ns, wildcard);
+    if (nssElementMap.get(nss) != null)
       return false;
-    elementMap.put(ns, actions);
+    for (Enumeration e = nssElementMap.keys(); e.hasMoreElements();) {
+      NamespaceSpecification nssI = (NamespaceSpecification)e.nextElement();
+      if (nss.compete(nssI)) {
+        return false;
+      }
+    }
+    nssElementMap.put(nss, actions);
     return true;
   }
 
-  boolean bindAttribute(String ns, AttributeActionSet actions) {
-    if (attributeMap.get(ns) != null)
+  /**
+   * Adds a set of attribute actions to be performed in this mode
+   * for attributes in a specified namespace.
+   *  
+   * @param ns The namespace pattern.
+   * @param wildcard The wildcard character.
+   * @param actions The set of attribute actions.
+   * @return true if successfully added, that is the namespace was
+   * not already present in the attributeMap, otherwise false, the 
+   * caller should signal a script error in this case.
+   */
+  boolean bindAttribute(String ns, String wildcard, AttributeActionSet actions) {
+    NamespaceSpecification nss = new NamespaceSpecification(ns, wildcard);
+    if (nssAttributeMap.get(nss) != null)
       return false;
-    attributeMap.put(ns, actions);
-    return true;
+    for (Enumeration e = nssAttributeMap.keys(); e.hasMoreElements();) {
+      NamespaceSpecification nssI = (NamespaceSpecification)e.nextElement();
+      if (nss.compete(nssI)) {
+        return false;
+      }
+    }
+    nssAttributeMap.put(nss, actions);
+    return true;    
   }
-
 }
