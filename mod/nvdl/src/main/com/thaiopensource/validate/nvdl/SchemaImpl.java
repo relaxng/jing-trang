@@ -949,10 +949,13 @@ class SchemaImpl extends AbstractSchema {
      * @throws SAXException
      */
     private void parseContext(Attributes attributes) throws SAXException {
-      if (md.anyNamespace) {
-        error("context_any_namespace");
-        return;
-      }
+      // TODO: check this in the NVDL spec.
+      // context not allowed within anyNamespace.???
+      // IT SEEMS IT IS ALLOWED IN NVDL...
+      //if (md.anyNamespace) {
+      //  error("context_any_namespace");
+      //  return;
+      //}
       // Get the mode to be used further on this context.
       Mode mode = getUseMode(attributes);
       md.lastMode = mode;
