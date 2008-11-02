@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.Stack;
 
 /**
  * Schema implementation for NVDL scripts.
@@ -256,6 +257,13 @@ class SchemaImpl extends AbstractSchema {
     private boolean anyNamespace;
 
     /**
+     * Keeps the elements from NVDL representing the current context.
+     * We need it to distinguish between modes, included modes and 
+     * nested modes.
+     */
+    private Stack nvdlStack = new Stack();
+    
+    /**
      * Creates a handler.
      * @param sr The Schema Receiver implementation for NVDL schemas.
      */
@@ -387,6 +395,9 @@ class SchemaImpl extends AbstractSchema {
         parseCancelNestedActions(attributes);
       else
         throw new RuntimeException("unexpected element \"" + localName + "\"");
+      // add the NVDL element on the stack
+      nvdlStack.push(localName);
+      
     }
 
     /**
@@ -410,6 +421,9 @@ class SchemaImpl extends AbstractSchema {
       // exit early if we got errors.
       if (ceh.getHadErrorOrFatalError())
         return;
+      // pop the NVDL element from the stack
+      nvdlStack.pop();
+      // dispatch based on element name.
       if (localName.equals("validate"))
         finishValidate();
     }
