@@ -1285,19 +1285,29 @@ element linux|windows { empty }
   </mode>
   <mode name="linux">
     <namespace ns="http://www.example.com/version">
-      <validate schema="version.rnc" schemaType="application/x-rnc" useMode="#allow"/>
-      <unwrap useMode="#allow">
-	<context path="linux" useMode="#attach"/>
+      <validate schema="version.rnc" schemaType="application/x-rnc" useMode="allow"/>
+      <unwrap useMode="allow">
+	<context path="linux" useMode="attach"/>
       </unwrap>
     </namespace>
   </mode>
   <mode name="windows">
     <namespace ns="http://www.example.com/version">
-      <validate schema="version.rnc" schemaType="application/x-rnc" useMode="#allow"/>
-      <unwrap useMode="#allow">
-	<context path="windows" useMode="#attach"/>
+      <validate schema="version.rnc" schemaType="application/x-rnc" useMode="allow"/>
+      <unwrap useMode="allow">
+	<context path="windows" useMode="attach"/>
       </unwrap>
     </namespace>
+  </mode>
+  <mode name="attach">
+    <anyNamespace>
+      <attach/>
+    </anyNamespace>
+  </mode>
+  <mode name="allow">
+    <anyNamespace>
+      <allow/>
+    </anyNamespace>
   </mode>
 </rules>
 </correct>
