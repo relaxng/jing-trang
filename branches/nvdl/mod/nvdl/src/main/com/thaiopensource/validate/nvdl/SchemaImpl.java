@@ -407,6 +407,9 @@ class SchemaImpl extends AbstractSchema {
         error("embedded_schemas");
       else if (localName.equals("cancelNestedActions"))
         parseCancelNestedActions(attributes);
+      else if (localName.equals("message")) {
+    	  // noop;
+      } 
       else
         throw new RuntimeException("unexpected element \"" + localName + "\"");
       // add the NVDL element on the stack
