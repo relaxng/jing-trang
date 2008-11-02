@@ -21,6 +21,21 @@ class Mode {
   static final Mode CURRENT = new Mode("#current", null);
 
   /**
+   * Mode name prefix used for inline anonymous modes.
+   */
+  private static final String ANONYMOUS_MODE_NAME_PREFIX = "#anonymous#";
+  
+  /**
+   * Inline anonymous modes counter.
+   */
+  private static int anonymousModeCounter = 0;
+  
+  /**
+   * Flag for anonymous modes.
+   */
+  private boolean anonymous;
+  
+  /**
    * The mode name.
    */
   private final String name;
@@ -58,6 +73,15 @@ class Mode {
   Mode(String name, Mode baseMode) {
     this.name = name;
     this.baseMode = baseMode;
+  }
+
+  /**
+   * Creates an anonymous mode.
+   * @param baseMode
+   */
+  public Mode(Mode baseMode) {
+    this(ANONYMOUS_MODE_NAME_PREFIX+anonymousModeCounter++, baseMode);
+    anonymous = true;
   }
 
   /**
@@ -205,6 +229,14 @@ class Mode {
    */
   boolean isDefined() {
     return defined;
+  }
+  
+  /**
+   * Checks if a mode is anonymous.
+   * @return true if anonymous.
+   */
+  boolean isAnonymous() {
+    return anonymous;
   }
 
   /**
