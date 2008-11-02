@@ -195,11 +195,6 @@ class SchemaImpl extends AbstractSchema {
     private int foreignDepth = 0;
     
     /**
-     * Points to the current mode.
-     */
-    private Mode currentMode = null;
-    
-    /**
      * The value of rules/@schemaType
      */
     private String defaultSchemaType;
@@ -211,51 +206,68 @@ class SchemaImpl extends AbstractSchema {
     private Validator validator;
     
     /**
-     * The value of the match attribute on the current rule.
+     * Stores mode data.
+     * We use this to handle included and nested modes.
      */
-    private ElementsOrAttributes match;
+    class ModeData {
+	    /**
+	     * Points to the current mode.
+	     */
+	    private Mode currentMode = null;
+	  
+	    /**
+	     * The value of the match attribute on the current rule.
+	     */
+	    private ElementsOrAttributes match;
+	    
+	    /**
+	     * The current element actions.
+	     */
+	    private ActionSet actions;
+	    
+	    /**
+	     * The current attribute actions.
+	     */
+	    private AttributeActionSet attributeActions;
+	    
+	    /**
+	     * The URI of the schema for the current validate action.
+	     */
+	    private String schemaUri;
+	    
+	    /**
+	     * The current validate action schema type.
+	     */
+	    private String schemaType;
+	    
+	    /**
+	     * The options defined for a validate action.
+	     */
+	    private PropertyMapBuilder options;
+	    
+	    /**
+	     * The options that must be supported by the validator
+	     * for the current validate action.
+	     */
+	    private final Vector mustSupportOptions = new Vector();
+	    
+	    /**
+	     * The current mode usage, for the current action.
+	     */
+	    private ModeUsage modeUsage;
+	    
+	    /**
+	     * Flag indicating if we are in a namespace rule or in an anyNamespace rule.
+	     */
+	    private boolean anyNamespace;
+	    
+    }
     
     /**
-     * The current element actions.
+     * Stores mode data.
      */
-    private ActionSet actions;
+    ModeData md = new ModeData();    
     
-    /**
-     * The current attribute actions.
-     */
-    private AttributeActionSet attributeActions;
-    
-    /**
-     * The URI of the schema for the current validate action.
-     */
-    private String schemaUri;
-    
-    /**
-     * The current validate action schema type.
-     */
-    private String schemaType;
-    
-    /**
-     * The options defined for a validate action.
-     */
-    private PropertyMapBuilder options;
-    
-    /**
-     * The options that must be supported by the validator
-     * for the current validate action.
-     */
-    private final Vector mustSupportOptions = new Vector();
-    
-    /**
-     * The current mode usage, for the current action.
-     */
-    private ModeUsage modeUsage;
-    
-    /**
-     * Flag indicating if we are in a namespace rule or in an anyNamespace rule.
-     */
-    private boolean anyNamespace;
-
     /**
      * Keeps the elements from NVDL representing the current context.
      * We need it to distinguish between modes, included modes and 
@@ -441,7 +453,7 @@ class SchemaImpl extends AbstractSchema {
       // If not start mode specified we create an implicit mode.
       if (startMode == null) {
         startMode = lookupCreateMode(IMPLICIT_MODE_NAME);
-        currentMode = startMode;
+        md.currentMode = startMode;
         // mark this implicit mode as not defined in the schema.
         startMode.noteDefined(null);
       }
@@ -472,19 +484,19 @@ class SchemaImpl extends AbstractSchema {
      */
     private void parseMode(Attributes attributes) throws SAXException {
       // Get the mode (create it if it does not exists) corresponding to the name attribute.
-      currentMode = getModeAttribute(attributes, "name");
+      md.currentMode = getModeAttribute(attributes, "name");
       // If already defined, report errors.
-      if (currentMode.isDefined()) {
-        error("duplicate_mode", currentMode.getName());
-        error("first_mode", currentMode.getName(), currentMode.getWhereDefined());
+      if (md.currentMode.isDefined()) {
+        error("duplicate_mode", md.currentMode.getName());
+        error("first_mode", md.currentMode.getName(), md.currentMode.getWhereDefined());
       }
       else {
         // Check if we have a base mode and set that as the base mode for this mode.
         Mode base = getModeAttribute(attributes, "extends");
         if (base != null)
-          currentMode.setBaseMode(base);
+          md.currentMode.setBaseMode(base);
         // record the location where this mode is defined.
-        currentMode.noteDefined(locator);
+        md.currentMode.noteDefined(locator);
       }
     }
 
@@ -494,7 +506,7 @@ class SchemaImpl extends AbstractSchema {
      * @throws SAXException
      */
     private void parseNamespace(Attributes attributes) throws SAXException {
-      anyNamespace = false;
+      md.anyNamespace = false;
       parseRule(getNs(attributes), attributes);
     }
 
@@ -504,7 +516,7 @@ class SchemaImpl extends AbstractSchema {
      * @throws SAXException
      */
     private void parseAnyNamespace(Attributes attributes) throws SAXException {
-      anyNamespace = true;
+      md.anyNamespace = true;
       parseRule(Mode.ANY_NAMESPACE, attributes);
     }
 
@@ -516,20 +528,20 @@ class SchemaImpl extends AbstractSchema {
      */
     private void parseRule(String ns, Attributes attributes) throws SAXException {
       // gets the value of the match attribute, defaults to match elements only.
-      match = toElementsOrAttributes(attributes.getValue("", "match"),
+      md.match = toElementsOrAttributes(attributes.getValue("", "match"),
                                      ElementsOrAttributes.ELEMENTS);
-      if (match.containsAttributes()) {
-        attributeActions = new AttributeActionSet();
-        if (!currentMode.bindAttribute(ns, attributeActions)) {
+      if (md.match.containsAttributes()) {
+        md.attributeActions = new AttributeActionSet();
+        if (!md.currentMode.bindAttribute(ns, md.attributeActions)) {
           if (ns.equals(Mode.ANY_NAMESPACE))
             error("duplicate_attribute_action_any_namespace");
           else
             error("duplicate_attribute_action", ns);
         }
       }
-      if (match.containsElements()) {
-        actions = new ActionSet();
-        if (!currentMode.bindElement(ns, actions)) {
+      if (md.match.containsElements()) {
+        md.actions = new ActionSet();
+        if (!md.currentMode.bindElement(ns, md.actions)) {
           if (ns.equals(Mode.ANY_NAMESPACE))
             error("duplicate_element_action_any_namespace");
           else
@@ -537,7 +549,7 @@ class SchemaImpl extends AbstractSchema {
         }
       }
       else
-        actions = null;
+        md.actions = null;
     }
 
     /**
@@ -547,22 +559,22 @@ class SchemaImpl extends AbstractSchema {
      */
     private void parseValidate(Attributes attributes) throws SAXException {
       // get the resolved URI pointing to the schema.
-      schemaUri = getSchema(attributes);
+      md.schemaUri = getSchema(attributes);
       // get the schema type
-      schemaType = getSchemaType(attributes);
+      md.schemaType = getSchemaType(attributes);
       // if no schemaType attribute, use the default schema type.
-      if (schemaType == null)
-        schemaType = defaultSchemaType;
-      if (SchemaReceiverImpl.LEGACY_RNC_MEDIA_TYPE.equals(schemaType))
+      if (md.schemaType == null)
+        md.schemaType = defaultSchemaType;
+      if (SchemaReceiverImpl.LEGACY_RNC_MEDIA_TYPE.equals(md.schemaType))
         warning("legacy_rnc_media_type", locator);
       // if we matched on elements create a mode usage.
-      if (actions != null)
-        modeUsage = getModeUsage(attributes);
+      if (md.actions != null)
+        md.modeUsage = getModeUsage(attributes);
       else
-        modeUsage = null;
+        md.modeUsage = null;
       // prepare to receive validate options.
-      options = new PropertyMapBuilder();
-      mustSupportOptions.clear();
+      md.options = new PropertyMapBuilder();
+      md.mustSupportOptions.clear();
     }
 
     /**
@@ -573,15 +585,15 @@ class SchemaImpl extends AbstractSchema {
       try {
         // if we had attribute actions, that is matching attributes
         // we add a schema to the attributes action set.
-        if (attributeActions != null) {
+        if (md.attributeActions != null) {
           Schema schema = createSubSchema(true);
-          attributeActions.addSchema(schema);
+          md.attributeActions.addSchema(schema);
         }
         // if we had element actions, that is macting elements
         // we add a validate action with the schema and the specific mode usage.
-        if (actions != null) {
+        if (md.actions != null) {
           Schema schema = createSubSchema(false);
-          actions.addNoResultAction(new ValidateAction(modeUsage, schema));
+          md.actions.addNoResultAction(new ValidateAction(md.modeUsage, schema));
         }
       }
       catch (IncorrectSchemaException e) {
@@ -604,16 +616,16 @@ class SchemaImpl extends AbstractSchema {
      */
     private Schema createSubSchema(boolean isAttributesSchema) throws IOException, IncorrectSchemaException, SAXException {
       // the user specified options
-      PropertyMap requestedProperties = options.toPropertyMap();
+      PropertyMap requestedProperties = md.options.toPropertyMap();
       // let the schema receiver create a child schema
-      Schema schema = sr.createChildSchema(new InputSource(schemaUri),
-                                           schemaType,
+      Schema schema = sr.createChildSchema(new InputSource(md.schemaUri),
+                                           md.schemaType,
                                            requestedProperties,
                                            isAttributesSchema);
       // get the schema properties
       PropertyMap actualProperties = schema.getProperties();
       // Check if the actual properties match the must support properties.
-      for (Enumeration e = mustSupportOptions.elements(); e.hasMoreElements();) {
+      for (Enumeration e = md.mustSupportOptions.elements(); e.hasMoreElements();) {
         MustSupportOption mso = (MustSupportOption)e.nextElement();
         Object actualValue = actualProperties.get(mso.pid);
         if (actualValue == null)
@@ -653,17 +665,17 @@ class SchemaImpl extends AbstractSchema {
         try {
           PropertyId pid = option.getPropertyId();
           Object value = option.valueOf(arg);
-          Object oldValue = options.get(pid);
+          Object oldValue = md.options.get(pid);
           if (oldValue != null) {
             value = option.combine(new Object[]{oldValue, value});
             if (value == null)
               error("duplicate_option", name);
             else
-              options.put(pid, value);
+              md.options.put(pid, value);
           }
           else {
-            options.put(pid, value);
-            mustSupportOptions.addElement(new MustSupportOption(name, pid,
+            md.options.put(pid, value);
+            md.mustSupportOptions.addElement(new MustSupportOption(name, pid,
                                                                 locator == null
                                                                 ? null
                                                                 : new LocatorImpl(locator)));
@@ -704,17 +716,17 @@ class SchemaImpl extends AbstractSchema {
      */
     private void parseAttach(Attributes attributes) {
       // if the rule matched attributes set the attach flag in the attribute actions.
-      if (attributeActions != null)
-        attributeActions.setAttach(true);
+      if (md.attributeActions != null)
+        md.attributeActions.setAttach(true);
       // if the rule matched elements, the the mode usage and create a attach result action
       // with that mode usage.
-      if (actions != null) {
-        modeUsage = getModeUsage(attributes);
-        actions.setResultAction(new AttachAction(modeUsage));
+      if (md.actions != null) {
+        md.modeUsage = getModeUsage(attributes);
+        md.actions.setResultAction(new AttachAction(md.modeUsage));
       }
       // no element action -> no modeUsage.
       else
-        modeUsage = null;
+        md.modeUsage = null;
     }
 
     /**
@@ -725,13 +737,13 @@ class SchemaImpl extends AbstractSchema {
       // this makes sense only on elements
       // if we have element actions, create the mode usage and add
       // an unwrap action with this mode usage.
-      if (actions != null) {
-        modeUsage = getModeUsage(attributes);
-        actions.setResultAction(new UnwrapAction(modeUsage));
+      if (md.actions != null) {
+        md.modeUsage = getModeUsage(attributes);
+        md.actions.setResultAction(new UnwrapAction(md.modeUsage));
       }
       // no element actions, no modeUsage.
       else
-        modeUsage = null;
+        md.modeUsage = null;
     }
 
     /**
@@ -742,13 +754,13 @@ class SchemaImpl extends AbstractSchema {
       // this makes sense only on elements
       // if we have element actions, create the mode usage and add
       // an attachPlaceholder action with this mode usage.
-      if (actions != null) {
-        modeUsage = getModeUsage(attributes);
-        actions.setResultAction(new AttachPlaceholderAction(modeUsage));
+      if (md.actions != null) {
+        md.modeUsage = getModeUsage(attributes);
+        md.actions.setResultAction(new AttachPlaceholderAction(md.modeUsage));
       }
       // no element actions, no modeUsage.
       else
-        modeUsage = null;
+        md.modeUsage = null;
     }
     
     /**
@@ -758,13 +770,13 @@ class SchemaImpl extends AbstractSchema {
      */
     private void parseAllow(Attributes attributes) {
       // if we match on elements, create the mode usage and add an allow action.
-      if (actions != null) {
-        modeUsage = getModeUsage(attributes);
-        actions.addNoResultAction(new AllowAction(modeUsage));
+      if (md.actions != null) {
+        md.modeUsage = getModeUsage(attributes);
+        md.actions.addNoResultAction(new AllowAction(md.modeUsage));
       }
       // no actions, no mode usage.
       else
-        modeUsage = null;
+        md.modeUsage = null;
       // no need to add anything in the attribute actions, allow
       // is equivalent with a noop action.
     }
@@ -776,16 +788,16 @@ class SchemaImpl extends AbstractSchema {
     private void parseReject(Attributes attributes) {
       // if element actions, get the mode usage and add a reject 
       // action with this mode usage.
-      if (actions != null) {
-        modeUsage = getModeUsage(attributes);
-        actions.addNoResultAction(new RejectAction(modeUsage));
+      if (md.actions != null) {
+        md.modeUsage = getModeUsage(attributes);
+        md.actions.addNoResultAction(new RejectAction(md.modeUsage));
       }
       // no actions, no mode usage
       else
-        modeUsage = null;
+        md.modeUsage = null;
       // if attribute actions, set the reject flag.
-      if (attributeActions != null)
-        attributeActions.setReject(true);
+      if (md.attributeActions != null)
+        md.attributeActions.setReject(true);
     }
 
     /**
@@ -796,17 +808,17 @@ class SchemaImpl extends AbstractSchema {
     private void parseCancelNestedActions(Attributes attributes) {
       // if we match on elements, create the mode usage and add a 
       // cancelNestedActions action.
-      if (actions != null) {
-        modeUsage = getModeUsage(attributes);
-        actions.setCancelNestedActions(true);
+      if (md.actions != null) {
+        md.modeUsage = getModeUsage(attributes);
+        md.actions.setCancelNestedActions(true);
       } 
       // no actions, no mode usage.
       else
-        modeUsage = null;
+        md.modeUsage = null;
       
       // if attribute actions set the cancelNestedActions flag.
-      if (attributeActions != null) {
-        attributeActions.setCancelNestedActions(true);        
+      if (md.attributeActions != null) {
+        md.attributeActions.setCancelNestedActions(true);        
       }
     }
 
@@ -816,7 +828,7 @@ class SchemaImpl extends AbstractSchema {
      * @throws SAXException
      */
     private void parseContext(Attributes attributes) throws SAXException {
-      if (anyNamespace) {
+      if (md.anyNamespace) {
         error("context_any_namespace");
         return;
       }
@@ -827,10 +839,10 @@ class SchemaImpl extends AbstractSchema {
         // and add them to the mode usage
         Vector paths = Path.parse(attributes.getValue("", "path"));
         // XXX warning if modeUsage is null
-        if (modeUsage != null) {
+        if (md.modeUsage != null) {
           for (int i = 0, len = paths.size(); i < len; i++) {
             Path path = (Path)paths.elementAt(i);
-            if (!modeUsage.addContext(path.isRoot(), path.getNames(), mode))
+            if (!md.modeUsage.addContext(path.isRoot(), path.getNames(), mode))
               error("duplicate_path", path.toString());
           }
         }
@@ -890,7 +902,7 @@ class SchemaImpl extends AbstractSchema {
      * by the useMode attribute.
      */
     private ModeUsage getModeUsage(Attributes attributes) {
-      return new ModeUsage(getUseMode(attributes), currentMode);
+      return new ModeUsage(getUseMode(attributes), md.currentMode);
     }
 
     /**
