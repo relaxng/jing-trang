@@ -68,3 +68,25 @@ Trang was written from the start to use Java 1.2 collections.
 = Generics =
 
 Code used in modules that are used only in Trang can and should use generics.  Code used in Jing should not use generics. (This may be changed in the future.)
+
+= Subversion =
+
+Make sure new files get created with the right properties.  In particular, Java files should be created with `svn:eol-style=native`, so that they get checked out with native line endings on all platforms.  You can do this by finding your SVN config file and adding
+
+{{{
+[miscellany]
+enable-auto-props = yes
+
+[auto-props]
+*.java = svn:eol-style=native
+*.xml = svn:eol-style=native; svn:mime-type=application/xml
+*.rng = svn:eol-style=native; svn:mime-type=application/xml
+*.xsl = svn:eol-style=native; svn:mime-type=application/xslt+xml
+*.rnc = svn:eol-style=native
+}}}
+
+On Windows Vista, my Subversion config file is in `C:\Users\jjc\AppData\Roaming\Subversion\config`.
+
+
+
+
