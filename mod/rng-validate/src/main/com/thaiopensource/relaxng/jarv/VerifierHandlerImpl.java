@@ -6,6 +6,7 @@ import com.thaiopensource.relaxng.impl.ValidatorPatternBuilder;
 import com.thaiopensource.xml.sax.CountingErrorHandler;
 import org.iso_relax.verifier.VerifierHandler;
 import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
 
 class VerifierHandlerImpl extends PatternValidator implements VerifierHandler {
   private boolean complete = false;
@@ -16,7 +17,7 @@ class VerifierHandlerImpl extends PatternValidator implements VerifierHandler {
     this.ceh = ceh;
   }
 
-  public void endDocument() {
+  public void endDocument() throws SAXException {
     super.endDocument();
     complete = true;
   }
