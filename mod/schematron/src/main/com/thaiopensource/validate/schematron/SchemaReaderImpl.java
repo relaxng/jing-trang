@@ -51,10 +51,12 @@ class SchemaReaderImpl extends AbstractSchemaReader {
   private final Localizer localizer = new Localizer(SchemaReaderImpl.class);
 
   private final Class transformerFactoryClass;
+  private final TransformerFactoryInitializer transformerFactoryInitializer;
   private final Templates schematron;
   private final Schema schematronSchema;
   private static final String SCHEMATRON_SCHEMA = "schematron.rnc";
   private static final String SCHEMATRON_STYLESHEET = "schematron.xsl";
+  private static final String SCHEMATRON_XSLTC_STYLESHEET = "schematron-xsltc.xsl";
   private static final PropertyId[] supportedPropertyIds = {
     ValidateProperty.ERROR_HANDLER,
     ValidateProperty.XML_READER_CREATOR,
@@ -65,10 +67,14 @@ class SchemaReaderImpl extends AbstractSchemaReader {
     SchematronProperty.PHASE,
   };
 
-  SchemaReaderImpl(SAXTransformerFactory transformerFactory) throws TransformerConfigurationException, IncorrectSchemaException {
+  SchemaReaderImpl(SAXTransformerFactory transformerFactory, TransformerFactoryInitializer transformerFactoryInitializer)
+          throws TransformerConfigurationException, IncorrectSchemaException {
     this.transformerFactoryClass = transformerFactory.getClass();
-    String resourceName = fullResourceName(SCHEMATRON_STYLESHEET);
-    StreamSource source = new StreamSource(getResourceAsStream(resourceName));
+    this.transformerFactoryInitializer = transformerFactoryInitializer;
+    final boolean isXsltc = (transformerFactoryClass.getName().indexOf(".xsltc.") >= 0);
+    final String stylesheet = isXsltc ? SCHEMATRON_XSLTC_STYLESHEET : SCHEMATRON_STYLESHEET;
+    final String resourceName = fullResourceName(stylesheet);
+    final StreamSource source = new StreamSource(getResourceAsStream(resourceName));
     initTransformerFactory(transformerFactory);
     schematron = transformerFactory.newTemplates(source);
     InputSource schemaSource = new InputSource(getResourceAsStream(fullResourceName(SCHEMATRON_SCHEMA)));
@@ -91,27 +97,7 @@ class SchemaReaderImpl extends AbstractSchemaReader {
   }
 
   private void initTransformerFactory(TransformerFactory factory) {
-    String name = factory.getClass().getName();
-    try {
-      if (name.equals("com.icl.saxon.TransformerFactoryImpl"))
-        factory.setAttribute("http://icl.com/saxon/feature/linenumbering",
-                             Boolean.TRUE);
-      else if (name.equals("org.apache.xalan.processor.TransformerFactoryImpl")) {
-        // Try both the documented URI and the URI that the code expects.
-        try {
-          // This is the URI that the code expects.
-          factory.setAttribute("http://xml.apache.org/xalan/properties/source-location",
-                               Boolean.TRUE);
-        }
-        catch (IllegalArgumentException e) {
-          // This is the URI that's documented.
-          factory.setAttribute("http://apache.org/xalan/features/source_location",
-                               Boolean.TRUE);
-        }
-      }
-    }
-    catch (IllegalArgumentException e) {
-    }
+    transformerFactoryInitializer.initTransformerFactory(factory);
   }
 
   static class ValidateStage extends XMLReaderImpl {
@@ -219,13 +205,15 @@ class SchemaReaderImpl extends AbstractSchemaReader {
   }
 
   static class LocationFilter extends DelegatingContentHandler implements Locator {
-    private final String systemId;
+    private final String mainSystemId;
+    private String systemId = null;
     private int lineNumber = -1;
+    private int columnNumber = -1;
     private SAXException exception = null;
 
     LocationFilter(ContentHandler delegate, String systemId) {
       super(delegate);
-      this.systemId = systemId;
+      this.mainSystemId = systemId;
     }
 
     SAXException getException() {
@@ -244,17 +232,9 @@ class SchemaReaderImpl extends AbstractSchemaReader {
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
             throws SAXException {
-      String value = atts.getValue(LOCATION_URI, "line-number");
-      if (value != null) {
-        try {
-          lineNumber = Integer.parseInt(value);
-        }
-        catch (NumberFormatException e) {
-          lineNumber = -1;
-        }
-      }
-      else
-        lineNumber = -1;
+      systemId = getLocationAttribute(atts, "system-id");
+      lineNumber = toInteger(getLocationAttribute(atts, "line-number"));
+      columnNumber = toInteger(getLocationAttribute(atts, "column-number"));
       try {
         super.startElement(namespaceURI, localName, qName, atts);
       }
@@ -262,7 +242,24 @@ class SchemaReaderImpl extends AbstractSchemaReader {
         this.exception = e;
         setDelegate(null);
       }
+      systemId = null;
       lineNumber = -1;
+      columnNumber = -1;
+    }
+
+    private static String getLocationAttribute(Attributes atts, String name) {
+      return atts.getValue(LOCATION_URI, name);
+    }
+
+    private static int toInteger(String value) {
+      if (value == null)
+        return -1;
+      try {
+        return Integer.parseInt(value);
+      }
+      catch (NumberFormatException e) {
+        return -1;
+      }
     }
 
     public String getPublicId() {
@@ -270,7 +267,9 @@ class SchemaReaderImpl extends AbstractSchemaReader {
     }
 
     public String getSystemId() {
-      return systemId;
+      if (systemId != null && !systemId.equals(""))
+        return systemId;
+      return mainSystemId;
     }
 
     public int getLineNumber() {
@@ -278,7 +277,7 @@ class SchemaReaderImpl extends AbstractSchemaReader {
     }
 
     public int getColumnNumber() {
-      return -1;
+      return columnNumber;
     }
   }
 
@@ -387,15 +386,15 @@ class SchemaReaderImpl extends AbstractSchemaReader {
        SourceLocator locator = exception.getLocator();
        if (locator == null)
          return new SAXParseException(exception.getMessage(), null);
-       // Xalan sometimes loses the systemId; work around this.
+       // Xalan sometimes loses the mainSystemId; work around this.
        String s = locator.getSystemId();
        if (s == null)
         s = systemId;
        return new SAXParseException(exception.getMessage(),
-                                    null,
+                                    locator.getPublicId(),
                                     s,
                                     locator.getLineNumber(),
-                                    -1);
+                                    locator.getColumnNumber());
      }
    }
 
