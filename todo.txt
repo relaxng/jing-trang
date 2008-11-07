@@ -21,15 +21,9 @@ Move java sources used for testing only into test hierarchy.
 
 Set some more svn:ignore properties; get rid of .cvsignore properties.
 
-Ensure svn:mime-type/svn:eol-type is set correctly.
-
 test element in mod.xml should specify additional jars.
 
 Merge Jing changes from oNVDL.
-
-?Use JAXP-supplied XSLT implementation. Get rid of saxon dependency.
-
-Use Xsltc from Xalan.
 
 Fix bug with not checking "duplicate declaration" and maybe "xsd prefix"
 constraint.
@@ -44,11 +38,7 @@ Deal with complaints by XSV about trang's handling of Rahtz's example
 
 Handling float/double/Name in trang DTD output module.
 
-Allow jing to read from stdin.
-
 Put jing/trang man pages online.
-
-Add DTD validator
 
 Provide a validate method on Validator so that we can avoid messing
 with threads in some cases.
@@ -75,8 +65,6 @@ com.thaiopensource.validate.driver?
 
 Should have option for specifying non-XML language in a general way.
 
-Auto-detect compact/XML syntax.
-
 Compact syntax parser should provide encoding information.
 
 Give a warning for a list containing a single token.
@@ -89,24 +77,14 @@ Handle comments embedded within strings better.
 Put location information in error messages into a standard format
 understandable by Emacs.
 
-More helpful syntax error messages with compact syntax parser.
-
-Support for IDREF checking via JARV.
-
 In a big choice or interleave or attribute group, memoization for each
 binary pattern is inefficient.
 
 Option to recover from unknown datatype libraries.
 
-More helpful error message for duplicate attributes.
-
 Implement ValidationContext.getBaseUri in the instance.
 
 Support infoset modification for ID/IDREF/IDREFS.
-
-Support DTD compatibility use of default values.
-
-Option to do XInclude before validation.
 
 Maybe introduce a variant of the element pattern that has a mapping
 from names to content models.
@@ -114,5 +92,3 @@ from names to content models.
 Better error message for wrong namespace URI.
 
 Option to be verbose.
-
-Streaming validation of data.
