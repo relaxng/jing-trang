@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-class PatternMatcher implements Cloneable, Matcher {
+public class PatternMatcher implements Cloneable, Matcher {
 
   static private class Shared {
     private final Pattern start;
@@ -49,7 +49,7 @@ class PatternMatcher implements Cloneable, Matcher {
   private String errorMessage;
   private final Shared shared;
 
-  PatternMatcher(Pattern start, ValidatorPatternBuilder builder) {
+  public PatternMatcher(Pattern start, ValidatorPatternBuilder builder) {
     shared = new Shared(start, builder);
     memo = builder.getPatternMemo(start);
   }
@@ -58,6 +58,8 @@ class PatternMatcher implements Cloneable, Matcher {
     PatternMatcher other = (PatternMatcher)obj;
     if (other == null)
       return false;
+    // don't need to test equality of shared, because the memos can only be ==
+    // if the shareds are ==.
     return (memo == other.memo
             && hadError == other.hadError
             && Equal.equal(errorMessage, other.errorMessage)
@@ -88,18 +90,25 @@ class PatternMatcher implements Cloneable, Matcher {
     return true;
   }
 
+  public boolean matchEndDocument() {
+    // XXX maybe check that memo.isNullable if !hadError
+    return true;
+  }
+
   public boolean matchStartTagOpen(Name name) {
     if (setMemo(memo.startTagOpenDeriv(name)))
       return true;
     PatternMemo next = memo.startTagOpenRecoverDeriv(name);
     if (!next.isNotAllowed()) {
+      boolean ok = error("required_elements_missing");
       memo = next;
-      return error("required_elements_missing");
+      return ok;
     }
     ValidatorPatternBuilder builder = shared.builder;
     next = builder.getPatternMemo(builder.makeAfter(shared.findElement(name), memo.getPattern()));
+    boolean ok = error(next.isNotAllowed() ? "unknown_element" : "out_of_context_element", name);
     memo = next;
-    return error(next.isNotAllowed() ? "unknown_element" : "out_of_context_element", name);
+    return ok;
   }
 
   public boolean matchAttributeName(Name name) {
@@ -116,33 +125,41 @@ class PatternMatcher implements Cloneable, Matcher {
     }
     if (setMemo(memo.dataDeriv(value, vc)))
       return true;
+    boolean ok = error("bad_attribute_value", name);
     memo = memo.recoverAfter();
-    return error("bad_attribute_value", name);
+    return ok;
   }
 
   public boolean matchStartTagClose() {
-    boolean ret;
+    boolean ok;
     if (setMemo(memo.endAttributes()))
-      ret = true;
+      ok = true;
     else {
-      memo = memo.ignoreMissingAttributes();
       // XXX should specify which attributes
-      ret = error("required_attributes_missing");
+      ok = error("required_attributes_missing");
+      memo = memo.ignoreMissingAttributes();
     }
     textTyped = memo.getPattern().getContentType() == Pattern.DATA_CONTENT_TYPE;
-    return ret;
+    return ok;
   }
 
-  public boolean matchText(String string, ValidationContext vc, boolean nextTagIsEndTag) {
-    if (textTyped && nextTagIsEndTag) {
+  public boolean matchTextBeforeEndTag(String string, ValidationContext vc) {
+    if (textTyped) {
       ignoreNextEndTag = true;
       return setDataDeriv(string, vc);
     }
-    else {
-      if (DataDerivFunction.isBlank(string))
-        return true;
-      return matchUntypedText();
-    }
+    else
+      return matchUntypedText(string);
+  }
+
+  public boolean matchTextBeforeStartTag(String string) {
+    return matchUntypedText(string);
+  }
+
+  private boolean matchUntypedText(String string) {
+    if (DataDerivFunction.isBlank(string))
+      return true;
+    return matchUntypedText();
   }
 
   public boolean matchUntypedText() {
@@ -158,22 +175,23 @@ class PatternMatcher implements Cloneable, Matcher {
   private boolean setDataDeriv(String string, ValidationContext vc) {
     textTyped = false;
     if (!setMemo(memo.textOnly())) {
+      boolean ok = error("only_text_not_allowed");
       memo = memo.recoverAfter();
-      return error("only_text_not_allowed");
+      return ok;
     }
     if (setMemo(memo.dataDeriv(string, vc))) {
       ignoreNextEndTag = true;
       return true;
     }
     PatternMemo next = memo.recoverAfter();
-    boolean ret = true;
+    boolean ok = true;
     if (!memo.isNotAllowed()) {
       if (!next.isNotAllowed()
           || shared.fixAfter(memo).dataDeriv(string, vc).isNotAllowed())
-        ret = error("string_not_allowed");
+        ok = error("string_not_allowed");
     }
     memo = next;
-    return ret;
+    return ok;
   }
 
   public boolean matchEndTag(ValidationContext vc) {
@@ -183,21 +201,21 @@ class PatternMatcher implements Cloneable, Matcher {
       ignoreNextEndTag = false;
       return true;
     }
-    if (textTyped)
+    if (textTyped) {
+      textTyped = false;
       return setDataDeriv("", vc);
-    textTyped = false;
+    }
     if (setMemo(memo.endTagDeriv()))
       return true;
+    boolean ok = true;
     PatternMemo next = memo.recoverAfter();
-    if (memo.isNotAllowed()) {
+    if (!memo.isNotAllowed()) {
       if (!next.isNotAllowed()
-          || shared.fixAfter(memo).endTagDeriv().isNotAllowed()) {
-        memo = next;
-        return error("unfinished_element");
-      }
+          || shared.fixAfter(memo).endTagDeriv().isNotAllowed())
+        ok = error("unfinished_element");
     }
     memo = next;
-    return true;
+    return ok;
   }
 
   public String getErrorMessage() {
