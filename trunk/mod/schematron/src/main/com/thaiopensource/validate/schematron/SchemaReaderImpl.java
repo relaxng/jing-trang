@@ -56,6 +56,10 @@ class SchemaReaderImpl extends AbstractSchemaReader {
   private final Schema schematronSchema;
   private static final String SCHEMATRON_SCHEMA = "schematron.rnc";
   private static final String SCHEMATRON_STYLESHEET = "schematron.xsl";
+  // XSLTC has some problems with extension functions and function-available, so
+  // we need a separate stylesheet.  See
+  // https://issues.apache.org/jira/browse/XALANJ-2464
+  // https://issues.apache.org/jira/browse/XALANJ-2465
   private static final String SCHEMATRON_XSLTC_STYLESHEET = "schematron-xsltc.xsl";
   private static final PropertyId[] supportedPropertyIds = {
     ValidateProperty.ERROR_HANDLER,
