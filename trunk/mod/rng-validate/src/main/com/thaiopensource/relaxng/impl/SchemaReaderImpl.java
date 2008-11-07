@@ -12,6 +12,7 @@ import com.thaiopensource.validate.Option;
 import com.thaiopensource.validate.ResolverFactory;
 import com.thaiopensource.validate.Schema;
 import com.thaiopensource.validate.ValidateProperty;
+import com.thaiopensource.validate.CombineSchema;
 import com.thaiopensource.validate.prop.rng.RngProperty;
 import com.thaiopensource.validate.prop.wrap.WrapProperty;
 import com.thaiopensource.xml.sax.Resolver;
