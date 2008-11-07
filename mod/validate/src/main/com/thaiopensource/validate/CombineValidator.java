@@ -1,6 +1,5 @@
-package com.thaiopensource.relaxng.impl;
+package com.thaiopensource.validate;
 
-import com.thaiopensource.validate.Validator;
 import com.thaiopensource.xml.sax.ForkContentHandler;
 import com.thaiopensource.xml.sax.ForkDTDHandler;
 import org.xml.sax.ContentHandler;

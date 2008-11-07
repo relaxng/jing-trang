@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng.impl;
+package com.thaiopensource.validate;
 
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.AbstractSchema;
