@@ -10,6 +10,7 @@ import com.thaiopensource.util.Localizer;
 class OutputHandler extends DefaultHandler {
   private final ErrorHandler eh;
   private int lineNumber = -1;
+  private int columnNumber = -1;
   private String systemId = null;
   private final StringBuffer message = new StringBuffer();
   private boolean inMessage = false;
@@ -51,23 +52,12 @@ class OutputHandler extends DefaultHandler {
   public void startElement(String uri, String localName,
                            String qName, Attributes attributes)
           throws SAXException {
-    if (localName.equals("failed-assertion")
-        || localName.equals("report")) {
-      String value = attributes.getValue("", "line-number");
-      if (value == null)
-        lineNumber = -1;
-      else {
-        try {
-          lineNumber = Integer.parseInt(value);
-        }
-        catch (NumberFormatException e) {
-          lineNumber = -1;
-        }
-      }
-      value = attributes.getValue("", "system-id");
-      if (value != null && value.equals(""))
-        value = null;
-      systemId = value;
+    if (localName.equals("failed-assertion") || localName.equals("report")) {
+      lineNumber = toInteger(attributes.getValue("", "line-number"));
+      columnNumber = toInteger(attributes.getValue("", "column-number"));
+      systemId = attributes.getValue("", "system-id");
+      if ("".equals(systemId))
+        systemId = null;
       message.append(localizer.message(localName.equals("failed-assertion")
                                        ? "failed_assertion"
                                        : "report"));
@@ -79,6 +69,17 @@ class OutputHandler extends DefaultHandler {
     }
   }
 
+  private static int toInteger(String value) {
+    if (value == null)
+      return -1;
+    try {
+      return Integer.parseInt(value);
+    }
+    catch (NumberFormatException e) {
+      return -1;
+    }
+  }
+
   public void endElement(String uri, String localName, String qName)
           throws SAXException {
     if (localName.equals("statement") || localName.equals("diagnostic")) {
@@ -86,9 +87,8 @@ class OutputHandler extends DefaultHandler {
         message.setLength(message.length() - 1);
       inMessage = false;
     }
-    else if (localName.equals("failed-assertion")
-             || localName.equals("report")) {
-      eh.error(new SAXParseException(message.toString(), null, systemId, lineNumber, -1));
+    else if (localName.equals("failed-assertion") || localName.equals("report")) {
+      eh.error(new SAXParseException(message.toString(), null, systemId, lineNumber, columnNumber));
       message.setLength(0);
     }
   }
