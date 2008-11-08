@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng.javax;
+package com.thaiopensource.relaxng.jaxp;
 
 import com.thaiopensource.datatype.DatatypeLibraryLoader;
 import com.thaiopensource.relaxng.impl.SchemaBuilderImpl;

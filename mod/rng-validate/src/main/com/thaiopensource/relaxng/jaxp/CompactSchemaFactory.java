@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng.javax;
+package com.thaiopensource.relaxng.jaxp;
 
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.parse.compact.CompactParseable;
