@@ -1,16 +1,16 @@
 package com.thaiopensource.relaxng.parse.sax;
 
 import com.thaiopensource.relaxng.parse.BuildException;
-import com.thaiopensource.xml.sax.Resolver;
+import com.thaiopensource.xml.sax.BasicResolver;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.sax.SAXSource;
 import java.io.IOException;
 
 public class UriResolverImpl implements UriResolver {
-  private final Resolver resolver;
+  private final BasicResolver resolver;
 
-  public UriResolverImpl(Resolver resolver) {
+  public UriResolverImpl(BasicResolver resolver) {
     this.resolver = resolver;
   }
 

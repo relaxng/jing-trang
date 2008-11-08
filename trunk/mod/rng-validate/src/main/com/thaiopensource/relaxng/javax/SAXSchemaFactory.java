@@ -1,29 +1,26 @@
-package com.thaiopensource.validate.rng;
+package com.thaiopensource.relaxng.javax;
 
-import com.thaiopensource.validate.rng.impl.SchemaReaderImpl;
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 import com.thaiopensource.relaxng.parse.sax.UriResolverImpl;
-import com.thaiopensource.validate.SchemaReader;
 import com.thaiopensource.xml.sax.BasicResolver;
+import com.thaiopensource.xml.util.WellKnownNamespaces;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.sax.SAXSource;
 
-public class SAXSchemaReader extends SchemaReaderImpl {
-  private static final SchemaReader theInstance = new SAXSchemaReader();
+public class SAXSchemaFactory extends SchemaFactoryImpl {
+  static final public String SCHEMA_LANGUAGE = WellKnownNamespaces.RELAX_NG;
   
-  private SAXSchemaReader() {
-  }
-  
-  public static SchemaReader getInstance() {
-    return theInstance;
-  }
-
   protected Parseable createParseable(SAXSource source, BasicResolver resolver, ErrorHandler eh) throws SAXException {
     if (source.getXMLReader() == null)
       source = new SAXSource(resolver.createXMLReader(), source.getInputSource());
     return new SAXParseable(source, new UriResolverImpl(resolver), eh);
   }
+  
+  public boolean isSchemaLanguageSupported(String schemaLanguage) {
+    return schemaLanguage.equals(SCHEMA_LANGUAGE);
+  }
+
 }
