@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng.javax;
+package com.thaiopensource.relaxng.jaxp;
 
 import com.thaiopensource.xml.sax.BasicResolver;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
