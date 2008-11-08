@@ -1,6 +1,5 @@
 package com.thaiopensource.xml.sax;
 
-import com.thaiopensource.util.Uri;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -11,23 +10,21 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.sax.SAXSource;
 import java.io.IOException;
-import java.net.URL;
 
-public class Resolver implements XMLReaderCreator {
+public class Resolver extends BasicResolver {
+  private final EntityResolver entityResolver;
   private final URIResolver uriResolver;
   private final URIResolver uriResolverWrapper;
-  private final EntityResolver entityResolver;
-  private final XMLReaderCreator xrc;
 
   private Resolver(XMLReaderCreator xrc, URIResolver uriResolver, EntityResolver entityResolver) {
-    this.xrc = xrc == null ? new Jaxp11XMLReaderCreator() : xrc;
-    this.entityResolver = entityResolver;
+    super(xrc);
     this.uriResolver = uriResolver;
     this.uriResolverWrapper = new URIResolverImpl();
+    this.entityResolver = entityResolver;
   }
 
-  public XMLReader createXMLReader() throws SAXException {
-    XMLReader xr = xrc.createXMLReader();
+   public XMLReader createXMLReader() throws SAXException {
+    XMLReader xr = super.createXMLReader();
     if (entityResolver != null)
       xr.setEntityResolver(entityResolver);
     return xr;
@@ -93,13 +90,13 @@ public class Resolver implements XMLReaderCreator {
       }
     }
     if (saxSource == null) {
-      InputSource in = null;
-      String uri = Uri.resolve(base, href);
-      if (uriResolver == null && entityResolver != null)
-        in = entityResolver.resolveEntity(null, uri);
-      if (in == null)
-        in = new InputSource(uri);
-      saxSource = new SAXSource(in);
+      saxSource = super.resolve(href, base);
+      if (uriResolver == null && entityResolver != null) {
+        InputSource in = saxSource.getInputSource();
+        in = entityResolver.resolveEntity(null, in.getSystemId());
+        if (in != null)
+          saxSource = new SAXSource(in);
+      }
     }
     return saxSource;
   }
@@ -134,22 +131,6 @@ public class Resolver implements XMLReaderCreator {
   public URIResolver getURIResolver() {
     // Always return a wrapper, so that the right XMLReader and EntityResolver gets used.
     return uriResolverWrapper;
-  }
-
-  public InputSource open(InputSource in) throws IOException, SAXException {
-    if (in.getCharacterStream() != null || in.getByteStream() != null)
-      return in;
-    String systemId = in.getSystemId();
-    if (systemId == null)
-      throw new IllegalArgumentException("byteStream, charStream and systemId of the InputSource are all null");
-    String uri = Uri.escapeDisallowedChars(systemId);
-    URL url = new URL(uri);
-    InputSource opened = new InputSource(systemId);
-    opened.setPublicId(in.getPublicId());
-    opened.setEncoding(in.getEncoding());
-    // XXX if encoding is null, should use charset parameter of content-type to set encoding in text/xml case
-    opened.setByteStream(url.openStream());
-    return opened;
   }
 
   public EntityResolver getEntityResolver() {

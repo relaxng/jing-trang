@@ -22,6 +22,7 @@ import com.thaiopensource.validate.CombineSchema;
 import com.thaiopensource.validate.prop.rng.RngProperty;
 import com.thaiopensource.validate.prop.wrap.WrapProperty;
 import com.thaiopensource.xml.sax.Resolver;
+import com.thaiopensource.xml.sax.BasicResolver;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
@@ -84,5 +85,5 @@ public abstract class SchemaReaderImpl extends AbstractSchemaReader {
     return schema;
   }
 
-  protected abstract Parseable createParseable(SAXSource source, Resolver resolver, ErrorHandler eh) throws SAXException;
+  protected abstract Parseable createParseable(SAXSource source, BasicResolver resolver, ErrorHandler eh) throws SAXException;
 }

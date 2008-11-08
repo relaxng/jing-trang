@@ -1,23 +1,18 @@
-package com.thaiopensource.validate.rng;
+package com.thaiopensource.relaxng.javax;
 
-import com.thaiopensource.validate.rng.impl.SchemaReaderImpl;
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.parse.compact.CompactParseable;
 import com.thaiopensource.relaxng.parse.compact.UriOpenerImpl;
-import com.thaiopensource.validate.SchemaReader;
 import com.thaiopensource.xml.sax.BasicResolver;
 import org.xml.sax.ErrorHandler;
 
 import javax.xml.transform.sax.SAXSource;
 
-public class CompactSchemaReader extends SchemaReaderImpl {
-  private static final SchemaReader theInstance = new CompactSchemaReader();
+public class CompactSchemaFactory extends SchemaFactoryImpl {
+  static final public String SCHEMA_LANGUAGE = "http://www.iana.org/assignments/media-types/application/relax-ng-compact-syntax";
 
-  private CompactSchemaReader() {
-  }
-
-  public static SchemaReader getInstance() {
-    return theInstance;
+  public boolean isSchemaLanguageSupported(String schemaLanguage) {
+    return schemaLanguage.equals(SCHEMA_LANGUAGE);
   }
 
   protected Parseable createParseable(SAXSource source, BasicResolver resolver, ErrorHandler eh) {

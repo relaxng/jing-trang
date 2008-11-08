@@ -1,16 +1,16 @@
 package com.thaiopensource.relaxng.parse.compact;
 
 import com.thaiopensource.relaxng.parse.BuildException;
-import com.thaiopensource.xml.sax.Resolver;
+import com.thaiopensource.xml.sax.BasicResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
 
 public class UriOpenerImpl implements UriOpener {
-  private final Resolver resolver;
+  private final BasicResolver resolver;
 
-  public UriOpenerImpl(Resolver resolver) {
+  public UriOpenerImpl(BasicResolver resolver) {
     this.resolver = resolver;
   }
 
