@@ -109,7 +109,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     };
   }
 
-  static RuntimeException unwrapBuildException(BuildException e) throws SAXException, IllegalSchemaException, IOException {
+  static public RuntimeException unwrapBuildException(BuildException e) throws SAXException, IllegalSchemaException, IOException {
     Throwable t = e.getCause();
     if (t instanceof IOException)
       throw (IOException)t;

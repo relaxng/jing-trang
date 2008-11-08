@@ -1,5 +1,8 @@
-package com.thaiopensource.relaxng.impl;
+package com.thaiopensource.validate.rng.impl;
 
+import com.thaiopensource.relaxng.impl.Pattern;
+import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
+import com.thaiopensource.relaxng.impl.ValidatorPatternBuilder;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.AbstractSchema;
 import com.thaiopensource.validate.ValidateProperty;
@@ -18,6 +21,6 @@ public class PatternSchema extends AbstractSchema {
 
   public Validator createValidator(PropertyMap properties) {
     ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
-    return new PatternValidator(start, new ValidatorPatternBuilder(spb), eh);
+    return new RngValidator(start, new ValidatorPatternBuilder(spb), eh);
   }
 }

@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng.impl;
+package com.thaiopensource.validate.rng.impl;
 
 import com.thaiopensource.validate.IncorrectSchemaException;
 import com.thaiopensource.validate.auto.SchemaReceiver;
@@ -10,6 +10,9 @@ import com.thaiopensource.validate.auto.SchemaFuture;
 import com.thaiopensource.relaxng.parse.ParseReceiver;
 import com.thaiopensource.relaxng.parse.BuildException;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
+import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
+import com.thaiopensource.relaxng.impl.PatternFuture;
+import com.thaiopensource.relaxng.impl.SchemaBuilderImpl;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.datatype.DatatypeLibraryLoader;
 import org.relaxng.datatype.DatatypeLibraryFactory;

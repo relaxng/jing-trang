@@ -1,12 +1,10 @@
 package com.thaiopensource.relaxng.impl;
 
-import com.thaiopensource.validate.Validator;
 import com.thaiopensource.xml.util.Name;
 import com.thaiopensource.xml.util.StringSplitter;
 import org.relaxng.datatype.Datatype;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.DTDHandler;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
@@ -19,7 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class IdSoundnessChecker implements Validator, ContentHandler {
+public class IdSoundnessChecker implements ContentHandler {
   private final IdTypeMap idTypeMap;
   private final ErrorHandler eh;
   private Locator locator;
@@ -41,14 +39,6 @@ public class IdSoundnessChecker implements Validator, ContentHandler {
     locator = null;
   }
 
-  public ContentHandler getContentHandler() {
-    return this;
-  }
-
-  public DTDHandler getDTDHandler() {
-    return null;
-  }
-
   public void setDocumentLocator(Locator locator) {
     this.locator = locator;
   }
@@ -56,7 +46,7 @@ public class IdSoundnessChecker implements Validator, ContentHandler {
   public void startDocument() throws SAXException {
   }
 
-  void setComplete() {
+  protected void setComplete() {
   }
 
   public void endDocument() throws SAXException {

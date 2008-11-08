@@ -1,8 +1,14 @@
-package com.thaiopensource.relaxng.impl;
+package com.thaiopensource.validate.rng.impl;
 
 import com.thaiopensource.datatype.DatatypeLibraryLoader;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.Parseable;
+import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
+import com.thaiopensource.relaxng.impl.Pattern;
+import com.thaiopensource.relaxng.impl.SchemaBuilderImpl;
+import com.thaiopensource.relaxng.impl.FeasibleTransform;
+import com.thaiopensource.relaxng.impl.IdTypeMap;
+import com.thaiopensource.relaxng.impl.IdTypeMapBuilder;
 import com.thaiopensource.util.PropertyId;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.AbstractSchema;
