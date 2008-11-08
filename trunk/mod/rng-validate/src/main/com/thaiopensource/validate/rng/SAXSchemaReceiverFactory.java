@@ -1,6 +1,6 @@
 package com.thaiopensource.validate.rng;
 
-import com.thaiopensource.relaxng.impl.SchemaReceiverImpl;
+import com.thaiopensource.validate.rng.impl.SchemaReceiverImpl;
 import com.thaiopensource.relaxng.parse.sax.SAXParseReceiver;
 import com.thaiopensource.relaxng.parse.sax.UriResolverImpl;
 import com.thaiopensource.util.PropertyMap;

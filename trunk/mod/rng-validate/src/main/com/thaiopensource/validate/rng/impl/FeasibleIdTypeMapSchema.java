@@ -1,21 +1,26 @@
-package com.thaiopensource.relaxng.impl;
+package com.thaiopensource.validate.rng.impl;
 
+import com.thaiopensource.relaxng.impl.IdTypeMap;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.AbstractSchema;
 import com.thaiopensource.validate.ValidateProperty;
 import com.thaiopensource.validate.Validator;
 import org.xml.sax.ErrorHandler;
 
-public class IdTypeMapSchema extends AbstractSchema {
+public class FeasibleIdTypeMapSchema extends AbstractSchema {
   private final IdTypeMap idTypeMap;
 
-  public IdTypeMapSchema(IdTypeMap idTypeMap, PropertyMap properties) {
+  public FeasibleIdTypeMapSchema(IdTypeMap idTypeMap, PropertyMap properties) {
     super(properties);
     this.idTypeMap = idTypeMap;
   }
 
   public Validator createValidator(PropertyMap properties) {
     ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
-    return new IdSoundnessChecker(idTypeMap, eh);
+    return new IdValidator(idTypeMap, eh) {
+      public void endDocument() {
+         setComplete();
+      }
+    };
   }
 }
