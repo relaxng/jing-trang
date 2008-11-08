@@ -3,8 +3,6 @@ package com.thaiopensource.relaxng.impl;
 import com.thaiopensource.xml.util.Name;
 import com.thaiopensource.xml.util.StringSplitter;
 import org.relaxng.datatype.Datatype;
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
@@ -17,10 +15,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class IdSoundnessChecker implements ContentHandler {
+public class IdSoundnessChecker {
   private final IdTypeMap idTypeMap;
   private final ErrorHandler eh;
-  private Locator locator;
   private final Map map = new HashMap();
 
   private static class Entry {
@@ -36,17 +33,6 @@ public class IdSoundnessChecker implements ContentHandler {
 
   public void reset() {
     map.clear();
-    locator = null;
-  }
-
-  public void setDocumentLocator(Locator locator) {
-    this.locator = locator;
-  }
-
-  public void startDocument() throws SAXException {
-  }
-
-  protected void setComplete() {
   }
 
   public void endDocument() throws SAXException {
@@ -58,62 +44,50 @@ public class IdSoundnessChecker implements ContentHandler {
           error("missing_id", token, (Locator)locIter.next());
       }
     }
-    setComplete();
   }
 
-  public void startPrefixMapping(String s, String s1) throws SAXException {
-  }
-
-  public void endPrefixMapping(String s) throws SAXException {
-  }
-
-  public void startElement(String namespaceUri, String localName, String qName, Attributes attributes)
+  public void attribute(Name elementName, Name attributeName, String value, Locator locator)
           throws SAXException {
-    Name elementName = new Name(namespaceUri, localName);
-    int len = attributes.getLength();
-    for (int i = 0; i < len; i++) {
-      Name attributeName = new Name(attributes.getURI(i), attributes.getLocalName(i));
-      int idType = idTypeMap.getIdType(elementName, attributeName);
-      if (idType != Datatype.ID_TYPE_NULL) {
-        String[] tokens = StringSplitter.split(attributes.getValue(i));
-        switch (idType) {
-        case Datatype.ID_TYPE_ID:
-          if (tokens.length == 1)
-            id(tokens[0]);
-          else if (tokens.length == 0)
-            error("id_no_tokens");
-          else
-            error("id_multiple_tokens");
-          break;
-        case Datatype.ID_TYPE_IDREF:
-          if (tokens.length == 1)
-            idref(tokens[0]);
-          else if (tokens.length == 0)
-            error("idref_no_tokens");
-          else
-            error("idref_multiple_tokens");
-          break;
-        case Datatype.ID_TYPE_IDREFS:
-          if (tokens.length > 0) {
-            for (int j = 0; j < tokens.length; j++)
-              idref(tokens[j]);
-          }
-          else
-            error("idrefs_no_tokens");
-          break;
+    int idType = idTypeMap.getIdType(elementName, attributeName);
+    if (idType != Datatype.ID_TYPE_NULL) {
+      String[] tokens = StringSplitter.split(value);
+      switch (idType) {
+      case Datatype.ID_TYPE_ID:
+        if (tokens.length == 1)
+          id(tokens[0], locator);
+        else if (tokens.length == 0)
+          error("id_no_tokens", locator);
+        else
+          error("id_multiple_tokens", locator);
+        break;
+      case Datatype.ID_TYPE_IDREF:
+        if (tokens.length == 1)
+          idref(tokens[0], locator);
+        else if (tokens.length == 0)
+          error("idref_no_tokens", locator);
+        else
+          error("idref_multiple_tokens", locator);
+        break;
+      case Datatype.ID_TYPE_IDREFS:
+        if (tokens.length > 0) {
+          for (int j = 0; j < tokens.length; j++)
+            idref(tokens[j], locator);
         }
+        else
+          error("idrefs_no_tokens", locator);
+        break;
       }
     }
   }
 
-  private void id(String token) throws SAXException {
+  private void id(String token, Locator locator) throws SAXException {
     Entry entry = (Entry)map.get(token);
     if (entry == null) {
       entry = new Entry();
       map.put(token, entry);
     }
     else if (entry.hadId) {
-      error("duplicate_id", token);
+      error("duplicate_id", token, locator);
       error("first_id", token, entry.idLoc);
       return;
     }
@@ -121,7 +95,7 @@ public class IdSoundnessChecker implements ContentHandler {
     entry.hadId = true;
   }
 
-  private void idref(String token) {
+  private void idref(String token, Locator locator) {
     Entry entry = (Entry)map.get(token);
     if (entry == null) {
       entry = new Entry();
@@ -134,44 +108,12 @@ public class IdSoundnessChecker implements ContentHandler {
     entry.idrefLocs.add(new LocatorImpl(locator));
   }
 
-  public void endElement(String s, String s1, String s2) throws SAXException {
-  }
-
-  public void characters(char[] chars, int i, int i1) throws SAXException {
-  }
-
-  public void ignorableWhitespace(char[] chars, int i, int i1) throws SAXException {
-  }
-
-  public void processingInstruction(String s, String s1) throws SAXException {
-  }
-
-  public void skippedEntity(String s) throws SAXException {
-  }
-
-  public void notationDecl(String name,
-                           String publicId,
-                           String systemId)
-          throws SAXException {
-  }
-
-  public void unparsedEntityDecl(String name,
-                                 String publicId,
-                                 String systemId,
-                                 String notationName)
-          throws SAXException {
-  }
-
-  private void error(String key) throws SAXException {
+  private void error(String key, Locator locator) throws SAXException {
     eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key), locator));
   }
 
-  private void error(String key, String arg) throws SAXException {
-    eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key, arg), locator));
-  }
-
-  private void error(String key, String arg, Locator loc) throws SAXException {
+  private void error(String key, String arg, Locator locator) throws SAXException {
     eh.error(new SAXParseException(SchemaBuilderImpl.localizer.message(key, arg),
-                                   loc));
+                                   locator));
   }
 }
