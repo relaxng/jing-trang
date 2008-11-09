@@ -13,10 +13,13 @@ They can be divided into three groups.
    * *xsd-datatype* - implements the datatypes of W3C XML Schema Part 2 as a datatype library; depends on the regex and datatype modules
    * *rng-parse* - parses both the XML and compact syntax of RELAX NG
  * *jing* - modules used only by Jing
+   * *pattern* - matching and simplifying RELAX NG patterns; depends on datatype, rng-parse; this is the guts of Jing
+   * *rng-jarv* - implements the JARV validation interface on top of pattern
+   * *rng-jaxp* - implements the JAXP javax.xml.validation interface on top of pattern
    * *validate* - provides a schema language independent framework for validation
-   * *rng-validate* - implements RELAX NG validation based on the framework provided by the validate module; depends on datatype, validate, rng-parse; this is the guts of Jing
-   * *nvdl* - implements MNS and NRL validation based on the framework provided by the validate module; will eventually support NVDL; depends on rng-validate (because it uses RELAX NG to validate the MNS/NRL schemas)
-   * *schematron* - implements Schematron 1.5 based on the framework provided by the validate module; depends on rng-validate (because it uses RELAX NG to validate Schematron schemas)
+   * *rng-validate* - implements RELAX NG validation for the framework provided by the validate module using the pattern module; depends on datatype, validate, rng-parse, pattern
+   * *nvdl* - implements NVDL validation for the framework provided by the validate module; depends on rng-validate (because it uses RELAX NG to validate NVDL schemas); also implements MNS and NRL, the non-standard predecessors to NVDL
+   * *schematron* - implements Schematron 1.5 for the framework provided by the validate module; depends on rng-validate (because it uses RELAX NG to validate Schematron schemas)
    * *xerces* - uses Xerces2-J to implement support for W3C XML Schema based on the framework provided by the validate module
    * *picl* - some experimental code for a Path-based Integrity Constraint Language that was being developed for Part 7 of [http://www.dsdl.org DSDL]
  * *trang* - modules used only by Trang
