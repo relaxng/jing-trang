@@ -1,8 +1,8 @@
 package com.thaiopensource.validate.rng.impl;
 
-import com.thaiopensource.relaxng.impl.Pattern;
-import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
-import com.thaiopensource.relaxng.impl.ValidatorPatternBuilder;
+import com.thaiopensource.relaxng.pattern.Pattern;
+import com.thaiopensource.relaxng.pattern.SchemaPatternBuilder;
+import com.thaiopensource.relaxng.pattern.ValidatorPatternBuilder;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.AbstractSchema;
 import com.thaiopensource.validate.ValidateProperty;

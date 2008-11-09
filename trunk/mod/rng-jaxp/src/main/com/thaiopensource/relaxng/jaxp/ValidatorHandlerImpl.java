@@ -1,8 +1,8 @@
 package com.thaiopensource.relaxng.jaxp;
 
-import com.thaiopensource.relaxng.impl.Pattern;
-import com.thaiopensource.relaxng.impl.PatternMatcher;
-import com.thaiopensource.relaxng.impl.ValidatorPatternBuilder;
+import com.thaiopensource.relaxng.pattern.Pattern;
+import com.thaiopensource.relaxng.pattern.PatternMatcher;
+import com.thaiopensource.relaxng.pattern.ValidatorPatternBuilder;
 import com.thaiopensource.relaxng.match.Matcher;
 import com.thaiopensource.relaxng.sax.Context;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;

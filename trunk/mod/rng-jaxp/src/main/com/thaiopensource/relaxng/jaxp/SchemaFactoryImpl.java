@@ -1,8 +1,8 @@
 package com.thaiopensource.relaxng.jaxp;
 
 import com.thaiopensource.datatype.DatatypeLibraryLoader;
-import com.thaiopensource.relaxng.impl.SchemaBuilderImpl;
-import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
+import com.thaiopensource.relaxng.pattern.SchemaBuilderImpl;
+import com.thaiopensource.relaxng.pattern.SchemaPatternBuilder;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.xml.sax.BasicResolver;

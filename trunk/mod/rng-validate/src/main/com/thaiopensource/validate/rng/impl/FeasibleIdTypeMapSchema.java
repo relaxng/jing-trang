@@ -1,6 +1,6 @@
 package com.thaiopensource.validate.rng.impl;
 
-import com.thaiopensource.relaxng.impl.IdTypeMap;
+import com.thaiopensource.relaxng.pattern.IdTypeMap;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.AbstractSchema;
 import com.thaiopensource.validate.ValidateProperty;
