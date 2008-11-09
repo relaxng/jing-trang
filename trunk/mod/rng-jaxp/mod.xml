@@ -1,0 +1,7 @@
+<module>
+  <depends module="util"/>
+  <depends module="datatype"/>
+  <depends module="rng-parse"/>
+  <depends module="pattern"/>
+  <compile/>
+</module>
