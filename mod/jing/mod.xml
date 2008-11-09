@@ -5,6 +5,9 @@
   <depends module="xsd-datatype"/>
   <depends module="validate"/>
   <depends module="rng-parse"/>
+  <depends module="pattern"/>
+  <depends module="rng-jaxp"/>
+  <depends module="rng-jarv"/>
   <depends module="rng-validate"/>
   <depends module="nvdl"/>
   <depends module="schematron"/>
