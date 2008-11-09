@@ -1,11 +1,11 @@
 package com.thaiopensource.relaxng.match;
 
 import com.thaiopensource.datatype.DatatypeLibraryLoader;
-import com.thaiopensource.relaxng.impl.FeasibleTransform;
-import com.thaiopensource.relaxng.impl.MatchablePatternImpl;
-import com.thaiopensource.relaxng.impl.Pattern;
-import com.thaiopensource.relaxng.impl.SchemaBuilderImpl;
-import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
+import com.thaiopensource.relaxng.pattern.FeasibleTransform;
+import com.thaiopensource.relaxng.pattern.MatchablePatternImpl;
+import com.thaiopensource.relaxng.pattern.Pattern;
+import com.thaiopensource.relaxng.pattern.SchemaBuilderImpl;
+import com.thaiopensource.relaxng.pattern.SchemaPatternBuilder;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.parse.compact.CompactParseable;

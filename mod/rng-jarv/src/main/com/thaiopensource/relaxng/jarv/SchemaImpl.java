@@ -1,8 +1,8 @@
 package com.thaiopensource.relaxng.jarv;
 
-import com.thaiopensource.relaxng.impl.Pattern;
-import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
-import com.thaiopensource.relaxng.impl.ValidatorPatternBuilder;
+import com.thaiopensource.relaxng.pattern.Pattern;
+import com.thaiopensource.relaxng.pattern.SchemaPatternBuilder;
+import com.thaiopensource.relaxng.pattern.ValidatorPatternBuilder;
 import org.iso_relax.verifier.Schema;
 import org.iso_relax.verifier.Verifier;
 import org.iso_relax.verifier.VerifierConfigurationException;

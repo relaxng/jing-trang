@@ -1,7 +1,7 @@
 package com.thaiopensource.relaxng.sax;
 
-import com.thaiopensource.relaxng.impl.IdSoundnessChecker;
-import com.thaiopensource.relaxng.impl.IdTypeMap;
+import com.thaiopensource.relaxng.pattern.IdSoundnessChecker;
+import com.thaiopensource.relaxng.pattern.IdTypeMap;
 import com.thaiopensource.xml.util.Name;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;

@@ -1,6 +1,6 @@
 package com.thaiopensource.validate.rng.impl;
 
-import com.thaiopensource.relaxng.impl.IdTypeMap;
+import com.thaiopensource.relaxng.pattern.IdTypeMap;
 import com.thaiopensource.relaxng.sax.IdContentHandler;
 import com.thaiopensource.validate.Validator;
 import org.xml.sax.ContentHandler;

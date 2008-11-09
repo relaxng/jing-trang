@@ -1,8 +1,8 @@
 package com.thaiopensource.relaxng.jaxp;
 
-import com.thaiopensource.relaxng.impl.Pattern;
-import com.thaiopensource.relaxng.impl.SchemaPatternBuilder;
-import com.thaiopensource.relaxng.impl.ValidatorPatternBuilder;
+import com.thaiopensource.relaxng.pattern.Pattern;
+import com.thaiopensource.relaxng.pattern.SchemaPatternBuilder;
+import com.thaiopensource.relaxng.pattern.ValidatorPatternBuilder;
 
 import javax.xml.validation.Schema;
 import javax.xml.validation.Validator;

@@ -1,7 +1,7 @@
 package com.thaiopensource.relaxng.jaxp;
 
-import com.thaiopensource.relaxng.impl.Pattern;
-import com.thaiopensource.relaxng.impl.ValidatorPatternBuilder;
+import com.thaiopensource.relaxng.pattern.Pattern;
+import com.thaiopensource.relaxng.pattern.ValidatorPatternBuilder;
 import org.w3c.dom.ls.LSResourceResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
