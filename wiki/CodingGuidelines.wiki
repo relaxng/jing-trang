@@ -79,14 +79,12 @@ enable-auto-props = yes
 
 [auto-props]
 *.java = svn:eol-style=native
-*.xml = svn:eol-style=native; svn:mime-type=application/xml
-*.rng = svn:eol-style=native; svn:mime-type=application/xml
-*.xsl = svn:eol-style=native; svn:mime-type=application/xslt+xml
+*.xml = svn:eol-style=native
+*.rng = svn:eol-style=native
+*.xsl = svn:eol-style=native
 *.rnc = svn:eol-style=native
 }}}
 
 On Windows Vista, my Subversion config file is in `C:\Users\jjc\AppData\Roaming\Subversion\config`.
-
-
 
 
