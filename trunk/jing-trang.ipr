@@ -317,9 +317,12 @@
       <module fileurl="file://$PROJECT_DIR$/mod/infer/infer.iml" filepath="$PROJECT_DIR$/mod/infer/infer.iml" group="Trang" />
       <module fileurl="file://$PROJECT_DIR$/mod/jing/jing.iml" filepath="$PROJECT_DIR$/mod/jing/jing.iml" group="Jing" />
       <module fileurl="file://$PROJECT_DIR$/mod/nvdl/nvdl.iml" filepath="$PROJECT_DIR$/mod/nvdl/nvdl.iml" group="Jing" />
+      <module fileurl="file://$PROJECT_DIR$/mod/pattern/pattern.iml" filepath="$PROJECT_DIR$/mod/pattern/pattern.iml" group="Jing" />
       <module fileurl="file://$PROJECT_DIR$/mod/picl/picl.iml" filepath="$PROJECT_DIR$/mod/picl/picl.iml" group="Jing" />
       <module fileurl="file://$PROJECT_DIR$/mod/regex/regex.iml" filepath="$PROJECT_DIR$/mod/regex/regex.iml" group="Common" />
       <module fileurl="file://$PROJECT_DIR$/mod/regex-gen/regex-gen.iml" filepath="$PROJECT_DIR$/mod/regex-gen/regex-gen.iml" group="Common" />
+      <module fileurl="file://$PROJECT_DIR$/mod/rng-jarv/rng-jarv.iml" filepath="$PROJECT_DIR$/mod/rng-jarv/rng-jarv.iml" group="Jing" />
+      <module fileurl="file://$PROJECT_DIR$/mod/rng-jaxp/rng-jaxp.iml" filepath="$PROJECT_DIR$/mod/rng-jaxp/rng-jaxp.iml" group="Jing" />
       <module fileurl="file://$PROJECT_DIR$/mod/rng-parse/rng-parse.iml" filepath="$PROJECT_DIR$/mod/rng-parse/rng-parse.iml" group="Common" />
       <module fileurl="file://$PROJECT_DIR$/mod/rng-schema/rng-schema.iml" filepath="$PROJECT_DIR$/mod/rng-schema/rng-schema.iml" group="Trang" />
       <module fileurl="file://$PROJECT_DIR$/mod/rng-validate/rng-validate.iml" filepath="$PROJECT_DIR$/mod/rng-validate/rng-validate.iml" group="Jing" />
