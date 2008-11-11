@@ -1,6 +1,6 @@
 package com.thaiopensource.validate.nvdl;
 
-import java.util.regex.PatternSyntaxException;
+import java.util.StringTokenizer;
 
 /**
  * Stores information about a namespace specification.
@@ -103,20 +103,18 @@ class NamespaceSpecification {
     return s1.startsWith(s2) || s2.startsWith(s1);
   }
 
-  private String[] split(String value, String regexp) {
-    String[] parts;
-    try {
-      parts = value.split("\\" + regexp, -1);
+  private String[] split(String value, String wildcard) {
+    StringTokenizer st = new StringTokenizer(value, wildcard, true);
+    int index = st.countTokens();
+    if (index == 0)
+      return new String[]{value};
+    String[] parts = new String[index];
+    index = 0;
+    while (st.hasMoreTokens()) {
+      String token = st.nextToken();
+      parts[index++] = token.equals(wildcard) ? "" : token;
     }
-    catch (PatternSyntaxException e) {
-      try {
-        parts = value.split(regexp, -1);
-      }
-      catch (PatternSyntaxException e2) {
-        parts = new String[]{value};
-      }
-    }
-    return parts;
+     return parts;
   }
 
   /**
