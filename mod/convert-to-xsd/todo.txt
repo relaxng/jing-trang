@@ -36,8 +36,6 @@ Make choice of targetNamespace not depend on order of hash table iteration.
 
 Handle nested grammars (use different namespace for different grammars).
 
-Turn overrides into <redefine>.
-
 Preserve definitions that are equivalent to empty or notAllowed.
 A define whose pattern is equivalent to notAllowed should be preserved
 in the intermediate form, since it may correspond to the abstract head
