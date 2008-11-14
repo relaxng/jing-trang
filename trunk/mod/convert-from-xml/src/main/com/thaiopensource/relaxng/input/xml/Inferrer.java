@@ -19,6 +19,8 @@ import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.edit.SchemaDocument;
 import com.thaiopensource.relaxng.edit.TextPattern;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
+import com.thaiopensource.resolver.Resolver;
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.xml.infer.AttributeDecl;
 import com.thaiopensource.xml.infer.ChoiceParticle;
 import com.thaiopensource.xml.infer.ElementDecl;
@@ -31,7 +33,6 @@ import com.thaiopensource.xml.infer.ParticleVisitor;
 import com.thaiopensource.xml.infer.Schema;
 import com.thaiopensource.xml.infer.SequenceParticle;
 import com.thaiopensource.xml.infer.TextParticle;
-import com.thaiopensource.xml.sax.Resolver;
 import com.thaiopensource.xml.util.Name;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
@@ -215,10 +216,7 @@ class Inferrer {
 
   static SchemaCollection infer(String[] args, Options options, ErrorHandler eh) throws SAXException, IOException {
     InferHandler handler = new InferHandler(new DatatypeLibraryLoader());
-    Resolver resolver = options.resolver;
-    if (resolver == null)
-      resolver = Resolver.newInstance();
-    XMLReader xr = resolver.createXMLReader();
+    XMLReader xr = new SAXResolver(options.resolver).createXMLReader();
     xr.setErrorHandler(eh);
     xr.setContentHandler(handler);
     for (int i = 0; i < args.length; i++) {

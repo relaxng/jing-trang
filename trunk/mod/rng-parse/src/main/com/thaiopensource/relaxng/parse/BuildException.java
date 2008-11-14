@@ -1,5 +1,6 @@
 package com.thaiopensource.relaxng.parse;
 
+import com.thaiopensource.resolver.ResolverException;
 import org.xml.sax.SAXException;
 
 public class BuildException extends RuntimeException {
@@ -19,5 +20,17 @@ public class BuildException extends RuntimeException {
     if (inner instanceof BuildException)
       return (BuildException)inner;
     return new BuildException(e);
+  }
+
+  public static BuildException fromResolverException(ResolverException e) {
+    if (e.getMessage() == null) {
+      Throwable t = e.unwrap();
+      if (t != null) {
+        if (t instanceof BuildException)
+          throw (BuildException)t;
+        throw new BuildException(t);
+      }
+    }
+    throw new BuildException(e);
   }
 }

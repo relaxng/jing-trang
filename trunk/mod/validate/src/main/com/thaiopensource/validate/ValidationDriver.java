@@ -6,7 +6,6 @@ import com.thaiopensource.util.UriOrFile;
 import com.thaiopensource.validate.auto.AutoSchemaReader;
 import com.thaiopensource.xml.sax.CountingErrorHandler;
 import com.thaiopensource.xml.sax.ErrorHandlerImpl;
-import com.thaiopensource.xml.sax.Resolver;
 import org.xml.sax.DTDHandler;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
@@ -26,7 +25,6 @@ import java.net.MalformedURLException;
  */
 
 public class ValidationDriver {
-  private final Resolver resolver;
   private XMLReader xr;
   private final CountingErrorHandler eh;
   private final SchemaReader sr;
@@ -66,7 +64,6 @@ public class ValidationDriver {
     eh = new CountingErrorHandler(ieh);
     ValidateProperty.ERROR_HANDLER.put(builder, eh);
     this.instanceProperties = builder.toPropertyMap();
-    this.resolver = ResolverFactory.createResolver(this.instanceProperties);
     this.sr = schemaReader == null ? new AutoSchemaReader() : schemaReader;
   }
 
@@ -152,7 +149,7 @@ public class ValidationDriver {
     if (validator == null)
       validator = schema.createValidator(instanceProperties);
     if (xr == null) {
-      xr = resolver.createXMLReader();
+      xr = ResolverFactory.createResolver(instanceProperties).createXMLReader();
       xr.setErrorHandler(eh);
     }
     eh.reset();

@@ -1,14 +1,13 @@
 package com.thaiopensource.relaxng.translate;
 
-import com.thaiopensource.relaxng.translate.util.InvalidParamsException;
 import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.input.InputFailedException;
 import com.thaiopensource.relaxng.input.InputFormat;
 import com.thaiopensource.relaxng.input.MultiInputFormat;
-import com.thaiopensource.relaxng.input.xml.XmlInputFormat;
 import com.thaiopensource.relaxng.input.dtd.DtdInputFormat;
 import com.thaiopensource.relaxng.input.parse.compact.CompactParseInputFormat;
 import com.thaiopensource.relaxng.input.parse.sax.SAXParseInputFormat;
+import com.thaiopensource.relaxng.input.xml.XmlInputFormat;
 import com.thaiopensource.relaxng.output.LocalOutputDirectory;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.output.OutputFailedException;
@@ -17,11 +16,13 @@ import com.thaiopensource.relaxng.output.dtd.DtdOutputFormat;
 import com.thaiopensource.relaxng.output.rnc.RncOutputFormat;
 import com.thaiopensource.relaxng.output.rng.RngOutputFormat;
 import com.thaiopensource.relaxng.output.xsd.XsdOutputFormat;
-import com.thaiopensource.xml.sax.ErrorHandlerImpl;
+import com.thaiopensource.relaxng.translate.util.InvalidParamsException;
+import com.thaiopensource.resolver.Resolver;
 import com.thaiopensource.util.Localizer;
 import com.thaiopensource.util.OptionParser;
 import com.thaiopensource.util.UriOrFile;
 import com.thaiopensource.util.Version;
+import com.thaiopensource.xml.sax.ErrorHandlerImpl;
 import org.xml.sax.SAXException;
 
 import java.io.File;
@@ -119,7 +120,7 @@ public class Driver {
       String[] inputParamArray = inputParams.toArray(new String[0]);
       outputType = outputType.toLowerCase();
       SchemaCollection sc;
-      ClassLoader loader = Driver.class.getClassLoader();
+      Resolver resolver = null;
       if (args.length > 2) {
         if (!(inFormat instanceof MultiInputFormat)) {
           error(localizer.message("too_many_arguments"));
@@ -128,10 +129,10 @@ public class Driver {
         String[] uris = new String[args.length - 1];
         for (int i = 0; i < uris.length; i++)
           uris[i] = UriOrFile.toUri(args[i]);
-        sc = ((MultiInputFormat)inFormat).load(uris, inputParamArray, outputType, eh, loader);
+        sc = ((MultiInputFormat)inFormat).load(uris, inputParamArray, outputType, eh, resolver);
       }
       else
-        sc = inFormat.load(UriOrFile.toUri(args[0]), inputParamArray, outputType, eh, loader);
+        sc = inFormat.load(UriOrFile.toUri(args[0]), inputParamArray, outputType, eh, resolver);
       if (ext.length() == 0)
         ext = outputType;
       OutputDirectory od = new LocalOutputDirectory(sc.getMainUri(),

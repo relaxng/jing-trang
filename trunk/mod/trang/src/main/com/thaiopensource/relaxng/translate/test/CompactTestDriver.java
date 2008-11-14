@@ -12,10 +12,9 @@ import com.thaiopensource.relaxng.output.rnc.RncOutputFormat;
 import com.thaiopensource.relaxng.output.rng.RngOutputFormat;
 import com.thaiopensource.relaxng.output.xsd.XsdOutputFormat;
 import com.thaiopensource.relaxng.translate.util.InvalidParamsException;
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.util.UriOrFile;
 import com.thaiopensource.xml.sax.ErrorHandlerImpl;
-import com.thaiopensource.xml.sax.XMLReaderCreator;
-import com.thaiopensource.xml.sax.Resolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 
@@ -27,9 +26,8 @@ import java.io.OutputStreamWriter;
 
 public class CompactTestDriver {
 
-  private final XMLReaderCreator xrc = Resolver.newInstance();
+  private final SAXResolver saxResolver = new SAXResolver();
   private ErrorHandler eh;
-  private ClassLoader loader;
   private final InputFormat inputFormat = new CompactParseInputFormat();
   private OutputFormat outputFormat;
   private OutputFormat compactOutputFormat;
@@ -45,7 +43,6 @@ public class CompactTestDriver {
 
   private int doMain(String[] args) throws IOException {
     eh = new ErrorHandlerImpl(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(args[0]))));
-    loader = CompactTestDriver.class.getClassLoader();
     if (args[2].equals("xsd")) {
       outputFormat = new XsdOutputFormat();
       toExt = XSD_EXTENSION;
@@ -130,7 +127,7 @@ public class CompactTestDriver {
           if (!compareDir(file, new File(testDir, files[i])))
             return false;
         }
-        else if (!Compare.compare(file, new File(testDir, files[i]), xrc))
+        else if (!Compare.compare(file, new File(testDir, files[i]), saxResolver))
           return false;
       }
       return true;
@@ -158,7 +155,7 @@ public class CompactTestDriver {
 
   private boolean run(File in, File out, OutputFormat of, String outExt) throws IOException {
     try {
-      SchemaCollection sc = inputFormat.load(UriOrFile.fileToUri(in), new String[0], null, eh, loader);
+      SchemaCollection sc = inputFormat.load(UriOrFile.fileToUri(in), new String[0], null, eh, saxResolver.getResolver());
       OutputDirectory od = new LocalOutputDirectory(sc.getMainUri(), out, outExt, null, LINE_LENGTH, INDENT);
       od.setEncoding(OUTPUT_ENCODING);
       of.output(sc, od, new String[0], null, eh);

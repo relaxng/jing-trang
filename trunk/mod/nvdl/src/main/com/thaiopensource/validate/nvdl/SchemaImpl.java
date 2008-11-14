@@ -1,5 +1,6 @@
 package com.thaiopensource.validate.nvdl;
 
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.util.Localizer;
 import com.thaiopensource.util.PropertyId;
 import com.thaiopensource.util.PropertyMap;
@@ -18,7 +19,6 @@ import com.thaiopensource.validate.auto.SchemaFuture;
 import com.thaiopensource.validate.prop.wrap.WrapProperty;
 import com.thaiopensource.xml.sax.CountingErrorHandler;
 import com.thaiopensource.xml.sax.DelegatingContentHandler;
-import com.thaiopensource.xml.sax.Resolver;
 import com.thaiopensource.xml.sax.XmlBaseHandler;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
 import org.xml.sax.Attributes;
@@ -178,7 +178,7 @@ class SchemaImpl extends AbstractSchema {
     /**
      * The Resolver to use for resolving URIs and entities.
      */
-    private final Resolver resolver;
+    private final SAXResolver resolver;
     
     /**
      * Convert error keys to messages.
@@ -754,6 +754,7 @@ class SchemaImpl extends AbstractSchema {
       // the user specified options
       PropertyMap requestedProperties = md.options.toPropertyMap();
       // let the schema receiver create a child schema
+      // XXX parse the media type to the resolver
       Schema schema = sr.createChildSchema(resolver.resolve(md.schemaUriRef, md.schemaUriBase),
                                            md.schemaType,
                                            requestedProperties,

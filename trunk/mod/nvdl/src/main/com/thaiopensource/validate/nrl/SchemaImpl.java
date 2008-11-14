@@ -1,5 +1,6 @@
 package com.thaiopensource.validate.nrl;
 
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.util.Localizer;
 import com.thaiopensource.util.PropertyId;
 import com.thaiopensource.util.PropertyMap;
@@ -19,7 +20,6 @@ import com.thaiopensource.validate.auto.SchemaFuture;
 import com.thaiopensource.validate.prop.wrap.WrapProperty;
 import com.thaiopensource.xml.sax.CountingErrorHandler;
 import com.thaiopensource.xml.sax.DelegatingContentHandler;
-import com.thaiopensource.xml.sax.Resolver;
 import com.thaiopensource.xml.sax.XmlBaseHandler;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
 import org.xml.sax.Attributes;
@@ -72,7 +72,7 @@ class SchemaImpl extends AbstractSchema {
     private final SchemaReceiverImpl sr;
     private boolean hadError = false;
     private final ErrorHandler eh;
-    private final Resolver resolver;
+    private final SAXResolver resolver;
     private final CountingErrorHandler ceh;
     private final Localizer localizer = new Localizer(SchemaImpl.class);
     private Locator locator;

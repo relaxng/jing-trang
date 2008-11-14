@@ -4,12 +4,13 @@ import com.thaiopensource.relaxng.parse.ParseReceiver;
 import com.thaiopensource.relaxng.parse.ParsedPatternFuture;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
 public class SAXParseReceiver extends SAXSubParser implements ParseReceiver {
-  public SAXParseReceiver(UriResolver resolver, ErrorHandler eh) {
+  public SAXParseReceiver(SAXResolver resolver, ErrorHandler eh) {
     super(resolver, eh);
   }
 

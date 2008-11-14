@@ -1,15 +1,11 @@
 package com.thaiopensource.xml.em;
 
-import com.thaiopensource.xml.util.EncodingMap;
-
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
-public class FileEntityManager implements EntityManager {
-  public OpenEntity open(ExternalId xid) throws IOException {
+public class FileEntityManager extends EntityManager {
+  public OpenEntity open(ExternalId xid, boolean isParameterEntity, String entityName) throws IOException {
     String systemId = xid.getSystemId();
     File file = new File(systemId);
     if (!file.isAbsolute()) {
@@ -20,14 +16,16 @@ public class FileEntityManager implements EntityManager {
 	  file = new File(dir, systemId);
       }
     }
-    EncodingDetectInputStream in
-      = new EncodingDetectInputStream(new FileInputStream(file));
-    String enc = in.detectEncoding();
-    String javaEnc = EncodingMap.getJavaName(enc);
-    return new OpenEntity(new BufferedReader(new InputStreamReader(in,
-								   javaEnc)),
-			  file.toString(),
-			  file.toString(),
-			  enc);
+    return openFile(file);
   }
+
+  public OpenEntity open(String systemId) throws IOException {
+    return openFile(new File(systemId));
+  }
+
+  private OpenEntity openFile(File file) throws IOException {
+    return detectEncoding(new FileInputStream(file), file.toString());
+  }
+
+
 }

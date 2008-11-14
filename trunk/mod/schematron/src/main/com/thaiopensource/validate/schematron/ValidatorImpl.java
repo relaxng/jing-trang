@@ -1,10 +1,11 @@
 package com.thaiopensource.validate.schematron;
 
+import com.thaiopensource.resolver.Resolver;
+import com.thaiopensource.resolver.xml.transform.Transform;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.ResolverFactory;
 import com.thaiopensource.validate.ValidateProperty;
 import com.thaiopensource.validate.Validator;
-import com.thaiopensource.xml.sax.Resolver;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.DTDHandler;
 import org.xml.sax.ErrorHandler;
@@ -27,7 +28,7 @@ class ValidatorImpl implements Validator {
     this.factory = factory;
     ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
     outputHandler = new OutputHandler(eh);
-    resolver = ResolverFactory.createResolver(properties);
+    resolver = ResolverFactory.createResolver(properties).getResolver();
     initTransformerHandler();
   }
 
@@ -46,7 +47,7 @@ class ValidatorImpl implements Validator {
   private void initTransformerHandler() {
     try {
       transformerHandler = factory.newTransformerHandler(templates);
-      transformerHandler.getTransformer().setURIResolver(resolver.getURIResolver());
+      transformerHandler.getTransformer().setURIResolver(Transform.createSAXURIResolver(resolver));
       // XXX set up transformer with an ErrorListener that just throws
       // XXX (what about errors from document() calls?)
     }

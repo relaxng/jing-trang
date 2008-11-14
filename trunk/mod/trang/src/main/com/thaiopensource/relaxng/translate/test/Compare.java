@@ -1,9 +1,8 @@
 package com.thaiopensource.relaxng.translate.test;
 
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.util.UriOrFile;
 import com.thaiopensource.xml.sax.AbstractLexicalHandler;
-import com.thaiopensource.xml.sax.XMLReaderCreator;
-import com.thaiopensource.xml.sax.Resolver;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -20,14 +19,14 @@ import java.util.List;
 import java.util.Vector;
 
 public class Compare {
-  static public boolean compare(File file1, File file2, XMLReaderCreator xrc) throws SAXException, IOException {
-    return load(xrc, file1).equals(load(xrc, file2));
+  static public boolean compare(File file1, File file2, SAXResolver resolver) throws SAXException, IOException {
+    return load(resolver, file1).equals(load(resolver, file2));
   }
 
-  static private List<Event> load(XMLReaderCreator xrc, File file) throws SAXException, IOException {
+  static private List<Event> load(SAXResolver resolver, File file) throws SAXException, IOException {
     InputSource in = new InputSource(UriOrFile.fileToUri(file));
     Saver saver = new Saver();
-    XMLReader xr = xrc.createXMLReader();
+    XMLReader xr = resolver.createXMLReader();
 
     try {
       xr.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
@@ -220,6 +219,6 @@ public class Compare {
   }
 
   static public void main(String[] args) throws SAXException, IOException {
-    System.err.println(compare(new File(args[0]), new File(args[1]), Resolver.newInstance()));
+    System.err.println(compare(new File(args[0]), new File(args[1]), new SAXResolver()));
   }
 }

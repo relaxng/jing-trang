@@ -18,7 +18,6 @@ import com.thaiopensource.xml.sax.CountingErrorHandler;
 import com.thaiopensource.xml.sax.DelegatingContentHandler;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
 import com.thaiopensource.xml.sax.ForkContentHandler;
-import com.thaiopensource.xml.sax.Resolver;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.ErrorHandler;
@@ -407,11 +406,13 @@ class SchemaReaderImpl extends AbstractSchemaReader {
   // This approach uses SAXTransformerFactory. We will stick with
   // the original for now since it works and is debugged.  Also
   // Saxon 6.5.2 prints to System.err in TemplatesHandlerImpl.getTemplates().
+  // XXX switch over to this implementation
 
-  private Schema createSchema2(InputSource in, PropertyMap properties)
+  private Schema createSchema2(SAXSource source, PropertyMap properties)
             throws IOException, SAXException, IncorrectSchemaException {
     ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
     CountingErrorHandler ceh = new CountingErrorHandler(eh);
+    InputSource in = source.getInputSource();
     String systemId = in.getSystemId();
     try {
       SAXTransformerFactory factory = (SAXTransformerFactory)transformerFactoryClass.newInstance();
@@ -421,8 +422,9 @@ class SchemaReaderImpl extends AbstractSchemaReader {
       PropertyMapBuilder builder = new PropertyMapBuilder(properties);
       ValidateProperty.ERROR_HANDLER.put(builder, ceh);
       Validator validator = schematronSchema.createValidator(builder.toPropertyMap());
-      Resolver resolver = ResolverFactory.createResolver(properties);
-      XMLReader xr = resolver.createXMLReader();
+      XMLReader xr = source.getXMLReader();
+      if (xr == null)
+        xr = ResolverFactory.createResolver(properties).createXMLReader();
       xr.setContentHandler(new ForkContentHandler(validator.getContentHandler(),
                                                   transformerHandler));
       factory.setErrorListener(new SAXErrorListener(ceh, systemId));

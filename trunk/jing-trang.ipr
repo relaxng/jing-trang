@@ -7,7 +7,12 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
+      <executeOn event="beforeRun" target="services" />
+      <executeOn event="beforeRun" target="services" />
+      <executeOn event="beforeRun" target="services" />
+      <executeOn event="beforeRun" target="services" />
       <executeOn event="beforeRun" target="services" runConfigurationType="Application" runConfigurationName="Jing" />
       <executeOn event="beforeRun" target="services" runConfigurationType="Application" runConfigurationName="Trang" />
       <executeOn event="beforeRun" target="services" runConfigurationType="Application" runConfigurationName="mns-test" />
@@ -355,6 +360,7 @@
       <module fileurl="file://$PROJECT_DIR$/mod/picl/picl.iml" filepath="$PROJECT_DIR$/mod/picl/picl.iml" group="Jing" />
       <module fileurl="file://$PROJECT_DIR$/mod/regex/regex.iml" filepath="$PROJECT_DIR$/mod/regex/regex.iml" group="Common" />
       <module fileurl="file://$PROJECT_DIR$/mod/regex-gen/regex-gen.iml" filepath="$PROJECT_DIR$/mod/regex-gen/regex-gen.iml" group="Common" />
+      <module fileurl="file://$PROJECT_DIR$/mod/resolver/resolver.iml" filepath="$PROJECT_DIR$/mod/resolver/resolver.iml" group="Common" />
       <module fileurl="file://$PROJECT_DIR$/mod/rng-jarv/rng-jarv.iml" filepath="$PROJECT_DIR$/mod/rng-jarv/rng-jarv.iml" group="Jing" />
       <module fileurl="file://$PROJECT_DIR$/mod/rng-jaxp/rng-jaxp.iml" filepath="$PROJECT_DIR$/mod/rng-jaxp/rng-jaxp.iml" group="Jing" />
       <module fileurl="file://$PROJECT_DIR$/mod/rng-parse/rng-parse.iml" filepath="$PROJECT_DIR$/mod/rng-parse/rng-parse.iml" group="Common" />

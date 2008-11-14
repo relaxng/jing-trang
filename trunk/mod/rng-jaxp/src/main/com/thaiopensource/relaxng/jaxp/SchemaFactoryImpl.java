@@ -1,20 +1,20 @@
 package com.thaiopensource.relaxng.jaxp;
 
 import com.thaiopensource.datatype.DatatypeLibraryLoader;
-import com.thaiopensource.relaxng.pattern.SchemaBuilderImpl;
-import com.thaiopensource.relaxng.pattern.SchemaPatternBuilder;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.Parseable;
-import com.thaiopensource.xml.sax.BasicResolver;
+import com.thaiopensource.relaxng.pattern.SchemaBuilderImpl;
+import com.thaiopensource.relaxng.pattern.SchemaPatternBuilder;
+import com.thaiopensource.resolver.Resolver;
+import com.thaiopensource.resolver.xml.ls.LS;
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 import org.w3c.dom.ls.LSResourceResolver;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.Source;
-import javax.xml.transform.sax.SAXSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.IOException;
@@ -50,19 +50,18 @@ public abstract class SchemaFactoryImpl extends SchemaFactory {
   public Schema newSchema(Source[] schemas) throws SAXException {
     if (schemas.length != 1)
       throw new UnsupportedOperationException();
-    SAXSource source = sourceToSAXSource(schemas[0]);
-    BasicResolver resolver;
-    if (resourceResolver == null)
-      resolver = new BasicResolver();
-    else
-      resolver = new Resolver(resourceResolver);
+    Source source = schemas[0];
+    Resolver resolver = null;
+    if (resourceResolver != null)
+      resolver = LS.createResolver(resourceResolver);
+    SAXResolver saxResolver = new SAXResolver(resolver);
     ErrorHandler eh = errorHandler;
     if (eh == null)
       eh = new DraconianErrorHandler();
     // XXX add a property to enable user to set this
     if (dlf == null)
       dlf = new DatatypeLibraryLoader();
-    Parseable parseable = createParseable(source, resolver, eh);
+    Parseable parseable = createParseable(source, saxResolver, eh);
     SchemaPatternBuilder spb = new SchemaPatternBuilder();
     try {
       return new SchemaImpl(spb, SchemaBuilderImpl.parse(parseable, eh, dlf, spb, false));
@@ -76,15 +75,5 @@ public abstract class SchemaFactoryImpl extends SchemaFactory {
     }
   }
 
-  abstract protected Parseable createParseable(SAXSource source, BasicResolver resolver, ErrorHandler eh) throws SAXException;
-
-  static private SAXSource sourceToSAXSource(Source source) throws SAXException {
-    if (source instanceof SAXSource)
-      return (SAXSource)source;
-    InputSource inputSource = SAXSource.sourceToInputSource(source);
-    // XXX transform it to a SAXSource
-    if (inputSource == null)
-      throw new IllegalArgumentException("unsupported type of Source for schema");
-    return new SAXSource(inputSource);
-  }
+  abstract protected Parseable createParseable(Source source, SAXResolver resolver, ErrorHandler eh) throws SAXException;
 }

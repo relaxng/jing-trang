@@ -1,14 +1,10 @@
 package com.thaiopensource.xml.em;
 
-import com.thaiopensource.xml.util.EncodingMap;
-
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 
-public class UriEntityManager implements EntityManager {
-  public OpenEntity open(ExternalId xid) throws IOException {
+public class UriEntityManager extends EntityManager {
+  public OpenEntity open(ExternalId xid, boolean isParameterEntity, String entityName) throws IOException {
     String systemId = xid.getSystemId();
     String baseUri = xid.getBaseUri();
     URL u;
@@ -16,16 +12,14 @@ public class UriEntityManager implements EntityManager {
       u = new URL(new URL(baseUri), systemId);
     else
       u = new URL(systemId);
-
-    EncodingDetectInputStream in
-      = new EncodingDetectInputStream(u.openStream());
-    String enc = in.detectEncoding();
-    String javaEnc = EncodingMap.getJavaName(enc);
-    return new OpenEntity(new BufferedReader(new InputStreamReader(in,
-								   javaEnc)),
-			  u.toString(),
-			  u.toString(),
-			  enc);
+    return open(u);
   }
 
+  public OpenEntity open(String uri) throws IOException {
+    return open(new URL(uri));
+  }
+
+  private OpenEntity open(URL u) throws IOException {
+    return detectEncoding(u.openStream(), u.toString());
+  }
 }
