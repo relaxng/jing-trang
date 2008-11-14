@@ -1,13 +1,23 @@
 package com.thaiopensource.xml.dtd.parse;
 
-import java.io.Reader;
-import java.io.IOException;
-import java.util.Vector;
-import java.util.Hashtable;
-
-import com.thaiopensource.xml.tok.*;
-import com.thaiopensource.xml.em.*;
 import com.thaiopensource.util.Localizer;
+import com.thaiopensource.xml.em.EntityManager;
+import com.thaiopensource.xml.em.ExternalId;
+import com.thaiopensource.xml.em.OpenEntity;
+import com.thaiopensource.xml.tok.EmptyTokenException;
+import com.thaiopensource.xml.tok.EndOfPrologException;
+import com.thaiopensource.xml.tok.ExtensibleTokenException;
+import com.thaiopensource.xml.tok.InvalidTokenException;
+import com.thaiopensource.xml.tok.PartialTokenException;
+import com.thaiopensource.xml.tok.Position;
+import com.thaiopensource.xml.tok.TextDecl;
+import com.thaiopensource.xml.tok.Token;
+import com.thaiopensource.xml.tok.Tokenizer;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Hashtable;
+import java.util.Vector;
 
 class Parser extends Token {
   static final Localizer localizer = new Localizer(Parser.class);
@@ -279,7 +289,8 @@ class Parser extends Token {
       return new Parser(entity.text, name, this);
 
     OpenEntity openEntity
-      = entityManager.open(new ExternalId(entity.systemId, entity.publicId, entity.baseUri));
+      = entityManager.open(new ExternalId(entity.systemId, entity.publicId, entity.baseUri),
+                           entity.isParameter, entity.name);
     if (openEntity == null)
       return null;
     entity.encoding = openEntity.getEncoding();

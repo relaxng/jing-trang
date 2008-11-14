@@ -1,16 +1,17 @@
 package com.thaiopensource.xml.dtd.parse;
 
-import java.io.IOException;
-
-import com.thaiopensource.xml.dtd.om.DtdParser;
 import com.thaiopensource.xml.dtd.om.Dtd;
-import com.thaiopensource.xml.em.*;
+import com.thaiopensource.xml.dtd.om.DtdParser;
+import com.thaiopensource.xml.em.EntityManager;
+import com.thaiopensource.xml.em.OpenEntity;
+
+import java.io.IOException;
 
 public class DtdParserImpl implements DtdParser {
   public DtdParserImpl() { }
 
   public Dtd parse(String systemId, EntityManager em) throws IOException {
-    return parse(em.open(new ExternalId(systemId)), em);
+    return parse(em.open(systemId), em);
   }
 
   public Dtd parse(OpenEntity entity, EntityManager em) throws IOException {

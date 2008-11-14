@@ -3,7 +3,7 @@ package com.thaiopensource.validate;
 import com.thaiopensource.util.PropertyId;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.util.PropertyMapBuilder;
-import com.thaiopensource.xml.sax.Resolver;
+import com.thaiopensource.resolver.Resolver;
 import com.thaiopensource.xml.sax.XMLReaderCreator;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;

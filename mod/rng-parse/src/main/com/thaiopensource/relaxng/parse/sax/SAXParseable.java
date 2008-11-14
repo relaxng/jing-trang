@@ -7,6 +7,7 @@ import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.SubParseable;
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.util.Uri;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
@@ -24,7 +25,7 @@ public class SAXParseable extends SAXSubParser implements SubParseable {
    * @param resolver
    * @param eh
    */
-  public SAXParseable(SAXSource source, UriResolver resolver, ErrorHandler eh) {
+  public SAXParseable(SAXSource source, SAXResolver resolver, ErrorHandler eh) {
     super(resolver, eh);
     this.source = source;
   }

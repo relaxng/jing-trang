@@ -14,8 +14,6 @@ import com.thaiopensource.validate.auto.AutoSchemaReader;
 import com.thaiopensource.validate.prop.rng.RngProperty;
 import com.thaiopensource.validate.rng.CompactSchemaReader;
 import com.thaiopensource.xml.sax.ErrorHandlerImpl;
-import com.thaiopensource.xml.sax.Resolver;
-import com.thaiopensource.xml.sax.ResolverInstantiationException;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -38,7 +36,7 @@ class Driver {
 
   public int doMain(String[] args) {
     ErrorHandlerImpl eh = new ErrorHandlerImpl(System.out);
-    OptionParser op = new OptionParser("itcdfe:p:r:", args);
+    OptionParser op = new OptionParser("itcdfe:p:", args);
     PropertyMapBuilder properties = new PropertyMapBuilder();
     ValidateProperty.ERROR_HANDLER.put(properties, eh);
     RngProperty.CHECK_ID_IDREF.add(properties);
@@ -91,17 +89,6 @@ class Driver {
               eh.print(localizer.message("invalid_phase", op.getOptionArg()));
               return 2;
             }
-          }
-          break;
-        case 'r':
-          try {
-            ValidateProperty.RESOLVER.put(properties,
-                                          Resolver.newInstance(op.getOptionArg(),
-                                                               Driver.class.getClassLoader()));
-          }
-          catch (ResolverInstantiationException e) {
-            eh.print(localizer.message("invalid_resolver_class", e.getMessage()));
-            return 2;
           }
           break;
         }

@@ -2,10 +2,12 @@ package com.thaiopensource.relaxng.jaxp;
 
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.parse.compact.CompactParseable;
-import com.thaiopensource.relaxng.parse.compact.UriOpenerImpl;
-import com.thaiopensource.xml.sax.BasicResolver;
+import com.thaiopensource.resolver.xml.sax.SAX;
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
 
+import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 
 public class CompactSchemaFactory extends SchemaFactoryImpl {
@@ -15,7 +17,10 @@ public class CompactSchemaFactory extends SchemaFactoryImpl {
     return schemaLanguage.equals(SCHEMA_LANGUAGE);
   }
 
-  protected Parseable createParseable(SAXSource source, BasicResolver resolver, ErrorHandler eh) {
-    return new CompactParseable(source.getInputSource(), new UriOpenerImpl(resolver), eh);
+  protected Parseable createParseable(Source source, SAXResolver saxResolver, ErrorHandler eh) {
+    InputSource inputSource = SAXSource.sourceToInputSource(source);
+    if (inputSource == null)
+      throw new IllegalArgumentException("unsupported type of Source for RELAX NG compact syntax schema");
+    return new CompactParseable(SAX.createInput(inputSource), saxResolver.getResolver(), eh);
   }
 }

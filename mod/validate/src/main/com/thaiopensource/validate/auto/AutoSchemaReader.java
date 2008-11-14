@@ -1,5 +1,6 @@
 package com.thaiopensource.validate.auto;
 
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.util.PropertyMapBuilder;
 import com.thaiopensource.validate.AbstractSchemaReader;
@@ -8,7 +9,6 @@ import com.thaiopensource.validate.Option;
 import com.thaiopensource.validate.ResolverFactory;
 import com.thaiopensource.validate.Schema;
 import com.thaiopensource.validate.ValidateProperty;
-import com.thaiopensource.xml.sax.Resolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -36,7 +36,7 @@ public class AutoSchemaReader extends AbstractSchemaReader {
       SchemaReceiverFactory.PROPERTY.put(builder, srf);
       properties = builder.toPropertyMap();
     }
-    Resolver resolver = ResolverFactory.createResolver(properties);
+    SAXResolver resolver = ResolverFactory.createResolver(properties);
     InputSource in = resolver.open(source.getInputSource());
     InputSource in2 = new InputSource();
     in2.setSystemId(in.getSystemId());

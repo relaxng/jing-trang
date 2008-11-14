@@ -9,8 +9,8 @@ import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.translate.util.EncodingParam;
 import com.thaiopensource.relaxng.translate.util.InvalidParamsException;
 import com.thaiopensource.relaxng.translate.util.ParamProcessor;
-import com.thaiopensource.relaxng.translate.util.ResolverParam;
-import com.thaiopensource.xml.sax.Resolver;
+import com.thaiopensource.resolver.Resolver;
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -23,13 +23,9 @@ public abstract class ParseInputFormat implements InputFormat {
     this.commentsNeedTrimming = commentsNeedTrimming;
   }
 
-  static private class Options {
-    Resolver resolver;
-  }
-  public SchemaCollection load(String uri, String[] params, String outputFormat, ErrorHandler eh, ClassLoader loader)
+  public SchemaCollection load(String uri, String[] params, String outputFormat, ErrorHandler eh, Resolver resolver)
           throws InputFailedException, InvalidParamsException, IOException, SAXException {
     final InputSource in = new InputSource(uri);
-    final Options options = new Options();
     ParamProcessor pp = new ParamProcessor();
     pp.declare("encoding",
                new EncodingParam() {
@@ -37,17 +33,8 @@ public abstract class ParseInputFormat implements InputFormat {
                    in.setEncoding(encoding);
                  }
                });
-    pp.declare("resolver",
-               new ResolverParam(loader) {
-                 protected void setResolver(Resolver resolver) {
-                   options.resolver = resolver;
-                 }
-               });
     pp.process(params, eh);
-    Resolver resolver = options.resolver;
-    if (resolver == null)
-      resolver = Resolver.newInstance();
-    Parseable parseable = makeParseable(in, resolver, eh);
+    Parseable parseable = makeParseable(in, new SAXResolver(resolver), eh);
     try {
       return SchemaBuilderImpl.parse(parseable,
                                      uri,
@@ -60,5 +47,5 @@ public abstract class ParseInputFormat implements InputFormat {
     }
   }
 
-  protected abstract Parseable makeParseable(InputSource in, Resolver resolver, ErrorHandler eh) throws SAXException;
+  protected abstract Parseable makeParseable(InputSource in, SAXResolver resolver, ErrorHandler eh) throws SAXException;
 }

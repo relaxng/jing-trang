@@ -1,24 +1,21 @@
 package com.thaiopensource.relaxng.match;
 
 import com.thaiopensource.datatype.DatatypeLibraryLoader;
+import com.thaiopensource.relaxng.parse.IllegalSchemaException;
+import com.thaiopensource.relaxng.parse.Parseable;
+import com.thaiopensource.relaxng.parse.compact.CompactParseable;
+import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 import com.thaiopensource.relaxng.pattern.FeasibleTransform;
 import com.thaiopensource.relaxng.pattern.MatchablePatternImpl;
 import com.thaiopensource.relaxng.pattern.Pattern;
 import com.thaiopensource.relaxng.pattern.SchemaBuilderImpl;
 import com.thaiopensource.relaxng.pattern.SchemaPatternBuilder;
-import com.thaiopensource.relaxng.parse.IllegalSchemaException;
-import com.thaiopensource.relaxng.parse.Parseable;
-import com.thaiopensource.relaxng.parse.compact.CompactParseable;
-import com.thaiopensource.relaxng.parse.compact.UriOpenerImpl;
-import com.thaiopensource.relaxng.parse.sax.SAXParseable;
-import com.thaiopensource.relaxng.parse.sax.UriResolverImpl;
-import com.thaiopensource.xml.sax.Resolver;
+import com.thaiopensource.resolver.Input;
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 
-import javax.xml.transform.URIResolver;
-import javax.xml.transform.sax.SAXSource;
 import java.io.IOException;
 
 /**
@@ -27,21 +24,17 @@ import java.io.IOException;
 public class MatchablePatternLoader {
   public static final int COMPACT_SYNTAX_FLAG = 01;
   public static final int FEASIBLE_FLAG = 02;
-  public MatchablePattern load(SAXSource source,
-                               URIResolver uriResolver,
+  public MatchablePattern load(Input input,
+                               SAXResolver saxResolver,
                                ErrorHandler eh,
                                DatatypeLibraryFactory dlf,
                                int flags) throws IOException, SAXException, IncorrectSchemaException {
     SchemaPatternBuilder spb = new SchemaPatternBuilder();
     Parseable parseable;
-    Resolver resolver = Resolver.newInstance(uriResolver);
     if ((flags & COMPACT_SYNTAX_FLAG) != 0)
-      parseable = new CompactParseable(source.getInputSource(), new UriOpenerImpl(resolver), eh);
-    else {
-      if (source.getXMLReader() == null)
-        source = new SAXSource(resolver.createXMLReader(), source.getInputSource());
-      parseable = new SAXParseable(source, new UriResolverImpl(resolver), eh);
-    }
+      parseable = new CompactParseable(input, saxResolver.getResolver(), eh);
+    else
+      parseable = new SAXParseable(saxResolver.createSAXSource(input), saxResolver, eh);
     if (dlf == null)
       dlf = new DatatypeLibraryLoader();
     try {

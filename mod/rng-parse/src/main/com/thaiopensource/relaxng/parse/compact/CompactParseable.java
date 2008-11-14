@@ -7,10 +7,14 @@ import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.SubParseable;
+import com.thaiopensource.resolver.Identifier;
+import com.thaiopensource.resolver.Input;
+import com.thaiopensource.resolver.MediaTypedIdentifier;
+import com.thaiopensource.resolver.Resolver;
+import com.thaiopensource.resolver.ResolverException;
 import com.thaiopensource.util.Uri;
 import com.thaiopensource.xml.util.EncodingMap;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,42 +23,56 @@ import java.io.PushbackInputStream;
 import java.io.Reader;
 
 public class CompactParseable implements SubParseable {
-  private final InputSource in;
-  private final UriOpener opener;
+  private final Input in;
+  private final Resolver resolver;
   private final ErrorHandler eh;
+  private static final String MEDIA_TYPE = "application/relax-ng-compact-syntax";
 
-  public CompactParseable(InputSource in, UriOpener opener, ErrorHandler eh) {
+  public CompactParseable(Input in, Resolver resolver, ErrorHandler eh) {
     this.in = in;
-    this.opener = opener;
+    this.resolver = resolver;
     this.eh = eh;
   }
 
   public ParsedPattern parse(SchemaBuilder sb, Scope scope) throws BuildException, IllegalSchemaException {
-    return new CompactSyntax(makeReader(in), in.getSystemId(), sb, eh).parse(scope);
+    return new CompactSyntax(makeReader(in), in.getUri(), sb, eh).parse(scope);
   }
 
   public SubParseable createSubParseable(String href, String base) throws BuildException {
-    return new CompactParseable(opener.resolve(href, base), opener, eh);
+    Identifier id = new MediaTypedIdentifier(href, base, MEDIA_TYPE);
+    Input input = new Input();
+    try {
+      resolver.resolve(id, input);
+    }
+    catch (ResolverException e) {
+      throw BuildException.fromResolverException(e);
+    }
+    catch (IOException e) {
+      throw new BuildException(e);
+    }
+    return new CompactParseable(input, resolver, eh);
   }
 
   public ParsedPattern parseAsInclude(SchemaBuilder sb, IncludedGrammar g)
           throws BuildException, IllegalSchemaException {
-    return new CompactSyntax(makeReader(in), in.getSystemId(), sb, eh).parseInclude(g);
+    return new CompactSyntax(makeReader(in), in.getUri(), sb, eh).parseInclude(g);
   }
 
   public String getUri() {
-    return Uri.escapeDisallowedChars(in.getSystemId());
+    return Uri.escapeDisallowedChars(in.getUri());
   }
 
   private static final String UTF8 = EncodingMap.getJavaName("UTF-8");
   private static final String UTF16 = EncodingMap.getJavaName("UTF-16");
 
-  private Reader makeReader(InputSource in) throws BuildException {
-    in = opener.open(in);
+  private Reader makeReader(Input in) throws BuildException {
     try {
+      resolver.open(in);
       Reader reader = in.getCharacterStream();
       if (reader == null) {
         InputStream byteStream = in.getByteStream();
+        if (byteStream == null)
+          throw new IllegalArgumentException("invalid input for CompactParseable");
         String encoding = in.getEncoding();
         if (encoding == null) {
           PushbackInputStream pb = new PushbackInputStream(byteStream, 2);
@@ -64,6 +82,9 @@ public class CompactParseable implements SubParseable {
         reader = new InputStreamReader(byteStream, encoding);
       }
       return reader;
+    }
+    catch (ResolverException e) {
+      throw BuildException.fromResolverException(e);
     }
     catch (IOException e) {
       throw new BuildException(e);

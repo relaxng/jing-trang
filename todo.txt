@@ -1,13 +1,11 @@
+Implement a CatalogResolver; plus option to jing/trang to use it
+
+Add JingTask parameter(s) to specify the resolver.
+
+Figure out handling of non-ASCII chars in URIs.
+
 CompactSyntax.jj should check that externalRef and include literal is
 a valid Uri.
-
-convert-from-dtd module should use a resolver
-
-Resolver.resolve needs a type argument
-
-Document -r Jing option and -Iresolver trang option.
-
-Add JingTask parameter to specify the resolver.
 
 Transformer in schematron needs a resolver.
 

@@ -1,20 +1,54 @@
 package com.thaiopensource.validate;
 
+import com.thaiopensource.resolver.BasicResolver;
+import com.thaiopensource.resolver.Resolver;
+import com.thaiopensource.resolver.SequenceResolver;
+import com.thaiopensource.resolver.xml.sax.SAX;
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
+import com.thaiopensource.resolver.xml.transform.Transform;
 import com.thaiopensource.util.PropertyMap;
-import com.thaiopensource.xml.sax.Resolver;
 import com.thaiopensource.xml.sax.XMLReaderCreator;
 import org.xml.sax.EntityResolver;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 import javax.xml.transform.URIResolver;
 
 public class ResolverFactory {
-  static public Resolver createResolver(PropertyMap properties) {
-    Resolver resolver = ValidateProperty.RESOLVER.get(properties);
-    if (resolver != null)
-      return resolver;
-    XMLReaderCreator xrc = ValidateProperty.XML_READER_CREATOR.get(properties);
-    URIResolver uriResolver = ValidateProperty.URI_RESOLVER.get(properties);
+  static private class CustomSAXResolver extends SAXResolver {
+    private final XMLReaderCreator xrc;
+
+    private CustomSAXResolver(Resolver resolver, XMLReaderCreator xrc) {
+      super(resolver);
+      this.xrc = xrc;
+    }
+
+    protected XMLReader createXMLReaderWithoutResolver() throws SAXException {
+      return xrc.createXMLReader();
+    }
+  }
+
+  static public SAXResolver createResolver(PropertyMap properties) {
+    Resolver[] resolvers = new Resolver[4];
+    int i = 0;
+    // user-specified Resolver first
+    resolvers[0] = ValidateProperty.RESOLVER.get(properties);
+    if (resolvers[0] != null)
+      i++;
+    // EntityResolver before uriResolver
     EntityResolver entityResolver = ValidateProperty.ENTITY_RESOLVER.get(properties);
-    return Resolver.newInstance(xrc, uriResolver, entityResolver);
+    URIResolver uriResolver = ValidateProperty.URI_RESOLVER.get(properties);
+    if (entityResolver != null)
+      resolvers[i++] = SAX.createResolver(entityResolver, uriResolver == null);
+    if (uriResolver != null)
+      resolvers[i++] = Transform.createResolver(uriResolver);
+    resolvers[i++] = BasicResolver.getInstance();
+    while (--i > 0)
+      resolvers[i - 1] = new SequenceResolver(resolvers[i - 1], resolvers[i]);
+    // XMLReaderCreator last, so it can create an EntityResolver
+    XMLReaderCreator xrc = ValidateProperty.XML_READER_CREATOR.get(properties);
+    if (xrc != null)
+      return new CustomSAXResolver(resolvers[0], xrc);
+    return new SAXResolver(resolvers[0]);
   }
 }

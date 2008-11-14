@@ -1,9 +1,8 @@
 package com.thaiopensource.xml.infer;
 
 import com.thaiopensource.datatype.DatatypeLibraryLoader;
+import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.util.UriOrFile;
-import com.thaiopensource.xml.sax.XMLReaderCreator;
-import com.thaiopensource.xml.sax.Resolver;
 import com.thaiopensource.xml.util.Name;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -15,8 +14,8 @@ import java.util.Map;
 public class TestDriver {
   static public void main(String[] args) throws SAXException, IOException {
     InferHandler handler = new InferHandler(new DatatypeLibraryLoader());
-    XMLReaderCreator xrc = Resolver.newInstance();
-    XMLReader xr = xrc.createXMLReader();
+    SAXResolver resolver = new SAXResolver();
+    XMLReader xr = resolver.createXMLReader();
     xr.setContentHandler(handler);
     for (int i = 0; i < args.length; i++)
        xr.parse(new InputSource(UriOrFile.toUri(args[i])));
