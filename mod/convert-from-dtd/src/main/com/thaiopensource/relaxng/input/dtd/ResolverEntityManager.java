@@ -76,10 +76,10 @@ public class ResolverEntityManager extends EntityManager {
     if (message == null) {
       if (cause instanceof IOException)
         return (IOException)cause;
-      return new IOException(cause);
+      // Avoid IOException(Throwable) because it's 1.6
+      return new IOException(cause.getMessage());
     }
-    if (cause == null)
-      return new IOException(message);
-    return new IOException(message, cause);
+    // Avoid IOException(String, Throwable) because it's 1.6
+    return new IOException(message);
   }
 }
