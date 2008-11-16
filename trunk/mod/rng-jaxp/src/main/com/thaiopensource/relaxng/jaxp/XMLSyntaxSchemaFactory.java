@@ -11,7 +11,7 @@ import org.xml.sax.InputSource;
 import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 
-public class SAXSchemaFactory extends SchemaFactoryImpl {
+public class XMLSyntaxSchemaFactory extends SchemaFactoryImpl {
   static final public String SCHEMA_LANGUAGE = WellKnownNamespaces.RELAX_NG;
   
   protected Parseable createParseable(Source source, SAXResolver resolver, ErrorHandler eh) throws SAXException {
