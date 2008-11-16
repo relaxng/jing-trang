@@ -3,4 +3,7 @@
   <depends module="validate"/>
   <depends lib="xercesImpl"/>
   <compile/>
+  <service type="com.thaiopensource.validate.SchemaReaderFactory">
+    <provider classname="com.thaiopensource.validate.xerces.XsdSchemaReaderFactory"/>
+  </service>
 </module>

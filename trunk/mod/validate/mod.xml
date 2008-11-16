@@ -4,4 +4,10 @@
   <depends module="datatype"/>
   <depends lib="isorelax"/>
   <compile/>
+  <service type="com.thaiopensource.validate.SchemaReaderFactory">
+    <provider classname="com.thaiopensource.validate.jarv.JarvSchemaReaderFactory"/>
+  </service>
+  <service type="com.thaiopensource.validate.auto.SchemaReceiverFactory">
+    <provider classname="com.thaiopensource.validate.auto.SchemaReaderLoaderSchemaReceiverFactory"/>
+  </service>
 </module>

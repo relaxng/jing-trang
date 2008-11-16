@@ -7,4 +7,9 @@
   <test name="nrl" type="validate" schema="test/nrltest.rng"/>
   <test name="nvdl" type="validate" schema="mod/nvdl/test/nvdltest.rng"/>
   <compile/>
+  <service type="com.thaiopensource.validate.auto.SchemaReceiverFactory">
+    <provider classname="com.thaiopensource.validate.nvdl.NvdlSchemaReceiverFactory"/>
+    <provider classname="com.thaiopensource.validate.nrl.NrlSchemaReceiverFactory"/>
+    <provider classname="com.thaiopensource.validate.mns.MnsSchemaReceiverFactory"/>
+  </service>
 </module>

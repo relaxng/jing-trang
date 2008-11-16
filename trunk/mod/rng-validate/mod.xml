@@ -9,4 +9,7 @@
   <test name="spec" type="validate" schema="eg/testSuite.rng"/>
   <compile/>
   <version package="com/thaiopensource/relaxng/util"/>
+  <service type="com.thaiopensource.validate.auto.SchemaReceiverFactory">
+    <provider classname="com.thaiopensource.validate.rng.SAXSchemaReceiverFactory"/>
+  </service>
 </module>

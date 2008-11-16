@@ -20,4 +20,10 @@
     </target>
   </ant>
   <compile/>
+  <service type="com.thaiopensource.validate.SchemaReaderFactory">
+    <provider classname="com.thaiopensource.validate.schematron.NewSaxonSchemaReaderFactory"/>
+    <provider classname="com.thaiopensource.validate.schematron.OldSaxonSchemaReaderFactory"/>
+    <provider classname="com.thaiopensource.validate.schematron.XalanSchemaReaderFactory"/>
+    <provider classname="com.thaiopensource.validate.schematron.SchematronSchemaReaderFactory"/>
+  </service>
 </module>
