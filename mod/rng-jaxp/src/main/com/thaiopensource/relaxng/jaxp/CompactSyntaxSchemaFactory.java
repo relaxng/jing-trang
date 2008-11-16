@@ -10,7 +10,7 @@ import org.xml.sax.InputSource;
 import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 
-public class CompactSchemaFactory extends SchemaFactoryImpl {
+public class CompactSyntaxSchemaFactory extends SchemaFactoryImpl {
   static final public String SCHEMA_LANGUAGE = "http://www.iana.org/assignments/media-types/application/relax-ng-compact-syntax";
 
   public boolean isSchemaLanguageSupported(String schemaLanguage) {
