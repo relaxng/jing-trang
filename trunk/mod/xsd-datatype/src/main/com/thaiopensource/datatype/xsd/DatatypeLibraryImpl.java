@@ -1,16 +1,13 @@
 package com.thaiopensource.datatype.xsd;
 
-import java.util.Hashtable;
-import java.util.Enumeration;
-
-import com.thaiopensource.util.Service;
 import com.thaiopensource.datatype.xsd.regex.RegexEngine;
 import com.thaiopensource.datatype.xsd.regex.RegexSyntaxException;
-
-import org.relaxng.datatype.DatatypeLibrary;
 import org.relaxng.datatype.Datatype;
-import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.DatatypeBuilder;
+import org.relaxng.datatype.DatatypeException;
+import org.relaxng.datatype.DatatypeLibrary;
+
+import java.util.Hashtable;
 
 public class DatatypeLibraryImpl implements DatatypeLibrary {
   private final Hashtable typeTable = new Hashtable();
@@ -32,8 +29,8 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
   // Follow RFC 3066 syntax.
   static private final String LANGUAGE_PATTERN = "[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*";
 
-  public DatatypeLibraryImpl() {
-    this.regexEngine = findRegexEngine();
+  public DatatypeLibraryImpl(RegexEngine regexEngine) {
+    this.regexEngine = regexEngine;
     typeTable.put("string", new StringDatatype());
     typeTable.put("normalizedString", new CdataDatatype());
     typeTable.put("token", new TokenDatatype());
@@ -130,20 +127,7 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
     return new MinLengthRestrictDatatype(new ListDatatype(base), 1);
   }
 
-  private static RegexEngine findRegexEngine() {
-    Enumeration e = new Service(RegexEngine.class).getProviders();
-    if (!e.hasMoreElements())
-      return null;
-    return (RegexEngine)e.nextElement();
-  }
-
   public Datatype createDatatype(String type) throws DatatypeException {
     return createDatatypeBuilder(type).createDatatype();
-  }
-
-  static public void main(String[] args) throws DatatypeException {
-    System.err.println(new DatatypeLibraryImpl().createDatatype(args[0]).isValid(args[1], null)
-                       ? "valid"
-                       : "invalid");
   }
 }
