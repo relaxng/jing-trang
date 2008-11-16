@@ -1,6 +1,7 @@
 package com.thaiopensource.relaxng.jaxp;
 
-import com.thaiopensource.datatype.DatatypeLibraryLoader;
+import com.thaiopensource.datatype.xsd.DatatypeLibraryFactoryImpl;
+import com.thaiopensource.datatype.xsd.regex.java.RegexEngineImpl;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.pattern.SchemaBuilderImpl;
@@ -16,11 +17,19 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.IOException;
 
+/**
+ * A SchemaFactory that supports RELAX NG.
+ * This class is abstract: it has two concrete subclasses, one that supports the XML syntax
+ * and one that supports the compact syntax.
+ * @see XMLSyntaxSchemaFactory
+ * @see CompactSyntaxSchemaFactory
+ */
 public abstract class SchemaFactoryImpl extends SchemaFactory {
   private ErrorHandler errorHandler = null;
   private LSResourceResolver resourceResolver = null;
@@ -28,6 +37,21 @@ public abstract class SchemaFactoryImpl extends SchemaFactory {
   /* If this is true, then logically datatypeLibraryFactory is an instance of DatatypeLibraryLoader,
      but we create it lazily, so that we don't need to create it if the user specifies their own. */
   private boolean defaultDatatypeLibraryFactory = true;
+  // Corresponds to XMLConstants.FEATURE_SECURE_PROCESSING. Doesn't do anything yet.
+  private boolean secureProcessing = false;
+  /**
+   * The name of the property that can be used to specify a DatatypeLibraryFactory.
+   * The value of the property must implement org.relaxng.datatype.DatatypeLibraryFactory.
+   * By default, a datatype library factory that supports XML Schema Datatypes is used.
+   * If the value of this property is set to null, then only the built-in datatypes will be
+   * supported. By default, datatype libraries will not be discovered dynamically; in order
+   * to enable this, the value can be set to an instance of
+   * org.relaxng.datatype.helpers.DatatypeLibraryLoader.
+   * @see DatatypeLibraryFactory
+   * @see org.relaxng.datatype.helpers.DatatypeLibraryLoader
+   * @see #setProperty
+   * @see #getProperty
+   */
   static final public String PROPERTY_DATATYPE_LIBRARY_FACTORY = "http://relaxng.org/properties/datatype-library-factory";
 
   protected SchemaFactoryImpl() {
@@ -78,6 +102,19 @@ public abstract class SchemaFactoryImpl extends SchemaFactory {
     }
   }
 
+  public void setFeature(String name, boolean value) throws SAXNotRecognizedException, SAXNotSupportedException {
+    if (XMLConstants.FEATURE_SECURE_PROCESSING.equals(name))
+      secureProcessing = value;
+    else
+      super.setFeature(name, value);
+  }
+
+  public boolean getFeature(String name) throws SAXNotRecognizedException, SAXNotSupportedException {
+    if (XMLConstants.FEATURE_SECURE_PROCESSING.equals(name))
+      return secureProcessing;
+    return super.getFeature(name);
+  }
+
   public void setProperty(String name, Object object) throws SAXNotRecognizedException, SAXNotSupportedException {
     if (PROPERTY_DATATYPE_LIBRARY_FACTORY.equals(name)) {
       if (object instanceof DatatypeLibraryFactory) {
@@ -100,7 +137,7 @@ public abstract class SchemaFactoryImpl extends SchemaFactory {
 
   private DatatypeLibraryFactory getDatatypeLibraryFactory() {
     if (defaultDatatypeLibraryFactory) {
-      datatypeLibraryFactory = new DatatypeLibraryLoader();
+      datatypeLibraryFactory = new DatatypeLibraryFactoryImpl(new RegexEngineImpl());
       defaultDatatypeLibraryFactory = false;
     }
     return datatypeLibraryFactory;
