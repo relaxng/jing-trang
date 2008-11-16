@@ -52,6 +52,16 @@
 	</xsl:for-each>
       </xsl:attribute>
     </target>
+    <target name="services">
+      <xsl:attribute name="depends">
+	<xsl:text>init</xsl:text>
+	<xsl:for-each select="modules/module">
+	  <xsl:text>,mod.</xsl:text>
+	  <xsl:value-of select="."/>
+	  <xsl:text>.services</xsl:text>
+	</xsl:for-each>
+      </xsl:attribute>
+    </target>
   </project>
 </xsl:template>
 
@@ -139,14 +149,16 @@
     </xsl:if>
   </target>
   <target name="mod.{$name}.jar" depends="mod.{$name}.compile-main">
-    <jar jarfile="{$build}/{$name}.jar">
-      <xsl:copy-of select="jar/*"/>
+    <jar jarfile="{$build}/{$name}.jar" duplicate="fail">
+      <xsl:apply-templates select="jar/*" mode="jar">
+	<xsl:with-param name="root" select="$root"/>
+      </xsl:apply-templates>
       <xsl:if test="compile">
-	<fileset dir="{$build}/mod/{$name}/classes/main"/>
+	<fileset dir="{$build}/mod/{$name}/classes/main" includes="**/*.class"/>
 	<fileset dir="mod/{$name}/src/main" includes="**/resources/*"/>
       </xsl:if>
       <xsl:for-each select="depends[@module]">
-	<fileset dir="{$build}/mod/{@module}/classes/main"/>
+	<fileset dir="{$build}/mod/{@module}/classes/main" includes="**/*.class"/>
 	<fileset dir="mod/{@module}/src/main" includes="**/resources/*"/>
       </xsl:for-each>
     </jar>
@@ -191,6 +203,19 @@
   <xsl:apply-templates select="test">
     <xsl:with-param name="name" select="$name"/>
   </xsl:apply-templates>
+  <target name="mod.{$name}.services">
+    <xsl:for-each select="service">
+      <mkdir dir="{$build}/mod/{$name}/classes/main/META-INF/services"/>
+      <delete file="{$build}/mod/{$name}/classes/main/META-INF/services/{@type}"
+	      quiet="true"
+	      failonerror="false"/>
+      <xsl:for-each select="provider">
+	<echo file="{$build}/mod/{$name}/classes/main/META-INF/services/{../@type}"
+	      append="true"
+	      message="{@classname}${{line.separator}}"/>
+      </xsl:for-each>
+    </xsl:for-each>
+  </target>
 </xsl:template>
 
 <xsl:template match="module" mode="src-fileset">
@@ -342,6 +367,29 @@
       <xsl:attribute name="target">1.1</xsl:attribute>
     </xsl:otherwise>
   </xsl:choose>
+</xsl:template>
+
+<xsl:template match="service" mode="jar">
+  <xsl:param name="root"/>
+  <xsl:copy>
+    <xsl:variable name="type" select="@type"/>
+    <xsl:copy-of select="@type"/>
+    <xsl:copy-of select="/module/service[@type=$type]/provider"/>
+    <xsl:for-each select="/module/depends[@module]">
+      <xsl:copy-of select="document(concat('mod/', @module, '/mod.xml'), $root)
+			   /module/service[@type=$type]/provider"/>
+    </xsl:for-each>
+  </xsl:copy>
+</xsl:template>
+
+<xsl:template match="*" mode="jar">
+  <xsl:param name="root"/>
+  <xsl:copy>
+    <xsl:copy-of select="@*"/>
+    <xsl:apply-templates select="node()" mode="jar">
+      <xsl:with-param name="root" select="$root"/>
+    </xsl:apply-templates>
+  </xsl:copy>
 </xsl:template>
 
 </xsl:stylesheet>
