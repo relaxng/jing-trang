@@ -3,16 +3,24 @@ package com.thaiopensource.relaxng.jaxp;
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.parse.sax.SAXParseable;
 import com.thaiopensource.resolver.xml.sax.SAXResolver;
-import com.thaiopensource.xml.util.WellKnownNamespaces;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 
+/**
+ * A SchemaFactory that supports RELAX NG with the original XML syntax.
+ */
 public class XMLSyntaxSchemaFactory extends SchemaFactoryImpl {
-  static final public String SCHEMA_LANGUAGE = WellKnownNamespaces.RELAX_NG;
+
+  /**
+   * The String that is used to identify the schema language, when the schema language is RELAX NG with the original
+   * XML syntax.  The String is the namespace URI for RELAX NG schemas.
+   */
+  static final public String SCHEMA_LANGUAGE = XMLConstants.RELAXNG_NS_URI;
   
   protected Parseable createParseable(Source source, SAXResolver resolver, ErrorHandler eh) throws SAXException {
     return new SAXParseable(sourceToSAXSource(source, resolver), resolver, eh);
