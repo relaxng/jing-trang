@@ -1,45 +1,41 @@
 package com.thaiopensource.util;
 
-import java.net.URL;
-import java.net.MalformedURLException;
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class UriOrFile {
   private UriOrFile() {
   }
 
   public static String toUri(String uriOrFile) {
-    if (!hasScheme(uriOrFile)) {
-      try {
-	return fileToUri(uriOrFile);
-      }
-      catch (MalformedURLException e) { }
-    }
-    return uriOrFile;
+    String scheme = getScheme(uriOrFile);
+    // if it has a schema that isn't a single letter treat is as a URI,
+    // otherwise treat it as a file and convert it to a URI
+    return scheme != null && scheme.length() > 1 ? uriOrFile : fileToUri(uriOrFile);
   }
 
-  private static boolean hasScheme(String str) {
+  private static String getScheme(String str) {
     int len = str.length();
     if (len == 0)
-      return false;
+      return null;
     if (!isAlpha(str.charAt(0)))
-      return false;
+      return null;
     for (int i = 1; i < len; i++) {
       char c = str.charAt(i);
       switch (c) {
       case ':':
-	// Don't recognize single letters as schemes
-	return i == 1 ? false : true;
+	return str.substring(0, i);
       case '+':
       case '-':
 	break;
       default:
 	if (!isAlnum(c))
-	  return false;
+	  return null;
 	break;
       }
     }
-    return false;
+    return null;
   }
 
   private static boolean isAlpha(char c) {
@@ -50,31 +46,25 @@ public class UriOrFile {
     return isAlpha(c) || ('0' <= c && c <= '9');
   }
 
-  public static String fileToUri(String file) throws MalformedURLException {
+  public static String fileToUri(String file) {
     return fileToUri(new File(file));
   }
 
-  public static String fileToUri(File file) throws MalformedURLException {
-    String path = file.getAbsolutePath().replace(File.separatorChar, '/');
-    if (path.length() > 0 && path.charAt(0) != '/')
-      path = '/' + path;
-    return new URL("file", "", path).toString();
+  public static String fileToUri(File file) {
+    return file.toURI().toString();
   }
 
   public static String uriToUriOrFile(String uri) {
-    if (!uri.startsWith("file:"))
-      return uri;
-    uri = uri.substring(5);
-    int nSlashes = 0;
-    while (nSlashes < uri.length() && uri.charAt(nSlashes) == '/')
-      nSlashes++;
-    File f = new File(uri.substring(nSlashes).replace('/', File.separatorChar));
-    if (f.isAbsolute())
-      return f.toString();
-    return uri.replace('/', File.separatorChar);
-  }
-
-  static public void main(String[] args) {
-    System.err.println(uriToUriOrFile(args[0]));
+    // try to avoid throwing an exception in the common case
+    if ("file".equalsIgnoreCase(getScheme(uri))) {
+      try {
+        return new File(new URI(uri)).toString();
+      }
+      // not a valid URI
+      catch (URISyntaxException e) { }
+      // not a valid file URI
+      catch (IllegalArgumentException e) { }
+    }
+    return uri;
   }
 }

@@ -15,7 +15,6 @@ import org.xml.sax.XMLReader;
 import javax.xml.transform.sax.SAXSource;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 
 /**
  * Provides a simplified API for validating XML documents against schemas.
@@ -172,8 +171,8 @@ public class ValidationDriver {
    * @param filename a String specifying the filename
    * @return an <code>InputSource</code> for the filename
    */
-  static public InputSource fileInputSource(String filename) throws MalformedURLException {
-    return ValidationDriver.fileInputSource(new File(filename));
+  static public InputSource fileInputSource(String filename) {
+    return fileInputSource(new File(filename));
   }
 
   /**
@@ -182,7 +181,7 @@ public class ValidationDriver {
    * @param file the <code>File</code>
    * @return an <code>InputSource</code> for the filename
    */
-  static public InputSource fileInputSource(File file) throws MalformedURLException {
+  static public InputSource fileInputSource(File file) {
     return new InputSource(UriOrFile.fileToUri(file));
   }
 
@@ -194,7 +193,7 @@ public class ValidationDriver {
    * @param uriOrFile a <code>String</code> representing either a file or an absolute URI
    * @return an <code>InputSource</code> for the file or absolute URI
    */
-  static public InputSource uriOrFileInputSource(String uriOrFile) throws MalformedURLException {
+  static public InputSource uriOrFileInputSource(String uriOrFile) {
     return new InputSource(UriOrFile.toUri(uriOrFile));
   }
 }
