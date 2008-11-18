@@ -4,60 +4,23 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 public class Uri {
+  /**
+   * Tests whether a string is a valid URI reference.
+   * @param s the String to be tested
+   * @return true is s is a valid URI reference, false otherwise
+   */
   public static boolean isValid(String s) {
-    return isValidPercent(s) && isValidFragment(s) && isValidScheme(s);
+    try {
+      new URI(UriEncoder.encode(s));
+    }
+    catch (URISyntaxException e) {
+      return false;
+    }
+    return true;
   }
   
   public static String escapeDisallowedChars(String s) {
     return UriEncoder.encodeAsAscii(s);
-  }
-
-  private static boolean isAlpha(char c) {
-    return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
-  }
-
-  private static boolean isHexDigit(char c) {
-    return ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F') || isDigit(c);
-  }
-
-  private static boolean isDigit(char c) {
-    return '0' <= c && c <= '9';
-  }
-  
-  private static boolean isSchemeChar(char c) {
-    return isAlpha(c) || isDigit(c) || c == '+' || c == '-' || c =='.';
-  }
-
-  private static boolean isValidPercent(String s) {
-    int len = s.length();
-    for (int i = 0; i < len; i++)
-      if (s.charAt(i) == '%') {
-	if (i + 2 >= len)
-	  return false;
-	else if (!isHexDigit(s.charAt(i + 1))
-		 || !isHexDigit(s.charAt(i + 2)))
-	  return false;
-      }
-    return true;
-  }
-
-  private static boolean isValidFragment(String s) {
-    int i = s.indexOf('#');
-    return i < 0 || s.indexOf('#', i + 1) < 0;
-  }
-
-  private static boolean isValidScheme(String s) {
-    if (!isAbsolute(s))
-      return true;
-    int i = s.indexOf(':');
-    if (i == 0
-	|| i + 1 == s.length()
-	|| !isAlpha(s.charAt(0)))
-      return false;
-    while (--i > 0)
-      if (!isSchemeChar(s.charAt(i)))
-	return false;
-    return true;
   }
 
   public static String resolve(String base, String uriReference) {
@@ -73,10 +36,23 @@ public class Uri {
     return uriReference;
   }
 
+  /**
+   * Tests whether a valid URI reference has a fragment identifier. It is allowed to pass an invalid URI reference,
+   * but the result is not defined.
+   * @param uri the URI reference to be tested, must not be null
+   * @return true if the URI reference has a fragment identifier, false otherwise
+   */
   public static boolean hasFragmentId(String uri) {
     return uri.indexOf('#') >= 0;
   }
 
+  /**
+   * Tests whether a valid URI reference is absolute. It is allowed to pass an invalid URI reference,
+   * but the result is not defined. It is also allowed to pass a valid URI with leading
+   * and trailing whitespace.
+   * @param uri the URI to be tested, must not be null
+   * @return true if the URI reference is absolute, false otherwise
+   */
   public static boolean isAbsolute(String uri) {
     int i = uri.indexOf(':');
     if (i < 0)
