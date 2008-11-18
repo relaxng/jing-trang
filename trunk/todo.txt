@@ -1,3 +1,11 @@
+In ValidatorHnadler ignore attributes that are xmlns:*.
+
+Support feasible featue for JAXP.
+
+Support check-id-idref feature for JAXP.
+
+Support URIResolver, EntityResolver properties for JAXP.
+
 Implement a CatalogResolver; plus option to jing/trang to use it
 
 Add JingTask parameter(s) to specify the resolver.
