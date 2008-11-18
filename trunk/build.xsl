@@ -370,7 +370,7 @@
   <target name="mod.{$name}.test-{@name}" depends="mod.{$name}.compile-test">
     <mkdir dir="{$build}/mod/{$name}/test-{@name}"/>
     <testng workingDir="{$build}/mod/{$name}/test-{@name}"
-	    outputdir="report"
+	    outputdir="{$build}/mod/{$name}/test-{@name}/report"
 	    haltonfailure="true"
 	    suiteName="mod.{$name}.test-{@name}"
 	    listeners="org.testng.reporters.DotTestListener">
