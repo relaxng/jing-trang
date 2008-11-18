@@ -37,6 +37,7 @@ public class BasicResolver implements Resolver {
       throw new ResolverException("cannot open relative URI: " + uri);
     URL url = new URL(uri.toASCIIString());
     // XXX should set the encoding properly
+    // XXX if this is HTTP and we've been redirected, should do input.setURI with the new URI
     input.setByteStream(url.openStream());
   }
 
