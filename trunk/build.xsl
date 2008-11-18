@@ -96,7 +96,7 @@
     </xsl:attribute>
     <mkdir dir="{$build}/mod/{$name}/classes/main"/>
     <xsl:if test="compile">
-      <javac destdir="{$build}/mod/{$name}/classes/main">
+      <javac destdir="{$build}/mod/{$name}/classes/main" debug="true" debuglevel="lines,source">
 	<xsl:call-template name="javac-attributes"/>
 	<src>
 	  <pathelement location="mod/{$name}/src/main"/>
@@ -135,7 +135,7 @@
     </xsl:attribute>
     <mkdir dir="{$build}/mod/{$name}/classes/test"/>
     <xsl:if test="compile[@test]">
-      <javac destdir="{$build}/mod/{$name}/classes/test">
+      <javac destdir="{$build}/mod/{$name}/classes/test" debug="true">
 	<xsl:call-template name="javac-attributes">
 	  <xsl:with-param name="test" select="true()"/>
 	</xsl:call-template>
