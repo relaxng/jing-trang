@@ -1,7 +1,7 @@
 package com.thaiopensource.util;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class Uri {
   public static boolean isValid(String s) {
@@ -60,12 +60,15 @@ public class Uri {
     return true;
   }
 
-  public static String resolve(String baseUri, String uriReference) {
-    if (!isAbsolute(uriReference) && baseUri != null && isAbsolute(baseUri)) {
+  public static String resolve(String base, String uriReference) {
+    if (!isAbsolute(uriReference) && base != null && isAbsolute(base)) {
       try {
-	return new URL(new URL(baseUri), uriReference).toString();
+        URI baseURI = new URI(UriEncoder.encode(base));
+        return baseURI.resolve(new URI(UriEncoder.encode(uriReference))).toString();
       }
-      catch (MalformedURLException e) { }
+      catch (URISyntaxException e) {
+        // fall back to returning uriReference
+      }
     }
     return uriReference;
   }
