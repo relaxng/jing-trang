@@ -5,6 +5,9 @@ public abstract class Utf16 {
   static public boolean isSurrogate(char c) {
     return (c & 0xF800) == 0xD800;
   }
+  static public boolean isSurrogate(int c) {
+    return c >= 0 && c <= 0xFFFF && isSurrogate((char)c);
+  }
   static public boolean isSurrogate1(char c) {
     return (c & 0xFC00) == 0xD800;
   }
