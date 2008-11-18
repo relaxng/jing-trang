@@ -10,7 +10,7 @@
 <xsl:template match="module">
   <module relativePaths="true" type="JAVA_MODULE" version="4">
     <component name="NewModuleRootManager" inherit-compiler-output="false">
-      <xsl:if test="java5">
+      <xsl:if test="java5|test[type='testng']">
 	<xsl:attribute name="LANGUAGE_LEVEL">JDK_1_5</xsl:attribute>
       </xsl:if>
       <exclude-output />
@@ -30,6 +30,9 @@
       </content>
       <orderEntry type="inheritedJdk" />
       <orderEntry type="sourceFolder" forTests="false" />
+      <xsl:if test="test[@type='testng']">
+	<orderEntry type="library" name="testng" level="project"/>
+      </xsl:if>
       <xsl:apply-templates select="depends"/>
       <orderEntryProperties />
     </component>
