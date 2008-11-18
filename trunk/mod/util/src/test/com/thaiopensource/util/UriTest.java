@@ -23,4 +23,33 @@ public class UriTest {
   public void testResolve(String base, String ref, String result) {
     Assert.assertEquals(Uri.resolve(base, ref), result);
   }
+
+  @DataProvider(name = "valid")
+  public Object[][] createValid() {
+    return new Object[][] {
+            {"http://192.168.88.1"},
+            {""},
+            {"random:stuff"},
+            {"random:\u0e01"},
+            {"foo"}
+    };
+  }
+  @Test(dataProvider = "valid")
+  public void testValid(String uri) {
+    Assert.assertTrue(Uri.isValid(uri));
+  }
+
+  @DataProvider(name = "invalid")
+  public Object[][] createInvalid() {
+    return new Object[][] {
+            {"foo%0G"},
+            {"foo#bar#baz"},
+            {"foo_bar:baz"},
+            {"123:foo"}
+    };
+  }
+  @Test(dataProvider = "invalid")
+  public void testInvalid(String uri) {
+     Assert.assertFalse(Uri.isValid(uri));
+  }
 }
