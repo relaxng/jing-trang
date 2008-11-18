@@ -10,6 +10,11 @@
   <project>
     <xmlproperty file="version.xml"/>
     <property name="build.dir" value="${{basedir}}/build"/>
+    <taskdef name="testng" classname="org.testng.TestNGAntTask">
+      <classpath>
+	<pathelement location="lib/testng.jar"/>
+      </classpath>
+    </taskdef>
     <target name="dummy"/>
     <target name="init">
       <mkdir dir="{$build}"/>
@@ -131,7 +136,9 @@
     <mkdir dir="{$build}/mod/{$name}/classes/test"/>
     <xsl:if test="compile[@test]">
       <javac destdir="{$build}/mod/{$name}/classes/test">
-	<xsl:call-template name="javac-attributes"/>
+	<xsl:call-template name="javac-attributes">
+	  <xsl:with-param name="test" select="true()"/>
+	</xsl:call-template>
 	<src>
 	  <pathelement location="mod/{$name}/src/test"/>
 	</src>
@@ -144,6 +151,9 @@
 	  <xsl:for-each select="depends[@lib]">
 	    <pathelement location="lib/{@lib}.jar"/>
 	  </xsl:for-each>
+	  <xsl:if test="test[@type='testng']">
+	    <pathelement location="lib/testng.jar"/>
+	  </xsl:if>
 	</classpath>
       </javac>
     </xsl:if>
@@ -355,10 +365,40 @@
   </target>
 </xsl:template>
 
+<xsl:template match="test[@type='testng']">
+  <xsl:param name="name"/>
+  <target name="mod.{$name}.test-{@name}" depends="mod.{$name}.compile-test">
+    <mkdir dir="{$build}/mod/{$name}/test-{@name}"/>
+    <testng workingDir="{$build}/mod/{$name}/test-{@name}"
+	    outputdir="report"
+	    haltonfailure="true"
+	    suiteName="mod.{$name}.test-{@name}"
+	    listeners="org.testng.reporters.DotTestListener">
+      <classfileset dir="{$build}/mod/{$name}/classes/test" includes="**/*.class"/>
+      <classpath>
+	<pathelement location="{$build}/mod/{$name}/classes/test"/>
+	<pathelement location="{$build}/mod/{$name}/classes/main"/>
+	<pathelement location="mod/{$name}/src/test"/>
+	<pathelement location="mod/{$name}/src/main"/>
+	<xsl:for-each select="../depends[@module]">
+	  <pathelement location="{$build}/mod/{@module}/classes/test"/>
+	  <pathelement location="{$build}/mod/{@module}/classes/main"/>
+	  <pathelement location="mod/{@module}/src/test"/>
+	  <pathelement location="mod/{@module}/src/main"/>
+	</xsl:for-each>
+	<xsl:for-each select="../depends[@lib]">
+	  <pathelement location="lib/{@lib}.jar"/>
+	</xsl:for-each>
+      </classpath>
+    </testng>
+  </target>
+</xsl:template>
+
 <xsl:template name="javac-attributes">
+  <xsl:param name="test" select="false()"/>
   <xsl:attribute name="includeAntRuntime">no</xsl:attribute>
   <xsl:choose>
-    <xsl:when test="java5">
+    <xsl:when test="java5 or ($test and test[@type='testng'])">
       <xsl:attribute name="source">1.5</xsl:attribute>
       <xsl:attribute name="target">1.5</xsl:attribute>
     </xsl:when>
