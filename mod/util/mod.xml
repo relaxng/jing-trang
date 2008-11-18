@@ -1,4 +1,5 @@
 <module>
-  <compile/>
+  <compile test="yes"/>
+  <test name="unit" type="testng"/>
 </module>
 
