@@ -5,6 +5,7 @@ import com.thaiopensource.resolver.Identifier;
 import com.thaiopensource.resolver.Input;
 import com.thaiopensource.resolver.Resolver;
 import com.thaiopensource.resolver.ResolverException;
+import com.thaiopensource.resolver.SequenceResolver;
 import com.thaiopensource.resolver.xml.XMLDocumentIdentifier;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -23,7 +24,10 @@ public class SAXResolver {
   private final SAXParserFactory parserFactory;
 
   public SAXResolver(Resolver resolver) {
-    this.resolver = resolver == null ? BasicResolver.getInstance() : resolver;
+    Resolver tem = BasicResolver.getInstance();
+    if (resolver != null)
+      tem = new SequenceResolver(resolver, tem);
+    this.resolver = tem;
     parserFactory = SAXParserFactory.newInstance();
     parserFactory.setNamespaceAware(true);
     parserFactory.setValidating(false);

@@ -1,6 +1,5 @@
 package com.thaiopensource.validate;
 
-import com.thaiopensource.resolver.BasicResolver;
 import com.thaiopensource.resolver.Resolver;
 import com.thaiopensource.resolver.SequenceResolver;
 import com.thaiopensource.resolver.xml.sax.SAX;
@@ -42,7 +41,6 @@ public class ResolverFactory {
       resolvers[i++] = SAX.createResolver(entityResolver, uriResolver == null);
     if (uriResolver != null)
       resolvers[i++] = Transform.createResolver(uriResolver);
-    resolvers[i++] = BasicResolver.getInstance();
     while (--i > 0)
       resolvers[i - 1] = new SequenceResolver(resolvers[i - 1], resolvers[i]);
     // XMLReaderCreator last, so it can create an EntityResolver
