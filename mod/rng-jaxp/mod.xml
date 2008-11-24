@@ -7,4 +7,6 @@
   <depends module="rng-parse"/>
   <depends module="pattern"/>
   <compile test="yes"/>
+  <java5/>
+  <test name="unit" type="testng"/>
 </module>

@@ -16,11 +16,9 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
+import org.xml.sax.SAXParseException;
 
-import javax.xml.XMLConstants;
-import javax.xml.transform.Source;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
+import javax.xml.transform.sax.SAXSource;
 import java.io.IOException;
 
 /**
@@ -30,15 +28,12 @@ import java.io.IOException;
  * @see XMLSyntaxSchemaFactory
  * @see CompactSyntaxSchemaFactory
  */
-public abstract class SchemaFactoryImpl extends SchemaFactory {
-  private ErrorHandler errorHandler = null;
-  private LSResourceResolver resourceResolver = null;
+public abstract class SchemaFactoryImpl extends SchemaFactory2 {
   private DatatypeLibraryFactory datatypeLibraryFactory = null;
   /* If this is true, then logically datatypeLibraryFactory is an instance of DatatypeLibraryLoader,
      but we create it lazily, so that we don't need to create it if the user specifies their own. */
   private boolean defaultDatatypeLibraryFactory = true;
-  // Corresponds to XMLConstants.FEATURE_SECURE_PROCESSING. Doesn't do anything yet.
-  private boolean secureProcessing = false;
+
   /**
    * The name of the property that can be used to specify a DatatypeLibraryFactory.
    * The value of the property must implement org.relaxng.datatype.DatatypeLibraryFactory.
@@ -57,62 +52,30 @@ public abstract class SchemaFactoryImpl extends SchemaFactory {
   protected SchemaFactoryImpl() {
   }
 
-  public void setErrorHandler(ErrorHandler errorHandler) {
-    this.errorHandler = errorHandler;
-  }
-
-  public ErrorHandler getErrorHandler() {
-    return errorHandler;
-  }
-
-  public void setResourceResolver(LSResourceResolver resourceResolver) {
-    this.resourceResolver = resourceResolver;
-  }
-
-  public LSResourceResolver getResourceResolver() {
-    return resourceResolver;
-  }
-
-  public Schema newSchema() throws SAXException {
-    throw new UnsupportedOperationException();
-  }
-
-  public Schema newSchema(Source[] schemas) throws SAXException {
-    if (schemas.length != 1)
-      throw new UnsupportedOperationException();
-    Source source = schemas[0];
+  public Schema2 newSchema(SAXSource source) throws SAXException {
     Resolver resolver = null;
+    LSResourceResolver resourceResolver = getResourceResolver();
     if (resourceResolver != null)
       resolver = LS.createResolver(resourceResolver);
     SAXResolver saxResolver = new SAXResolver(resolver);
-    ErrorHandler eh = errorHandler;
+    ErrorHandler eh = getErrorHandler();
     if (eh == null)
       eh = new DraconianErrorHandler();
     Parseable parseable = createParseable(source, saxResolver, eh);
     SchemaPatternBuilder spb = new SchemaPatternBuilder();
     try {
-      return new SchemaImpl(spb, SchemaBuilderImpl.parse(parseable, eh, getDatatypeLibraryFactory(), spb, false));
+      return new SchemaImpl(this, spb, SchemaBuilderImpl.parse(parseable, eh, getDatatypeLibraryFactory(), spb, false));
     }
-    catch (IOException e) {
-      throw new SAXException(e);
+    catch (IOException io) {
+      // this is a truly bizarre API; why can't we just throw the IOException
+      SAXParseException e = new SAXParseException(io.getMessage(), null, io);
+      eh.fatalError(e);
+      throw e;
     }
     catch (IllegalSchemaException e) {
-      // XXX not sure what we're supposed to do here
+      // we have already reported something for this error, so don't give it to the error handler
       throw new SAXException("invalid schema");
     }
-  }
-
-  public void setFeature(String name, boolean value) throws SAXNotRecognizedException, SAXNotSupportedException {
-    if (XMLConstants.FEATURE_SECURE_PROCESSING.equals(name))
-      secureProcessing = value;
-    else
-      super.setFeature(name, value);
-  }
-
-  public boolean getFeature(String name) throws SAXNotRecognizedException, SAXNotSupportedException {
-    if (XMLConstants.FEATURE_SECURE_PROCESSING.equals(name))
-      return secureProcessing;
-    return super.getFeature(name);
   }
 
   public void setProperty(String name, Object object) throws SAXNotRecognizedException, SAXNotSupportedException {
@@ -143,5 +106,5 @@ public abstract class SchemaFactoryImpl extends SchemaFactory {
     return datatypeLibraryFactory;
   }
 
-  abstract protected Parseable createParseable(Source source, SAXResolver resolver, ErrorHandler eh) throws SAXException;
+  abstract protected Parseable createParseable(SAXSource source, SAXResolver resolver, ErrorHandler eh) throws SAXException;
 }
