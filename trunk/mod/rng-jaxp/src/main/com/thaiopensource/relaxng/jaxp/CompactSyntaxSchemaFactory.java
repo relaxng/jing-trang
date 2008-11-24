@@ -5,9 +5,7 @@ import com.thaiopensource.relaxng.parse.compact.CompactParseable;
 import com.thaiopensource.resolver.xml.sax.SAX;
 import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
 
-import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 
 /**
@@ -28,10 +26,7 @@ public class CompactSyntaxSchemaFactory extends SchemaFactoryImpl {
     return schemaLanguage.equals(SCHEMA_LANGUAGE);
   }
 
-  protected Parseable createParseable(Source source, SAXResolver saxResolver, ErrorHandler eh) {
-    InputSource inputSource = SAXSource.sourceToInputSource(source);
-    if (inputSource == null)
-      throw new IllegalArgumentException("unsupported type of Source for RELAX NG compact syntax schema");
-    return new CompactParseable(SAX.createInput(inputSource), saxResolver.getResolver(), eh);
+  protected Parseable createParseable(SAXSource source, SAXResolver saxResolver, ErrorHandler eh) {
+    return new CompactParseable(SAX.createInput(source.getInputSource()), saxResolver.getResolver(), eh);
   }
 }
