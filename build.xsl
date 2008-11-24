@@ -113,6 +113,9 @@
 	  </xsl:for-each>
 	</classpath>
       </javac>
+      <copy todir="{$build}/mod/{$name}/classes/main">
+        <fileset dir="mod/{$name}/src/main" includes="**/resources/*"/>
+      </copy>
     </xsl:if>
     <xsl:if test="version">
       <xsl:variable name="resdir"
@@ -165,11 +168,9 @@
       </xsl:apply-templates>
       <xsl:if test="compile">
 	<fileset dir="{$build}/mod/{$name}/classes/main" includes="**/*.class,**/resources/*"/>
-	<fileset dir="mod/{$name}/src/main" includes="**/resources/*"/>
       </xsl:if>
       <xsl:for-each select="depends[@module]">
 	<fileset dir="{$build}/mod/{@module}/classes/main" includes="**/*.class,**/resources/*"/>
-	<fileset dir="mod/{@module}/src/main" includes="**/resources/*"/>
       </xsl:for-each>
     </jar>
   </target>
