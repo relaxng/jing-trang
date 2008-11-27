@@ -59,7 +59,10 @@ public class CompactParseable implements SubParseable {
   }
 
   public String getUri() {
-    return Uri.escapeDisallowedChars(in.getUri());
+    String uri = in.getUri();
+    if (uri == null)
+      return null;
+    return Uri.escapeDisallowedChars(uri);
   }
 
   private static final String UTF8 = EncodingMap.getJavaName("UTF-8");

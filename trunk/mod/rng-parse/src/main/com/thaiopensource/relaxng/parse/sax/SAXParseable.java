@@ -62,6 +62,9 @@ public class SAXParseable extends SAXSubParser implements SubParseable {
   }
 
   public String getUri() {
-    return Uri.escapeDisallowedChars(source.getInputSource().getSystemId());
+    final String uri = source.getInputSource().getSystemId();
+    if (uri == null)
+      return null;
+    return Uri.escapeDisallowedChars(uri);
   }
 }
