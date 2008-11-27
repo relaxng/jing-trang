@@ -1,16 +1,18 @@
 package com.thaiopensource.relaxng.jaxp;
 
+import com.thaiopensource.validation.LSInputImpl;
+import com.thaiopensource.validation.SchemaFactory2;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.w3c.dom.ls.LSInput;
+import org.w3c.dom.ls.LSResourceResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.SAXParseException;
-import org.w3c.dom.ls.LSResourceResolver;
-import org.w3c.dom.ls.LSInput;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.Source;

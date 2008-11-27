@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng.jaxp;
+package com.thaiopensource.validation;
 
 import javax.xml.validation.Schema;
 

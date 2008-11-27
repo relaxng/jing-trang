@@ -5,6 +5,7 @@ import com.thaiopensource.relaxng.pattern.Pattern;
 import com.thaiopensource.relaxng.pattern.PatternMatcher;
 import com.thaiopensource.relaxng.pattern.ValidatorPatternBuilder;
 import com.thaiopensource.relaxng.sax.Context;
+import com.thaiopensource.validation.ValidatorHandler2;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
 import com.thaiopensource.xml.util.Name;
 import org.w3c.dom.ls.LSResourceResolver;

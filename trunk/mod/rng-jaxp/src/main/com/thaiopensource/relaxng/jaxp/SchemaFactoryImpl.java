@@ -9,6 +9,8 @@ import com.thaiopensource.relaxng.pattern.SchemaPatternBuilder;
 import com.thaiopensource.resolver.Resolver;
 import com.thaiopensource.resolver.xml.ls.LS;
 import com.thaiopensource.resolver.xml.sax.SAXResolver;
+import com.thaiopensource.validation.Schema2;
+import com.thaiopensource.validation.SchemaFactory2;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 import org.w3c.dom.ls.LSResourceResolver;
