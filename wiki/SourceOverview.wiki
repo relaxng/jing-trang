@@ -16,8 +16,9 @@ They can be divided into three groups.
  * *jing* - modules used only by Jing
    * *pattern* - matching and simplifying RELAX NG patterns; depends on datatype, rng-parse; this is the guts of Jing
    * *rng-jarv* - implements the JARV validation interface on top of pattern
-   * *rng-jaxp* - implements the JAXP javax.xml.validation interface on top of pattern
-   * *validate* - provides a schema language independent framework for validation
+   * *jaxp* - provides extensions and helpers for the JAXP javax.xml.validation API
+   * *rng-jaxp* - implements the JAXP javax.xml.validation API on top of pattern; uses the jaxp module
+   * *validate* - provides a schema language independent framework for validation; this predates the standard javax.xml.validation JAXP interface; eventually this will probably be superseded by the extended JAXP interface defined in the jaxp module
    * *rng-validate* - implements RELAX NG validation for the framework provided by the validate module using the pattern module; depends on datatype, validate, rng-parse, pattern
    * *nvdl* - implements NVDL validation for the framework provided by the validate module; depends on rng-validate (because it uses RELAX NG to validate NVDL schemas); also implements MNS and NRL, the non-standard predecessors to NVDL
    * *schematron* - implements Schematron 1.5 for the framework provided by the validate module; depends on rng-validate (because it uses RELAX NG to validate Schematron schemas)
