@@ -17,7 +17,9 @@ import java.net.URL;
 
 /**
  * Extends the SchemaFactory abstract class.  All methods of SchemaFactory
- * that return a Schema are overridden to return a Schema2.
+ * that return a Schema are overridden to return a Schema2. Default implementations
+ * of several methods are provided.
+ * @see SchemaFactory
  */
 public abstract class SchemaFactory2 extends SchemaFactory {
   // Corresponds to XMLConstants.FEATURE_SECURE_PROCESSING.
@@ -25,6 +27,10 @@ public abstract class SchemaFactory2 extends SchemaFactory {
   private ErrorHandler errorHandler = null;
   private LSResourceResolver resourceResolver = null;
 
+  /**
+   * Create a new Schema from a SAXSource. Subclasses must implement this.
+   * @see SchemaFactory#newSchema(Source)
+   */
   public abstract Schema2 newSchema(SAXSource schema) throws SAXException;
 
   public Schema2 newSchema(Source[] schemas) throws SAXException {
@@ -33,6 +39,10 @@ public abstract class SchemaFactory2 extends SchemaFactory {
     return newSchema(schemas[0]);
   }
 
+  /**
+   * This implementation of SchemaFactory#newSchema simply throws UnsupportedOperationException.
+   * @see SchemaFactory#newSchema
+   */
   public Schema2 newSchema() throws SAXException {
     throw new UnsupportedOperationException();
   }
@@ -73,6 +83,13 @@ public abstract class SchemaFactory2 extends SchemaFactory {
     return resourceResolver;
   }
 
+  /**
+   * Extends SchemaFactory.setFeature by implementing the secure processing feature.
+   * The implementation simply sets an internal flag, which can be accessed using
+   * getSecureProcessing.
+   * @see SchemaFactory#setFeature
+   * @see #getSecureProcessing
+   */
   public void setFeature(String name, boolean value) throws SAXNotRecognizedException, SAXNotSupportedException {
     if (XMLConstants.FEATURE_SECURE_PROCESSING.equals(name))
       secureProcessing = value;
@@ -80,6 +97,13 @@ public abstract class SchemaFactory2 extends SchemaFactory {
       super.setFeature(name, value);
   }
 
+  /**
+   * Extends SchemaFactory.setFeature by implementing the secure processing feature.
+   * The implementation simply sets an internal flag, which can be accessed using
+   * getSecureProcessing.
+   * @see SchemaFactory#getFeature
+   * @see #getSecureProcessing
+   */
   public boolean getFeature(String name) throws SAXNotRecognizedException, SAXNotSupportedException {
     if (XMLConstants.FEATURE_SECURE_PROCESSING.equals(name))
       return secureProcessing;

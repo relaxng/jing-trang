@@ -3,7 +3,7 @@ package com.thaiopensource.validation;
 import javax.xml.XMLConstants;
 
 /**
- *
+ * Some useful constants for the names of schema languages.
  */
 public class Constants  {
   private Constants() { }

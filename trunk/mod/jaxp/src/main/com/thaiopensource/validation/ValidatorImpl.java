@@ -31,6 +31,9 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
 
+/**
+ * Implements Validator2 in terms of ValidatorHandler2.
+ */
 class ValidatorImpl extends Validator2 {
   private final ValidatorHandler2 handler;
   private XMLReader cachedXMLReader = null;
