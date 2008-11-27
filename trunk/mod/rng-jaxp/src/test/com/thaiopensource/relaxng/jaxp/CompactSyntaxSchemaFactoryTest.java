@@ -36,4 +36,12 @@ public class CompactSyntaxSchemaFactoryTest extends SchemaFactoryImplTest {
   protected String attribute(String name) {
     return "attribute " + name + " { text }";
   }
+
+  protected String externalRef(String uri) {
+    return "external \"" + uri + "\"";
+  }
+
+  protected String getLSType() {
+    return CompactSyntaxSchemaFactory.SCHEMA_LANGUAGE;
+  }
 }

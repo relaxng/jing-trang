@@ -9,6 +9,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.SAXParseException;
+import org.w3c.dom.ls.LSResourceResolver;
+import org.w3c.dom.ls.LSInput;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
@@ -130,14 +132,46 @@ public abstract class SchemaFactoryImplTest {
     v.validate(charStreamSource("<doc>\n<bad/></doc>"));
     throw new AssertionError();
   }
+  
   @Test
-  public void testSetResourceResolver() {
-    // Add your code here
+  public void testInstanceResourceResolver() throws SAXException, IOException {
+    SchemaFactory f = factory();
+    Validator v = f.newSchema(charStreamSource(element("doc", element("inner")))).newValidator();
+    Assert.assertNull(v.getResourceResolver());
+    LSResourceResolver rr = new LSResourceResolver() {
+      public LSInput resolveResource(String type, String namespaceURI, String publicId, String systemId, String baseURI) {
+        Assert.assertEquals(systemId, "e.xml");
+        Assert.assertEquals(type, "http://www.w3.org/TR/REC-xml");
+        LSInput in = new LSInputImpl();
+        in.setStringData("<inner/>");
+        return in;
+      }
+    };
+    v.setResourceResolver(rr);
+    Assert.assertSame(v.getResourceResolver(), rr);
+    v.validate(charStreamSource("<!DOCTYPE doc [ <!ENTITY e SYSTEM 'e.xml'> ]><doc>&e;</doc>"));
   }
 
   @Test
-  public void testGetResourceResolver() {
-    // Add your code here
+  public void testSchemaResourceResolver() throws SAXException, IOException {
+    SchemaFactory f = factory();
+    Assert.assertNull(f.getResourceResolver());
+    LSResourceResolver rr = new LSResourceResolver() {
+      public LSInput resolveResource(String type, String namespaceURI, String publicId, String systemId, String baseURI) {
+        Assert.assertEquals(systemId, "myschema");
+        Assert.assertEquals(type, getLSType());
+        Assert.assertNull(baseURI);
+        Assert.assertNull(namespaceURI);
+        Assert.assertNull(publicId);
+        LSInput in = new LSInputImpl();
+        in.setStringData(createSchema("doc"));
+        return in;
+      }
+    };
+    f.setResourceResolver(rr);
+    Assert.assertSame(f.getResourceResolver(), rr);
+    Validator v = f.newSchema(charStreamSource(externalRef("myschema"))).newValidator();
+    v.validate(charStreamSource("<doc/>"));
   }
 
   @Test(expectedExceptions = { UnsupportedOperationException.class })
@@ -200,20 +234,33 @@ public abstract class SchemaFactoryImplTest {
     throw new AssertionError();
   }
 
-  @Test
-  public void testSetProperty() {
-    // Add your code here
+  @Test(expectedExceptions = { SAXNotRecognizedException.class })
+  public void testUnrecognizedSetProperty() throws SAXNotRecognizedException, SAXNotSupportedException {
+    SchemaFactory f = factory();
+    f.setProperty("http://thaiopensource.com/properties-no-such-property", null);
+    throw new AssertionError();
   }
 
-  @Test
-  public void testGetProperty() {
-    // Add your code here
+  @Test(expectedExceptions = { SAXNotRecognizedException.class })
+  public void testUnrecognizedGetProperty() throws SAXNotRecognizedException, SAXNotSupportedException {
+    SchemaFactory f = factory();
+    f.getProperty("http://thaiopensource.com/properties/no-such-property");
+    throw new AssertionError();
   }
 
   private String createSchema(String rootElement) {
-    return element(rootElement, new String[] { });
+    return element(rootElement);
   }
 
+  private String element(String name) {
+    return element(name, new String[] { });
+  }
+
+  private String element(String name, String contentPattern) {
+    return element(name, new String[] { contentPattern });
+  }
   abstract protected String element(String name, String[] contentPatterns);
   abstract protected String attribute(String name);
+  abstract protected String externalRef(String uri);
+  abstract protected String getLSType();
 }
