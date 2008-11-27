@@ -1,4 +1,4 @@
-package com.thaiopensource.relaxng.jaxp;
+package com.thaiopensource.validation;
 
 import com.thaiopensource.resolver.Resolver;
 import com.thaiopensource.resolver.xml.ls.LS;

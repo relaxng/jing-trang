@@ -351,6 +351,7 @@
       <module fileurl="file://$PROJECT_DIR$/mod/dtd-parse/dtd-parse.iml" filepath="$PROJECT_DIR$/mod/dtd-parse/dtd-parse.iml" group="Trang" />
       <module fileurl="file://$PROJECT_DIR$/mod/dtdinst/dtdinst.iml" filepath="$PROJECT_DIR$/mod/dtdinst/dtdinst.iml" group="Trang" />
       <module fileurl="file://$PROJECT_DIR$/mod/infer/infer.iml" filepath="$PROJECT_DIR$/mod/infer/infer.iml" group="Trang" />
+      <module fileurl="file://$PROJECT_DIR$/mod/jaxp/jaxp.iml" filepath="$PROJECT_DIR$/mod/jaxp/jaxp.iml" group="Jing" />
       <module fileurl="file://$PROJECT_DIR$/mod/jing/jing.iml" filepath="$PROJECT_DIR$/mod/jing/jing.iml" group="Jing" />
       <module fileurl="file://$PROJECT_DIR$/mod/nvdl/nvdl.iml" filepath="$PROJECT_DIR$/mod/nvdl/nvdl.iml" group="Jing" />
       <module fileurl="file://$PROJECT_DIR$/mod/pattern/pattern.iml" filepath="$PROJECT_DIR$/mod/pattern/pattern.iml" group="Jing" />
