@@ -41,4 +41,12 @@ public class XMLSyntaxSchemaFactoryTest extends SchemaFactoryImplTest {
   protected String attribute(String name) {
     return "<attribute name='" + name + "'/>";
   }
+
+  protected String externalRef(String uri) {
+    return "<externalRef xmlns='" + NS + "' href='" + uri + "'/>";
+  }
+
+  protected String getLSType() {
+    return NS;
+  }
 }
