@@ -4,6 +4,7 @@ import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.parse.compact.CompactParseable;
 import com.thaiopensource.resolver.xml.sax.SAX;
 import com.thaiopensource.resolver.xml.sax.SAXResolver;
+import com.thaiopensource.validation.Constants;
 import org.xml.sax.ErrorHandler;
 
 import javax.xml.transform.sax.SAXSource;
@@ -20,7 +21,7 @@ public class CompactSyntaxSchemaFactory extends SchemaFactoryImpl {
    * @see javax.xml.validation.SchemaFactory#isSchemaLanguageSupported
    * @see javax.xml.validation.SchemaFactory#newInstance(String)
    */
-  static final public String SCHEMA_LANGUAGE = "http://www.iana.org/assignments/media-types/application/relax-ng-compact-syntax";
+  static final public String SCHEMA_LANGUAGE = Constants.RELAXNG_COMPACT_URI;
 
   public boolean isSchemaLanguageSupported(String schemaLanguage) {
     return schemaLanguage.equals(SCHEMA_LANGUAGE);
