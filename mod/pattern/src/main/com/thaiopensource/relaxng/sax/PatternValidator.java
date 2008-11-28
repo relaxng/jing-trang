@@ -91,7 +91,6 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
 
   public PatternValidator(Pattern pattern, ValidatorPatternBuilder builder, ErrorHandler eh) {
     this.initialMatcher = new PatternMatcher(pattern, builder);
-    this.matcher = initialMatcher.copy();
     this.eh = eh;
     reset();
   }
@@ -101,7 +100,6 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
     bufferingCharacters = false;
     locator = null;
     matcher = initialMatcher.copy();
-
   }
 
   private void check(boolean ok) throws SAXException {
