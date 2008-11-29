@@ -6,10 +6,7 @@ import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.ValidationContext;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 public class PatternMatcher implements Cloneable, Matcher {
 
@@ -226,15 +223,16 @@ public class PatternMatcher implements Cloneable, Matcher {
     return !hadError;
   }
 
-  static abstract class PossibleNamesFunction extends AbstractPatternFunction implements NameClassVisitor {
-    private Set knownNames;
-    private Set possibleNames;
+  static abstract class PossibleNamesFunction extends AbstractPatternFunction {
+    private UnionNameClassNormalizer normalizer = new UnionNameClassNormalizer();
 
-    Set applyTo(Pattern p, Set knownNames) {
-      this.knownNames = knownNames;
-      this.possibleNames = new HashSet();
+    NormalizedNameClass applyTo(Pattern p) {
       p.apply(this);
-      return possibleNames;
+      return normalizer.normalize();
+    }
+
+    void add(NameClass nc) {
+      normalizer.add(nc);
     }
 
     public Object caseAfter(AfterPattern p) {
@@ -261,68 +259,12 @@ public class PatternMatcher implements Cloneable, Matcher {
 
     public Object caseOther(Pattern p) {
       return null;
-    }
-
-    public void visitChoice(NameClass nc1, NameClass nc2) {
-      nc1.accept(this);
-      nc2.accept(this);
-    }
-
-    public void visitNsName(String ns) {
-      visitNsNameExcept(ns, null);
-    }
-
-    public void visitNsNameExcept(String ns, NameClass nc) {
-     if (knownNames == null)
-        return;
-      boolean addedAll = true;
-      for (Iterator iter = knownNames.iterator(); iter.hasNext();) {
-        Name name = (Name)iter.next();
-        if (!name.getNamespaceUri().equals(ns) || (nc != null && nc.contains(name)))
-          addedAll = false;
-        else
-          possibleNames.add(name);
-      }
-      if (addedAll)
-        knownNames = null;
-    }
-
-    public void visitAnyName() {
-      if (knownNames == null)
-        return;
-      possibleNames.addAll(knownNames);
-      knownNames = null;
-    }
-
-    public void visitAnyNameExcept(NameClass nc) {
-      if (knownNames == null)
-        return;
-      boolean addedAll = true;
-      for (Iterator iter = knownNames.iterator(); iter.hasNext();) {
-        Name name = (Name)iter.next();
-        if (nc.contains(name))
-          addedAll = false;
-        else
-          possibleNames.add(name);
-      }
-      if (addedAll)
-        knownNames = null;
-    }
-
-    public void visitName(Name name) {
-      possibleNames.add(name);
-    }
-
-    public void visitNull() {
-    }
-
-    public void visitError() {
-    }
+    } 
   }
 
-  static class PossibleStartTagsFunction extends PossibleNamesFunction {
+  static class PossibleStartTagNamesFunction extends PossibleNamesFunction {
     public Object caseElement(ElementPattern p) {
-      p.getNameClass().accept(this);
+      add(p.getNameClass());
       return null;
     }
 
@@ -334,9 +276,9 @@ public class PatternMatcher implements Cloneable, Matcher {
     }
   }
 
-  static class PossibleAttributesFunction extends PossibleNamesFunction {
+  static class PossibleAttributeNamesFunction extends PossibleNamesFunction {
     public Object caseAttribute(AttributePattern p) {
-      p.getNameClass().accept(this);
+      add(p.getNameClass());
       return null;
     }
 
@@ -345,12 +287,12 @@ public class PatternMatcher implements Cloneable, Matcher {
     }
   }
 
-  public Set possibleStartTags(Set knownNames) {
-    return new PossibleStartTagsFunction().applyTo(memo.getPattern(), knownNames);
+  public com.thaiopensource.relaxng.match.NameClass possibleStartTagNames() {
+    return new PossibleStartTagNamesFunction().applyTo(memo.getPattern());
   }
 
-  public Set possibleAttributes(Set knownNames) {
-    return new PossibleAttributesFunction().applyTo(memo.getPattern(), knownNames);
+  public com.thaiopensource.relaxng.match.NameClass possibleAttributeNames() {
+    return new PossibleAttributeNamesFunction().applyTo(memo.getPattern());
   }
 
   private boolean setMemo(PatternMemo m) {

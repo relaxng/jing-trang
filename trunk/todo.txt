@@ -1,3 +1,12 @@
+Add toString() method to NormalizedNameClass.
+
+Use Matcher.possibleAttributeNames/possibleStartTagNames().toString() to give additional
+information in error messages.
+
+Use IntersectionNameClassNormalizer in DuplicateAttributeDetector.
+
+Use IntersectionNameClassNormalized in Alphabet.
+
 Make Matcher available as a property of Validator/ValidatorHandler.  No need for other
 ways to get a Matcher.
 

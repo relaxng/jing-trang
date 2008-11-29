@@ -3,8 +3,6 @@ package com.thaiopensource.relaxng.match;
 import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.ValidationContext;
 
-import java.util.Set;
-
 /**
  * Represents the state of matching an XML document against a RELAX NG pattern.
  * The XML document is considered as a linear sequence of events of different
@@ -205,32 +203,20 @@ public interface Matcher {
   boolean isValidSoFar();
 
   /**
-   * Return a Set of the names of elements whose start-tags are valid
-   * in the current state.  This must be called only in a state in
+   * Return a NameClass containing the names of elements whose start-tags are valid
+   * in the current state. This must be called only in a state in
    * which a call to <code>matchStartTagOpen</code> would be allowed.
-   * The members of the Set have type <code>com.thaiopensource.xml.util.Name</code>.
-   * When an element pattern with a wildcard name-class is possible, then all
-   * Names in knownNames that are contained in the wildcard name-class will be
-   * included in the returned Set.  The returned list may contain duplicates.
-   * Does not modify <code>knownNames</code>.
    *
-   * @param knownNames a Set of names to be considered for wildcards, or null
-   * @return a Set of names whose start-tags are possible
+   * @return a NameClass contains the names of elements whose start-tags are possible
    */
-  Set possibleStartTags(Set knownNames);
+  NameClass possibleStartTagNames();
 
   /**
-   * Return a Set of the names of attributes that are valid
+   * Return a NameClass containing the names of attributes that are valid
    * in the current state.  This must be called only in a state in
    * which a call to <code>matchAttributeName</code> would be allowed.
-   * The members of the Set have type <code>com.thaiopensource.xml.util.Name</code>.
-   * When an attribute pattern with a wildcard name-class is possible, then all
-   * Names in knownNames that are contained in the wildcard name-class will be
-   * included in the returned Set.  The returned list may contain duplicates.
-   * Does not modify <code>knownNames</code>.
    *
-   * @param knownNames a Set of names to be considered for wildcards, or null
-   * @return a Set of names of attributes that are possible
+   * @return a NameClass containing the names of attributes that are possible
    */
-  Set possibleAttributes(Set knownNames);
+  NameClass possibleAttributeNames();
 }
