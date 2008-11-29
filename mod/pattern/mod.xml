@@ -3,5 +3,6 @@
   <depends module="resolver"/>
   <depends module="datatype"/>
   <depends module="rng-parse"/>
-  <compile/>
+  <compile test="yes"/>
+  <test name="unit" type="testng"/>
 </module>
