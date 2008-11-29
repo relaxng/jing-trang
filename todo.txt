@@ -1,4 +1,7 @@
-In ValidatorHnadler ignore attributes that are xmlns:*.
+Make Matcher available as a property of Validator/ValidatorHandler.  No need for other
+ways to get a Matcher.
+
+In ValidatorHandler ignore attributes that are xmlns:*.
 
 Support feasible featue for JAXP.
 
