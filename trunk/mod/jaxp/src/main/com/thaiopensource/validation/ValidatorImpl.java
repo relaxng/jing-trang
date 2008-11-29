@@ -25,8 +25,6 @@ import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
-import javax.xml.transform.stax.StAXResult;
-import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
@@ -73,11 +71,11 @@ class ValidatorImpl extends Validator2 {
           throw new IllegalArgumentException();
         doValidate((DOMSource)source, (DOMResult)result);
       }
-      else if (source instanceof StAXSource) {
-        if (result != null && !(result instanceof StAXResult))
-          throw new IllegalArgumentException();
-        doValidate((StAXSource)source, (StAXResult)result);
-      }
+//      else if (source instanceof StAXSource) {
+//        if (result != null && !(result instanceof StAXResult))
+//          throw new IllegalArgumentException();
+//        doValidate((StAXSource)source, (StAXResult)result);
+//      }
       else
         throw new IllegalArgumentException("unsupported type of Source: " + source.getClass().getName());
     }
@@ -87,11 +85,11 @@ class ValidatorImpl extends Validator2 {
     }
   }
 
-  private void doValidate(StAXSource source, StAXResult result)
-          throws SAXException, IOException, TransformerException {
-    // XXX transform source and result
-    throw new IllegalArgumentException();
-  }
+//  private void doValidate(StAXSource source, StAXResult result)
+//          throws SAXException, IOException, TransformerException {
+//    // XXX transform source and result
+//    throw new IllegalArgumentException();
+//  }
 
   private void doValidate(DOMSource source, DOMResult result)
           throws SAXException, IOException, TransformerException {
