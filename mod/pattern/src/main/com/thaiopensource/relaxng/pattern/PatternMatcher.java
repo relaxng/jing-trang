@@ -5,8 +5,14 @@ import com.thaiopensource.util.Equal;
 import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.ValidationContext;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class PatternMatcher implements Cloneable, Matcher {
 
@@ -132,12 +138,37 @@ public class PatternMatcher implements Cloneable, Matcher {
     if (setMemo(memo.endAttributes()))
       ok = true;
     else {
-      // XXX should specify which attributes
-      ok = error("required_attributes_missing");
+      ok = ignoreError();
+      if (!ok)
+        reportMissingAttributes();
       memo = memo.ignoreMissingAttributes();
     }
     textTyped = memo.getPattern().getContentType() == Pattern.DATA_CONTENT_TYPE;
     return ok;
+  }
+
+  public void reportMissingAttributes() {
+    List missing = new ArrayList(requiredAttributeNames());
+    if (missing.isEmpty())
+      // XXX Can we do better here? This is probably not very common in practice.
+      error("required_attributes_missing");
+    else if (missing.size() == 1)
+      error("required_attribute_missing", NameFormatter.format((Name)missing.get(0)));
+    else {
+      Collections.sort(missing, new Comparator() {
+        public int compare(Object o1, Object o2) {
+          return Name.compare((Name)o1, (Name)o2);
+        }
+      });
+      StringBuffer buf = new StringBuffer();
+      for (Iterator iter = missing.iterator(); iter.hasNext();) {
+        // XXX internationalize this better
+        if (buf.length() > 0)
+          buf.append(", ");
+        buf.append(NameFormatter.format((Name)iter.next()));
+      }
+      error("required_attributes_missing_detail", buf.toString());
+    }
   }
 
   public boolean matchTextBeforeEndTag(String string, ValidationContext vc) {
@@ -295,6 +326,10 @@ public class PatternMatcher implements Cloneable, Matcher {
     return new PossibleAttributeNamesFunction().applyTo(memo.getPattern());
   }
 
+  public Set requiredAttributeNames() {
+    return (Set)memo.getPattern().apply(shared.builder.getRequiredAttributesFunction());
+  }
+
   private boolean setMemo(PatternMemo m) {
     if (m.isNotAllowed())
       return false;
@@ -304,8 +339,15 @@ public class PatternMatcher implements Cloneable, Matcher {
     }
   }
 
+  private boolean ignoreError() {
+    return hadError && memo.isNotAllowed();
+  }
+
+  /**
+   * Return true if the error was ignored, false otherwise.
+   */
   private boolean error(String key) {
-    if (hadError && memo.isNotAllowed())
+    if (ignoreError())
       return true;
     hadError = true;
     errorMessage = SchemaBuilderImpl.localizer.message(key);

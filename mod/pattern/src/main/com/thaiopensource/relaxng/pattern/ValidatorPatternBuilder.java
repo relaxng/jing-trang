@@ -16,6 +16,7 @@ public class ValidatorPatternBuilder extends PatternBuilder {
   private final Map choiceMap = new HashMap();
   private final PatternFunction removeChoicesFunction = new RemoveChoicesFunction();
   private final PatternFunction noteChoicesFunction = new NoteChoicesFunction();
+  private final PatternFunction requiredAttributesFunction = new RequiredAttributesFunction();
 
   private class NoteChoicesFunction extends AbstractPatternFunction {
     public Object caseOther(Pattern p) {
@@ -77,6 +78,10 @@ public class ValidatorPatternBuilder extends PatternBuilder {
 
   PatternFunction getIgnoreMissingAttributesFunction() {
     return ignoreMissingAttributesFunction;
+  }
+
+  PatternFunction getRequiredAttributesFunction() {
+    return requiredAttributesFunction;
   }
 
   PatternFunction getEndTagDerivFunction() {
