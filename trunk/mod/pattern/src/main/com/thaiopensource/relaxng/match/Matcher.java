@@ -3,6 +3,8 @@ package com.thaiopensource.relaxng.match;
 import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.ValidationContext;
 
+import java.util.Set;
+
 /**
  * Represents the state of matching an XML document against a RELAX NG pattern.
  * The XML document is considered as a linear sequence of events of different
@@ -219,4 +221,18 @@ public interface Matcher {
    * @return a NameClass containing the names of attributes that are possible
    */
   NameClass possibleAttributeNames();
+
+  /**
+   * Return a Set containing the names of attributes that are required in the
+   * current state. This must be called only in a state in
+   * which a call to <code>matchAttributeName</code> would be allowed. Note
+   * that in a schema such as attribute foo|bar { text } neither foo nor
+   * bar are considered required attributes; an attribute name x is required
+   * only if every matching pattern contains an attribute named x. Similarly,
+   * this function provides no information about wildcard attribute names.
+   * @return a non-null Set each member of which is a non-null Name corresponding
+   * to the name of a required attribute
+   * @see Name
+   */
+  Set requiredAttributeNames();
 }
