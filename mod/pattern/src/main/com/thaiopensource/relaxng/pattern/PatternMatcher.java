@@ -48,7 +48,7 @@ public class PatternMatcher implements Cloneable, Matcher {
   private PatternMemo memo;
   private boolean textTyped;
   private boolean hadError;
-  private boolean ignoreNextEndTag;
+  private boolean ignoreNextEndTagOrAttributeValue;
   private String errorMessage;
   private final Shared shared;
 
@@ -66,7 +66,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     return (memo == other.memo
             && hadError == other.hadError
             && Equal.equal(errorMessage, other.errorMessage)
-            && ignoreNextEndTag == other.ignoreNextEndTag
+            && ignoreNextEndTagOrAttributeValue == other.ignoreNextEndTagOrAttributeValue
             && textTyped == other.textTyped);
   }
 
@@ -117,13 +117,13 @@ public class PatternMatcher implements Cloneable, Matcher {
   public boolean matchAttributeName(Name name) {
     if (setMemo(memo.startAttributeDeriv(name)))
       return true;
-    ignoreNextEndTag = true;
+    ignoreNextEndTagOrAttributeValue = true;
     return error("impossible_attribute_ignored", name);
   }
 
   public boolean matchAttributeValue(Name name, String value, ValidationContext vc) {
-    if (ignoreNextEndTag) {
-      ignoreNextEndTag = false;
+    if (ignoreNextEndTagOrAttributeValue) {
+      ignoreNextEndTagOrAttributeValue = false;
       return true;
     }
     if (setMemo(memo.dataDeriv(value, vc)))
@@ -173,7 +173,7 @@ public class PatternMatcher implements Cloneable, Matcher {
 
   public boolean matchTextBeforeEndTag(String string, ValidationContext vc) {
     if (textTyped) {
-      ignoreNextEndTag = true;
+      ignoreNextEndTagOrAttributeValue = true;
       return setDataDeriv(string, vc);
     }
     else
@@ -208,7 +208,7 @@ public class PatternMatcher implements Cloneable, Matcher {
       return ok;
     }
     if (setMemo(memo.dataDeriv(string, vc))) {
-      ignoreNextEndTag = true;
+      ignoreNextEndTagOrAttributeValue = true;
       return true;
     }
     PatternMemo next = memo.recoverAfter();
@@ -225,8 +225,8 @@ public class PatternMatcher implements Cloneable, Matcher {
   public boolean matchEndTag(ValidationContext vc) {
     // The tricky thing here is that the derivative that we compute may be notAllowed simply because the parent
     // is notAllowed; we don't want to give an error in this case.
-    if (ignoreNextEndTag) {
-      ignoreNextEndTag = false;
+    if (ignoreNextEndTagOrAttributeValue) {
+      ignoreNextEndTagOrAttributeValue = false;
       return true;
     }
     if (textTyped) {
