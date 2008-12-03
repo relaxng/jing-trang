@@ -1,18 +1,18 @@
 package com.thaiopensource.relaxng.pattern;
 
+import com.thaiopensource.relaxng.match.MatchContext;
 import com.thaiopensource.relaxng.match.Matcher;
 import com.thaiopensource.util.Equal;
 import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.ValidationContext;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Collections;
-import java.util.Comparator;
 
 public class PatternMatcher implements Cloneable, Matcher {
 
@@ -58,9 +58,9 @@ public class PatternMatcher implements Cloneable, Matcher {
   }
 
   public boolean equals(Object obj) {
-    PatternMatcher other = (PatternMatcher)obj;
-    if (other == null)
+    if (!(obj instanceof PatternMatcher))
       return false;
+    PatternMatcher other = (PatternMatcher)obj;
     // don't need to test equality of shared, because the memos can only be ==
     // if the shareds are ==.
     return (memo == other.memo
@@ -74,7 +74,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     return memo.hashCode();
   }
 
-  public Object clone() {
+  public final Object clone() {
     try {
       return super.clone();
     }
@@ -98,83 +98,80 @@ public class PatternMatcher implements Cloneable, Matcher {
     return true;
   }
 
-  public boolean matchStartTagOpen(Name name) {
+  public boolean matchStartTagOpen(Name name, String qName, MatchContext context) {
     if (setMemo(memo.startTagOpenDeriv(name)))
       return true;
     PatternMemo next = memo.startTagOpenRecoverDeriv(name);
     if (!next.isNotAllowed()) {
-      boolean ok = error("required_elements_missing");
+      boolean ok = ignoreError();
+      if (!ok) {
+        Set missing = requiredElementNames();
+        if (!missing.isEmpty())
+          error(missing.size() == 1
+                ? "unexpected_element_required_element_missing"
+                : "unexpected_element_required_elements_missing",
+                errorArgQName(qName, name, context, false),
+                formatNames(missing, FORMAT_NAMES_ELEMENT|FORMAT_NAMES_AND, context));
+        else
+          error("unexpected_element_required_elements_missing_no_info",
+                errorArgQName(qName, name, context, false));
+      }
       memo = next;
       return ok;
     }
     ValidatorPatternBuilder builder = shared.builder;
     next = builder.getPatternMemo(builder.makeAfter(shared.findElement(name), memo.getPattern()));
-    boolean ok = error(next.isNotAllowed() ? "unknown_element" : "out_of_context_element", name);
+    boolean ok = error(next.isNotAllowed() ? "unknown_element" : "out_of_context_element",
+                       errorArgQName(qName, name, context, false));
     memo = next;
     return ok;
   }
 
-  public boolean matchAttributeName(Name name) {
+
+  public boolean matchAttributeName(Name name, String qName, MatchContext context) {
     if (setMemo(memo.startAttributeDeriv(name)))
       return true;
     ignoreNextEndTagOrAttributeValue = true;
-    return error("impossible_attribute_ignored", name);
+    return error("impossible_attribute_ignored", errorArgQName(qName, name, context, true));
   }
 
-  public boolean matchAttributeValue(Name name, String value, ValidationContext vc) {
+  public boolean matchAttributeValue(Name name, String qName, MatchContext context, String value) {
     if (ignoreNextEndTagOrAttributeValue) {
       ignoreNextEndTagOrAttributeValue = false;
       return true;
     }
-    if (setMemo(memo.dataDeriv(value, vc)))
+    if (setMemo(memo.dataDeriv(value, context)))
       return true;
-    boolean ok = error("bad_attribute_value", name);
+    boolean ok = error("bad_attribute_value", errorArgQName(qName, name, context, true));
     memo = memo.recoverAfter();
     return ok;
   }
 
-  public boolean matchStartTagClose() {
+  public boolean matchStartTagClose(MatchContext context) {
     boolean ok;
     if (setMemo(memo.endAttributes()))
       ok = true;
     else {
       ok = ignoreError();
-      if (!ok)
-        reportMissingAttributes();
+      if (!ok) {
+        Set missing = requiredAttributeNames();
+        if (missing.isEmpty())
+          // XXX Can we do better here? This is probably not very common in practice.
+          error("required_attributes_missing_no_info");
+        else
+          error(missing.size() == 1 ? "required_attribute_missing" : "required_attributes_missing",
+                formatNames(missing, FORMAT_NAMES_ATTRIBUTE|FORMAT_NAMES_AND, context));
+      }
       memo = memo.ignoreMissingAttributes();
     }
     textTyped = memo.getPattern().getContentType() == Pattern.DATA_CONTENT_TYPE;
     return ok;
   }
 
-  public void reportMissingAttributes() {
-    List missing = new ArrayList(requiredAttributeNames());
-    if (missing.isEmpty())
-      // XXX Can we do better here? This is probably not very common in practice.
-      error("required_attributes_missing");
-    else if (missing.size() == 1)
-      error("required_attribute_missing", NameFormatter.format((Name)missing.get(0)));
-    else {
-      Collections.sort(missing, new Comparator() {
-        public int compare(Object o1, Object o2) {
-          return Name.compare((Name)o1, (Name)o2);
-        }
-      });
-      StringBuffer buf = new StringBuffer();
-      for (Iterator iter = missing.iterator(); iter.hasNext();) {
-        // XXX internationalize this better
-        if (buf.length() > 0)
-          buf.append(", ");
-        buf.append(NameFormatter.format((Name)iter.next()));
-      }
-      error("required_attributes_missing_detail", buf.toString());
-    }
-  }
-
-  public boolean matchTextBeforeEndTag(String string, ValidationContext vc) {
+  public boolean matchTextBeforeEndTag(String string, MatchContext context) {
     if (textTyped) {
       ignoreNextEndTagOrAttributeValue = true;
-      return setDataDeriv(string, vc);
+      return setDataDeriv(string, context);
     }
     else
       return matchUntypedText(string);
@@ -222,25 +219,30 @@ public class PatternMatcher implements Cloneable, Matcher {
     return ok;
   }
 
-  public boolean matchEndTag(ValidationContext vc) {
-    // The tricky thing here is that the derivative that we compute may be notAllowed simply because the parent
-    // is notAllowed; we don't want to give an error in this case.
+  public boolean matchEndTag(MatchContext context) {
     if (ignoreNextEndTagOrAttributeValue) {
       ignoreNextEndTagOrAttributeValue = false;
       return true;
     }
-    if (textTyped) {
-      textTyped = false;
-      return setDataDeriv("", vc);
-    }
+    if (textTyped)
+      return setDataDeriv("", context);
     if (setMemo(memo.endTagDeriv()))
       return true;
-    boolean ok = true;
+    boolean ok = ignoreError();
     PatternMemo next = memo.recoverAfter();
-    if (!memo.isNotAllowed()) {
-      if (!next.isNotAllowed()
-          || shared.fixAfter(memo).endTagDeriv().isNotAllowed())
-        ok = error("unfinished_element");
+    // The tricky thing here is that the derivative that we compute may be notAllowed simply because the parent
+    // is notAllowed; we don't want to give an error in this case.
+    if (!ok && (!next.isNotAllowed()
+                || shared.fixAfter(memo).endTagDeriv().isNotAllowed())) {
+      Set missing = requiredElementNames();
+      if (!missing.isEmpty())
+        error(missing.size() == 1
+              ? "incomplete_element_required_element_missing"
+              : "incomplete_element_required_elements_missing",
+              formatNames(missing, FORMAT_NAMES_ELEMENT|FORMAT_NAMES_AND, context));
+      else
+        // XXX  Need to do better here. More common than the corresponding attributes case.
+        error("incomplete_element_required_elements_missing_no_info");
     }
     memo = next;
     return ok;
@@ -254,76 +256,16 @@ public class PatternMatcher implements Cloneable, Matcher {
     return !hadError;
   }
 
-  static abstract class PossibleNamesFunction extends AbstractPatternFunction {
-    private UnionNameClassNormalizer normalizer = new UnionNameClassNormalizer();
-
-    NormalizedNameClass applyTo(Pattern p) {
-      p.apply(this);
-      return normalizer.normalize();
-    }
-
-    void add(NameClass nc) {
-      normalizer.add(nc);
-    }
-
-    public Object caseAfter(AfterPattern p) {
-      return p.getOperand1().apply(this);
-    }
-
-    public Object caseBinary(BinaryPattern p) {
-      p.getOperand1().apply(this);
-      p.getOperand2().apply(this);
-      return null;
-    }
-
-    public Object caseChoice(ChoicePattern p) {
-      return caseBinary(p);
-    }
-
-    public Object caseInterleave(InterleavePattern p) {
-      return caseBinary(p);
-    }
-
-    public Object caseOneOrMore(OneOrMorePattern p) {
-      return p.getOperand().apply(this);
-    }
-
-    public Object caseOther(Pattern p) {
-      return null;
-    } 
-  }
-
-  static class PossibleStartTagNamesFunction extends PossibleNamesFunction {
-    public Object caseElement(ElementPattern p) {
-      add(p.getNameClass());
-      return null;
-    }
-
-    public Object caseGroup(GroupPattern p) {
-      p.getOperand1().apply(this);
-      if (p.getOperand1().isNullable())
-        p.getOperand2().apply(this);
-      return null;
-    }
-  }
-
-  static class PossibleAttributeNamesFunction extends PossibleNamesFunction {
-    public Object caseAttribute(AttributePattern p) {
-      add(p.getNameClass());
-      return null;
-    }
-
-    public Object caseGroup(GroupPattern p) {
-      return caseBinary(p);
-    }
-  }
-
   public com.thaiopensource.relaxng.match.NameClass possibleStartTagNames() {
-    return new PossibleStartTagNamesFunction().applyTo(memo.getPattern());
+    return memo.possibleStartTagNames();
   }
 
   public com.thaiopensource.relaxng.match.NameClass possibleAttributeNames() {
-    return new PossibleAttributeNamesFunction().applyTo(memo.getPattern());
+    return memo.possibleAttributeNames();
+  }
+
+  public Set requiredElementNames() {
+    return (Set)memo.getPattern().apply(shared.builder.getRequiredElementsFunction());
   }
 
   public Set requiredAttributeNames() {
@@ -347,23 +289,178 @@ public class PatternMatcher implements Cloneable, Matcher {
    * Return true if the error was ignored, false otherwise.
    */
   private boolean error(String key) {
-    if (ignoreError())
-      return true;
-    hadError = true;
-    errorMessage = SchemaBuilderImpl.localizer.message(key);
-    return false;
-  }
-
-  private boolean error(String key, Name arg) {
-    return error(key, NameFormatter.format(arg));
+    return error(key, new String[] { });
   }
 
   private boolean error(String key, String arg) {
-    if (hadError && memo.isNotAllowed())
-      return true;
-    hadError = true;
-    errorMessage = SchemaBuilderImpl.localizer.message(key, arg);
-    return false;
+    return error(key, new String[] { arg });
   }
 
+  private boolean error(String key, String arg1, String arg2) {
+    return error(key, new String[] { arg1, arg2 });
+  }
+
+  private boolean error(String key, String arg1, String arg2, String arg3) {
+    return error(key, new String[] { arg1, arg2, arg3 });
+  }
+
+  private boolean error(String key, String[] args) {
+    if (ignoreError())
+      return true;
+    hadError = true;
+    errorMessage = SchemaBuilderImpl.localizer.message(key, args);
+    return false;
+  }
+   
+  private String errorArgQName(String qName, Name name, MatchContext context, boolean isAttribute) {
+    if (ignoreError())
+      return null;
+    if (qName == null || qName.length() == 0) {
+      final String ns = name.getNamespaceUri();
+      final String localName = name.getLocalName();
+      if (ns.length() == 0 || (!isAttribute && ns.equals(context.resolveNamespacePrefix(""))))
+        qName = localName;
+      else {
+        String prefix = context.getPrefix(ns);
+        if (prefix != null)
+          qName = prefix + ":" + localName;
+        // this shouldn't happen unless the parser isn't supplying prefixes properly
+        else
+          qName = "{" + ns + "}" + localName;
+      }
+    }
+    return quoteQName(qName);
+  }
+
+  static private final String GENERATED_PREFIX = "ns";
+
+  // Values for flags parameter of formatNames
+  static private final int FORMAT_NAMES_ELEMENT = 0x0;
+  static private final int FORMAT_NAMES_ATTRIBUTE = 0x1;
+  static private final int FORMAT_NAMES_AND = 0x0;
+  static private final int FORMAT_NAMES_OR = 0x2;
+
+  private static String formatNames(Set names, int flags, MatchContext context) {
+    if (names.isEmpty())
+      return "";
+    Map nsDecls = new HashMap();
+    String defaultNamespace;
+    if ((flags & FORMAT_NAMES_ATTRIBUTE) != 0)
+      defaultNamespace = "";
+    else {
+      defaultNamespace = context.resolveNamespacePrefix("");
+      if (defaultNamespace == null)
+       defaultNamespace = "";
+      else {
+        for (Iterator iter = names.iterator(); iter.hasNext();) {
+          if (((Name)iter.next()).getNamespaceUri().length() == 0) {
+            defaultNamespace = "";
+            nsDecls.put("", "");
+            break;
+          }
+        }
+      }
+    }
+    List list = new ArrayList();
+    int genPrefixIndex = 0;
+    for (Iterator iter = names.iterator(); iter.hasNext();) {
+      Name name = (Name)iter.next();
+      String ns = name.getNamespaceUri();
+      String prefix;
+      if (ns.equals(defaultNamespace))
+        prefix = "";
+      else {
+        prefix = context.getPrefix(ns);
+        if (prefix == null) {
+          prefix = (String)nsDecls.get(ns);
+          if (prefix == null) {
+            do {
+              if (genPrefixIndex == 0)
+                prefix = GENERATED_PREFIX;
+              else
+                prefix = GENERATED_PREFIX + genPrefixIndex;
+              ++genPrefixIndex;
+            } while (context.resolveNamespacePrefix(prefix) != null);
+            nsDecls.put(ns, prefix);
+          }
+        }
+      }
+      list.add(makeQName(prefix, name.getLocalName()));
+    }
+    Collections.sort(list);
+    int len = list.size();
+    for (int i = 0; i < len; i++)
+      list.set(i, quoteQName((String)list.get(i)));
+    String result;
+    final String conjunction = (flags & FORMAT_NAMES_OR) != 0 ? "or" : "and";
+    switch (list.size()) {
+    case 1:
+      result = (String)list.get(0);
+      break;
+    case 2:
+      result = SchemaBuilderImpl.localizer.message(conjunction + "_list_pair",
+                                                   list.get(0),
+                                                   list.get(1));
+      break;
+    default:
+      result = SchemaBuilderImpl.localizer.message(conjunction + "_list_many_first", list.get(0));
+      for (int i = 1; i < len - 1; i++)
+        result = SchemaBuilderImpl.localizer.message(conjunction + "_list_many_middle", result, list.get(i));
+      result = SchemaBuilderImpl.localizer.message(conjunction + "_list_many_last", result, list.get(len - 1));
+      break;
+    }
+    if (nsDecls.size() != 0)
+      result = SchemaBuilderImpl.localizer.message("qnames_nsdecls", result, formatNamespaceDecls(nsDecls));
+    return result;
+  }
+
+  // nsDecls maps namespaces to prefixes
+  private static String formatNamespaceDecls(Map nsDecls) {
+    List list = new ArrayList();
+    for (Iterator iter = nsDecls.entrySet().iterator(); iter.hasNext();) {
+      Map.Entry entry = (Map.Entry)iter.next();
+      StringBuffer buf = new StringBuffer();
+      String prefix = (String)entry.getValue();
+      if (prefix.length() == 0)
+        buf.append("xmlns");
+      else
+        buf.append("xmlns:").append(prefix);
+      buf.append("=\"");
+      String ns = (String)entry.getKey();
+      for (int i = 0; i < ns.length(); i++) {
+        char c = ns.charAt(i);
+        switch (c) {
+        case '<':
+          buf.append("&lt;");
+          break;
+        case '"':
+          buf.append("&quot;");
+          break;
+        default:
+          buf.append(c);
+          break;
+        }
+      }
+      buf.append('"');
+      list.add(buf.toString());
+    }
+    Collections.sort(list);
+    StringBuffer buf = new StringBuffer();
+    for (Iterator iter = list.iterator(); iter.hasNext();) {
+      if (buf.length() != 0)
+        buf.append(" ");
+      buf.append((String)iter.next());
+    }
+    return buf.toString();
+  }
+
+  private static String makeQName(String prefix, String localName) {
+    if (prefix.length() == 0)
+      return localName;
+    return prefix + ":" + localName;
+  }
+
+  static private String quoteQName(String qName) {
+    return SchemaBuilderImpl.localizer.message("qname", qName);
+  }
 }

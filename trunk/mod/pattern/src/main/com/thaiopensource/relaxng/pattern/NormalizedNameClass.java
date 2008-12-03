@@ -67,4 +67,6 @@ public abstract class NormalizedNameClass implements com.thaiopensource.relaxng.
       return Collections.EMPTY_SET;
     return Collections.unmodifiableSet(set);
   }
+
+  abstract boolean includesNamespace(String ns);
 }

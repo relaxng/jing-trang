@@ -16,7 +16,10 @@ public class ValidatorPatternBuilder extends PatternBuilder {
   private final Map choiceMap = new HashMap();
   private final PatternFunction removeChoicesFunction = new RemoveChoicesFunction();
   private final PatternFunction noteChoicesFunction = new NoteChoicesFunction();
+  private final PatternFunction requiredElementsFunction = new RequiredElementsFunction();
   private final PatternFunction requiredAttributesFunction = new RequiredAttributesFunction();
+  private final PossibleNamesFunction possibleStartTagNamesFunction = new PossibleStartTagNamesFunction();
+  private final PossibleNamesFunction possibleAttributeNamesFunction = new PossibleAttributeNamesFunction();
 
   private class NoteChoicesFunction extends AbstractPatternFunction {
     public Object caseOther(Pattern p) {
@@ -80,8 +83,20 @@ public class ValidatorPatternBuilder extends PatternBuilder {
     return ignoreMissingAttributesFunction;
   }
 
+  PatternFunction getRequiredElementsFunction() {
+    return requiredElementsFunction;
+  }
+
   PatternFunction getRequiredAttributesFunction() {
     return requiredAttributesFunction;
+  }
+
+  PossibleNamesFunction getPossibleStartTagNamesFunction() {
+    return possibleStartTagNamesFunction;
+  }
+
+  PossibleNamesFunction getPossibleAttributeNamesFunction() {
+    return possibleAttributeNamesFunction;
   }
 
   PatternFunction getEndTagDerivFunction() {

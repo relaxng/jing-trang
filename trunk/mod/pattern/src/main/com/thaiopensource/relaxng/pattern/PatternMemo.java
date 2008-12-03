@@ -19,6 +19,9 @@ final class PatternMemo {
   private Map startTagOpenRecoverDerivMap;
   private Map startAttributeDerivMap;
   private DataDerivType memoDataDerivType;
+  private PatternMemo memoRecoverAfter;
+  private NormalizedNameClass memoPossibleAttributeNames;
+  private NormalizedNameClass memoPossibleStartTagNames;
 
   PatternMemo(Pattern pattern, ValidatorPatternBuilder builder) {
     this.pattern = pattern;
@@ -183,8 +186,21 @@ final class PatternMemo {
   }
 
   PatternMemo recoverAfter() {
-    // XXX memoize
-    return applyForPatternMemo(builder.getRecoverAfterFunction());
+    if (memoRecoverAfter == null)
+      memoRecoverAfter = applyForPatternMemo(builder.getRecoverAfterFunction());
+    return memoRecoverAfter;
+  }
+
+  NormalizedNameClass possibleStartTagNames() {
+    if (memoPossibleStartTagNames == null)
+      memoPossibleStartTagNames = builder.getPossibleStartTagNamesFunction().applyTo(pattern);
+    return memoPossibleStartTagNames;
+  }
+
+  NormalizedNameClass possibleAttributeNames() {
+    if (memoPossibleAttributeNames == null)
+      memoPossibleAttributeNames = builder.getPossibleAttributeNamesFunction().applyTo(pattern);
+    return memoPossibleAttributeNames;
   }
 
   private PatternMemo applyForPatternMemo(PatternFunction f) {

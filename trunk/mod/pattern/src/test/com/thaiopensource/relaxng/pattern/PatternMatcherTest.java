@@ -1,6 +1,7 @@
 package com.thaiopensource.relaxng.pattern;
 
 import com.thaiopensource.relaxng.match.Matcher;
+import com.thaiopensource.relaxng.sax.Context;
 import com.thaiopensource.xml.util.Name;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -67,7 +68,7 @@ public class PatternMatcherTest extends SchemaPatternBuilder {
 
   private Matcher rootAttributeMatcher(Pattern start) {
     Matcher matcher = rootMatcher(start);
-    Assert.assertTrue(matcher.matchStartTagOpen(root));
+    Assert.assertTrue(matcher.matchStartTagOpen(root, "", new Context()));
     return matcher;
   }
 

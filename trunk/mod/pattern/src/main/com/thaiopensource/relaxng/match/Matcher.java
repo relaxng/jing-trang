@@ -1,7 +1,6 @@
 package com.thaiopensource.relaxng.match;
 
 import com.thaiopensource.xml.util.Name;
-import org.relaxng.datatype.ValidationContext;
 
 import java.util.Set;
 
@@ -92,38 +91,44 @@ public interface Matcher {
   /**
    * Match a StartTagOpen event.
    * @param name the element name
+   * @param qName the element qName (may be empty or null if unknown)
+   * @param context the MatchContext
    * @return false if there was an error, true otherwise
    */
-  boolean matchStartTagOpen(Name name);
+  boolean matchStartTagOpen(Name name, String qName, MatchContext context);
 
   /**
    * Match an AttributeName event.
    *
    * @param name the attribute name
+   * @param qName the attribute qName (may be empty or null if unknown)
+   * @param context the MatchContext
    * @return false if there was an error, true otherwise
    */
-  boolean matchAttributeName(Name name);
+  boolean matchAttributeName(Name name, String qName, MatchContext context);
 
   /**
    * Match an AttributeValue event.
-   * The validation context must include all the namespace declarations in the start-tag
+   * The MatchContext must include all the namespace declarations in the start-tag
    * including those that lexically follow the attribute.
    *
    * @param name  the attribute name (included for use in error messages)
+   * @param qName the attribute qName (included for use in error messages)
+   * @param context the MatchContext
    * @param value the attribute value, normalized in accordance with XML 1.0
-   * @param vc    a validation context
    * @return false if there was an error, true otherwise
    */
-  boolean matchAttributeValue(Name name, String value, ValidationContext vc);
+  boolean matchAttributeValue(Name name, String qName, MatchContext context, String value);
 
   /**
    * Match a StartTagClose event.  This corresponds to the  <code>&gt;</code> character
    * that ends the start-tag).
    * It may cause an error if there are required attributes that have not been matched.
    *
+   * @param context the MatchContext (used for error messages)
    * @return false if there was an error, true otherwise
    */
-  boolean matchStartTagClose();
+  boolean matchStartTagClose(MatchContext context);
 
   /**
    * Match a Text event that occurs immediately before an EndTag event.
@@ -134,10 +139,10 @@ public interface Matcher {
    * calls to <code>matchUntypedText</code>.
    *
    * @param string the text to be matched
-   * @param vc     a validation context
+   * @param context a match context
    * @return false if there was an error, true otherwise
    */
-  boolean matchTextBeforeEndTag(String string, ValidationContext vc);
+  boolean matchTextBeforeEndTag(String string, MatchContext context);
 
   /**
    * Match a Text event that occurs immediately before a StartTagOpen event.
@@ -180,10 +185,10 @@ public interface Matcher {
   /**
    * Match an EndTag event.
    *
-   * @param vc a validation context
+   * @param context a match context
    * @return false if there was an error, true otherwise
    */
-  boolean matchEndTag(ValidationContext vc);
+  boolean matchEndTag(MatchContext context);
 
   /**
    * Return the current error message.
@@ -235,4 +240,5 @@ public interface Matcher {
    * @see Name
    */
   Set requiredAttributeNames();
+  Set requiredElementNames();
 }

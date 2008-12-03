@@ -56,4 +56,8 @@ public class NormalizedAnyNameClass extends NormalizedNameClass {
       return false;
     return equal(this, other);
   }
+
+  boolean includesNamespace(String ns) {
+    return !getExcludedNamespaces().contains(ns);
+  }
 }
