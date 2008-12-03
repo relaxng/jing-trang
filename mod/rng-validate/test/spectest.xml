@@ -6842,4 +6842,90 @@ before string sequence checking.</documentation>
 </invalid>
 </testCase>
 </testSuite>
+<testSuite>
+<documentation>Validation error reporting</documentation>
+<testCase>
+<correct>
+<element name="n1:foo" xmlns:n1="http://www.example.com/1"
+	 xmlns="http://relaxng.org/ns/structure/1.0">
+  <attribute name="a0"/>
+  <attribute name="n1:a1"/>
+  <attribute name="a2" ns="http://www.example.com/2"/>
+  <attribute name="a3" ns="http://www.example.com/3"/>
+  <attribute name="a4" ns="http://www.example.com/3"/>
+</element>
+</correct>
+<valid>
+<foo xmlns="http://www.example.com/1"
+     xmlns:n1="http://www.example.com/1"
+     xmlns:n2="http://www.example.com/2"
+     xmlns:n3="http://www.example.com/3"
+     a0=""
+     n1:a1=""
+     n2:a2=""
+     n3:a3=""
+     n3:a4=""
+/>
+</valid>
+<invalid>
+<foo xmlns="http://www.example.com/1"
+     xmlns:n1="http://www.example.com/1"
+     xmlns:n2="http://www.example.com/2"
+     xmlns:n3="http://www.example.com/3"
+     n1:a1=""
+     n2:a2=""
+     n3:a3=""
+     n3:a4=""
+/>
+</invalid>
+<invalid>
+<foo xmlns="http://www.example.com/1"
+     xmlns:n1="http://www.example.com/1"
+     xmlns:n2="http://www.example.com/2"
+     xmlns:n3="http://www.example.com/3"
+     a0=""
+     n2:a2=""
+     n3:a3=""
+     n3:a4=""
+/>
+</invalid>
+<invalid>
+<foo xmlns="http://www.example.com/1"
+     xmlns:n1="http://www.example.com/1"
+     xmlns:n2="http://www.example.com/2"
+     xmlns:n3="http://www.example.com/3"
+     a0=""
+     n1:a1=""
+     n3:a3=""
+     n3:a4=""
+/>
+</invalid>
+<invalid>
+<foo xmlns="http://www.example.com/1"
+     xmlns:n1="http://www.example.com/1"
+     xmlns:n2="http://www.example.com/2"
+     xmlns:n3="http://www.example.com/3"
+     a0=""
+     n1:a1=""
+     n2:a2=""
+/>
+</invalid>
+<invalid>
+<foo xmlns="http://www.example.com/1"
+     xmlns:n1="http://www.example.com/1"
+     xmlns:n2="http://www.example.com/2"
+     xmlns:n3="http://www.example.com/3"
+/>
+</invalid>
+<invalid>
+<n1:foo xmlns:n1="http://www.example.com/1"/>
+</invalid>
+<invalid>
+<ns1:foo xmlns:ns1="http://www.example.com/1"/>
+</invalid>
+<invalid>
+<foo xmlns="http://www.example.com/1"/>
+</invalid>
+</testCase>
+</testSuite>
 </testSuite>

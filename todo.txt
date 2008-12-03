@@ -1,7 +1,8 @@
-Add toString() method to NormalizedNameClass.
+Note prefixes used in the schema and use them in qNames in error
+messages when no prefix is declared for a namespace.
 
-Use Matcher.possibleAttributeNames/possibleStartTagNames().toString() to give additional
-information in error messages.
+Use Matcher.possibleAttributeNames/possibleStartTagNames to give
+additional information in error messages.
 
 Use IntersectionNameClassNormalizer in DuplicateAttributeDetector.
 
@@ -12,7 +13,7 @@ ways to get a Matcher.
 
 In ValidatorHandler ignore attributes that are xmlns:*.
 
-Support feasible featue for JAXP.
+Support feasible feature for JAXP.
 
 Support check-id-idref feature for JAXP.
 

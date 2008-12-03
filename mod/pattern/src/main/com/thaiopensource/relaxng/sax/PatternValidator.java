@@ -1,9 +1,9 @@
 package com.thaiopensource.relaxng.sax;
 
+import com.thaiopensource.relaxng.match.Matcher;
 import com.thaiopensource.relaxng.pattern.Pattern;
 import com.thaiopensource.relaxng.pattern.PatternMatcher;
 import com.thaiopensource.relaxng.pattern.ValidatorPatternBuilder;
-import com.thaiopensource.relaxng.match.Matcher;
 import com.thaiopensource.xml.util.Name;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -30,14 +30,15 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
       check(matcher.matchTextBeforeStartTag(charBuf.toString()));
     }
     Name name = new Name(namespaceURI, localName);
-    check(matcher.matchStartTagOpen(name));
+    check(matcher.matchStartTagOpen(name, qName, this));
     int len = atts.getLength();
     for (int i = 0; i < len; i++) {
       Name attName = new Name(atts.getURI(i), atts.getLocalName(i));
-      check(matcher.matchAttributeName(attName));
-      check(matcher.matchAttributeValue(attName, atts.getValue(i), this));
+      String attQName = atts.getQName(i);
+      check(matcher.matchAttributeName(attName, attQName, this));
+      check(matcher.matchAttributeValue(attName, attQName, this, atts.getValue(i)));
     }
-    check(matcher.matchStartTagClose());
+    check(matcher.matchStartTagClose(this));
     if (matcher.isTextTyped()) {
       bufferingCharacters = true;
       charBuf.setLength(0);

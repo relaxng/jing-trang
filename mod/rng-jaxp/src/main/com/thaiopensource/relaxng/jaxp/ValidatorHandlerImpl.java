@@ -62,14 +62,15 @@ class ValidatorHandlerImpl extends ValidatorHandler2 {
       check(matcher.matchTextBeforeStartTag(charBuf.toString()));
     }
     Name name = new Name(namespaceURI, localName);
-    check(matcher.matchStartTagOpen(name));
+    check(matcher.matchStartTagOpen(name, qName, context));
     int len = atts.getLength();
     for (int i = 0; i < len; i++) {
       Name attName = new Name(atts.getURI(i), atts.getLocalName(i));
-      check(matcher.matchAttributeName(attName));
-      check(matcher.matchAttributeValue(attName, atts.getValue(i), context));
+      String attQName = atts.getQName(i);
+      check(matcher.matchAttributeName(attName, attQName, context));
+      check(matcher.matchAttributeValue(attName, attQName, context, atts.getValue(i)));
     }
-    check(matcher.matchStartTagClose());
+    check(matcher.matchStartTagClose(context));
     if (matcher.isTextTyped()) {
       bufferingCharacters = true;
       charBuf.setLength(0);
