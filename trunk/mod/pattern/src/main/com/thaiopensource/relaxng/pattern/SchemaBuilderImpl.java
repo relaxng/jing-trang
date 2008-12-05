@@ -39,7 +39,6 @@ import org.xml.sax.XMLReader;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilder, CommentList {
@@ -448,14 +447,14 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
 
   static class GrammarImpl implements Grammar, Div, IncludedGrammar {
     private final SchemaBuilderImpl sb;
-    private final Map defines;
+    private final Map<String, RefPattern> defines;
     private final RefPattern startRef;
     private final Scope parent;
 
     private GrammarImpl(SchemaBuilderImpl sb, Scope parent) {
       this.sb = sb;
       this.parent = parent;
-      this.defines = new HashMap();
+      this.defines = new HashMap<String, RefPattern>();
       this.startRef = new RefPattern(null);
     }
 
@@ -467,10 +466,8 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     }
 
     public ParsedPattern endGrammar(Location loc, Annotations anno) throws BuildException {
-      for (Iterator iter = defines.keySet().iterator();
-           iter.hasNext();) {
-        String name = (String)iter.next();
-        RefPattern rp = (RefPattern)defines.get(name);
+      for (String name : defines.keySet()) {
+        RefPattern rp = defines.get(name);
         if (rp.getPattern() == null) {
           sb.error("reference_to_undefined", name, rp.getRefLocator());
           rp.setPattern(sb.pb.makeError());
@@ -551,7 +548,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     }
 
     private RefPattern lookup1(String name) {
-      RefPattern p = (RefPattern)defines.get(name);
+      RefPattern p = defines.get(name);
       if (p == null) {
         p = new RefPattern(name);
         defines.put(name, p);
@@ -767,7 +764,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     return new AnyNameExceptNameClass((NameClass)except);
   }
 
-  private final String resolveInherit(String ns) {
+  private String resolveInherit(String ns) {
     if (ns == INHERIT_NS)
       return inheritNs;
     return ns;

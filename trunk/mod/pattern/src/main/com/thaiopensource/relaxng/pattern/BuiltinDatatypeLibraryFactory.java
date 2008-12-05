@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 class BuiltinDatatypeLibraryFactory implements DatatypeLibraryFactory {
-  private final Map cache = new HashMap();
+  private final Map<String, DatatypeLibrary> cache = new HashMap<String, DatatypeLibrary>();
   private final DatatypeLibraryFactory factory;
   private final DatatypeLibrary builtinDatatypeLibrary
     = new BuiltinDatatypeLibrary();
@@ -26,7 +26,7 @@ class BuiltinDatatypeLibraryFactory implements DatatypeLibraryFactory {
       return builtinDatatypeLibrary;
     if (uri.equals(lastDatatypeLibraryUri))
       return lastDatatypeLibrary;
-    DatatypeLibrary library = (DatatypeLibrary)cache.get(uri);
+    DatatypeLibrary library = cache.get(uri);
     if (library == null) {
       if (factory == null)
 	return null;

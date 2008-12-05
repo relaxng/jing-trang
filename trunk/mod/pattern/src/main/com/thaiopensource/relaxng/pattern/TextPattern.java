@@ -13,7 +13,7 @@ class TextPattern extends Pattern {
     visitor.visitText();
   }
 
-  Object apply(PatternFunction f) {
+  <T> T apply(PatternFunction<T> f) {
     return f.caseText(this);
   }
 

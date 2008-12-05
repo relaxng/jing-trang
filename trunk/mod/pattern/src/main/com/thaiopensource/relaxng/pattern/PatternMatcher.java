@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +19,7 @@ public class PatternMatcher implements Cloneable, Matcher {
   static private class Shared {
     private final Pattern start;
     private final ValidatorPatternBuilder builder;
-    private Map recoverPatternTable;
+    private Map<Name, Pattern> recoverPatternTable;
     Shared(Pattern start, ValidatorPatternBuilder builder) {
       this.start = start;
       this.builder = builder;
@@ -28,8 +27,8 @@ public class PatternMatcher implements Cloneable, Matcher {
 
     Pattern findElement(Name name) {
       if (recoverPatternTable == null)
-        recoverPatternTable = new HashMap();
-      Pattern p = (Pattern)recoverPatternTable.get(name);
+        recoverPatternTable = new HashMap<Name, Pattern>();
+      Pattern p = recoverPatternTable.get(name);
       if (p == null) {
         p = FindElementFunction.findElement(builder, name, start);
         recoverPatternTable.put(name, p);
@@ -38,7 +37,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     }
 
     PatternMemo fixAfter(PatternMemo p) {
-      return builder.getPatternMemo(p.getPattern().applyForPattern(new ApplyAfterFunction(builder) {
+      return builder.getPatternMemo(p.getPattern().apply(new ApplyAfterFunction(builder) {
         Pattern apply(Pattern p) {
           return builder.makeEmpty();
         }
@@ -115,7 +114,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     if (!next.isNotAllowed()) {
       boolean ok = ignoreError();
       if (!ok) {
-        Set missing = requiredElementNames();
+        Set<Name> missing = requiredElementNames();
         if (!missing.isEmpty())
           error(missing.size() == 1
                 ? "unexpected_element_required_element_missing"
@@ -174,7 +173,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     else {
       ok = ignoreError();
       if (!ok) {
-        Set missing = requiredAttributeNames();
+        Set<Name> missing = requiredAttributeNames();
         if (missing.isEmpty())
           error("required_attributes_missing_expected",
                 errorArgQName(qName, name, context, false),
@@ -256,7 +255,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     if (!ok && (!next.isNotAllowed()
                 // Retry computing the deriv on a pattern where the after is OK (not notAllowed)
                 || shared.fixAfter(memo).endTagDeriv().isNotAllowed())) {
-      Set missing = requiredElementNames();
+      Set<Name> missing = requiredElementNames();
       if (!missing.isEmpty())
         error(missing.size() == 1
               ? "incomplete_element_required_element_missing"
@@ -289,12 +288,12 @@ public class PatternMatcher implements Cloneable, Matcher {
     return memo.possibleAttributeNames();
   }
 
-  public Set requiredElementNames() {
-    return (Set)memo.getPattern().apply(shared.builder.getRequiredElementsFunction());
+  public Set<Name> requiredElementNames() {
+    return memo.getPattern().apply(shared.builder.getRequiredElementsFunction());
   }
 
-  public Set requiredAttributeNames() {
-    return (Set)memo.getPattern().apply(shared.builder.getRequiredAttributesFunction());
+  public Set<Name> requiredAttributeNames() {
+    return memo.getPattern().apply(shared.builder.getRequiredAttributesFunction());
   }
 
   private boolean setMemo(PatternMemo m) {
@@ -310,7 +309,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     return hadError && memo.isNotAllowed();
   }
 
-  /**
+  /*
    * Return true if the error was ignored, false otherwise.
    */
   private boolean error(String key) {
@@ -363,7 +362,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     NormalizedNameClass nnc = memo.possibleAttributeNames();
     if (nnc.isEmpty())
       return "";
-    Set expectedNames = nnc.getIncludedNames();
+    Set<Name> expectedNames = nnc.getIncludedNames();
     if (!expectedNames.isEmpty())
       return localizer().message(nnc.isAnyNameIncluded() || !nnc.getIncludedNamespaces().isEmpty()
                                  ? "expected_attribute_or_other_ns"
@@ -413,7 +412,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     default:
       return "";
     }
-    Set expectedNames = nnc.getIncludedNames();
+    Set<Name> expectedNames = nnc.getIncludedNames();
     // XXX say something about wildcards
     if (!expectedNames.isEmpty()) {
       if (nnc.isAnyNameIncluded() || !nnc.getIncludedNamespaces().isEmpty())
@@ -434,29 +433,29 @@ public class PatternMatcher implements Cloneable, Matcher {
   static private final int FORMAT_NAMES_AND = 0x0;
   static private final int FORMAT_NAMES_OR = 0x2;
 
-  private static String formatNames(Set names, int flags, MatchContext context) {
+  private static String formatNames(Set<Name> names, int flags, MatchContext context) {
     if (names.isEmpty())
       return "";
-    Map nsDecls = new HashMap();
-    List qNames = generateQNames(names, flags, context, nsDecls);
+    Map<String, String> nsDecls = new HashMap<String, String>();
+    List<String> qNames = generateQNames(names, flags, context, nsDecls);
     Collections.sort(qNames);
     int len = qNames.size();
     for (int i = 0; i < len; i++)
-      qNames.set(i, quoteQName((String)qNames.get(i)));
+      qNames.set(i, quoteQName(qNames.get(i)));
     String result = formatList(qNames, (flags & FORMAT_NAMES_OR) != 0 ? "or" : "and");
     if (nsDecls.size() != 0)
       result = localizer().message("qnames_nsdecls", result, formatNamespaceDecls(nsDecls));
     return result;
   }
 
-  private static List generateQNames(Set names, int flags, MatchContext context, Map nsDecls) {
+  private static List<String> generateQNames(Set<Name> names, int flags, MatchContext context, Map<String, String> nsDecls) {
     String defaultNamespace;
     if ((flags & FORMAT_NAMES_ATTRIBUTE) != 0)
       defaultNamespace = "";
     else {
       defaultNamespace = context.resolveNamespacePrefix("");
-      for (Iterator iter = names.iterator(); iter.hasNext();) {
-        if (((Name)iter.next()).getNamespaceUri().length() == 0) {
+      for (Name name : names) {
+        if (name.getNamespaceUri().length() == 0) {
           if (defaultNamespace != null)
             nsDecls.put("", "");
           defaultNamespace = "";
@@ -464,11 +463,10 @@ public class PatternMatcher implements Cloneable, Matcher {
         }
       }
     }
-    List qNames = new ArrayList();
-    Set undeclaredNamespaces = new HashSet();
-    List namesWithUndeclaredNamespaces = new ArrayList();
-    for (Iterator iter = names.iterator(); iter.hasNext();) {
-      Name name = (Name)iter.next();
+    List<String> qNames = new ArrayList<String>();
+    Set<String> undeclaredNamespaces = new HashSet<String>();
+    List<Name> namesWithUndeclaredNamespaces = new ArrayList<Name>();
+    for (Name name : names) {
       String ns = name.getNamespaceUri();
       String prefix;
       if (ns.equals(defaultNamespace))
@@ -489,15 +487,14 @@ public class PatternMatcher implements Cloneable, Matcher {
     else
       choosePrefixes(undeclaredNamespaces, context, nsDecls);
     // now nsDecls has a prefix for each namespace
-    for (Iterator iter = namesWithUndeclaredNamespaces.iterator(); iter.hasNext();) {
-      Name name = (Name)iter.next();
-      qNames.add(makeQName((String)nsDecls.get(name.getNamespaceUri()), name.getLocalName()));
+    for (Name name : namesWithUndeclaredNamespaces) {
+      qNames.add(makeQName(nsDecls.get(name.getNamespaceUri()), name.getLocalName()));
     }
     return qNames;
   }
 
-  private static void choosePrefixes(Set nsSet, MatchContext context, Map nsDecls) {
-    List nsList = new ArrayList(nsSet);
+  private static void choosePrefixes(Set<String> nsSet, MatchContext context, Map<String, String> nsDecls) {
+    List<String> nsList = new ArrayList<String>(nsSet);
     Collections.sort(nsList);
     int len = nsList.size();
     String prefix;
@@ -520,18 +517,18 @@ public class PatternMatcher implements Cloneable, Matcher {
       ++tryIndex;
     } while (prefix == null);
     for (int i = 0; i < len; i++) {
-      String ns = (String)nsList.get(i);
+      String ns = nsList.get(i);
       nsDecls.put(ns, len == 1 ? prefix : prefix + (i + 1));
     }
   }
 
-  private static String formatList(List list, String conjunction) {
+  private static String formatList(List<String> list, String conjunction) {
     int len = list.size();
     switch (len) {
     case 0:
       return "";
     case 1:
-      return (String)list.get(0);
+      return list.get(0);
     case 2:
       return localizer().message(conjunction + "_list_pair", list.get(0), list.get(1));
     }
@@ -542,18 +539,17 @@ public class PatternMatcher implements Cloneable, Matcher {
   }
 
   // nsDecls maps namespaces to prefixes
-  private static String formatNamespaceDecls(Map nsDecls) {
-    List list = new ArrayList();
-    for (Iterator iter = nsDecls.entrySet().iterator(); iter.hasNext();) {
-      Map.Entry entry = (Map.Entry)iter.next();
-      StringBuffer buf = new StringBuffer();
-      String prefix = (String)entry.getValue();
+  private static String formatNamespaceDecls(Map<String, String> nsDecls) {
+    List<String> list = new ArrayList<String>();
+    for (Map.Entry<String, String> entry : nsDecls.entrySet()) {
+      StringBuilder buf = new StringBuilder();
+      String prefix = entry.getValue();
       if (prefix.length() == 0)
         buf.append("xmlns");
       else
         buf.append("xmlns:").append(prefix);
       buf.append("=\"");
-      String ns = (String)entry.getKey();
+      String ns = entry.getKey();
       for (int i = 0; i < ns.length(); i++) {
         char c = ns.charAt(i);
         switch (c) {
@@ -572,11 +568,11 @@ public class PatternMatcher implements Cloneable, Matcher {
       list.add(buf.toString());
     }
     Collections.sort(list);
-    StringBuffer buf = new StringBuffer();
-    for (Iterator iter = list.iterator(); iter.hasNext();) {
+    StringBuilder buf = new StringBuilder();
+    for (String aList : list) {
       if (buf.length() != 0)
         buf.append(" ");
-      buf.append((String)iter.next());
+      buf.append(aList);
     }
     return buf.toString();
   }

@@ -13,7 +13,7 @@ class AfterPattern extends BinaryPattern {
     return p1.isNotAllowed();
   }
 
-  Object apply(PatternFunction f) {
+  <T> T apply(PatternFunction<T> f) {
     return f.caseAfter(this);
   }
   void accept(PatternVisitor visitor) {

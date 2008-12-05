@@ -6,11 +6,11 @@ class MixedTextDerivFunction extends EndAttributesFunction {
     super(builder);
   }
 
-  public Object caseText(TextPattern p) {
+  public Pattern caseText(TextPattern p) {
     return p;
   }
 
-  public Object caseGroup(GroupPattern p) {
+  public Pattern caseGroup(GroupPattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
     final Pattern q1 = memoApply(p1);
@@ -20,7 +20,7 @@ class MixedTextDerivFunction extends EndAttributesFunction {
     return getPatternBuilder().makeChoice(tem, memoApply(p2));
   }
 
-  public Object caseInterleave(InterleavePattern p) {
+  public Pattern caseInterleave(InterleavePattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
     final Pattern q1 = memoApply(p1);
@@ -30,12 +30,12 @@ class MixedTextDerivFunction extends EndAttributesFunction {
     return getPatternBuilder().makeChoice(i1, i2);
   }
 
-  public Object caseOneOrMore(OneOrMorePattern p) {
+  public Pattern caseOneOrMore(OneOrMorePattern p) {
     return getPatternBuilder().makeGroup(memoApply(p.getOperand()),
 					 getPatternBuilder().makeOptional(p));
   }
 
-  public Object caseOther(Pattern p) {
+  public Pattern caseOther(Pattern p) {
     return getPatternBuilder().makeNotAllowed();
   }
 

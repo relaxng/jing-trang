@@ -37,7 +37,7 @@ public interface NameClass {
    * if isAnyNameIncluded() is true, null otherwise
    * @see #isAnyNameIncluded
    */
-  Set getExcludedNamespaces();
+  Set<String> getExcludedNamespaces();
 
   /**
    * Returns the set of names excluded from a wildcard matching any name.  None of the names
@@ -47,7 +47,7 @@ public interface NameClass {
    * @see #isAnyNameIncluded
    * @see Name
    */
-  Set getExcludedNames();
+  Set<Name> getExcludedNames();
 
   /**
    * Returns the set of names that this name class contains. This doesn't include any wildcards
@@ -57,7 +57,7 @@ public interface NameClass {
    * @return a non-null, possibly empty Set, each member of which is a non-null Name
    * @see Name
    */
-  Set getIncludedNames();
+  Set<Name> getIncludedNames();
 
   /**
    * Returns the set of namespace wildcards that this name class contains. If a string <var>s</var> is in the
@@ -68,7 +68,7 @@ public interface NameClass {
    * @return a non-null, possibly empty, immutable Set each member of which is a non-null String
    * @see #isAnyNameIncluded
    */
-  Set getIncludedNamespaces();
+  Set<String> getIncludedNamespaces();
 
   /**
    * Returns the set of local names excluded from a namespace wildcard.
@@ -77,5 +77,5 @@ public interface NameClass {
    * if ns is in getIncludedNamespaces(), null otherwise
    * @see #getIncludedNamespaces
    */
-  Set getExcludedLocalNames(String ns);
+  Set<String> getExcludedLocalNames(String ns);
 }

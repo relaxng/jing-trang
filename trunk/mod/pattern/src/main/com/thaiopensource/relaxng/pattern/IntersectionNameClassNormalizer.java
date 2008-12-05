@@ -10,23 +10,23 @@ import java.util.List;
  * Computes the normalized intersection of zero or more name classes.
  */
 public class IntersectionNameClassNormalizer extends AbstractNameClassNormalizer {
-  private final List nameClasses = new ArrayList();
+  private final List<NameClass> nameClasses = new ArrayList<NameClass>();
 
   public void add(NameClass nc) {
     nameClasses.add(nc);
   }
 
   protected void accept(NameClassVisitor visitor) {
-    for (Iterator iter = nameClasses.iterator(); iter.hasNext();)
-      ((NameClass)iter.next()).accept(visitor);
+    for (NameClass nameClass : nameClasses)
+      (nameClass).accept(visitor);
   }
 
   protected boolean contains(Name name) {
-    Iterator iter = nameClasses.iterator();
+    Iterator<NameClass> iter = nameClasses.iterator();
     if (!iter.hasNext())
       return false;
     for (;;) {
-      if (!((NameClass)iter.next()).contains(name))
+      if (!(iter.next()).contains(name))
         return false;
       if (!iter.hasNext())
         break;

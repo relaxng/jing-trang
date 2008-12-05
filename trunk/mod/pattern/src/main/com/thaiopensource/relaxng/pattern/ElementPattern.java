@@ -73,7 +73,7 @@ class ElementPattern extends Pattern {
     visitor.visitElement(nameClass, p);
   }
 
-  Object apply(PatternFunction f) {
+  <T> T apply(PatternFunction<T> f) {
     return f.caseElement(this);
   }
 

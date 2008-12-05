@@ -14,7 +14,7 @@ class NotAllowedPattern extends Pattern {
   void accept(PatternVisitor visitor) {
     visitor.visitNotAllowed();
   }
-  Object apply(PatternFunction f) {
+  <T> T apply(PatternFunction<T> f) {
     return f.caseNotAllowed(this);
   }
 }

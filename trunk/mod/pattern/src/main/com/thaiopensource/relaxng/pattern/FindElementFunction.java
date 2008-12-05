@@ -1,14 +1,15 @@
 package com.thaiopensource.relaxng.pattern;
 
+import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.xml.util.Name;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
-class FindElementFunction extends AbstractPatternFunction {
+class FindElementFunction extends AbstractPatternFunction<VoidValue> {
   private final ValidatorPatternBuilder builder;
   private final Name name;
-  private final Map processed = new HashMap();
+  private final Set<Pattern> processed = new HashSet<Pattern>();
   private int specificity = NameClass.SPECIFICITY_NONE;
   private Pattern pattern = null;
 
@@ -26,40 +27,40 @@ class FindElementFunction extends AbstractPatternFunction {
   }
 
   private boolean haveProcessed(Pattern p) {
-    if (processed.get(p) != null)
+    if (processed.contains(p))
       return true;
-    processed.put(p, p);
+    processed.add(p);
     return false;
   }
 
-  private Object caseBinary(BinaryPattern p) {
+  private VoidValue caseBinary(BinaryPattern p) {
     if (!haveProcessed(p)) {
       p.getOperand1().apply(this);
       p.getOperand2().apply(this);
     }
-    return null;
+    return VoidValue.VOID;
 
  }
 
-  public Object caseGroup(GroupPattern p) {
+  public VoidValue caseGroup(GroupPattern p) {
     return caseBinary(p);
   }
 
-  public Object caseInterleave(InterleavePattern p) {
+  public VoidValue caseInterleave(InterleavePattern p) {
     return caseBinary(p);
   }
 
-  public Object caseChoice(ChoicePattern p) {
+  public VoidValue caseChoice(ChoicePattern p) {
     return caseBinary(p);
   }
 
-  public Object caseOneOrMore(OneOrMorePattern p) {
+  public VoidValue caseOneOrMore(OneOrMorePattern p) {
     if (!haveProcessed(p))
       p.getOperand().apply(this);
-    return null;
+    return VoidValue.VOID;
   }
 
-  public Object caseElement(ElementPattern p) {
+  public VoidValue caseElement(ElementPattern p) {
     if (!haveProcessed(p)) {
       int s = p.getNameClass().containsSpecificity(name);
       if (s > specificity) {
@@ -70,10 +71,10 @@ class FindElementFunction extends AbstractPatternFunction {
         pattern = builder.makeChoice(pattern, p.getContent());
       p.getContent().apply(this);
     }
-    return null;
+    return VoidValue.VOID;
   }
 
-  public Object caseOther(Pattern p) {
-    return null;
+  public VoidValue caseOther(Pattern p) {
+    return VoidValue.VOID;
   }
 }

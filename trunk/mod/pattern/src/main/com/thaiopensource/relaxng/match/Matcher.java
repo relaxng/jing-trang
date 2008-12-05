@@ -254,6 +254,6 @@ public interface Matcher {
    * to the name of a required attribute
    * @see Name
    */
-  Set requiredAttributeNames();
-  Set requiredElementNames();
+  Set<Name> requiredAttributeNames();
+  Set<Name> requiredElementNames();
 }

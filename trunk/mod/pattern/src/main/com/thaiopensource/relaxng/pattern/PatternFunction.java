@@ -1,20 +1,20 @@
 package com.thaiopensource.relaxng.pattern;
 
-interface PatternFunction {
-  Object caseEmpty(EmptyPattern p);
-  Object caseNotAllowed(NotAllowedPattern p);
-  Object caseError(ErrorPattern p);
-  Object caseGroup(GroupPattern p);
-  Object caseInterleave(InterleavePattern p);
-  Object caseChoice(ChoicePattern p);
-  Object caseOneOrMore(OneOrMorePattern p);
-  Object caseElement(ElementPattern p);
-  Object caseAttribute(AttributePattern p);
-  Object caseData(DataPattern p);
-  Object caseDataExcept(DataExceptPattern p);
-  Object caseValue(ValuePattern p);
-  Object caseText(TextPattern p);
-  Object caseList(ListPattern p);
-  Object caseRef(RefPattern p);
-  Object caseAfter(AfterPattern p);
+interface PatternFunction<T> {
+  T caseEmpty(EmptyPattern p);
+  T caseNotAllowed(NotAllowedPattern p);
+  T caseError(ErrorPattern p);
+  T caseGroup(GroupPattern p);
+  T caseInterleave(InterleavePattern p);
+  T caseChoice(ChoicePattern p);
+  T caseOneOrMore(OneOrMorePattern p);
+  T caseElement(ElementPattern p);
+  T caseAttribute(AttributePattern p);
+  T caseData(DataPattern p);
+  T caseDataExcept(DataExceptPattern p);
+  T caseValue(ValuePattern p);
+  T caseText(TextPattern p);
+  T caseList(ListPattern p);
+  T caseRef(RefPattern p);
+  T caseAfter(AfterPattern p);
 }

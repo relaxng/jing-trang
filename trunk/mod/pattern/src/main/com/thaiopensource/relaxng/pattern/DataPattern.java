@@ -21,7 +21,7 @@ class DataPattern extends StringPattern {
     visitor.visitData(dt);
   }
 
-  Object apply(PatternFunction f) {
+  <T> T apply(PatternFunction<T> f) {
     return f.caseData(this);
   }
 

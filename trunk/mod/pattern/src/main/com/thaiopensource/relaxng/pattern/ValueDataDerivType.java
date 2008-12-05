@@ -9,7 +9,7 @@ import java.util.Map;
 class ValueDataDerivType extends DataDerivType {
   private final Datatype dt;
   private PatternMemo noValue;
-  private Map valueTable;
+  private Map<DatatypeValue, PatternMemo> valueTable;
 
   ValueDataDerivType(Datatype dt) {
     this.dt = dt;
@@ -29,8 +29,8 @@ class ValueDataDerivType extends DataDerivType {
     else {
       DatatypeValue dtv = new DatatypeValue(value, dt);
       if (valueTable == null)
-        valueTable = new HashMap();
-      PatternMemo tem = (PatternMemo)valueTable.get(dtv);
+        valueTable = new HashMap<DatatypeValue, PatternMemo>();
+      PatternMemo tem = valueTable.get(dtv);
       if (tem == null) {
         tem = super.dataDeriv(builder, p, str, vc);
         valueTable.put(dtv, tem);

@@ -36,7 +36,7 @@ class ListPattern extends Pattern {
     visitor.visitList(p);
   }
 
-  Object apply(PatternFunction f) {
+  <T> T apply(PatternFunction<T> f) {
     return f.caseList(this);
   }
 

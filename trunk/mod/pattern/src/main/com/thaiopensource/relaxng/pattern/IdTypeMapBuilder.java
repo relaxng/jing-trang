@@ -1,5 +1,6 @@
 package com.thaiopensource.relaxng.pattern;
 
+import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.Datatype;
 import org.xml.sax.ErrorHandler;
@@ -9,17 +10,18 @@ import org.xml.sax.SAXParseException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class IdTypeMapBuilder {
   private boolean hadError;
   private final ErrorHandler eh;
-  private final PatternFunction idTypeFunction = new IdTypeFunction();
+  private final PatternFunction<Integer> idTypeFunction = new IdTypeFunction();
   private final IdTypeMapImpl idTypeMap = new IdTypeMapImpl();
-  private final Map elementProcessed = new HashMap();
-  private final List possibleConflicts = new ArrayList();
+  private final Set<ElementPattern> elementProcessed = new HashSet<ElementPattern>();
+  private final List<PossibleConflict> possibleConflicts = new ArrayList<PossibleConflict>();
 
   private void notePossibleConflict(NameClass elementNameClass, NameClass attributeNameClass, Locator loc) {
     possibleConflicts.add(new PossibleConflict(elementNameClass, attributeNameClass, loc));
@@ -66,37 +68,37 @@ public class IdTypeMapBuilder {
   }
 
   private static class IdTypeMapImpl implements IdTypeMap {
-    private final Map table = new HashMap();
+    private final Map<ScopedName, Integer> table = new HashMap<ScopedName, Integer>();
     public int getIdType(Name elementName, Name attributeName) {
-      Integer n = (Integer)table.get(new ScopedName(elementName, attributeName));
+      Integer n = table.get(new ScopedName(elementName, attributeName));
       if (n == null)
         return Datatype.ID_TYPE_NULL;
-      return n.intValue();
+      return n;
     }
     private void add(Name elementName, Name attributeName, int idType) {
-      table.put(new ScopedName(elementName, attributeName), new Integer(idType));
+      table.put(new ScopedName(elementName, attributeName), idType);
     }
   }
 
-  private class IdTypeFunction extends AbstractPatternFunction {
-    public Object caseOther(Pattern p) {
-      return new Integer(Datatype.ID_TYPE_NULL);
+  private class IdTypeFunction extends AbstractPatternFunction<Integer> {
+    public Integer caseOther(Pattern p) {
+      return Datatype.ID_TYPE_NULL;
     }
 
-    public Object caseData(DataPattern p) {
-      return new Integer(p.getDatatype().getIdType());
+    public Integer caseData(DataPattern p) {
+      return p.getDatatype().getIdType();
     }
 
-    public Object caseDataExcept(DataExceptPattern p) {
-      return new Integer(p.getDatatype().getIdType());
+    public Integer caseDataExcept(DataExceptPattern p) {
+      return p.getDatatype().getIdType();
     }
 
-    public Object caseValue(ValuePattern p) {
-      return new Integer(p.getDatatype().getIdType());
+    public Integer caseValue(ValuePattern p) {
+      return p.getDatatype().getIdType();
     }
   }
 
-  private class BuildFunction extends AbstractPatternFunction {
+  private class BuildFunction extends AbstractPatternFunction<VoidValue> {
     private final NameClass elementNameClass;
     private final Locator locator;
     private final boolean attributeIsParent;
@@ -119,47 +121,47 @@ public class IdTypeMapBuilder {
       return new BuildFunction(elementNameClass, locator, false);
     }
 
-    public Object caseChoice(ChoicePattern p) {
+    public VoidValue caseChoice(ChoicePattern p) {
       BuildFunction f = down();
       p.getOperand1().apply(f);
       p.getOperand2().apply(f);
-      return null;
+      return VoidValue.VOID;
     }
 
-    public Object caseInterleave(InterleavePattern p) {
+    public VoidValue caseInterleave(InterleavePattern p) {
       BuildFunction f = down();
       p.getOperand1().apply(f);
       p.getOperand2().apply(f);
-      return null;
+      return VoidValue.VOID;
     }
 
-    public Object caseGroup(GroupPattern p) {
+    public VoidValue caseGroup(GroupPattern p) {
       BuildFunction f = down();
       p.getOperand1().apply(f);
       p.getOperand2().apply(f);
-      return null;
+      return VoidValue.VOID;
     }
 
-    public Object caseOneOrMore(OneOrMorePattern p) {
+    public VoidValue caseOneOrMore(OneOrMorePattern p) {
       p.getOperand().apply(down());
-      return null;
+      return VoidValue.VOID;
     }
 
-    public Object caseElement(ElementPattern p) {
-      if (elementProcessed.get(p) != null)
-        return null;
-      elementProcessed.put(p, p);
+    public VoidValue caseElement(ElementPattern p) {
+      if (elementProcessed.contains(p))
+        return VoidValue.VOID;
+      elementProcessed.add(p);
       p.getContent().apply(new BuildFunction(p.getNameClass(), p.getLocator()));
-      return null;
+      return VoidValue.VOID;
     }
 
-    public Object caseAttribute(AttributePattern p) {
-      int idType = ((Integer)p.getContent().apply(idTypeFunction)).intValue();
+    public VoidValue caseAttribute(AttributePattern p) {
+      int idType = p.getContent().apply(idTypeFunction);
       if (idType != Datatype.ID_TYPE_NULL) {
         NameClass attributeNameClass = p.getNameClass();
         if (!(attributeNameClass instanceof SimpleNameClass)) {
           error("id_attribute_name_class", p.getLocator());
-          return null;
+          return VoidValue.VOID;
         }
         elementNameClass.accept(new ElementNameClassVisitor(((SimpleNameClass)attributeNameClass).getName(),
                                                             locator,
@@ -168,7 +170,7 @@ public class IdTypeMapBuilder {
       else
         notePossibleConflict(elementNameClass, p.getNameClass(), locator);
       p.getContent().apply(new BuildFunction(null, p.getLocator(), true));
-      return null;
+      return VoidValue.VOID;
     }
 
     private void datatype(Datatype dt) {
@@ -176,29 +178,29 @@ public class IdTypeMapBuilder {
         error("id_parent", locator);
     }
 
-    public Object caseData(DataPattern p) {
+    public VoidValue caseData(DataPattern p) {
       datatype(p.getDatatype());
-      return null;
+      return VoidValue.VOID;
     }
 
-    public Object caseDataExcept(DataExceptPattern p) {
+    public VoidValue caseDataExcept(DataExceptPattern p) {
       datatype(p.getDatatype());
       p.getExcept().apply(down());
-      return null;
+      return VoidValue.VOID;
     }
 
-    public Object caseValue(ValuePattern p) {
+    public VoidValue caseValue(ValuePattern p) {
       datatype(p.getDatatype());
-      return null;
+      return VoidValue.VOID;
     }
 
-    public Object caseList(ListPattern p) {
+    public VoidValue caseList(ListPattern p) {
       p.getOperand().apply(down());
-      return null;
+      return VoidValue.VOID;
     }
 
-    public Object caseOther(Pattern p) {
-      return null;
+    public VoidValue caseOther(Pattern p) {
+      return VoidValue.VOID;
     }
   }
 
@@ -279,9 +281,7 @@ public class IdTypeMapBuilder {
     this.eh = eh;
     try {
       pattern.apply(new BuildFunction(null, null));
-      for (Iterator iter = possibleConflicts.iterator();
-           iter.hasNext();) {
-        PossibleConflict pc = (PossibleConflict)iter.next();
+      for (PossibleConflict pc : possibleConflicts) {
         if (pc.elementNameClass instanceof SimpleNameClass
             && pc.attributeNameClass instanceof SimpleNameClass) {
           Name elementName = ((SimpleNameClass)pc.elementNameClass).getName();
@@ -292,8 +292,7 @@ public class IdTypeMapBuilder {
             error("id_type_conflict", elementName, attributeName, pc.locator);
         }
         else {
-          for (Iterator nameIter = idTypeMap.table.keySet().iterator(); nameIter.hasNext();) {
-            ScopedName sn = (ScopedName)nameIter.next();
+          for (ScopedName sn : idTypeMap.table.keySet()) {
             if (pc.elementNameClass.contains(sn.elementName)
                 && pc.attributeNameClass.contains(sn.attributeName)) {
               error("id_type_conflict", sn.elementName, sn.attributeName, pc.locator);

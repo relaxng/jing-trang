@@ -11,18 +11,17 @@ import org.xml.sax.helpers.LocatorImpl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 public class IdSoundnessChecker {
   private final IdTypeMap idTypeMap;
   private final ErrorHandler eh;
-  private final Map map = new HashMap();
+  private final Map<String, Entry> map = new HashMap<String, Entry>();
 
   private static class Entry {
     Locator idLoc;
-    List idrefLocs;
+    List<LocatorImpl> idrefLocs;
     boolean hadId;
   }
 
@@ -36,12 +35,11 @@ public class IdSoundnessChecker {
   }
 
   public void endDocument() throws SAXException {
-    for (Iterator idIter = map.keySet().iterator(); idIter.hasNext();) {
-      String token = (String)idIter.next();
-      Entry entry = (Entry)map.get(token);
+    for (String token : map.keySet()) {
+      Entry entry = map.get(token);
       if (!entry.hadId) {
-        for (Iterator locIter = entry.idrefLocs.iterator(); locIter.hasNext();)
-          error("missing_id", token, (Locator)locIter.next());
+        for (LocatorImpl idrefLoc : entry.idrefLocs)
+          error("missing_id", token, idrefLoc);
       }
     }
   }
@@ -81,7 +79,7 @@ public class IdSoundnessChecker {
   }
 
   private void id(String token, Locator locator) throws SAXException {
-    Entry entry = (Entry)map.get(token);
+    Entry entry = map.get(token);
     if (entry == null) {
       entry = new Entry();
       map.put(token, entry);
@@ -96,7 +94,7 @@ public class IdSoundnessChecker {
   }
 
   private void idref(String token, Locator locator) {
-    Entry entry = (Entry)map.get(token);
+    Entry entry = map.get(token);
     if (entry == null) {
       entry = new Entry();
       map.put(token, entry);
@@ -104,7 +102,7 @@ public class IdSoundnessChecker {
     if (entry.hadId)
       return;
     if (entry.idrefLocs == null)
-      entry.idrefLocs = new ArrayList();
+      entry.idrefLocs = new ArrayList<LocatorImpl>();
     entry.idrefLocs.add(new LocatorImpl(locator));
   }
 

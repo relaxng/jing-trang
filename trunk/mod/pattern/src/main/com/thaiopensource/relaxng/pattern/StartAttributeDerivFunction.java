@@ -7,27 +7,27 @@ class StartAttributeDerivFunction extends StartTagOpenDerivFunction {
     super(name, builder);
   }
 
-  public Object caseElement(ElementPattern p) {
+  public Pattern caseElement(ElementPattern p) {
     return getPatternBuilder().makeNotAllowed();
   }
 
-  public Object caseGroup(GroupPattern p) {
+  public Pattern caseGroup(GroupPattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
     return getPatternBuilder().makeChoice(
-					  memoApply(p1).applyForPattern(new ApplyAfterFunction(getPatternBuilder()) {
-					      Pattern apply(Pattern x) {
-						return getPatternBuilder().makeGroup(x, p2);
-					      }
-					    }),
-					  memoApply(p2).applyForPattern(new ApplyAfterFunction(getPatternBuilder()) {
-					      Pattern apply(Pattern x) {
-						return getPatternBuilder().makeGroup(p1, x);
-					      }
-                                            }));
+            memoApply(p1).apply(new ApplyAfterFunction(getPatternBuilder()) {
+              Pattern apply(Pattern x) {
+                return getPatternBuilder().makeGroup(x, p2);
+              }
+            }),
+            memoApply(p2).apply(new ApplyAfterFunction(getPatternBuilder()) {
+              Pattern apply(Pattern x) {
+                return getPatternBuilder().makeGroup(p1, x);
+              }
+            }));
   }
 
-  public Object caseAttribute(AttributePattern p) {
+  public Pattern caseAttribute(AttributePattern p) {
     if (!p.getNameClass().contains(getName()))
       return getPatternBuilder().makeNotAllowed();
     return getPatternBuilder().makeAfter(p.getContent(),

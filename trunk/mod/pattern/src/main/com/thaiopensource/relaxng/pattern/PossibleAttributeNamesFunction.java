@@ -1,16 +1,18 @@
 package com.thaiopensource.relaxng.pattern;
 
+import com.thaiopensource.util.VoidValue;
+
 /**
  * PatternFunction to compute the name class of possible attributes.
  * Computes a NormalizedNameClass.
  */
 class PossibleAttributeNamesFunction extends PossibleNamesFunction {
-  public Object caseAttribute(AttributePattern p) {
+  public VoidValue caseAttribute(AttributePattern p) {
     add(p.getNameClass());
-    return null;
+    return VoidValue.VOID;
   }
 
-  public Object caseGroup(GroupPattern p) {
+  public VoidValue caseGroup(GroupPattern p) {
     return caseBinary(p);
   }
 }

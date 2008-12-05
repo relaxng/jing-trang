@@ -5,7 +5,7 @@ class IgnoreMissingAttributesFunction extends EndAttributesFunction {
     super(builder);
   }
 
-  public Object caseAttribute(AttributePattern p) {
+  public Pattern caseAttribute(AttributePattern p) {
     return getPatternBuilder().makeEmpty();
   }
 

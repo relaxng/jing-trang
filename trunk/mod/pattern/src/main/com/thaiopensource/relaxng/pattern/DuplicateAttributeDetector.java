@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 class DuplicateAttributeDetector {
-  private final List nameClasses = new ArrayList();
+  private final List<NameClass> nameClasses = new ArrayList<NameClass>();
   private Alternative alternatives = null;
 
   private static class Alternative {
@@ -23,11 +23,11 @@ class DuplicateAttributeDetector {
     int lim = nameClasses.size();
     for (Alternative a = alternatives; a != null; a = a.parent) {
       for (int i = a.endIndex; i < lim; i++)
-	checkAttributeOverlap(nc, (NameClass)nameClasses.get(i));
+	checkAttributeOverlap(nc, nameClasses.get(i));
       lim = a.startIndex;
     }
     for (int i = 0; i < lim; i++)
-      checkAttributeOverlap(nc, (NameClass)nameClasses.get(i));
+      checkAttributeOverlap(nc, nameClasses.get(i));
     nameClasses.add(nc);
   }
 

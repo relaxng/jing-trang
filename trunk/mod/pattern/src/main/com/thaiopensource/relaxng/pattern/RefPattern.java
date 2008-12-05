@@ -70,7 +70,7 @@ class RefPattern extends Pattern {
     p.accept(visitor);
   }
 
-  Object apply(PatternFunction f) {
+  <T> T apply(PatternFunction<T> f) {
     return f.caseRef(this);
   }
 
