@@ -23,7 +23,6 @@ import javax.xml.XMLConstants;
 import javax.xml.validation.TypeInfoProvider;
 
 class ValidatorHandlerImpl extends ValidatorHandler2 {
-  private final Matcher initialMatcher;
   private Matcher matcher;
   static private final ErrorHandler defaultErrorHandler = new DraconianErrorHandler();
   private ErrorHandler specifiedErrorHandler = null;
@@ -39,8 +38,7 @@ class ValidatorHandlerImpl extends ValidatorHandler2 {
   private boolean secureProcessing;
 
   ValidatorHandlerImpl(SchemaFactoryImpl factory, Pattern pattern, ValidatorPatternBuilder builder) {
-    initialMatcher = new PatternMatcher(pattern, builder);
-    matcher = initialMatcher.copy();
+    matcher = new PatternMatcher(pattern, builder);
     context = new Context();
     // the docs say it gets the properties of its factory, not the features
     secureProcessing = false;
@@ -49,7 +47,7 @@ class ValidatorHandlerImpl extends ValidatorHandler2 {
   public void reset() {
     bufferingCharacters = false;
     locator = null;
-    matcher = initialMatcher.copy();
+    matcher = matcher.start();
     context.reset();
   }
 
@@ -59,7 +57,7 @@ class ValidatorHandlerImpl extends ValidatorHandler2 {
 			   Attributes atts) throws SAXException {
     if (bufferingCharacters) {
       bufferingCharacters = false;
-      check(matcher.matchTextBeforeStartTag(charBuf.toString()));
+      check(matcher.matchTextBeforeStartTag(charBuf.toString(), context));
     }
     Name name = new Name(namespaceURI, localName);
     check(matcher.matchStartTagOpen(name, qName, context));
@@ -68,9 +66,9 @@ class ValidatorHandlerImpl extends ValidatorHandler2 {
       Name attName = new Name(atts.getURI(i), atts.getLocalName(i));
       String attQName = atts.getQName(i);
       check(matcher.matchAttributeName(attName, attQName, context));
-      check(matcher.matchAttributeValue(attName, attQName, context, atts.getValue(i)));
+      check(matcher.matchAttributeValue(atts.getValue(i), attName, attQName, context));
     }
-    check(matcher.matchStartTagClose(context));
+    check(matcher.matchStartTagClose(name, qName, context));
     if (matcher.isTextTyped()) {
       bufferingCharacters = true;
       charBuf.setLength(0);
@@ -84,9 +82,11 @@ class ValidatorHandlerImpl extends ValidatorHandler2 {
 			 String qName) throws SAXException {
     if (bufferingCharacters) {
       bufferingCharacters = false;
-      check(matcher.matchTextBeforeEndTag(charBuf.toString(), context));
+      if (charBuf.length() > 0)
+        check(matcher.matchTextBeforeEndTag(charBuf.toString(), new Name(namespaceURI, localName),
+                                            qName, context));
     }
-    check(matcher.matchEndTag(context));
+    check(matcher.matchEndTag(new Name(namespaceURI, localName), qName, context));
     if (contentHandler != null)
       contentHandler.endElement(namespaceURI, localName, qName);
   }
@@ -104,7 +104,7 @@ class ValidatorHandlerImpl extends ValidatorHandler2 {
       case '\n':
 	break;
       default:
-	check(matcher.matchUntypedText());
+	check(matcher.matchUntypedText(context));
 	return;
       }
     }
@@ -186,6 +186,11 @@ class ValidatorHandlerImpl extends ValidatorHandler2 {
   }
 
   public void startPrefixMapping(String prefix, String uri) throws SAXException {
+    // namespace declarations on the start-tag shouldn't apply to the characters before the start-tag
+    if (bufferingCharacters) {
+      bufferingCharacters = false;
+      check(matcher.matchTextBeforeStartTag(charBuf.toString(), context));
+    }
     context.startPrefixMapping(prefix, uri);
     if (contentHandler != null)
       contentHandler.startPrefixMapping(prefix, uri);

@@ -6927,5 +6927,51 @@ before string sequence checking.</documentation>
 <foo xmlns="http://www.example.com/1"/>
 </invalid>
 </testCase>
+<testCase>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <element name="bar"><empty/></element>
+  <text/>
+</element>
+</correct>
+<valid>
+<foo><bar/>text</foo>
+</valid>
+<invalid>
+<foo>xyzzy</foo>
+</invalid>
+</testCase>
+<testCase>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <choice>
+    <value>xyzzy</value>
+    <empty/>
+  </choice>
+</element>
+</correct>
+<valid>
+<foo/>
+</valid>
+<valid>
+<foo>xyzzy</foo>
+</valid>
+<invalid>
+<foo>x</foo>
+</invalid>
+</testCase>
+<testCase>
+<correct>
+<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
+  <empty/>
+</element>
+</correct>
+<valid>
+<foo/>
+</valid>
+<invalid>
+<foo att="val"/>
+</invalid>
+</testCase>
 </testSuite>
 </testSuite>
