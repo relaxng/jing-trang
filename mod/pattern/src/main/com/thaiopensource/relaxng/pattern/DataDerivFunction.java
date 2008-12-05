@@ -3,7 +3,7 @@ package com.thaiopensource.relaxng.pattern;
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.ValidationContext;
 
-class DataDerivFunction extends AbstractPatternFunction {
+class DataDerivFunction extends AbstractPatternFunction<Pattern> {
   private final ValidatorPatternBuilder builder;
   private final ValidationContext vc;
   private final String str;
@@ -30,11 +30,11 @@ class DataDerivFunction extends AbstractPatternFunction {
     return true;
   }
 
-  public Object caseText(TextPattern p) {
+  public Pattern caseText(TextPattern p) {
     return p;
   }
 
-  public Object caseList(ListPattern p) {
+  public Pattern caseList(ListPattern p) {
     int len = str.length();
     int tokenStart = -1;
     PatternMemo memo = builder.getPatternMemo(p.getOperand());
@@ -67,7 +67,7 @@ class DataDerivFunction extends AbstractPatternFunction {
     return p.dataDeriv(str.substring(i, j), vc);
   }
 
-  public Object caseValue(ValuePattern p) {
+  public Pattern caseValue(ValuePattern p) {
     Datatype dt = p.getDatatype();
     Object value = dt.createValue(str, vc);
     if (value != null && dt.sameValue(p.getValue(), value))
@@ -76,7 +76,7 @@ class DataDerivFunction extends AbstractPatternFunction {
       return builder.makeNotAllowed();
   }
 
-  public Object caseData(DataPattern p) {
+  public Pattern caseData(DataPattern p) {
     if (p.allowsAnyString())
       return builder.makeEmpty();
     if (p.getDatatype().isValid(str, vc))
@@ -85,26 +85,26 @@ class DataDerivFunction extends AbstractPatternFunction {
       return builder.makeNotAllowed();
   }
 
-  public Object caseDataExcept(DataExceptPattern p) {
-    Pattern tem = (Pattern)caseData(p);
+  public Pattern caseDataExcept(DataExceptPattern p) {
+    Pattern tem = caseData(p);
     if (tem.isNullable() && memoApply(p.getExcept()).isNullable())
       return builder.makeNotAllowed();
     return tem;
   }
 
-  public Object caseAfter(AfterPattern p) {
+  public Pattern caseAfter(AfterPattern p) {
     Pattern p1 = p.getOperand1();
     if (memoApply(p1).isNullable() || (p1.isNullable() && isBlank(str)))
       return p.getOperand2();
     return builder.makeNotAllowed();
   }
 
-  public Object caseChoice(ChoicePattern p) {
+  public Pattern caseChoice(ChoicePattern p) {
     return builder.makeChoice(memoApply(p.getOperand1()),
 			      memoApply(p.getOperand2()));
   }
   
-  public Object caseGroup(GroupPattern p) {
+  public Pattern caseGroup(GroupPattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
     Pattern tem = builder.makeGroup(memoApply(p1), p2);
@@ -113,19 +113,19 @@ class DataDerivFunction extends AbstractPatternFunction {
     return builder.makeChoice(tem, memoApply(p2));
   }
 
-  public Object caseInterleave(InterleavePattern p) {
+  public Pattern caseInterleave(InterleavePattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
     return builder.makeChoice(builder.makeInterleave(memoApply(p1), p2),
 			      builder.makeInterleave(p1, memoApply(p2)));
   }
 
-  public Object caseOneOrMore(OneOrMorePattern p) {
+  public Pattern caseOneOrMore(OneOrMorePattern p) {
     return builder.makeGroup(memoApply(p.getOperand()),
 			     builder.makeOptional(p));
   }
 
-  public Object caseOther(Pattern p) {
+  public Pattern caseOther(Pattern p) {
     return builder.makeNotAllowed();
   }
 

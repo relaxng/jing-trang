@@ -91,11 +91,7 @@ public abstract class Pattern implements ParsedPattern {
   }
 
   abstract void accept(PatternVisitor visitor);
-  abstract Object apply(PatternFunction f);
-
-  Pattern applyForPattern(PatternFunction f) {
-    return (Pattern)apply(f);
-  }
+  abstract <T> T apply(PatternFunction<T> f);
 
   static boolean contentTypeGroupable(int ct1, int ct2) {
     if (ct1 == EMPTY_CONTENT_TYPE || ct2 == EMPTY_CONTENT_TYPE)

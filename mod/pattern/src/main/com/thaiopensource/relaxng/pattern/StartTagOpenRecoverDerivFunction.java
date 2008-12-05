@@ -7,12 +7,12 @@ class StartTagOpenRecoverDerivFunction extends StartTagOpenDerivFunction {
     super(name, builder);
   }
 
-  public Object caseGroup(GroupPattern p) {
-    Pattern tem = (Pattern)super.caseGroup(p);
+  public Pattern caseGroup(GroupPattern p) {
+    Pattern tem = super.caseGroup(p);
     if (p.getOperand1().isNullable())
       return tem;
     return getPatternBuilder().makeChoice(tem, memoApply(p.getOperand2()));
- }
+  }
 
   PatternMemo apply(PatternMemo memo) {
     return memo.startTagOpenRecoverDeriv(this);

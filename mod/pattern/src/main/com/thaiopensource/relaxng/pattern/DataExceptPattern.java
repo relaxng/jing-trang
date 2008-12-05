@@ -23,7 +23,7 @@ class DataExceptPattern extends DataPattern {
     visitor.visitDataExcept(getDatatype(), except);
   }
 
-  Object apply(PatternFunction f) {
+  <T> T apply(PatternFunction<T> f) {
     return f.caseDataExcept(this);
   }
 

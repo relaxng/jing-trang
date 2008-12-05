@@ -13,12 +13,12 @@ import java.util.Map;
 
 public class PatternDumper {
   private boolean startTagOpen = false;
-  private final ArrayList tagStack = new ArrayList();
+  private final ArrayList<String> tagStack = new ArrayList<String>();
   private final PrintWriter writer;
   private int level = 0;
   private boolean suppressIndent = false;
-  private final List patternList = new ArrayList();
-  private final Map patternTable = new HashMap();
+  private final List<Pattern> patternList = new ArrayList<Pattern>();
+  private final Map<Pattern, String> patternTable = new HashMap<Pattern, String>();
 
   private final PatternVisitor patternVisitor = new DumpPatternVisitor();
   private final PatternVisitor groupPatternVisitor = new GroupDumpPatternVisitor();
@@ -48,7 +48,7 @@ public class PatternDumper {
     endElement();
     for (int i = 0; i < patternList.size(); i++) {
       startElement("define");
-      Pattern tem = (Pattern)patternList.get(i);
+      Pattern tem = patternList.get(i);
       attribute("name", getName(tem));
       tem.accept(groupPatternVisitor);
       endElement();
@@ -59,7 +59,7 @@ public class PatternDumper {
   }
 
   private String getName(Pattern p) {
-    String name = (String)patternTable.get(p);
+    String name = patternTable.get(p);
     if (name == null) {
       name = "p" + patternList.size();
       patternList.add(p);
@@ -165,7 +165,7 @@ public class PatternDumper {
   }
 
   private String pop() {
-    return (String)tagStack.remove(tagStack.size() - 1);
+    return tagStack.remove(tagStack.size() - 1);
   }
 
   class DumpPatternVisitor implements PatternVisitor {

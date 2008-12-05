@@ -1,12 +1,14 @@
 package com.thaiopensource.relaxng.pattern;
 
+import com.thaiopensource.util.VoidValue;
+
 /**
  * Common base class for PossibleAttributeNamesFunction and PossibleStartTagNamesFunction.
  * @see PossibleAttributeNamesFunction
  * @see PossibleStartTagNamesFunction
  */
-abstract class PossibleNamesFunction extends AbstractPatternFunction {
-  private UnionNameClassNormalizer normalizer = new UnionNameClassNormalizer();
+abstract class PossibleNamesFunction extends AbstractPatternFunction<VoidValue> {
+  private final UnionNameClassNormalizer normalizer = new UnionNameClassNormalizer();
 
   NormalizedNameClass applyTo(Pattern p) {
     p.apply(this);
@@ -17,29 +19,29 @@ abstract class PossibleNamesFunction extends AbstractPatternFunction {
     normalizer.add(nc);
   }
 
-  public Object caseAfter(AfterPattern p) {
+  public VoidValue caseAfter(AfterPattern p) {
     return p.getOperand1().apply(this);
   }
 
-  public Object caseBinary(BinaryPattern p) {
+  public VoidValue caseBinary(BinaryPattern p) {
     p.getOperand1().apply(this);
     p.getOperand2().apply(this);
-    return null;
+    return VoidValue.VOID;
   }
 
-  public Object caseChoice(ChoicePattern p) {
+  public VoidValue caseChoice(ChoicePattern p) {
     return caseBinary(p);
   }
 
-  public Object caseInterleave(InterleavePattern p) {
+  public VoidValue caseInterleave(InterleavePattern p) {
     return caseBinary(p);
   }
 
-  public Object caseOneOrMore(OneOrMorePattern p) {
+  public VoidValue caseOneOrMore(OneOrMorePattern p) {
     return p.getOperand().apply(this);
   }
 
-  public Object caseOther(Pattern p) {
-    return null;
+  public VoidValue caseOther(Pattern p) {
+    return VoidValue.VOID;
   }
 }

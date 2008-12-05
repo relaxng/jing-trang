@@ -1,49 +1,53 @@
 package com.thaiopensource.relaxng.pattern;
 
+import com.thaiopensource.util.VoidValue;
+import com.thaiopensource.xml.util.Name;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ValidatorPatternBuilder extends PatternBuilder {
-  private final Map patternMemoMap = new HashMap();
-  private final PatternFunction endAttributesFunction;
-  private final PatternFunction ignoreMissingAttributesFunction;
-  private final PatternFunction endTagDerivFunction;
-  private final PatternFunction mixedTextDerivFunction;
-  private final PatternFunction textOnlyFunction;
-  private final PatternFunction recoverAfterFunction;
-  private final PatternFunction dataDerivTypeFunction;
+  private final Map<Pattern, PatternMemo> patternMemoMap = new HashMap<Pattern, PatternMemo>();
+  private final PatternFunction<Pattern> endAttributesFunction;
+  private final PatternFunction<Pattern> ignoreMissingAttributesFunction;
+  private final PatternFunction<Pattern> endTagDerivFunction;
+  private final PatternFunction<Pattern> mixedTextDerivFunction;
+  private final PatternFunction<Pattern> textOnlyFunction;
+  private final PatternFunction<Pattern> recoverAfterFunction;
+  private final PatternFunction<DataDerivType> dataDerivTypeFunction;
 
-  private final Map choiceMap = new HashMap();
-  private final PatternFunction removeChoicesFunction = new RemoveChoicesFunction();
-  private final PatternFunction noteChoicesFunction = new NoteChoicesFunction();
-  private final PatternFunction requiredElementsFunction = new RequiredElementsFunction();
-  private final PatternFunction requiredAttributesFunction = new RequiredAttributesFunction();
+  private final Map<Pattern, Pattern> choiceMap = new HashMap<Pattern, Pattern>();
+  private final PatternFunction<Pattern> removeChoicesFunction = new RemoveChoicesFunction();
+  private final PatternFunction<VoidValue> noteChoicesFunction = new NoteChoicesFunction();
+  private final PatternFunction<Set<Name>> requiredElementsFunction = new RequiredElementsFunction();
+  private final PatternFunction<Set<Name>> requiredAttributesFunction = new RequiredAttributesFunction();
   private final PossibleNamesFunction possibleStartTagNamesFunction = new PossibleStartTagNamesFunction();
   private final PossibleNamesFunction possibleAttributeNamesFunction = new PossibleAttributeNamesFunction();
 
-  private class NoteChoicesFunction extends AbstractPatternFunction {
-    public Object caseOther(Pattern p) {
+  private class NoteChoicesFunction extends AbstractPatternFunction<VoidValue> {
+    public VoidValue caseOther(Pattern p) {
       choiceMap.put(p, p);
-      return null;
+      return VoidValue.VOID;
     }
 
-    public Object caseChoice(ChoicePattern p) {
+    public VoidValue caseChoice(ChoicePattern p) {
       p.getOperand1().apply(this);
       p.getOperand2().apply(this);
-      return null;
+      return VoidValue.VOID;
     }
   }
 
-  private class RemoveChoicesFunction extends AbstractPatternFunction {
-    public Object caseOther(Pattern p) {
+  private class RemoveChoicesFunction extends AbstractPatternFunction<Pattern> {
+    public Pattern caseOther(Pattern p) {
       if (choiceMap.get(p) != null)
         return notAllowed;
       return p;
     }
 
-    public Object caseChoice(ChoicePattern p) {
-      Pattern p1 = p.getOperand1().applyForPattern(this);
-      Pattern p2 = p.getOperand2().applyForPattern(this);
+    public Pattern caseChoice(ChoicePattern p) {
+      Pattern p1 = p.getOperand1().apply(this);
+      Pattern p2 = p.getOperand2().apply(this);
       if (p1 == p.getOperand1() && p2 == p.getOperand2())
         return p;
       if (p1 == notAllowed)
@@ -67,7 +71,7 @@ public class ValidatorPatternBuilder extends PatternBuilder {
   }
 
   PatternMemo getPatternMemo(Pattern p) {
-    PatternMemo memo = (PatternMemo)patternMemoMap.get(p);
+    PatternMemo memo = patternMemoMap.get(p);
     if (memo == null) {
       memo = new PatternMemo(p, this);
       patternMemoMap.put(p, memo);
@@ -75,19 +79,19 @@ public class ValidatorPatternBuilder extends PatternBuilder {
     return memo;
   }
 
-  PatternFunction getEndAttributesFunction() {
+  PatternFunction<Pattern> getEndAttributesFunction() {
     return endAttributesFunction;
   }
 
-  PatternFunction getIgnoreMissingAttributesFunction() {
+  PatternFunction<Pattern> getIgnoreMissingAttributesFunction() {
     return ignoreMissingAttributesFunction;
   }
 
-  PatternFunction getRequiredElementsFunction() {
+  PatternFunction<Set<Name>> getRequiredElementsFunction() {
     return requiredElementsFunction;
   }
 
-  PatternFunction getRequiredAttributesFunction() {
+  PatternFunction<Set<Name>> getRequiredAttributesFunction() {
     return requiredAttributesFunction;
   }
 
@@ -99,23 +103,23 @@ public class ValidatorPatternBuilder extends PatternBuilder {
     return possibleAttributeNamesFunction;
   }
 
-  PatternFunction getEndTagDerivFunction() {
+  PatternFunction<Pattern> getEndTagDerivFunction() {
     return endTagDerivFunction;
   }
 
-  PatternFunction getMixedTextDerivFunction() {
+  PatternFunction<Pattern> getMixedTextDerivFunction() {
     return mixedTextDerivFunction;
   }
 
-  PatternFunction getTextOnlyFunction() {
+  PatternFunction<Pattern> getTextOnlyFunction() {
     return textOnlyFunction;
   }
 
-  PatternFunction getRecoverAfterFunction() {
+  PatternFunction<Pattern> getRecoverAfterFunction() {
     return recoverAfterFunction;
   }
 
-  PatternFunction getDataDerivTypeFunction() {
+  PatternFunction<DataDerivType> getDataDerivTypeFunction() {
     return dataDerivTypeFunction;
   }
 
@@ -141,7 +145,7 @@ public class ValidatorPatternBuilder extends PatternBuilder {
     }
     else {
       p1.apply(noteChoicesFunction);
-      p2 = p2.applyForPattern(removeChoicesFunction);
+      p2 = p2.apply(removeChoicesFunction);
       if (choiceMap.size() > 0)
         choiceMap.clear();
     }

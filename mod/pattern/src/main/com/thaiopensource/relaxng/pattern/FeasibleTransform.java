@@ -1,47 +1,47 @@
 package com.thaiopensource.relaxng.pattern;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 public class FeasibleTransform {
-  private static class FeasiblePatternFunction extends AbstractPatternFunction {
+  private static class FeasiblePatternFunction extends AbstractPatternFunction<Pattern> {
     private final SchemaPatternBuilder spb;
-    private final Map elementTable = new HashMap();
+    private final Set<ElementPattern> elementDone = new HashSet<ElementPattern>();
 
     FeasiblePatternFunction(SchemaPatternBuilder spb) {
       this.spb = spb;
     }
 
-    public Object caseChoice(ChoicePattern p) {
-      return spb.makeChoice(p.getOperand1().applyForPattern(this), p.getOperand2().applyForPattern(this));
+    public Pattern caseChoice(ChoicePattern p) {
+      return spb.makeChoice(p.getOperand1().apply(this), p.getOperand2().apply(this));
     }
 
-    public Object caseGroup(GroupPattern p) {
-      return spb.makeGroup(p.getOperand1().applyForPattern(this), p.getOperand2().applyForPattern(this));
+    public Pattern caseGroup(GroupPattern p) {
+      return spb.makeGroup(p.getOperand1().apply(this), p.getOperand2().apply(this));
     }
 
-    public Object caseInterleave(InterleavePattern p) {
-      return spb.makeInterleave(p.getOperand1().applyForPattern(this), p.getOperand2().applyForPattern(this));
+    public Pattern caseInterleave(InterleavePattern p) {
+      return spb.makeInterleave(p.getOperand1().apply(this), p.getOperand2().apply(this));
     }
 
-    public Object caseOneOrMore(OneOrMorePattern p) {
-      return spb.makeOneOrMore(p.getOperand().applyForPattern(this));
+    public Pattern caseOneOrMore(OneOrMorePattern p) {
+      return spb.makeOneOrMore(p.getOperand().apply(this));
     }
 
-    public Object caseElement(ElementPattern p) {
-      if (elementTable.get(p) == null) {
-        elementTable.put(p, p);
-        p.setContent(p.getContent().applyForPattern(this));
+    public Pattern caseElement(ElementPattern p) {
+      if (!elementDone.contains(p)) {
+        elementDone.add(p);
+        p.setContent(p.getContent().apply(this));
       }
       return spb.makeOptional(p);
     }
 
-    public Object caseOther(Pattern p) {
+    public Pattern caseOther(Pattern p) {
       return spb.makeOptional(p);
     }
   }
 
   public static Pattern transform(SchemaPatternBuilder spb, Pattern p) {
-    return p.applyForPattern(new FeasiblePatternFunction(spb));
+    return p.apply(new FeasiblePatternFunction(spb));
   }
 }

@@ -17,7 +17,7 @@ final class PatternInterner {
   PatternInterner(PatternInterner parent) {
     table = parent.table;
     if (table != null)
-      table = (Pattern[])table.clone();
+      table = table.clone();
     used = parent.used;
     usedLimit = parent.usedLimit;
   }

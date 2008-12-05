@@ -9,14 +9,13 @@ import java.util.Set;
  * Base class for all implementations of com.thaiopensource.relaxng.match.NameClass.
  */
 public abstract class NormalizedNameClass implements com.thaiopensource.relaxng.match.NameClass {
-  // This is a Set<Name>.
-  private final Set includedNames;
+  private final Set<Name> includedNames;
 
   /**
    * Create a NormalizedNameClass representing a name class without any wildcards.
    * @param includedNames an immutable set of names
    */
-  public NormalizedNameClass(Set includedNames) {
+  public NormalizedNameClass(Set<Name> includedNames) {
     this.includedNames = immutable(includedNames);
   }
 
@@ -32,23 +31,23 @@ public abstract class NormalizedNameClass implements com.thaiopensource.relaxng.
     return false;
   }
 
-  public Set getExcludedNamespaces() {
+  public Set<String> getExcludedNamespaces() {
     return null;
   }
 
-  public Set getIncludedNames() {
+  public Set<Name> getIncludedNames() {
     return includedNames;
   }
 
-  public Set getExcludedNames() {
+  public Set<Name> getExcludedNames() {
     return null;
   }
 
-  public Set getIncludedNamespaces() {
-    return Collections.EMPTY_SET;
+  public Set<String> getIncludedNamespaces() {
+    return Collections.emptySet();
   }
 
-  public Set getExcludedLocalNames(String ns) {
+  public Set<String> getExcludedLocalNames(String ns) {
     return null;
   }
 
@@ -62,9 +61,9 @@ public abstract class NormalizedNameClass implements com.thaiopensource.relaxng.
     return includedNames.hashCode();
   }
 
-  Set immutable(Set set) {
+  <T> Set<T> immutable(Set<T> set) {
     if (set.isEmpty())
-      return Collections.EMPTY_SET;
+      return Collections.emptySet();
     return Collections.unmodifiableSet(set);
   }
 

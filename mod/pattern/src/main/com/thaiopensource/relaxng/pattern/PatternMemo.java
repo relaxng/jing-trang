@@ -15,9 +15,9 @@ final class PatternMemo {
   private PatternMemo memoEndTagDeriv;
   private PatternMemo memoMixedTextDeriv;
   private PatternMemo memoIgnoreMissingAttributes;
-  private Map startTagOpenDerivMap;
-  private Map startTagOpenRecoverDerivMap;
-  private Map startAttributeDerivMap;
+  private Map<Name, PatternMemo> startTagOpenDerivMap;
+  private Map<Name, PatternMemo> startTagOpenRecoverDerivMap;
+  private Map<Name, PatternMemo> startAttributeDerivMap;
   private DataDerivType memoDataDerivType;
   private PatternMemo memoRecoverAfter;
   private NormalizedNameClass memoPossibleAttributeNames;
@@ -47,7 +47,7 @@ final class PatternMemo {
     return memoEndAttributes;
   }
 
-  PatternMemo endAttributes(PatternFunction f) {
+  PatternMemo endAttributes(PatternFunction<Pattern> f) {
     if (memoEndAttributes == null)
       memoEndAttributes = applyForPatternMemo(f);
     return memoEndAttributes;
@@ -60,7 +60,7 @@ final class PatternMemo {
     return memoIgnoreMissingAttributes;
   }
 
-  PatternMemo ignoreMissingAttributes(PatternFunction f) {
+  PatternMemo ignoreMissingAttributes(PatternFunction<Pattern> f) {
     if (memoIgnoreMissingAttributes == null)
       memoIgnoreMissingAttributes = applyForPatternMemo(f);
     return memoIgnoreMissingAttributes;
@@ -72,7 +72,7 @@ final class PatternMemo {
     return memoTextOnly;
   }
 
-  PatternMemo textOnly(PatternFunction f) {
+  PatternMemo textOnly(PatternFunction<Pattern> f) {
     if (memoTextOnly == null)
       memoTextOnly = applyForPatternMemo(f);
     return memoTextOnly;
@@ -84,7 +84,7 @@ final class PatternMemo {
     return memoEndTagDeriv;
   }
 
-  PatternMemo endTagDeriv(PatternFunction f) {
+  PatternMemo endTagDeriv(PatternFunction<Pattern> f) {
     if (memoEndTagDeriv == null)
       memoEndTagDeriv = applyForPatternMemo(f);
     return memoEndTagDeriv;
@@ -97,7 +97,7 @@ final class PatternMemo {
     return memoMixedTextDeriv;
   }
 
-  PatternMemo mixedTextDeriv(PatternFunction f) {
+  PatternMemo mixedTextDeriv(PatternFunction<Pattern> f) {
     if (memoMixedTextDeriv == null)
       memoMixedTextDeriv = applyForPatternMemo(f);
     return memoMixedTextDeriv;
@@ -114,9 +114,9 @@ final class PatternMemo {
   private PatternMemo startTagOpenDeriv(Name name, StartTagOpenDerivFunction f) {
     PatternMemo tem;
     if (startTagOpenDerivMap == null)
-      startTagOpenDerivMap = new HashMap();
+      startTagOpenDerivMap = new HashMap<Name, PatternMemo>();
     else {
-      tem = (PatternMemo)startTagOpenDerivMap.get(name);
+      tem = startTagOpenDerivMap.get(name);
       if (tem != null)
 	return tem;
     }
@@ -138,9 +138,9 @@ final class PatternMemo {
   private PatternMemo startTagOpenRecoverDeriv(Name name, StartTagOpenRecoverDerivFunction f) {
     PatternMemo tem;
     if (startTagOpenRecoverDerivMap == null)
-      startTagOpenRecoverDerivMap = new HashMap();
+      startTagOpenRecoverDerivMap = new HashMap<Name, PatternMemo>();
     else {
-      tem = (PatternMemo)startTagOpenRecoverDerivMap.get(name);
+      tem = startTagOpenRecoverDerivMap.get(name);
       if (tem != null)
 	return tem;
     }
@@ -162,9 +162,9 @@ final class PatternMemo {
   private PatternMemo startAttributeDeriv(Name name, StartAttributeDerivFunction f) {
     PatternMemo tem;
     if (startAttributeDerivMap == null)
-      startAttributeDerivMap = new HashMap();
+      startAttributeDerivMap = new HashMap<Name, PatternMemo>();
     else {
-      tem = (PatternMemo)startAttributeDerivMap.get(name);
+      tem = startAttributeDerivMap.get(name);
       if (tem != null)
 	return tem;
     }
@@ -203,7 +203,7 @@ final class PatternMemo {
     return memoPossibleAttributeNames;
   }
 
-  private PatternMemo applyForPatternMemo(PatternFunction f) {
-    return builder.getPatternMemo(pattern.applyForPattern(f));
+  private PatternMemo applyForPatternMemo(PatternFunction<Pattern> f) {
+    return builder.getPatternMemo(pattern.apply(f));
   }
 }

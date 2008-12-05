@@ -20,18 +20,18 @@ public class NameClassNormalizerTest {
     final Name foo = new Name("", "foo");
     final String ns1 = "http://www.example.com/1";
     final Name ns1foo = new Name(ns1, "foo");
-    Map<String, Set> ns1Map = new HashMap<String, Set>();
-    ns1Map.put(ns1, new HashSet());
-    final NormalizedNameClass ns1NNC = new NormalizedNsNameClass(Collections.EMPTY_SET, ns1Map);
-    final NormalizedNameClass anyNNC = new NormalizedAnyNameClass(Collections.EMPTY_SET,
-                                                                  Collections.EMPTY_SET,
-                                                                  Collections.EMPTY_SET);
+    Map<String, HashSet<String>> ns1Map = new HashMap<String, HashSet<String>>();
+    ns1Map.put(ns1, new HashSet<String>());
+    final NormalizedNameClass ns1NNC = new NormalizedNsNameClass(emptyNameSet(), ns1Map);
+    final NormalizedNameClass anyNNC = new NormalizedAnyNameClass(emptyNameSet(),
+                                                                  emptyStringSet(),
+                                                                  emptyNameSet());
     final NormalizedNsNameClass fooNNC = new NormalizedNsNameClass(Collections.singleton(foo),
-                                                                   Collections.EMPTY_MAP);
+                                                                   emptyMap());
     final NormalizedNsNameClass ns1fooNNC = new NormalizedNsNameClass(Collections.singleton(ns1foo),
-                                                                      Collections.EMPTY_MAP);
-    final NormalizedNsNameClass emptyNNC = new NormalizedNsNameClass(Collections.EMPTY_SET,
-                                                                     Collections.EMPTY_MAP);
+                                                                      emptyMap());
+    final NormalizedNsNameClass emptyNNC = new NormalizedNsNameClass(emptyNameSet(),
+                                                                     emptyMap());
     return new Object[][] {
             { new SimpleNameClass(foo), fooNNC},
             { new ChoiceNameClass(new SimpleNameClass(foo), new SimpleNameClass(foo)),
@@ -51,5 +51,16 @@ public class NameClassNormalizerTest {
   @Test(dataProvider = "pairs")
   public void testNormalize(NameClass nc, NormalizedNameClass nnc) {
     Assert.assertEquals(new NameClassNormalizer(nc).normalize(), nnc);
+  }
+
+  static private Set<Name> emptyNameSet() {
+    return Collections.emptySet();
+  }
+
+  static private Set<String> emptyStringSet() {
+    return Collections.emptySet();
+  }
+  static private Map<String,HashSet<String>> emptyMap() {
+    return Collections.emptyMap();
   }
 }

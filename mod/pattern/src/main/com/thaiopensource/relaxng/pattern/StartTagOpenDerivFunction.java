@@ -2,7 +2,7 @@ package com.thaiopensource.relaxng.pattern;
 
 import com.thaiopensource.xml.util.Name;
 
-class StartTagOpenDerivFunction extends AbstractPatternFunction {
+class StartTagOpenDerivFunction extends AbstractPatternFunction<Pattern> {
   private final Name name;
   private final ValidatorPatternBuilder builder;
 
@@ -11,54 +11,51 @@ class StartTagOpenDerivFunction extends AbstractPatternFunction {
     this.builder = builder;
   }
 
-  public Object caseChoice(ChoicePattern p) {
+  public Pattern caseChoice(ChoicePattern p) {
     return builder.makeChoice(memoApply(p.getOperand1()),
 			      memoApply(p.getOperand2()));
   }
 
-  public Object caseGroup(GroupPattern p) {
+  public Pattern caseGroup(GroupPattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
-    Pattern tem = memoApply(p1).applyForPattern(
-				      new ApplyAfterFunction(builder) {
-					  Pattern apply(Pattern x) {
-					    return builder.makeGroup(x, p2);
-					  }
-					});
+    Pattern tem = memoApply(p1).apply(new ApplyAfterFunction(builder) {
+      Pattern apply(Pattern x) {
+        return builder.makeGroup(x, p2);
+      }
+    });
     return p1.isNullable() ? builder.makeChoice(tem, memoApply(p2)) : tem;
   }
 
-  public Object caseInterleave(InterleavePattern p) {
+  public Pattern caseInterleave(InterleavePattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
     return builder.makeChoice(
-			      memoApply(p1).applyForPattern(new ApplyAfterFunction(builder) {
-				  Pattern apply(Pattern x) {
-				    return builder.makeInterleave(x, p2);
-				  }
-				}),
-			      memoApply(p2).applyForPattern(new ApplyAfterFunction(builder) {
-				  Pattern apply(Pattern x) {
-				    return builder.makeInterleave(p1, x);
-				  }
-				}));
+            memoApply(p1).apply(new ApplyAfterFunction(builder) {
+              Pattern apply(Pattern x) {
+                return builder.makeInterleave(x, p2);
+              }
+            }),
+            memoApply(p2).apply(new ApplyAfterFunction(builder) {
+              Pattern apply(Pattern x) {
+                return builder.makeInterleave(p1, x);
+              }
+            }));
   }
 
-  public Object caseAfter(AfterPattern p) {
+  public Pattern caseAfter(AfterPattern p) {
     final Pattern p1 = p.getOperand1();
     final Pattern p2 = p.getOperand2();
-    return memoApply(p1).applyForPattern(
-			       new ApplyAfterFunction(builder) {
+    return memoApply(p1).apply(new ApplyAfterFunction(builder) {
 				   Pattern apply(Pattern x) {
 				     return builder.makeAfter(x, p2);
 				   }
 				 });
   }
 
-  public Object caseOneOrMore(final OneOrMorePattern p) {
+  public Pattern caseOneOrMore(final OneOrMorePattern p) {
     final Pattern p1 = p.getOperand();
-    return memoApply(p1).applyForPattern(
-			       new ApplyAfterFunction(builder) {
+    return memoApply(p1).apply(new ApplyAfterFunction(builder) {
 				   Pattern apply(Pattern x) {
 				     return builder.makeGroup(x,
 							      builder.makeOptional(p));
@@ -67,13 +64,13 @@ class StartTagOpenDerivFunction extends AbstractPatternFunction {
   }
 
 
-  public Object caseElement(ElementPattern p) {
+  public Pattern caseElement(ElementPattern p) {
     if (!p.getNameClass().contains(name))
       return builder.makeNotAllowed();
     return builder.makeAfter(p.getContent(), builder.makeEmpty());
   }
 
-  public Object caseOther(Pattern p) {
+  public Pattern caseOther(Pattern p) {
     return builder.makeNotAllowed();
   }
 

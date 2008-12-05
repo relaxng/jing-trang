@@ -17,7 +17,7 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
   private Matcher matcher;
   private final ErrorHandler eh;
   private boolean bufferingCharacters = false;
-  private final StringBuffer charBuf = new StringBuffer();
+  private final StringBuilder charBuf = new StringBuilder();
   private Locator locator = null;
 
   public void startElement(String namespaceURI,

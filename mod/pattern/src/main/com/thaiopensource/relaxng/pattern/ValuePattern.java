@@ -25,7 +25,7 @@ class ValuePattern extends StringPattern {
     visitor.visitValue(dt, obj);
   }
 
-  Object apply(PatternFunction f) {
+  <T> T apply(PatternFunction<T> f) {
     return f.caseValue(this);
   }
 

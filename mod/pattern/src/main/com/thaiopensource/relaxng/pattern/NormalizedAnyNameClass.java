@@ -8,12 +8,10 @@ import java.util.Set;
  * A NormalizedNameClass that includes an any name wildcard.
  */
 public class NormalizedAnyNameClass extends NormalizedNameClass {
-  // A Set<String>.
-  private final Set excludedNamespaces;
-  // A Set<Name>.
-  private final Set excludedNames;
+  private final Set<String> excludedNamespaces;
+  private final Set<Name> excludedNames;
 
-  public NormalizedAnyNameClass(Set includedNames, Set excludedNamespaces, Set excludedNames) {
+  public NormalizedAnyNameClass(Set<Name> includedNames, Set<String> excludedNamespaces, Set<Name> excludedNames) {
     super(includedNames);
     this.excludedNamespaces = immutable(excludedNamespaces);
     this.excludedNames = immutable(excludedNames);
@@ -34,11 +32,11 @@ public class NormalizedAnyNameClass extends NormalizedNameClass {
     return false;
   }
 
-  public Set getExcludedNamespaces() {
+  public Set<String> getExcludedNamespaces() {
     return excludedNamespaces;
   }
 
-  public Set getExcludedNames() {
+  public Set<Name> getExcludedNames() {
     return excludedNames;
   }
 

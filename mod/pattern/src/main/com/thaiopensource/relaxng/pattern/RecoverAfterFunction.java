@@ -1,22 +1,22 @@
 package com.thaiopensource.relaxng.pattern;
 
-class RecoverAfterFunction extends AbstractPatternFunction {
+class RecoverAfterFunction extends AbstractPatternFunction<Pattern> {
   private final ValidatorPatternBuilder builder;
 
   RecoverAfterFunction(ValidatorPatternBuilder builder) {
     this.builder = builder;
   }
 
-  public Object caseOther(Pattern p) {
+  public Pattern caseOther(Pattern p) {
     throw new RuntimeException("recover after botch");
   }
 
-  public Object caseChoice(ChoicePattern p) {
-    return builder.makeChoice(p.getOperand1().applyForPattern(this),
-			      p.getOperand2().applyForPattern(this));
+  public Pattern caseChoice(ChoicePattern p) {
+    return builder.makeChoice(p.getOperand1().apply(this),
+                              p.getOperand2().apply(this));
   }
 
-  public Object caseAfter(AfterPattern p) {
+  public Pattern caseAfter(AfterPattern p) {
     return p.getOperand2();
   }
 }

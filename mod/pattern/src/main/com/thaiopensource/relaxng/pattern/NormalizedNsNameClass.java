@@ -9,16 +9,10 @@ import java.util.Set;
  * A NormalizedNsNameClass that contains one or more namespace wildcards.
  */
 public class NormalizedNsNameClass extends NormalizedNameClass {
-  /**
-   * A Map<String, Set<String>>.
-   */
-  private final Map nsMap;
-  /**
-   * A Set<String>.
-   */
-  private final Set includedNamespaces;
+  private final Map<String, ? extends Set<String>> nsMap;
+  private final Set<String> includedNamespaces;
 
-  public NormalizedNsNameClass(Set includedNames, Map nsMap) {
+  public NormalizedNsNameClass(Set<Name> includedNames, Map<String, ? extends Set<String>> nsMap) {
     super(includedNames);
     this.nsMap = nsMap;
     includedNamespaces = immutable(nsMap.keySet());
@@ -29,19 +23,19 @@ public class NormalizedNsNameClass extends NormalizedNameClass {
   }
 
   public boolean contains(Name name) {
-    Set excludedLocalNames = (Set)nsMap.get(name.getNamespaceUri());
+    Set<String> excludedLocalNames = nsMap.get(name.getNamespaceUri());
     if (excludedLocalNames == null)
       return super.contains(name);
     else
-      return !excludedLocalNames.contains(name);
+      return !excludedLocalNames.contains(name.getLocalName());
   }
 
-  public Set getIncludedNamespaces() {
+  public Set<String> getIncludedNamespaces() {
     return includedNamespaces;
   }
 
-  public Set getExcludedLocalNames(String ns) {
-    return (Set)nsMap.get(ns);
+  public Set<String> getExcludedLocalNames(String ns) {
+    return nsMap.get(ns);
   }
 
   public int hashCode() {

@@ -1,20 +1,22 @@
 package com.thaiopensource.relaxng.pattern;
 
+import com.thaiopensource.xml.util.Name;
+
 import java.util.Collections;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Common functionality between RequiredAttributesFunction and RequiredElementsFunction
  */
-abstract class RequiredElementsOrAttributesFunction extends AbstractPatternFunction {
-  public Object caseOther(Pattern p) {
-    return Collections.EMPTY_SET;
+abstract class RequiredElementsOrAttributesFunction extends AbstractPatternFunction<Set<Name>> {
+  public Set<Name> caseOther(Pattern p) {
+    return Collections.emptySet();
   }
 
-  public Object caseChoice(ChoicePattern p) {
-    Set s1 = (Set)p.getOperand1().apply(this);
-    Set s2 = (Set)p.getOperand2().apply(this);
+  public Set<Name> caseChoice(ChoicePattern p) {
+    Set<Name> s1 = p.getOperand1().apply(this);
+    Set<Name> s2 = p.getOperand2().apply(this);
     if (s1.isEmpty())
       return s1;
     if (s2.isEmpty())
@@ -23,17 +25,17 @@ abstract class RequiredElementsOrAttributesFunction extends AbstractPatternFunct
     return s1;
   }
 
-  protected Object caseNamed(NameClass nc) {
+  protected Set<Name> caseNamed(NameClass nc) {
     if (!(nc instanceof SimpleNameClass))
-      return Collections.EMPTY_SET;
-    Set s = new HashSet();
+      return Collections.emptySet();
+    Set<Name> s = new HashSet<Name>();
     s.add(((SimpleNameClass)nc).getName());
     return s;
   }
 
-  protected Object union(BinaryPattern p) {
-    Set s1 = (Set)p.getOperand1().apply(this);
-    Set s2 = (Set)p.getOperand2().apply(this);
+  protected Set<Name> union(BinaryPattern p) {
+    Set<Name> s1 = p.getOperand1().apply(this);
+    Set<Name> s2 = p.getOperand2().apply(this);
     if (s1.isEmpty())
       return s2;
     if (s2.isEmpty())
@@ -42,15 +44,15 @@ abstract class RequiredElementsOrAttributesFunction extends AbstractPatternFunct
     return s1;
   }
 
-  public Object caseInterleave(InterleavePattern p) {
+  public Set<Name> caseInterleave(InterleavePattern p) {
     return union(p);
   }
 
-  public Object caseAfter(AfterPattern p) {
+  public Set<Name> caseAfter(AfterPattern p) {
     return p.getOperand1().apply(this);
   }
 
-  public Object caseOneOrMore(OneOrMorePattern p) {
+  public Set<Name> caseOneOrMore(OneOrMorePattern p) {
     return p.getOperand().apply(this);
   }
 }

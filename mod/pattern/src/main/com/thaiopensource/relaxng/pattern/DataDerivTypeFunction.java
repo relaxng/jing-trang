@@ -1,6 +1,6 @@
 package com.thaiopensource.relaxng.pattern;
 
-class DataDerivTypeFunction extends AbstractPatternFunction {
+class DataDerivTypeFunction extends AbstractPatternFunction<DataDerivType> {
   private final ValidatorPatternBuilder builder;
 
   DataDerivTypeFunction(ValidatorPatternBuilder builder) {
@@ -8,14 +8,14 @@ class DataDerivTypeFunction extends AbstractPatternFunction {
   }
 
   static DataDerivType dataDerivType(ValidatorPatternBuilder builder, Pattern pattern) {
-    return (DataDerivType)pattern.apply(builder.getDataDerivTypeFunction());
+    return pattern.apply(builder.getDataDerivTypeFunction());
   }
 
-  public Object caseOther(Pattern p) {
+  public DataDerivType caseOther(Pattern p) {
     return new SingleDataDerivType();
   }
 
-  public Object caseAfter(AfterPattern p) {
+  public DataDerivType caseAfter(AfterPattern p) {
     Pattern p1 = p.getOperand1();
     DataDerivType ddt = apply(p.getOperand1());
     if (!p1.isNullable())
@@ -23,41 +23,41 @@ class DataDerivTypeFunction extends AbstractPatternFunction {
     return ddt.combine(new BlankDataDerivType());
   }
 
-  private Object caseBinary(BinaryPattern p) {
+  private DataDerivType caseBinary(BinaryPattern p) {
     return apply(p.getOperand1()).combine(apply(p.getOperand2()));
   }
 
-  public Object caseChoice(ChoicePattern p) {
+  public DataDerivType caseChoice(ChoicePattern p) {
     return caseBinary(p);
   }
 
-  public Object caseGroup(GroupPattern p) {
+  public DataDerivType caseGroup(GroupPattern p) {
     return caseBinary(p);
   }
 
-  public Object caseInterleave(InterleavePattern p) {
+  public DataDerivType caseInterleave(InterleavePattern p) {
     return caseBinary(p);
   }
 
-  public Object caseOneOrMore(OneOrMorePattern p) {
+  public DataDerivType caseOneOrMore(OneOrMorePattern p) {
     return apply(p.getOperand());
   }
 
-  public Object caseList(ListPattern p) {
+  public DataDerivType caseList(ListPattern p) {
     return InconsistentDataDerivType.getInstance();
   }
 
-  public Object caseValue(ValuePattern p) {
+  public DataDerivType caseValue(ValuePattern p) {
     return new ValueDataDerivType(p.getDatatype());
   }
 
-  public Object caseData(DataPattern p) {
+  public DataDerivType caseData(DataPattern p) {
     if (p.allowsAnyString())
       return new SingleDataDerivType();
     return new DataDataDerivType(p.getDatatype());
   }
 
-  public Object caseDataExcept(DataExceptPattern p) {
+  public DataDerivType caseDataExcept(DataExceptPattern p) {
     if (p.allowsAnyString())
       return apply(p.getExcept());
     return new DataDataDerivType(p.getDatatype()).combine(apply(p.getExcept()));

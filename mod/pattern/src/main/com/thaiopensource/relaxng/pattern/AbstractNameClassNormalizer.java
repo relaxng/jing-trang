@@ -5,7 +5,6 @@ import com.thaiopensource.xml.util.Name;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,8 +19,8 @@ public abstract class AbstractNameClassNormalizer {
   protected abstract void accept(NameClassVisitor visitor);
 
   public NormalizedNameClass normalize() {
-    final List mentionedNames = new ArrayList();
-    final List mentionedNamespaces = new ArrayList();
+    final List<Name> mentionedNames = new ArrayList<Name>();
+    final List<String> mentionedNamespaces = new ArrayList<String>();
     accept(new NameClassVisitor() {
       public void visitChoice(NameClass nc1, NameClass nc2) {
         nc1.accept(this);
@@ -55,16 +54,14 @@ public abstract class AbstractNameClassNormalizer {
       }
     });
     if (contains(new Name(IMPOSSIBLE, IMPOSSIBLE))) {
-      Set includedNames = new HashSet();
-      Set excludedNamespaces = new HashSet();
-      Set excludedNames = new HashSet();
-      for (Iterator iter = mentionedNamespaces.iterator(); iter.hasNext();) {
-        String ns = (String)iter.next();
+      Set<Name> includedNames = new HashSet<Name>();
+      Set<String> excludedNamespaces = new HashSet<String>();
+      Set<Name> excludedNames = new HashSet<Name>();
+      for (String ns : mentionedNamespaces) {
         if (!contains(new Name(ns, IMPOSSIBLE)))
           excludedNamespaces.add(ns);
       }
-      for (Iterator iter = mentionedNames.iterator(); iter.hasNext();) {
-        Name name = (Name)iter.next();
+      for (Name name : mentionedNames) {
         boolean in = contains(name);
         if (excludedNamespaces.contains(name.getNamespaceUri())) {
           if (in)
@@ -75,17 +72,15 @@ public abstract class AbstractNameClassNormalizer {
       }
       return new NormalizedAnyNameClass(includedNames, excludedNamespaces, excludedNames);
     }
-    Map nsMap = new HashMap();
-    for (Iterator iter = mentionedNamespaces.iterator(); iter.hasNext();) {
-      String ns = (String)iter.next();
+    Map<String, HashSet<String>> nsMap = new HashMap<String, HashSet<String>>();
+    for (String ns : mentionedNamespaces) {
       if (contains(new Name(ns, IMPOSSIBLE)) && nsMap.get(ns) == null)
-        nsMap.put(ns, new HashSet());
+        nsMap.put(ns, new HashSet<String>());
     }
-    Set includedNames = new HashSet();
-    for (Iterator iter = mentionedNames.iterator(); iter.hasNext();) {
-      Name name = (Name)iter.next();
+    Set<Name> includedNames = new HashSet<Name>();
+    for (Name name : mentionedNames) {
       boolean in = contains(name);
-      Set excluded = (Set)nsMap.get(name.getNamespaceUri());
+      Set<String> excluded = nsMap.get(name.getNamespaceUri());
       if (excluded == null) {
         if (in)
           includedNames.add(name);
