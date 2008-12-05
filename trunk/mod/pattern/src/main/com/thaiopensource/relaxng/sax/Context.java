@@ -3,6 +3,7 @@ package com.thaiopensource.relaxng.sax;
 import com.thaiopensource.relaxng.match.MatchContext;
 import com.thaiopensource.relaxng.parse.sax.DtdContext;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
+import org.xml.sax.SAXException;
 
 public class Context extends DtdContext implements MatchContext {
   protected PrefixMapping prefixMapping = new PrefixMapping("xml", WellKnownNamespaces.XML, null);
@@ -10,11 +11,11 @@ public class Context extends DtdContext implements MatchContext {
   public Context() {
   }
 
-  public void startPrefixMapping(String prefix, String uri) {
+  public void startPrefixMapping(String prefix, String uri) throws SAXException {
     prefixMapping = new PrefixMapping(prefix, "".equals(uri) ? null : uri, prefixMapping);
   }
 
-  public void endPrefixMapping(String prefix) {
+  public void endPrefixMapping(String prefix) throws SAXException {
     prefixMapping = prefixMapping.getPrevious();
   }
 

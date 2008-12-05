@@ -62,6 +62,12 @@ public interface Matcher {
   Matcher copy();
 
   /**
+   * Return a copy of this <code>Matcher</code> reset to its starting state.
+   * @return a new <code>Matcher</code>
+   */
+  Matcher start();
+
+  /**
    * Test whether obj is an equivalent <code>Matcher</code>.
    * @return true if they are obj is known to be equivalent, false otherwise
    */
@@ -112,23 +118,26 @@ public interface Matcher {
    * The MatchContext must include all the namespace declarations in the start-tag
    * including those that lexically follow the attribute.
    *
+   * @param value the attribute value, normalized in accordance with XML 1.0
    * @param name  the attribute name (included for use in error messages)
    * @param qName the attribute qName (included for use in error messages)
    * @param context the MatchContext
-   * @param value the attribute value, normalized in accordance with XML 1.0
    * @return false if there was an error, true otherwise
    */
-  boolean matchAttributeValue(Name name, String qName, MatchContext context, String value);
+  boolean matchAttributeValue(String value, Name name, String qName, MatchContext context);
 
   /**
    * Match a StartTagClose event.  This corresponds to the  <code>&gt;</code> character
    * that ends the start-tag).
    * It may cause an error if there are required attributes that have not been matched.
+   * The parameters are used to generate error messages.
    *
-   * @param context the MatchContext (used for error messages)
+   * @param name the element name
+   * @param qName the element qName (may be null or empty)
+   * @param context the MatchContext
    * @return false if there was an error, true otherwise
    */
-  boolean matchStartTagClose(MatchContext context);
+  boolean matchStartTagClose(Name name, String qName, MatchContext context);
 
   /**
    * Match a Text event that occurs immediately before an EndTag event.
@@ -139,10 +148,13 @@ public interface Matcher {
    * calls to <code>matchUntypedText</code>.
    *
    * @param string the text to be matched
+   * @param name the name of the parent element (i.e. the name of the element of the following
+   * EndTag event)
+   * @param qName the qName of the parent element
    * @param context a match context
    * @return false if there was an error, true otherwise
    */
-  boolean matchTextBeforeEndTag(String string, MatchContext context);
+  boolean matchTextBeforeEndTag(String string, Name name, String qName, MatchContext context);
 
   /**
    * Match a Text event that occurs immediately before a StartTagOpen event.
@@ -153,9 +165,10 @@ public interface Matcher {
    * calls to <code>matchUntypedText</code>.
    *
    * @param string the text to be matched
+   * @param context a match context
    * @return false if there was an error, true otherwise
    */
-  boolean matchTextBeforeStartTag(String string);
+  boolean matchTextBeforeStartTag(String string, MatchContext context);
 
   /**
    * An optimization of <code>matchTextBeforeStartTag</code>/<code>matchTextBeforeEndTag</code>.
@@ -168,10 +181,10 @@ public interface Matcher {
    * consecutive calls to <code>matchUntypedText</code> are allowed.
    * <code>matchUntypedText</code> must not be used unless <code>isTextTyped</code>
    * returns false.
-   *
+   * @param context a match context
    * @return false if there was an error, true otherwise
    */
-  boolean matchUntypedText();
+  boolean matchUntypedText(MatchContext context);
 
   /**
    * Return true if text may be typed in the current state, false otherwise.
@@ -185,10 +198,12 @@ public interface Matcher {
   /**
    * Match an EndTag event.
    *
+   * @param name the element name
+   * @param qName the elememt qname (may be empty or null if unknown)
    * @param context a match context
    * @return false if there was an error, true otherwise
    */
-  boolean matchEndTag(MatchContext context);
+  boolean matchEndTag(Name name, String qName, MatchContext context);
 
   /**
    * Return the current error message.

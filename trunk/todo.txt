@@ -1,8 +1,16 @@
+When too many possible element/attribute names, give only those with
+declared namespaces.
+
+Handle wildcards better in possibleContent/possibleAttributes.
+
+Enumerated values.
+
+Datatype errors.
+
+Diagnose missing namespace declaration
+
 Note prefixes used in the schema and use them in qNames in error
 messages when no prefix is declared for a namespace.
-
-Use Matcher.possibleAttributeNames/possibleStartTagNames to give
-additional information in error messages.
 
 Use IntersectionNameClassNormalizer in DuplicateAttributeDetector.
 

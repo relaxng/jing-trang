@@ -15,11 +15,10 @@ import org.xml.sax.SAXParseException;
 
 public class PatternValidator extends Context implements ContentHandler, DTDHandler {
   private Matcher matcher;
-  private final Matcher initialMatcher;
   private final ErrorHandler eh;
-  private boolean bufferingCharacters;
+  private boolean bufferingCharacters = false;
   private final StringBuffer charBuf = new StringBuffer();
-  private Locator locator;
+  private Locator locator = null;
 
   public void startElement(String namespaceURI,
 			   String localName,
@@ -27,7 +26,7 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
 			   Attributes atts) throws SAXException {
     if (bufferingCharacters) {
       bufferingCharacters = false;
-      check(matcher.matchTextBeforeStartTag(charBuf.toString()));
+      check(matcher.matchTextBeforeStartTag(charBuf.toString(), this));
     }
     Name name = new Name(namespaceURI, localName);
     check(matcher.matchStartTagOpen(name, qName, this));
@@ -36,9 +35,9 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
       Name attName = new Name(atts.getURI(i), atts.getLocalName(i));
       String attQName = atts.getQName(i);
       check(matcher.matchAttributeName(attName, attQName, this));
-      check(matcher.matchAttributeValue(attName, attQName, this, atts.getValue(i)));
+      check(matcher.matchAttributeValue(atts.getValue(i), attName, attQName, this));
     }
-    check(matcher.matchStartTagClose(this));
+    check(matcher.matchStartTagClose(name, qName, this));
     if (matcher.isTextTyped()) {
       bufferingCharacters = true;
       charBuf.setLength(0);
@@ -50,9 +49,11 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
 			 String qName) throws SAXException {
     if (bufferingCharacters) {
       bufferingCharacters = false;
-      check(matcher.matchTextBeforeEndTag(charBuf.toString(), this));
+      if (charBuf.length() > 0)
+        check(matcher.matchTextBeforeEndTag(charBuf.toString(), new Name(namespaceURI, localName),
+                                            qName, this));
     }
-    check(matcher.matchEndTag(this));
+    check(matcher.matchEndTag(new Name(namespaceURI, localName), qName, this));
   }
 
   public void characters(char ch[], int start, int length) throws SAXException {
@@ -68,7 +69,7 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
       case '\n':
 	break;
       default:
-	check(matcher.matchUntypedText());
+	check(matcher.matchUntypedText(this));
 	return;
       }
     }
@@ -90,17 +91,24 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
   public void skippedEntity(String name) { }
   public void ignorableWhitespace(char[] ch, int start, int len) { }
 
+  public void startPrefixMapping(String prefix, String uri) throws SAXException {
+    if (bufferingCharacters) {
+      bufferingCharacters = false;
+      check(matcher.matchTextBeforeStartTag(charBuf.toString(), this));
+    }
+    super.startPrefixMapping(prefix, uri);
+  }
+
   public PatternValidator(Pattern pattern, ValidatorPatternBuilder builder, ErrorHandler eh) {
-    this.initialMatcher = new PatternMatcher(pattern, builder);
+    this.matcher = new PatternMatcher(pattern, builder);
     this.eh = eh;
-    reset();
   }
 
   public void reset() {
     super.reset();
     bufferingCharacters = false;
     locator = null;
-    matcher = initialMatcher.copy();
+    matcher = matcher.start();
   }
 
   private void check(boolean ok) throws SAXException {
