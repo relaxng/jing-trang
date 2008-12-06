@@ -2,10 +2,16 @@ package com.thaiopensource.relaxng.jaxp;
 
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.parse.compact.CompactParseable;
+import com.thaiopensource.relaxng.pattern.Pattern;
+import com.thaiopensource.relaxng.pattern.NameClass;
+import com.thaiopensource.relaxng.pattern.CommentListImpl;
+import com.thaiopensource.relaxng.pattern.AnnotationsImpl;
 import com.thaiopensource.resolver.xml.sax.SAX;
 import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.validation.Constants;
+import com.thaiopensource.util.VoidValue;
 import org.xml.sax.ErrorHandler;
+import org.xml.sax.Locator;
 
 import javax.xml.transform.sax.SAXSource;
 
@@ -27,7 +33,7 @@ public class CompactSyntaxSchemaFactory extends SchemaFactoryImpl {
     return schemaLanguage.equals(SCHEMA_LANGUAGE);
   }
 
-  protected Parseable createParseable(SAXSource source, SAXResolver saxResolver, ErrorHandler eh) {
-    return new CompactParseable(SAX.createInput(source.getInputSource()), saxResolver.getResolver(), eh);
+  protected Parseable<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl> createParseable(SAXSource source, SAXResolver saxResolver, ErrorHandler eh) {
+    return new CompactParseable<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl>(SAX.createInput(source.getInputSource()), saxResolver.getResolver(), eh);
   }
 }

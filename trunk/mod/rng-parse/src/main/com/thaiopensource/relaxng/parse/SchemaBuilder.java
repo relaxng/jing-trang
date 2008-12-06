@@ -1,51 +1,55 @@
 package com.thaiopensource.relaxng.parse;
 
-public interface SchemaBuilder {
-  ParsedPattern makeChoice(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws BuildException;
-  ParsedPattern makeInterleave(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws BuildException;
-  ParsedPattern makeGroup(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws BuildException;
-  ParsedPattern makeOneOrMore(ParsedPattern p, Location loc, Annotations anno) throws BuildException;
-  ParsedPattern makeZeroOrMore(ParsedPattern p, Location loc, Annotations anno) throws BuildException;
-  ParsedPattern makeOptional(ParsedPattern p, Location loc, Annotations anno) throws BuildException;
-  ParsedPattern makeList(ParsedPattern p, Location loc, Annotations anno) throws BuildException;
-  ParsedPattern makeMixed(ParsedPattern p, Location loc, Annotations anno) throws BuildException;
-  ParsedPattern makeEmpty(Location loc, Annotations anno);
-  ParsedPattern makeNotAllowed(Location loc, Annotations anno);
-  ParsedPattern makeText(Location loc, Annotations anno);
-  ParsedPattern makeAttribute(ParsedNameClass nc, ParsedPattern p, Location loc, Annotations anno) throws BuildException;
-  ParsedPattern makeElement(ParsedNameClass nc, ParsedPattern p, Location loc, Annotations anno) throws BuildException;
-  DataPatternBuilder makeDataPatternBuilder(String datatypeLibrary, String type, Location loc) throws BuildException;
-  ParsedPattern makeValue(String datatypeLibrary, String type, String value, Context c, String ns,
-                          Location loc, Annotations anno) throws BuildException;
-  Grammar makeGrammar(Scope parent);
-  ParsedPattern annotate(ParsedPattern p, Annotations anno) throws BuildException;
-  ParsedNameClass annotate(ParsedNameClass nc, Annotations anno) throws BuildException;
-  ParsedPattern annotateAfter(ParsedPattern p, ParsedElementAnnotation e) throws BuildException;
-  ParsedNameClass annotateAfter(ParsedNameClass nc, ParsedElementAnnotation e) throws BuildException;
-  ParsedPattern commentAfter(ParsedPattern p, CommentList comments) throws BuildException;
-  ParsedNameClass commentAfter(ParsedNameClass nc, CommentList comments) throws BuildException;
-  ParsedPattern makeExternalRef(String href, String base, String ns, Scope scope,
-                                Location loc, Annotations anno) throws BuildException, IllegalSchemaException;
-  ParsedNameClass makeChoice(ParsedNameClass[] nameClasses, int nNameClasses, Location loc, Annotations anno);
+import java.util.List;
 
+public interface SchemaBuilder<P, NC, L, EA, CL extends CommentList<L>, A extends Annotations<L, EA, CL>> {
+  P makeChoice(List<P> patterns, L loc, A anno) throws BuildException;
+  P makeInterleave(List<P> patterns, L loc, A anno) throws BuildException;
+  P makeGroup(List<P> patterns, L loc, A anno) throws BuildException;
+  P makeOneOrMore(P p, L loc, A anno) throws BuildException;
+  P makeZeroOrMore(P p, L loc, A anno) throws BuildException;
+  P makeOptional(P p, L loc, A anno) throws BuildException;
+  P makeList(P p, L loc, A anno) throws BuildException;
+  P makeMixed(P p, L loc, A anno) throws BuildException;
+  P makeEmpty(L loc, A anno);
+  P makeNotAllowed(L loc, A anno);
+  P makeText(L loc, A anno);
+  P makeAttribute(NC nc, P p, L loc, A anno) throws BuildException;
+  P makeElement(NC nc, P p, L loc, A anno) throws BuildException;
+  DataPatternBuilder<P, L, EA, CL, A> makeDataPatternBuilder(String datatypeLibrary, String type, L loc) throws BuildException;
+  P makeValue(String datatypeLibrary, String type, String value, Context c, String ns,
+              L loc, A anno) throws BuildException;
+  Grammar<P, L, EA, CL, A> makeGrammar(Scope<P, L, EA, CL, A> parent);
+  P annotatePattern(P p, A anno) throws BuildException;
+  NC annotateNameClass(NC nc, A anno) throws BuildException;
+  P annotateAfterPattern(P p, EA e) throws BuildException;
+  NC annotateAfterNameClass(NC nc, EA e) throws BuildException;
+  P commentAfterPattern(P p, CL comments) throws BuildException;
+  NC commentAfterNameClass(NC nc, CL comments) throws BuildException;
+  P makeExternalRef(String href, String base, String ns, Scope<P, L, EA, CL, A> scope,
+                    L loc, A anno) throws BuildException, IllegalSchemaException;
+  NC makeNameClassChoice(List<NC> nameClasses, L loc, A anno);
+
+  // Compare against INHERIT_NS with == not equals.
+  // Doing new String() ensures it is not == if the user specifies #inherit explicitly in the schema.
   static final String INHERIT_NS = new String("#inherit");
-  ParsedNameClass makeName(String ns, String localName, String prefix, Location loc, Annotations anno);
-  ParsedNameClass makeNsName(String ns, Location loc, Annotations anno);
-  /**
+  NC makeName(String ns, String localName, String prefix, L loc, A anno);
+  NC makeNsName(String ns, L loc, A anno);
+  /*
    * Caller must enforce constraints on except.
    */
-  ParsedNameClass makeNsName(String ns, ParsedNameClass except, Location loc, Annotations anno);
-  ParsedNameClass makeAnyName(Location loc, Annotations anno);
-   /**
+  NC makeNsName(String ns, NC except, L loc, A anno);
+  NC makeAnyName(L loc, A anno);
+  /*
    * Caller must enforce constraints on except.
    */
-  ParsedNameClass makeAnyName(ParsedNameClass except, Location loc, Annotations anno);
-  Location makeLocation(String systemId, int lineNumber, int columnNumber);
-  Annotations makeAnnotations(CommentList comments, Context context);
-  ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix,
-                                                        Location loc, CommentList comments, Context context);
-  CommentList makeCommentList();
-  ParsedPattern makeErrorPattern();
-  ParsedNameClass makeErrorNameClass();
+  NC makeAnyName(NC except, L loc, A anno);
+  L makeLocation(String systemId, int lineNumber, int columnNumber);
+  A makeAnnotations(CL comments, Context context);
+  ElementAnnotationBuilder<L, EA, CL> makeElementAnnotationBuilder(String ns, String localName, String prefix,
+                                                                   L loc, CL comments, Context context);
+  CL makeCommentList();
+  P makeErrorPattern();
+  NC makeErrorNameClass();
   boolean usesComments();
 }

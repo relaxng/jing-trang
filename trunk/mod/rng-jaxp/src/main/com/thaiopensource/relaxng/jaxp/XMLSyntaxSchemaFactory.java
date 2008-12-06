@@ -2,10 +2,16 @@ package com.thaiopensource.relaxng.jaxp;
 
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.parse.sax.SAXParseable;
+import com.thaiopensource.relaxng.pattern.Pattern;
+import com.thaiopensource.relaxng.pattern.NameClass;
+import com.thaiopensource.relaxng.pattern.CommentListImpl;
+import com.thaiopensource.relaxng.pattern.AnnotationsImpl;
 import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.validation.Constants;
+import com.thaiopensource.util.VoidValue;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.Locator;
 
 import javax.xml.transform.sax.SAXSource;
 
@@ -20,10 +26,10 @@ public class XMLSyntaxSchemaFactory extends SchemaFactoryImpl {
    */
   static final public String SCHEMA_LANGUAGE = Constants.RELAXNG_XML_URI;
   
-  protected Parseable createParseable(SAXSource source, SAXResolver resolver, ErrorHandler eh) throws SAXException {
+  protected Parseable<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl> createParseable(SAXSource source, SAXResolver resolver, ErrorHandler eh) throws SAXException {
     if (source.getXMLReader() == null)
       source = new SAXSource(resolver.createXMLReader(), source.getInputSource());
-    return new SAXParseable(source, resolver, eh);
+    return new SAXParseable<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl>(source, resolver, eh);
   }
 
   public boolean isSchemaLanguageSupported(String schemaLanguage) {

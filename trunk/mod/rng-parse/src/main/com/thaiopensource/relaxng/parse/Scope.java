@@ -1,6 +1,6 @@
 package com.thaiopensource.relaxng.parse;
 
-public interface Scope {
-  ParsedPattern makeParentRef(String name, Location loc, Annotations anno) throws BuildException;
-  ParsedPattern makeRef(String name, Location loc, Annotations anno) throws BuildException;
+public interface Scope<P, L, EA, CL extends CommentList<L>, A extends Annotations<L, EA, CL>> {
+  P makeParentRef(String name, L loc, A anno) throws BuildException;
+  P makeRef(String name, L loc, A anno) throws BuildException;
 }

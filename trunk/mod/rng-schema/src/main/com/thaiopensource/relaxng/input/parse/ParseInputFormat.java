@@ -2,6 +2,9 @@ package com.thaiopensource.relaxng.input.parse;
 
 import com.thaiopensource.datatype.DatatypeLibraryLoader;
 import com.thaiopensource.relaxng.edit.SchemaCollection;
+import com.thaiopensource.relaxng.edit.Pattern;
+import com.thaiopensource.relaxng.edit.NameClass;
+import com.thaiopensource.relaxng.edit.SourceLocation;
 import com.thaiopensource.relaxng.input.InputFailedException;
 import com.thaiopensource.relaxng.input.InputFormat;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
@@ -34,7 +37,7 @@ public abstract class ParseInputFormat implements InputFormat {
                  }
                });
     pp.process(params, eh);
-    Parseable parseable = makeParseable(in, new SAXResolver(resolver), eh);
+    Parseable<Pattern, NameClass, SourceLocation, ElementAnnotationBuilderImpl, CommentListImpl, AnnotationsImpl> parseable = makeParseable(in, new SAXResolver(resolver), eh);
     try {
       return SchemaBuilderImpl.parse(parseable,
                                      uri,
@@ -47,5 +50,5 @@ public abstract class ParseInputFormat implements InputFormat {
     }
   }
 
-  protected abstract Parseable makeParseable(InputSource in, SAXResolver resolver, ErrorHandler eh) throws SAXException;
+  protected abstract Parseable<Pattern, NameClass, SourceLocation, ElementAnnotationBuilderImpl, CommentListImpl, AnnotationsImpl> makeParseable(InputSource in, SAXResolver resolver, ErrorHandler eh) throws SAXException;
 }

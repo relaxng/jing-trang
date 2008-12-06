@@ -1,10 +1,10 @@
 package com.thaiopensource.relaxng.edit;
 
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ChoiceNameClass extends NameClass {
-  private final List<NameClass> children = new Vector<NameClass>();
+  private final List<NameClass> children = new ArrayList<NameClass>();
 
   public List<NameClass> getChildren() {
     return children;

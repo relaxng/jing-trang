@@ -1,5 +1,6 @@
 package com.thaiopensource.relaxng.parse;
 
-public interface Div extends GrammarSection {
-  void endDiv(Location loc, Annotations anno) throws BuildException;
+public interface Div<P, L, EA, CL extends CommentList<L>, A extends Annotations<L, EA, CL>>
+        extends GrammarSection<P, L, EA, CL, A> {
+  void endDiv(L loc, A anno) throws BuildException;
 }

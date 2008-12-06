@@ -1,9 +1,10 @@
 package com.thaiopensource.relaxng.parse.compact;
 
+import com.thaiopensource.relaxng.parse.Annotations;
 import com.thaiopensource.relaxng.parse.BuildException;
+import com.thaiopensource.relaxng.parse.CommentList;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.IncludedGrammar;
-import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.SubParseable;
@@ -22,7 +23,8 @@ import java.io.InputStreamReader;
 import java.io.PushbackInputStream;
 import java.io.Reader;
 
-public class CompactParseable implements SubParseable {
+public class CompactParseable<P, NC, L, EA, CL extends CommentList<L>, A extends Annotations<L, EA, CL>>
+        implements SubParseable<P, NC, L, EA, CL, A> {
   private final Input in;
   private final Resolver resolver;
   private final ErrorHandler eh;
@@ -34,11 +36,11 @@ public class CompactParseable implements SubParseable {
     this.eh = eh;
   }
 
-  public ParsedPattern parse(SchemaBuilder sb, Scope scope) throws BuildException, IllegalSchemaException {
-    return new CompactSyntax(makeReader(in), in.getUri(), sb, eh).parse(scope);
+  public P parse(SchemaBuilder<P, NC, L, EA, CL, A> sb, Scope<P, L, EA, CL, A> scope) throws BuildException, IllegalSchemaException {
+    return new CompactSyntax<P, NC, L, EA, CL, A>(makeReader(in), in.getUri(), sb, eh).parse(scope);
   }
 
-  public SubParseable createSubParseable(String href, String base) throws BuildException {
+  public SubParseable<P, NC, L, EA, CL, A> createSubParseable(String href, String base) throws BuildException {
     Identifier id = new MediaTypedIdentifier(href, base, MEDIA_TYPE);
     Input input = new Input();
     try {
@@ -50,12 +52,12 @@ public class CompactParseable implements SubParseable {
     catch (IOException e) {
       throw new BuildException(e);
     }
-    return new CompactParseable(input, resolver, eh);
+    return new CompactParseable<P, NC, L, EA, CL, A>(input, resolver, eh);
   }
 
-  public ParsedPattern parseAsInclude(SchemaBuilder sb, IncludedGrammar g)
+  public P parseAsInclude(SchemaBuilder<P, NC, L, EA, CL, A> sb, IncludedGrammar<P, L, EA, CL, A> g)
           throws BuildException, IllegalSchemaException {
-    return new CompactSyntax(makeReader(in), in.getUri(), sb, eh).parseInclude(g);
+    return new CompactSyntax<P, NC, L, EA, CL, A>(makeReader(in), in.getUri(), sb, eh).parseInclude(g);
   }
 
   public String getUri() {

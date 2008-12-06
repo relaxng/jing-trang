@@ -6,12 +6,17 @@ import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.Parseable;
 import com.thaiopensource.relaxng.pattern.SchemaBuilderImpl;
 import com.thaiopensource.relaxng.pattern.SchemaPatternBuilder;
+import com.thaiopensource.relaxng.pattern.Pattern;
+import com.thaiopensource.relaxng.pattern.NameClass;
+import com.thaiopensource.relaxng.pattern.CommentListImpl;
+import com.thaiopensource.relaxng.pattern.AnnotationsImpl;
 import com.thaiopensource.resolver.Resolver;
 import com.thaiopensource.resolver.xml.ls.LS;
 import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.validation.Schema2;
 import com.thaiopensource.validation.SchemaFactory2;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
+import com.thaiopensource.util.VoidValue;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 import org.w3c.dom.ls.LSResourceResolver;
 import org.xml.sax.ErrorHandler;
@@ -19,6 +24,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.SAXParseException;
+import org.xml.sax.Locator;
 
 import javax.xml.transform.sax.SAXSource;
 import java.io.IOException;
@@ -63,7 +69,8 @@ public abstract class SchemaFactoryImpl extends SchemaFactory2 {
     ErrorHandler eh = getErrorHandler();
     if (eh == null)
       eh = new DraconianErrorHandler();
-    Parseable parseable = createParseable(source, saxResolver, eh);
+    Parseable<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl> parseable
+            = createParseable(source, saxResolver, eh);
     SchemaPatternBuilder spb = new SchemaPatternBuilder();
     try {
       return new SchemaImpl(this, spb, SchemaBuilderImpl.parse(parseable, eh, getDatatypeLibraryFactory(), spb, false));
@@ -108,5 +115,6 @@ public abstract class SchemaFactoryImpl extends SchemaFactory2 {
     return datatypeLibraryFactory;
   }
 
-  abstract protected Parseable createParseable(SAXSource source, SAXResolver resolver, ErrorHandler eh) throws SAXException;
+  abstract protected Parseable<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl>
+  createParseable(SAXSource source, SAXResolver resolver, ErrorHandler eh) throws SAXException;
 }

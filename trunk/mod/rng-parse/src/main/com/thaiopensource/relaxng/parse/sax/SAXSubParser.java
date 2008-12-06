@@ -1,6 +1,8 @@
 package com.thaiopensource.relaxng.parse.sax;
 
+import com.thaiopensource.relaxng.parse.Annotations;
 import com.thaiopensource.relaxng.parse.BuildException;
+import com.thaiopensource.relaxng.parse.CommentList;
 import com.thaiopensource.relaxng.parse.SubParseable;
 import com.thaiopensource.relaxng.parse.SubParser;
 import com.thaiopensource.resolver.xml.sax.SAXResolver;
@@ -10,7 +12,8 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 
-public class SAXSubParser implements SubParser {
+public class SAXSubParser<P, NC, L, EA, CL extends CommentList<L>, A extends Annotations<L, EA, CL>> implements
+        SubParser<P, NC, L, EA, CL, A> {
   final SAXResolver resolver;
   final ErrorHandler eh;
 
@@ -19,9 +22,9 @@ public class SAXSubParser implements SubParser {
     this.eh = eh;
   }
 
-  public SubParseable createSubParseable(String href, String base) throws BuildException {
+  public SubParseable<P, NC, L, EA, CL, A> createSubParseable(String href, String base) throws BuildException {
     try {
-      return new SAXParseable(resolver.resolve(href, base, WellKnownNamespaces.RELAX_NG), resolver, eh);
+      return new SAXParseable<P, NC, L, EA, CL, A>(resolver.resolve(href, base, WellKnownNamespaces.RELAX_NG), resolver, eh);
     }
     catch (SAXException e) {
       throw BuildException.fromSAXException(e);

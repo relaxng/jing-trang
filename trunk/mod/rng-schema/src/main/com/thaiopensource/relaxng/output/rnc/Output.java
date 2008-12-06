@@ -33,7 +33,6 @@ import com.thaiopensource.relaxng.edit.NameClassedPattern;
 import com.thaiopensource.relaxng.edit.NameNameClass;
 import com.thaiopensource.relaxng.edit.NotAllowedPattern;
 import com.thaiopensource.relaxng.edit.NsNameNameClass;
-import com.thaiopensource.relaxng.edit.VoidVisitor;
 import com.thaiopensource.relaxng.edit.OneOrMorePattern;
 import com.thaiopensource.relaxng.edit.OptionalPattern;
 import com.thaiopensource.relaxng.edit.Param;
@@ -46,19 +45,19 @@ import com.thaiopensource.relaxng.edit.TextAnnotation;
 import com.thaiopensource.relaxng.edit.TextPattern;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
-import com.thaiopensource.util.VoidValue;
+import com.thaiopensource.relaxng.edit.VoidVisitor;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
 import com.thaiopensource.relaxng.parse.Context;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.util.Utf16;
+import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.xml.out.CharRepertoire;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -340,8 +339,7 @@ class Output {
     private void noteContext(Context context, boolean required) {
       if (context == null)
         return;
-      for (Enumeration e = context.prefixes(); e.hasMoreElements();) {
-        String prefix = (String)e.nextElement();
+      for (String prefix : context.prefixes()) {
         // Default namespace is not relevant to annotations
         if (!prefix.equals("")) {
           String ns = context.resolveNamespacePrefix(prefix);
@@ -1197,8 +1195,7 @@ class Output {
   private void checkContext(Context context, SourceLocation loc) {
     if (context == null)
       return;
-    for (Enumeration e = context.prefixes(); e.hasMoreElements();) {
-      String prefix = (String)e.nextElement();
+    for (String prefix : context.prefixes()) {
       // Default namespace is not relevant to annotations
       if (!prefix.equals("")) {
         String ns = context.resolveNamespacePrefix(prefix);

@@ -9,7 +9,6 @@
       <maximumHeapSize value="128" />
       <maximumStackSize value="32" />
       <properties />
-      <executeOn event="beforeRun" target="services" />
       <executeOn event="beforeRun" target="services" runConfigurationType="Application" runConfigurationName="Jing" />
       <executeOn event="beforeRun" target="services" runConfigurationType="Application" runConfigurationName="Trang" />
       <executeOn event="beforeRun" target="services" runConfigurationType="Application" runConfigurationName="mns-test" />
@@ -49,10 +48,12 @@
         <option name="ALIGN_MULTILINE_BINARY_OPERATION" value="true" />
         <option name="ALIGN_MULTILINE_ASSIGNMENT" value="true" />
         <option name="ALIGN_MULTILINE_TERNARY_OPERATION" value="true" />
+        <option name="ALIGN_MULTILINE_EXTENDS_LIST" value="true" />
+        <option name="ALIGN_MULTILINE_PARENTHESIZED_EXPRESSION" value="true" />
         <option name="ALIGN_MULTILINE_ARRAY_INITIALIZER_EXPRESSION" value="true" />
         <option name="SPACE_AFTER_TYPE_CAST" value="false" />
-        <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="100" />
-        <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="100" />
+        <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="999" />
+        <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="999" />
         <option name="OPTIMIZE_IMPORTS_ON_THE_FLY" value="true" />
         <option name="ADD_UNAMBIGIOUS_IMPORTS_ON_THE_FLY" value="true" />
         <option name="RIGHT_MARGIN" value="100" />
@@ -158,6 +159,7 @@
           <option name="SUGGEST_PRIVATE_FOR_INNERS" value="false" />
         </inspection_tool>
         <inspection_tool class="OctalLiteral" level="WARNING" enabled="false" />
+        <inspection_tool class="ThrowableInstanceNeverThrown" level="WARNING" enabled="false" />
       </profile>
       <profile version="1.0" is_locked="false">
         <option name="myName" value="Project Default" />

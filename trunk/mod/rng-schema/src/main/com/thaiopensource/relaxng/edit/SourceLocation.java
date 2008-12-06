@@ -1,8 +1,6 @@
 package com.thaiopensource.relaxng.edit;
 
-import com.thaiopensource.relaxng.parse.Location;
-
-public class SourceLocation implements Location {
+public class SourceLocation {
   private final String uri;
   private final int lineNumber;
   private final int columnNumber;

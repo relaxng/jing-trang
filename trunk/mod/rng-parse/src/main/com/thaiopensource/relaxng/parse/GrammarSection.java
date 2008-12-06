@@ -1,6 +1,6 @@
 package com.thaiopensource.relaxng.parse;
 
-public interface GrammarSection {
+public interface GrammarSection<P, L, EA, CL extends CommentList<L>, A extends Annotations<L, EA, CL>> {
 
   static final class Combine {
     private final String name;
@@ -15,15 +15,15 @@ public interface GrammarSection {
   static final Combine COMBINE_CHOICE = new Combine("choice");
   static final Combine COMBINE_INTERLEAVE = new Combine("interleave");
 
-  static final String START = new String("#start");
+  static final String START = "#start";
 
-  void define(String name, Combine combine, ParsedPattern pattern, Location loc, Annotations anno)
+  void define(String name, Combine combine, P pattern, L loc, A anno)
     throws BuildException;
-  void topLevelAnnotation(ParsedElementAnnotation ea) throws BuildException;
-  void topLevelComment(CommentList comments) throws BuildException;
-  Div makeDiv();
-  /**
+  void topLevelAnnotation(EA ea) throws BuildException;
+  void topLevelComment(CL comments) throws BuildException;
+  Div<P, L, EA, CL, A> makeDiv();
+  /*
    * Returns null if already in an include.
    */
-  Include makeInclude();
+  Include<P, L, EA, CL, A> makeInclude();
 }

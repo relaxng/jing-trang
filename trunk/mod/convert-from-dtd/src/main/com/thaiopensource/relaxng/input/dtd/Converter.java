@@ -30,7 +30,6 @@ import com.thaiopensource.relaxng.edit.ValuePattern;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
 import com.thaiopensource.relaxng.input.CommentTrimmer;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
-import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.xml.dtd.om.AttributeDefault;
 import com.thaiopensource.xml.dtd.om.AttributeGroup;
 import com.thaiopensource.xml.dtd.om.AttributeGroupMember;
@@ -724,7 +723,7 @@ public class Converter {
       defaultNamespace = options.defaultNamespace;
     }
     else if (defaultNamespace == null)
-      defaultNamespace = SchemaBuilder.INHERIT_NS;
+      defaultNamespace = NameClass.INHERIT_NS;
     for (Map.Entry<String, String> entry : options.prefixMap.entrySet()) {
       String prefix = entry.getKey();
       String ns = entry.getValue();
