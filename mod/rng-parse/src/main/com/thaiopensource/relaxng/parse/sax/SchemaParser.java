@@ -1,47 +1,48 @@
 package com.thaiopensource.relaxng.parse.sax;
 
+import com.thaiopensource.relaxng.parse.Annotations;
+import com.thaiopensource.relaxng.parse.CommentList;
+import com.thaiopensource.relaxng.parse.Context;
 import com.thaiopensource.relaxng.parse.DataPatternBuilder;
+import com.thaiopensource.relaxng.parse.Div;
+import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
 import com.thaiopensource.relaxng.parse.Grammar;
 import com.thaiopensource.relaxng.parse.GrammarSection;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.Include;
 import com.thaiopensource.relaxng.parse.IncludedGrammar;
-import com.thaiopensource.relaxng.parse.Location;
-import com.thaiopensource.relaxng.parse.ParsedNameClass;
-import com.thaiopensource.relaxng.parse.ParsedPattern;
+import com.thaiopensource.relaxng.parse.ParsedPatternFuture;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
-import com.thaiopensource.relaxng.parse.Annotations;
-import com.thaiopensource.relaxng.parse.Context;
-import com.thaiopensource.relaxng.parse.CommentList;
-import com.thaiopensource.relaxng.parse.Div;
-import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
-import com.thaiopensource.relaxng.parse.ParsedElementAnnotation;
-import com.thaiopensource.relaxng.parse.ParsedPatternFuture;
-import com.thaiopensource.util.Uri;
 import com.thaiopensource.util.Localizer;
+import com.thaiopensource.util.Uri;
+import com.thaiopensource.xml.sax.AbstractLexicalHandler;
+import com.thaiopensource.xml.sax.XmlBaseHandler;
 import com.thaiopensource.xml.util.Naming;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
-import com.thaiopensource.xml.sax.XmlBaseHandler;
-import com.thaiopensource.xml.sax.AbstractLexicalHandler;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.XMLReader;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
-import java.util.Hashtable;
-import java.util.Enumeration;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
-class SchemaParser implements ParsedPatternFuture {
-
+class SchemaParser<Pattern, NameClass, Location, ElementAnnotation,
+        CommentListImpl extends CommentList<Location>,
+        AnnotationsImpl extends Annotations<Location, ElementAnnotation, CommentListImpl>>
+        implements ParsedPatternFuture<Pattern> {
   private static final String relaxngURIPrefix =
           WellKnownNamespaces.RELAX_NG.substring(0, WellKnownNamespaces.RELAX_NG.lastIndexOf('/') + 1);
   static final String relaxng10URI = WellKnownNamespaces.RELAX_NG;
@@ -50,16 +51,16 @@ class SchemaParser implements ParsedPatternFuture {
   private String relaxngURI;
   private final XMLReader xr;
   private final ErrorHandler eh;
-  private final SchemaBuilder schemaBuilder;
-  private ParsedPattern startPattern;
+  private final SchemaBuilder<Pattern, NameClass, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> schemaBuilder;
+  private Pattern startPattern;
   private Locator locator;
   private final XmlBaseHandler xmlBaseHandler = new XmlBaseHandler();
   private final ContextImpl context = new ContextImpl();
 
   private boolean hadError = false;
 
-  private Hashtable patternTable;
-  private Hashtable nameClassTable;
+  private Map<String, State> patternMap;
+  private Map<String, State> nameClassMap;
 
   static class PrefixMapping {
     final String prefix;
@@ -92,13 +93,11 @@ class SchemaParser implements ParsedPatternFuture {
       return null;
     }
 
-    public Enumeration prefixes() {
-      Vector v = new Vector();
-      for (PrefixMapping p = prefixMapping; p != null; p = p.next) {
-        if (!v.contains(p.prefix))
-          v.addElement(p.prefix);
-      }
-      return v.elements();
+    public Set<String> prefixes() {
+      Set<String> set = new HashSet<String>();
+      for (PrefixMapping p = prefixMapping; p != null; p = p.next)
+        set.add(p.prefix);
+      return set;
     }
 
     public Context copy() {
@@ -129,10 +128,10 @@ class SchemaParser implements ParsedPatternFuture {
   }
 
   abstract class Handler implements ContentHandler, CommentHandler {
-    CommentList comments;
+    CommentListImpl comments;
 
-    CommentList getComments() {
-      CommentList tem = comments;
+    CommentListImpl getComments() {
+      CommentListImpl tem = comments;
       comments = null;
       return tem;
     }
@@ -166,9 +165,9 @@ class SchemaParser implements ParsedPatternFuture {
     String nsInherit;
     String ns;
     String datatypeLibrary;
-    Scope scope;
+    Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope;
     Location startLocation;
-    Annotations annotations;
+    AnnotationsImpl annotations;
 
     void set() {
       xr.setContentHandler(this);
@@ -177,6 +176,13 @@ class SchemaParser implements ParsedPatternFuture {
     abstract State create();
     abstract State createChildState(String localName) throws SAXException;
 
+    RootState toRootState() {
+      return null;
+    }
+
+    NameClassChoiceState toNameClassChoiceState() {
+      return null;
+    }
 
     void setParent(State parent) {
       this.parent = parent;
@@ -188,7 +194,7 @@ class SchemaParser implements ParsedPatternFuture {
         annotations = schemaBuilder.makeAnnotations(parent.comments, getContext());
         parent.comments = null;
       }
-      else if (parent instanceof RootState)
+      else if (parent.toRootState() != null)
         annotations = schemaBuilder.makeAnnotations(null, getContext());
     }
 
@@ -285,18 +291,18 @@ class SchemaParser implements ParsedPatternFuture {
 
     abstract void end() throws SAXException;
 
-    void endChild(ParsedPattern pattern) {
+    void endPatternChild(Pattern pattern) {
       // XXX cannot happen; throw exception
     }
 
-    void endChild(ParsedNameClass nc) {
+    void endNameClassChild(NameClass nc) {
       // XXX cannot happen; throw exception
     }
 
     public void startDocument() { }
     public void endDocument() {
       if (comments != null && startPattern != null) {
-        startPattern = schemaBuilder.commentAfter(startPattern, comments);
+        startPattern = schemaBuilder.commentAfterPattern(startPattern, comments);
         comments = null;
       }
     }
@@ -320,7 +326,7 @@ class SchemaParser implements ParsedPatternFuture {
       return s.equals(relaxngURI);
     }
 
-    void endForeignChild(ParsedElementAnnotation ea) {
+    void endForeignChild(ElementAnnotation ea) {
       if (annotations == null)
         annotations = schemaBuilder.makeAnnotations(null, getContext());
       annotations.addElement(ea);
@@ -339,12 +345,12 @@ class SchemaParser implements ParsedPatternFuture {
 
   class ForeignElementHandler extends Handler {
     final State nextState;
-    ElementAnnotationBuilder builder;
-    final Stack builderStack = new Stack();
+    ElementAnnotationBuilder<Location, ElementAnnotation, CommentListImpl> builder;
+    final Stack<ElementAnnotationBuilder<Location, ElementAnnotation, CommentListImpl>> builderStack = new Stack<ElementAnnotationBuilder<Location, ElementAnnotation, CommentListImpl>>();
     StringBuffer textBuf;
     Location textLoc;
 
-    ForeignElementHandler(State nextState, CommentList comments) {
+    ForeignElementHandler(State nextState, CommentListImpl comments) {
       this.nextState = nextState;
       this.comments = comments;
     }
@@ -374,13 +380,13 @@ class SchemaParser implements ParsedPatternFuture {
       flushText();
       if (comments != null)
         builder.addComment(getComments());
-      ParsedElementAnnotation ea = builder.makeElementAnnotation();
+      ElementAnnotation ea = builder.makeElementAnnotation();
       if (builderStack.empty()) {
         nextState.endForeignChild(ea);
         nextState.set();
       }
       else {
-        builder = (ElementAnnotationBuilder)builderStack.pop();
+        builder = builderStack.pop();
         builder.addElement(ea);
       }
     }
@@ -440,7 +446,7 @@ class SchemaParser implements ParsedPatternFuture {
       return null;
     }
 
-    abstract ParsedPattern makePattern() throws SAXException;
+    abstract Pattern makePattern() throws SAXException;
 
     void end() throws SAXException {
       if (comments != null) {
@@ -449,18 +455,15 @@ class SchemaParser implements ParsedPatternFuture {
         annotations.addComment(comments);
         comments = null;
       }
-      parent.endChild(makePattern());
+      parent.endPatternChild(makePattern());
     }
   }
 
-  static private final int INIT_CHILD_ALLOC = 5;
-
   abstract class PatternContainerState extends State {
-    ParsedPattern[] childPatterns;
-    int nChildPatterns = 0;
+    List<Pattern> childPatterns = new ArrayList<Pattern>();
 
     State createChildState(String localName) throws SAXException {
-      State state = (State)patternTable.get(localName);
+      State state = patternMap.get(localName);
       if (state == null) {
 	error("expected_pattern", localName);
 	return null;
@@ -468,44 +471,41 @@ class SchemaParser implements ParsedPatternFuture {
       return state.create();
     }
 
-    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
-      if (nPatterns == 1 && anno == null)
-        return patterns[0];
-      return schemaBuilder.makeGroup(patterns, nPatterns, loc, anno);
+    Pattern buildPattern(List<Pattern> patterns, Location loc, AnnotationsImpl anno) throws SAXException {
+      if (patterns.size() == 1 && anno == null)
+        return patterns.get(0);
+      return schemaBuilder.makeGroup(patterns, loc, anno);
     }
 
-    void endChild(ParsedPattern pattern) {
-      if (childPatterns == null)
-        childPatterns = new ParsedPattern[INIT_CHILD_ALLOC];
-      else if (nChildPatterns >= childPatterns.length) {
-        ParsedPattern[] newChildPatterns = new ParsedPattern[childPatterns.length * 2];
-        System.arraycopy(childPatterns, 0, newChildPatterns, 0, childPatterns.length);
-        childPatterns = newChildPatterns;
-      }
-      childPatterns[nChildPatterns++] = pattern;
+    void endPatternChild(Pattern pattern) {
+      childPatterns.add(pattern);
     }
 
-    void endForeignChild(ParsedElementAnnotation ea) {
+    void endForeignChild(ElementAnnotation ea) {
+      int nChildPatterns = childPatterns.size();
       if (nChildPatterns == 0)
         super.endForeignChild(ea);
       else
-        childPatterns[nChildPatterns - 1] = schemaBuilder.annotateAfter(childPatterns[nChildPatterns - 1], ea);
+        childPatterns.set(nChildPatterns - 1,
+                          schemaBuilder.annotateAfterPattern(childPatterns.get(nChildPatterns - 1), ea));
     }
 
     void end() throws SAXException {
-      if (nChildPatterns == 0) {
+      if (childPatterns.size() == 0) {
 	error("missing_children");
-	endChild(schemaBuilder.makeErrorPattern());
+	endPatternChild(schemaBuilder.makeErrorPattern());
       }
       if (comments != null) {
-        childPatterns[nChildPatterns - 1] = schemaBuilder.commentAfter(childPatterns[nChildPatterns - 1], comments);
+        int nChildPatterns = childPatterns.size();
+        childPatterns.set(nChildPatterns - 1,
+                          schemaBuilder.commentAfterPattern(childPatterns.get(nChildPatterns - 1), comments));
         comments = null;
       }
-      sendPatternToParent(buildPattern(childPatterns, nChildPatterns, startLocation, annotations));
+      sendPatternToParent(buildPattern(childPatterns, startLocation, annotations));
     }
 
-    void sendPatternToParent(ParsedPattern p) {
-      parent.endChild(p);
+    void sendPatternToParent(Pattern p) {
+      parent.endPatternChild(p);
     }
   }
 
@@ -520,8 +520,8 @@ class SchemaParser implements ParsedPatternFuture {
       return new ZeroOrMoreState();
     }
 
-    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
-      return schemaBuilder.makeZeroOrMore(super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
+    Pattern buildPattern(List<Pattern> patterns, Location loc, AnnotationsImpl anno) throws SAXException {
+      return schemaBuilder.makeZeroOrMore(super.buildPattern(patterns, loc, null), loc, anno);
     }
   }
 
@@ -529,8 +529,8 @@ class SchemaParser implements ParsedPatternFuture {
     State create() {
       return new OneOrMoreState();
     }
-    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
-      return schemaBuilder.makeOneOrMore(super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
+    Pattern buildPattern(List<Pattern> patterns, Location loc, AnnotationsImpl anno) throws SAXException {
+      return schemaBuilder.makeOneOrMore(super.buildPattern(patterns, loc, null), loc, anno);
     }
   }
 
@@ -538,8 +538,8 @@ class SchemaParser implements ParsedPatternFuture {
     State create() {
       return new OptionalState();
     }
-    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
-      return schemaBuilder.makeOptional(super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
+    Pattern buildPattern(List<Pattern> patterns, Location loc, AnnotationsImpl anno) throws SAXException {
+      return schemaBuilder.makeOptional(super.buildPattern(patterns, loc, null), loc, anno);
     }
   }
 
@@ -547,8 +547,8 @@ class SchemaParser implements ParsedPatternFuture {
     State create() {
       return new ListState();
     }
-    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
-      return schemaBuilder.makeList(super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
+    Pattern buildPattern(List<Pattern> patterns, Location loc, AnnotationsImpl anno) throws SAXException {
+      return schemaBuilder.makeList(super.buildPattern(patterns, loc, null), loc, anno);
     }
   }
 
@@ -556,8 +556,8 @@ class SchemaParser implements ParsedPatternFuture {
     State create() {
       return new ChoiceState();
     }
-    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
-      return schemaBuilder.makeChoice(patterns, nPatterns, loc, anno);
+    Pattern buildPattern(List<Pattern> patterns, Location loc, AnnotationsImpl anno) throws SAXException {
+      return schemaBuilder.makeChoice(patterns, loc, anno);
     }
   }
 
@@ -565,8 +565,8 @@ class SchemaParser implements ParsedPatternFuture {
     State create() {
       return new InterleaveState();
     }
-    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) {
-      return schemaBuilder.makeInterleave(patterns, nPatterns, loc, anno);
+    Pattern buildPattern(List<Pattern> patterns, Location loc, AnnotationsImpl anno) {
+      return schemaBuilder.makeInterleave(patterns, loc, anno);
     }
   }
 
@@ -574,17 +574,17 @@ class SchemaParser implements ParsedPatternFuture {
     State create() {
       return new MixedState();
     }
-    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
-      return schemaBuilder.makeMixed(super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
+    Pattern buildPattern(List<Pattern> patterns, Location loc, AnnotationsImpl anno) throws SAXException {
+      return schemaBuilder.makeMixed(super.buildPattern(patterns, loc, null), loc, anno);
     }
   }
 
-  static interface NameClassRef {
-    void setNameClass(ParsedNameClass nc);
+  static interface NameClassRef<NC> {
+    void setNameClass(NC nc);
   }
 
-  class ElementState extends PatternContainerState implements NameClassRef {
-    ParsedNameClass nameClass;
+  class ElementState extends PatternContainerState implements NameClassRef<NameClass> {
+    NameClass nameClass;
     boolean nameClassWasAttribute;
     String name;
 
@@ -592,7 +592,7 @@ class SchemaParser implements ParsedPatternFuture {
       this.name = name;
     }
 
-    public void setNameClass(ParsedNameClass nc) {
+    public void setNameClass(NameClass nc) {
       nameClass = nc;
     }
 
@@ -609,29 +609,33 @@ class SchemaParser implements ParsedPatternFuture {
       return new ElementState();
     }
 
-    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
-      return schemaBuilder.makeElement(nameClass, super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
+    Pattern buildPattern(List<Pattern> patterns, Location loc, AnnotationsImpl anno) throws SAXException {
+      return schemaBuilder.makeElement(nameClass, super.buildPattern(patterns, loc, null), loc, anno);
     }
 
-    void endForeignChild(ParsedElementAnnotation ea) {
-      if (nameClassWasAttribute || nChildPatterns > 0 || nameClass == null)
+    void endForeignChild(ElementAnnotation ea) {
+      if (nameClassWasAttribute || childPatterns.size() > 0 || nameClass == null)
         super.endForeignChild(ea);
       else
-        nameClass = schemaBuilder.annotateAfter(nameClass, ea);
+        nameClass = schemaBuilder.annotateAfterNameClass(nameClass, ea);
     }
   }
 
   class RootState extends PatternContainerState {
-    IncludedGrammar grammar;
+    IncludedGrammar<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> grammar;
 
     RootState() {
     }
 
-    RootState(IncludedGrammar grammar, Scope scope, String ns) {
+    RootState(IncludedGrammar<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> grammar, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, String ns) {
       this.grammar = grammar;
       this.scope = scope;
       this.nsInherit = ns;
       this.datatypeLibrary = "";
+    }
+
+    RootState toRootState() {
+      return this;
     }
 
     State create() {
@@ -651,7 +655,7 @@ class SchemaParser implements ParsedPatternFuture {
       error("root_bad_namespace_uri", WellKnownNamespaces.RELAX_NG);
     }
 
-    void endChild(ParsedPattern pattern) {
+    void endPatternChild(Pattern pattern) {
       startPattern = pattern;
     }
 
@@ -673,7 +677,7 @@ class SchemaParser implements ParsedPatternFuture {
       return new NotAllowedState();
     }
 
-    ParsedPattern makePattern() {
+    Pattern makePattern() {
       return schemaBuilder.makeNotAllowed(startLocation, annotations);
     }
   }
@@ -683,7 +687,7 @@ class SchemaParser implements ParsedPatternFuture {
       return new EmptyState();
     }
 
-    ParsedPattern makePattern() {
+    Pattern makePattern() {
       return schemaBuilder.makeEmpty(startLocation, annotations);
     }
   }
@@ -693,7 +697,7 @@ class SchemaParser implements ParsedPatternFuture {
       return new TextState();
     }
 
-    ParsedPattern makePattern() {
+    Pattern makePattern() {
       return schemaBuilder.makeText(startLocation, annotations);
     }
   }
@@ -721,7 +725,7 @@ class SchemaParser implements ParsedPatternFuture {
       error("value_contains_foreign_element");
     }
 
-    ParsedPattern makePattern() throws SAXException {
+    Pattern makePattern() throws SAXException {
       if (type == null)
         return makePattern("", "token");
       else
@@ -733,7 +737,7 @@ class SchemaParser implements ParsedPatternFuture {
       super.end();
     }
 
-    ParsedPattern makePattern(String datatypeLibrary, String type) {
+    Pattern makePattern(String datatypeLibrary, String type) {
       return schemaBuilder.makeValue(datatypeLibrary,
                                      type,
                                      buf.toString(),
@@ -747,8 +751,8 @@ class SchemaParser implements ParsedPatternFuture {
 
   class DataState extends State {
     String type;
-    ParsedPattern except = null;
-    DataPatternBuilder dpb = null;
+    Pattern except = null;
+    DataPatternBuilder<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> dpb = null;
 
     State create() {
       return new DataState();
@@ -783,12 +787,12 @@ class SchemaParser implements ParsedPatternFuture {
 	dpb = schemaBuilder.makeDataPatternBuilder(datatypeLibrary, type, startLocation);
     }
 
-    void endForeignChild(ParsedElementAnnotation ea) {
+    void endForeignChild(ElementAnnotation ea) {
       dpb.annotation(ea);
     }
 
     void end() throws SAXException {
-      ParsedPattern p;
+      Pattern p;
       if (dpb != null) {
         if (except != null)
           p = dpb.makePattern(except, startLocation, annotations);
@@ -798,10 +802,10 @@ class SchemaParser implements ParsedPatternFuture {
       else
         p = schemaBuilder.makeErrorPattern();
       // XXX need to capture comments
-      parent.endChild(p);
+      parent.endPatternChild(p);
     }
 
-    void endChild(ParsedPattern pattern) {
+    void endPatternChild(Pattern pattern) {
       except = pattern;
     }
 
@@ -809,10 +813,10 @@ class SchemaParser implements ParsedPatternFuture {
 
   class ParamState extends State {
     private final StringBuffer buf = new StringBuffer();
-    private final DataPatternBuilder dpb;
+    private final DataPatternBuilder<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> dpb;
     private String name;
 
-    ParamState(DataPatternBuilder dpb) {
+    ParamState(DataPatternBuilder<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> dpb) {
       this.dpb = dpb;
     }
 
@@ -852,8 +856,8 @@ class SchemaParser implements ParsedPatternFuture {
     }
   }
 
-  class AttributeState extends PatternContainerState implements NameClassRef {
-    ParsedNameClass nameClass;
+  class AttributeState extends PatternContainerState implements NameClassRef<NameClass> {
+    NameClass nameClass;
     boolean nameClassWasAttribute;
     String name;
 
@@ -865,7 +869,7 @@ class SchemaParser implements ParsedPatternFuture {
       this.name = name;
     }
 
-    public void setNameClass(ParsedNameClass nc) {
+    public void setNameClass(NameClass nc) {
       nameClass = nc;
     }
 
@@ -883,26 +887,26 @@ class SchemaParser implements ParsedPatternFuture {
 	new NameClassChildState(this, this).set();
     }
 
-    void endForeignChild(ParsedElementAnnotation ea) {
-      if (nameClassWasAttribute || nChildPatterns > 0 || nameClass == null)
+    void endForeignChild(ElementAnnotation ea) {
+      if (nameClassWasAttribute || childPatterns.size() > 0 || nameClass == null)
         super.endForeignChild(ea);
       else
-        nameClass = schemaBuilder.annotateAfter(nameClass, ea);
+        nameClass = schemaBuilder.annotateAfterNameClass(nameClass, ea);
     }
 
     void end() throws SAXException {
-      if (nChildPatterns == 0)
-	endChild(schemaBuilder.makeText(startLocation, null));
+      if (childPatterns.size() == 0)
+	endPatternChild(schemaBuilder.makeText(startLocation, null));
       super.end();
     }
 
-    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
-      return schemaBuilder.makeAttribute(nameClass, super.buildPattern(patterns, nPatterns, loc, null), loc, anno);
+    Pattern buildPattern(List<Pattern> patterns, Location loc, AnnotationsImpl anno) throws SAXException {
+      return schemaBuilder.makeAttribute(nameClass, super.buildPattern(patterns, loc, null), loc, anno);
     }
 
     State createChildState(String localName) throws SAXException {
       State tem = super.createChildState(localName);
-      if (tem != null && nChildPatterns != 0)
+      if (tem != null && childPatterns.size() != 0)
 	error("attribute_multi_pattern");
       return tem;
     }
@@ -911,7 +915,7 @@ class SchemaParser implements ParsedPatternFuture {
 
   abstract class SinglePatternContainerState extends PatternContainerState {
     State createChildState(String localName) throws SAXException {
-      if (nChildPatterns == 0)
+      if (childPatterns.size() == 0)
 	return super.createChildState(localName);
       error("too_many_children");
       return null;
@@ -919,11 +923,11 @@ class SchemaParser implements ParsedPatternFuture {
   }
 
   class GrammarSectionState extends State {
-    GrammarSection section;
+    GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section;
 
     GrammarSectionState() { }
 
-    GrammarSectionState(GrammarSection section) {
+    GrammarSectionState(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section) {
       this.section = section;
     }
 
@@ -937,7 +941,7 @@ class SchemaParser implements ParsedPatternFuture {
       if (localName.equals("start"))
 	return new StartState(section);
       if (localName.equals("include")) {
-	Include include = section.makeInclude();
+	Include<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> include = section.makeInclude();
 	if (include != null)
 	  return new IncludeState(include);
       }
@@ -955,14 +959,14 @@ class SchemaParser implements ParsedPatternFuture {
       }
     }
 
-    void endForeignChild(ParsedElementAnnotation ea) {
+    void endForeignChild(ElementAnnotation ea) {
       section.topLevelAnnotation(ea);
     }
   }
 
   class DivState extends GrammarSectionState {
-    final Div div;
-    DivState(Div div) {
+    final Div<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> div;
+    DivState(Div<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> div) {
       super(div);
       this.div = div;
     }
@@ -976,9 +980,9 @@ class SchemaParser implements ParsedPatternFuture {
   class IncludeState extends GrammarSectionState {
     String href;
     String base;
-    final Include include;
+    final Include<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> include;
 
-    IncludeState(Include include) {
+    IncludeState(Include<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> include) {
       super(include);
       this.include = include;
     }
@@ -1012,20 +1016,20 @@ class SchemaParser implements ParsedPatternFuture {
   }
 
   class MergeGrammarState extends GrammarSectionState {
-    final IncludedGrammar grammar;
-    MergeGrammarState(IncludedGrammar grammar) {
+    final IncludedGrammar<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> grammar;
+    MergeGrammarState(IncludedGrammar<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> grammar) {
       super(grammar);
       this.grammar = grammar;
     }
 
     void end() throws SAXException {
       super.end();
-      parent.endChild(grammar.endIncludedGrammar(startLocation, annotations));
+      parent.endPatternChild(grammar.endIncludedGrammar(startLocation, annotations));
     }
   }
 
   class GrammarState extends GrammarSectionState {
-    Grammar grammar;
+    Grammar<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> grammar;
 
     void setParent(State parent) {
       super.setParent(parent);
@@ -1040,7 +1044,7 @@ class SchemaParser implements ParsedPatternFuture {
 
     void end() throws SAXException {
       super.end();
-      parent.endChild(grammar.endGrammar(startLocation, annotations));
+      parent.endPatternChild(grammar.endGrammar(startLocation, annotations));
     }
   }
 
@@ -1060,7 +1064,7 @@ class SchemaParser implements ParsedPatternFuture {
       this.name = checkNCName(name);
     }
 
-    ParsedPattern makePattern() {
+    Pattern makePattern() {
       if (name == null)
         return schemaBuilder.makeErrorPattern();
       return scope.makeRef(name, startLocation, annotations);
@@ -1072,7 +1076,7 @@ class SchemaParser implements ParsedPatternFuture {
       return new ParentRefState();
     }
 
-    ParsedPattern makePattern() {
+    Pattern makePattern() {
       if (name == null)
         return schemaBuilder.makeErrorPattern();
       return scope.makeParentRef(name, startLocation, annotations);
@@ -1082,7 +1086,7 @@ class SchemaParser implements ParsedPatternFuture {
   class ExternalRefState extends EmptyContentState {
     String href;
     String base;
-    ParsedPattern includedPattern;
+    Pattern includedPattern;
 
     State create() {
       return new ExternalRefState();
@@ -1104,7 +1108,7 @@ class SchemaParser implements ParsedPatternFuture {
         base = xmlBaseHandler.getBaseUri();
     }
 
-    ParsedPattern makePattern() {
+    Pattern makePattern() {
       if (href != null) {
         try {
           return schemaBuilder.makeExternalRef(href,
@@ -1122,9 +1126,9 @@ class SchemaParser implements ParsedPatternFuture {
 
   abstract class DefinitionState extends PatternContainerState {
     GrammarSection.Combine combine = null;
-    final GrammarSection section;
+    final GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section;
 
-    DefinitionState(GrammarSection section) {
+    DefinitionState(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section) {
       this.section = section;
     }
 
@@ -1142,15 +1146,15 @@ class SchemaParser implements ParsedPatternFuture {
 	super.setOtherAttribute(name, value);
     }
 
-    ParsedPattern buildPattern(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno) throws SAXException {
-      return super.buildPattern(patterns, nPatterns, loc, null);
+    Pattern buildPattern(List<Pattern> patterns, Location loc, AnnotationsImpl anno) throws SAXException {
+      return super.buildPattern(patterns, loc, null);
     }
   }
 
   class DefineState extends DefinitionState {
     String name;
 
-    DefineState(GrammarSection section) {
+    DefineState(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section) {
       super(section);
     }
 
@@ -1167,7 +1171,7 @@ class SchemaParser implements ParsedPatternFuture {
 	error("missing_name_attribute");
     }
 
-    void sendPatternToParent(ParsedPattern p) {
+    void sendPatternToParent(Pattern p) {
       if (name != null)
 	section.define(name, combine, p, startLocation, annotations);
     }
@@ -1176,7 +1180,7 @@ class SchemaParser implements ParsedPatternFuture {
 
   class StartState extends DefinitionState {
 
-    StartState(GrammarSection section) {
+    StartState(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section) {
       super(section);
     }
 
@@ -1184,13 +1188,13 @@ class SchemaParser implements ParsedPatternFuture {
       return new StartState(null);
     }
 
-    void sendPatternToParent(ParsedPattern p) {
+    void sendPatternToParent(Pattern p) {
       section.define(GrammarSection.START, combine, p, startLocation, annotations);
     }
 
     State createChildState(String localName) throws SAXException {
       State tem = super.createChildState(localName);
-      if (tem != null && nChildPatterns != 0)
+      if (tem != null && childPatterns.size() != 0)
 	error("start_multi_pattern");
       return tem;
     }
@@ -1199,7 +1203,7 @@ class SchemaParser implements ParsedPatternFuture {
 
   abstract class NameClassContainerState extends State {
     State createChildState(String localName) throws SAXException {
-      State state = (State)nameClassTable.get(localName);
+      State state = nameClassMap.get(localName);
       if (state == null) {
 	error("expected_name_class", localName);
 	return null;
@@ -1210,25 +1214,25 @@ class SchemaParser implements ParsedPatternFuture {
 
   class NameClassChildState extends NameClassContainerState {
     final State prevState;
-    final NameClassRef nameClassRef;
+    final NameClassRef<NameClass> nameClassRef;
 
     State create() {
       return null;
     }
 
-    NameClassChildState(State prevState, NameClassRef nameClassRef) {
+    NameClassChildState(State prevState, NameClassRef<NameClass> nameClassRef) {
       this.prevState = prevState;
       this.nameClassRef = nameClassRef;
       setParent(prevState.parent);
       this.ns = prevState.ns;
     }
 
-    void endChild(ParsedNameClass nameClass) {
+    void endNameClassChild(NameClass nameClass) {
       nameClassRef.setNameClass(nameClass);
       prevState.set();
     }
 
-    void endForeignChild(ParsedElementAnnotation ea) {
+    void endForeignChild(ElementAnnotation ea) {
       prevState.endForeignChild(ea);
     }
 
@@ -1242,10 +1246,10 @@ class SchemaParser implements ParsedPatternFuture {
 
   abstract class NameClassBaseState extends State {
 
-    abstract ParsedNameClass makeNameClass() throws SAXException;
+    abstract NameClass makeNameClass() throws SAXException;
 
     void end() throws SAXException {
-      parent.endChild(makeNameClass());
+      parent.endNameClassChild(makeNameClass());
     }
   }
 
@@ -1269,7 +1273,7 @@ class SchemaParser implements ParsedPatternFuture {
       error("name_contains_foreign_element");
     }
 
-    ParsedNameClass makeNameClass() throws SAXException {
+    NameClass makeNameClass() throws SAXException {
       mergeLeadingComments();
       return expandName(buf.toString().trim(), getNs(), annotations);
     }
@@ -1281,7 +1285,7 @@ class SchemaParser implements ParsedPatternFuture {
   private static final int NS_NAME_CONTEXT = 2;
 
   class AnyNameState extends NameClassBaseState {
-    ParsedNameClass except = null;
+    NameClass except = null;
 
     State create() {
       return new AnyNameState();
@@ -1301,22 +1305,22 @@ class SchemaParser implements ParsedPatternFuture {
       return ANY_NAME_CONTEXT;
     }
 
-    ParsedNameClass makeNameClass() {
+    NameClass makeNameClass() {
       if (except == null)
 	return makeNameClassNoExcept();
       else
 	return makeNameClassExcept(except);
     }
 
-    ParsedNameClass makeNameClassNoExcept() {
+    NameClass makeNameClassNoExcept() {
       return schemaBuilder.makeAnyName(startLocation, annotations);
     }
 
-    ParsedNameClass makeNameClassExcept(ParsedNameClass except) {
+    NameClass makeNameClassExcept(NameClass except) {
       return schemaBuilder.makeAnyName(except, startLocation, annotations);
     }
 
-    void endChild(ParsedNameClass nameClass) {
+    void endNameClassChild(NameClass nameClass) {
       except = nameClass;
     }
 
@@ -1327,11 +1331,11 @@ class SchemaParser implements ParsedPatternFuture {
       return new NsNameState();
     }
 
-    ParsedNameClass makeNameClassNoExcept() {
+    NameClass makeNameClassNoExcept() {
       return schemaBuilder.makeNsName(getNs(), null, null);
     }
 
-    ParsedNameClass makeNameClassExcept(ParsedNameClass except) {
+    NameClass makeNameClassExcept(NameClass except) {
       return schemaBuilder.makeNsName(getNs(), except, null, null);
     }
 
@@ -1342,8 +1346,7 @@ class SchemaParser implements ParsedPatternFuture {
   }
 
   class NameClassChoiceState extends NameClassContainerState {
-    private ParsedNameClass[] nameClasses;
-    private int nNameClasses;
+    private List<NameClass> nameClasses = new ArrayList<NameClass>();
     private int context;
 
     NameClassChoiceState() {
@@ -1354,10 +1357,15 @@ class SchemaParser implements ParsedPatternFuture {
       this.context = context;
     }
 
+    NameClassChoiceState toNameClassChoiceState() {
+      return this;
+    }
+
     void setParent(State parent) {
       super.setParent(parent);
-      if (parent instanceof NameClassChoiceState)
-	this.context = ((NameClassChoiceState)parent).context;
+      NameClassChoiceState parentChoice = parent.toNameClassChoiceState();
+      if (parentChoice != null)
+	this.context = parentChoice.context;
     }
 
     State create() {
@@ -1382,70 +1390,67 @@ class SchemaParser implements ParsedPatternFuture {
       return super.createChildState(localName);
     }
 
-    void endChild(ParsedNameClass nc) {
-      if (nameClasses == null)
-        nameClasses = new ParsedNameClass[INIT_CHILD_ALLOC];
-      else if (nNameClasses >= nameClasses.length) {
-        ParsedNameClass[] newNameClasses = new ParsedNameClass[nameClasses.length * 2];
-        System.arraycopy(nameClasses, 0, newNameClasses, 0, nameClasses.length);
-        nameClasses = newNameClasses;
-      }
-      nameClasses[nNameClasses++] = nc;
+    void endNameClassChild(NameClass nc) {
+      nameClasses.add(nc);
     }
 
-    void endForeignChild(ParsedElementAnnotation ea) {
+    void endForeignChild(ElementAnnotation ea) {
+      int nNameClasses = nameClasses.size();
       if (nNameClasses == 0)
         super.endForeignChild(ea);
       else
-        nameClasses[nNameClasses - 1] = schemaBuilder.annotateAfter(nameClasses[nNameClasses - 1], ea);
+        nameClasses.set(nNameClasses - 1,
+                        schemaBuilder.annotateAfterNameClass(nameClasses.get(nNameClasses - 1), ea));
     }
 
     void end() throws SAXException {
-      if (nNameClasses == 0) {
+      if (nameClasses.size() == 0) {
 	error("missing_name_class");
-	parent.endChild(schemaBuilder.makeErrorNameClass());
+	parent.endNameClassChild(schemaBuilder.makeErrorNameClass());
 	return;
       }
       if (comments != null) {
-        nameClasses[nNameClasses - 1] = schemaBuilder.commentAfter(nameClasses[nNameClasses - 1], comments);
+        int nNameClasses = nameClasses.size();
+        nameClasses.set(nNameClasses - 1,
+                        schemaBuilder.commentAfterNameClass(nameClasses.get(nNameClasses - 1), comments));
         comments = null;
       }
-      parent.endChild(schemaBuilder.makeChoice(nameClasses, nNameClasses, startLocation, annotations));
+      parent.endNameClassChild(schemaBuilder.makeNameClassChoice(nameClasses, startLocation, annotations));
     }
   }
 
   private void initPatternTable() {
-    patternTable = new Hashtable();
-    patternTable.put("zeroOrMore", new ZeroOrMoreState());
-    patternTable.put("oneOrMore", new OneOrMoreState());
-    patternTable.put("optional", new OptionalState());
-    patternTable.put("list", new ListState());
-    patternTable.put("choice", new ChoiceState());
-    patternTable.put("interleave", new InterleaveState());
-    patternTable.put("group", new GroupState());
-    patternTable.put("mixed", new MixedState());
-    patternTable.put("element", new ElementState());
-    patternTable.put("attribute", new AttributeState());
-    patternTable.put("empty", new EmptyState());
-    patternTable.put("text", new TextState());
-    patternTable.put("value", new ValueState());
-    patternTable.put("data", new DataState());
-    patternTable.put("notAllowed", new NotAllowedState());
-    patternTable.put("grammar", new GrammarState());
-    patternTable.put("ref", new RefState());
-    patternTable.put("parentRef", new ParentRefState());
-    patternTable.put("externalRef", new ExternalRefState());
+    patternMap = new HashMap<String, State>();
+    patternMap.put("zeroOrMore", new ZeroOrMoreState());
+    patternMap.put("oneOrMore", new OneOrMoreState());
+    patternMap.put("optional", new OptionalState());
+    patternMap.put("list", new ListState());
+    patternMap.put("choice", new ChoiceState());
+    patternMap.put("interleave", new InterleaveState());
+    patternMap.put("group", new GroupState());
+    patternMap.put("mixed", new MixedState());
+    patternMap.put("element", new ElementState());
+    patternMap.put("attribute", new AttributeState());
+    patternMap.put("empty", new EmptyState());
+    patternMap.put("text", new TextState());
+    patternMap.put("value", new ValueState());
+    patternMap.put("data", new DataState());
+    patternMap.put("notAllowed", new NotAllowedState());
+    patternMap.put("grammar", new GrammarState());
+    patternMap.put("ref", new RefState());
+    patternMap.put("parentRef", new ParentRefState());
+    patternMap.put("externalRef", new ExternalRefState());
   }
 
   private void initNameClassTable() {
-    nameClassTable = new Hashtable();
-    nameClassTable.put("name", new NameState());
-    nameClassTable.put("anyName", new AnyNameState());
-    nameClassTable.put("nsName", new NsNameState());
-    nameClassTable.put("choice", new NameClassChoiceState());
+    nameClassMap = new HashMap<String, State>();
+    nameClassMap.put("name", new NameState());
+    nameClassMap.put("anyName", new AnyNameState());
+    nameClassMap.put("nsName", new NsNameState());
+    nameClassMap.put("choice", new NameClassChoiceState());
   }
 
-  public ParsedPattern getParsedPattern() throws IllegalSchemaException {
+  public Pattern getParsedPattern() throws IllegalSchemaException {
     if (hadError)
       throw new IllegalSchemaException();
     return startPattern;
@@ -1514,9 +1519,9 @@ class SchemaParser implements ParsedPatternFuture {
 
   SchemaParser(XMLReader xr,
                ErrorHandler eh,
-               SchemaBuilder schemaBuilder,
-               IncludedGrammar grammar,
-               Scope scope) throws SAXException {
+               SchemaBuilder<Pattern, NameClass, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> schemaBuilder,
+               IncludedGrammar<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> grammar,
+               Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope) throws SAXException {
     this.xr = xr;
     this.eh = eh;
     this.schemaBuilder = schemaBuilder;
@@ -1561,7 +1566,7 @@ class SchemaParser implements ParsedPatternFuture {
     }
   }
 
-  private ParsedNameClass expandName(String name, String ns, Annotations anno) throws SAXException {
+  private NameClass expandName(String name, String ns, AnnotationsImpl anno) throws SAXException {
     int ic = name.indexOf(':');
     if (ic == -1)
       return schemaBuilder.makeName(ns, checkNCName(name), null, null, anno);

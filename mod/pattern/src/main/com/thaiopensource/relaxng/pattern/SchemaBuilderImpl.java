@@ -1,8 +1,6 @@
 package com.thaiopensource.relaxng.pattern;
 
-import com.thaiopensource.relaxng.parse.Annotations;
 import com.thaiopensource.relaxng.parse.BuildException;
-import com.thaiopensource.relaxng.parse.CommentList;
 import com.thaiopensource.relaxng.parse.Context;
 import com.thaiopensource.relaxng.parse.DataPatternBuilder;
 import com.thaiopensource.relaxng.parse.Div;
@@ -12,18 +10,15 @@ import com.thaiopensource.relaxng.parse.GrammarSection;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.Include;
 import com.thaiopensource.relaxng.parse.IncludedGrammar;
-import com.thaiopensource.relaxng.parse.Location;
 import com.thaiopensource.relaxng.parse.ParseReceiver;
 import com.thaiopensource.relaxng.parse.Parseable;
-import com.thaiopensource.relaxng.parse.ParsedElementAnnotation;
-import com.thaiopensource.relaxng.parse.ParsedNameClass;
-import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.ParsedPatternFuture;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.SubParseable;
 import com.thaiopensource.relaxng.parse.SubParser;
 import com.thaiopensource.util.Localizer;
+import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.Datatype;
 import org.relaxng.datatype.DatatypeBuilder;
@@ -40,11 +35,14 @@ import org.xml.sax.XMLReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
-public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilder, CommentList {
+public class SchemaBuilderImpl extends AnnotationsImpl implements
+        ElementAnnotationBuilder<Locator, VoidValue, CommentListImpl>,
+        SchemaBuilder<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl> {
   private final SchemaBuilderImpl parent;
   private boolean hadError = false;
-  private final SubParser subParser;
+  private final SubParser<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl> subParser;
   private final SchemaPatternBuilder pb;
   private final DatatypeLibraryFactory datatypeLibraryFactory;
   private final String inheritNs;
@@ -63,7 +61,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     }
   }
 
-  static public Pattern parse(Parseable parseable,
+  static public Pattern parse(Parseable<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl> parseable,
                               ErrorHandler eh,
                               DatatypeLibraryFactory datatypeLibraryFactory,
                               SchemaPatternBuilder pb,
@@ -74,10 +72,10 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
                                                    eh,
                                                    new BuiltinDatatypeLibraryFactory(datatypeLibraryFactory),
                                                    pb);
-      ParsedPattern pp = parseable.parse(sb, new RootScope(sb));
+      Pattern pattern = parseable.parse(sb, new RootScope(sb));
       if (isAttributesPattern)
-        pp = sb.wrapAttributesPattern(pp);
-      return sb.expandPattern((Pattern)pp);
+        pattern = sb.wrapAttributesPattern(pattern);
+      return sb.expandPattern(pattern);
     }
     catch (BuildException e) {
       throw unwrapBuildException(e);
@@ -85,21 +83,24 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
   }
 
 
-  static public PatternFuture installHandlers(ParseReceiver parser, XMLReader xr, ErrorHandler eh, DatatypeLibraryFactory dlf,
+  static public PatternFuture installHandlers(ParseReceiver<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl> parser,
+                                              XMLReader xr,
+                                              ErrorHandler eh,
+                                              DatatypeLibraryFactory dlf,
                                               SchemaPatternBuilder pb)
           throws SAXException {
     final SchemaBuilderImpl sb = new SchemaBuilderImpl(parser,
                                                        eh,
                                                        new BuiltinDatatypeLibraryFactory(dlf),
                                                        pb);
-    final ParsedPatternFuture pf = parser.installHandlers(xr, sb, new RootScope(sb));
+    final ParsedPatternFuture<Pattern> pf = parser.installHandlers(xr, sb, new RootScope(sb));
     return new PatternFuture() {
       public Pattern getPattern(boolean isAttributesPattern) throws IllegalSchemaException, SAXException, IOException {
         try {
-          ParsedPattern pp = pf.getParsedPattern();
+          Pattern pattern = pf.getParsedPattern();
           if (isAttributesPattern)
-            pp = sb.wrapAttributesPattern(pp);
-          return sb.expandPattern((Pattern)pp);
+            pattern = sb.wrapAttributesPattern(pattern);
+          return sb.expandPattern(pattern);
         }
         catch (BuildException e) {
           throw unwrapBuildException(e);
@@ -123,7 +124,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     throw new SAXException(t.getClass().getName() + " thrown");
   }
 
-  private ParsedPattern wrapAttributesPattern(ParsedPattern pattern) {
+  private Pattern wrapAttributesPattern(Pattern pattern) {
     // XXX where can we get a locator from?
     return makeElement(makeAnyName(null, null), pattern, null, null);
   }
@@ -155,7 +156,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     throw new IllegalSchemaException();
   }
 
-  private SchemaBuilderImpl(SubParser subParser,
+  private SchemaBuilderImpl(SubParser<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl> subParser,
                             ErrorHandler eh,
                             DatatypeLibraryFactory datatypeLibraryFactory,
                             SchemaPatternBuilder pb) {
@@ -180,109 +181,112 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     this.openIncludes = new OpenIncludes(uri, parent.openIncludes);
   }
 
-  public ParsedPattern makeChoice(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno)
+  public Pattern makeChoice(List<Pattern> patterns, Locator loc, AnnotationsImpl anno)
           throws BuildException {
+    int nPatterns = patterns.size();
     if (nPatterns <= 0)
       throw new IllegalArgumentException();
-    Pattern result = (Pattern)patterns[0];
+    Pattern result = patterns.get(0);
     for (int i = 1; i < nPatterns; i++)
-      result = pb.makeChoice(result, (Pattern)patterns[i]);
+      result = pb.makeChoice(result, patterns.get(i));
     return result;
   }
 
-  public ParsedPattern makeInterleave(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno)
+  public Pattern makeInterleave(List<Pattern> patterns, Locator loc, AnnotationsImpl anno)
           throws BuildException {
+    int nPatterns = patterns.size();
     if (nPatterns <= 0)
       throw new IllegalArgumentException();
-    Pattern result = (Pattern)patterns[0];
+    Pattern result = patterns.get(0);
     for (int i = 1; i < nPatterns; i++)
-      result = pb.makeInterleave(result, (Pattern)patterns[i]);
+      result = pb.makeInterleave(result, patterns.get(i));
     return result;
   }
 
-  public ParsedPattern makeGroup(ParsedPattern[] patterns, int nPatterns, Location loc, Annotations anno)
+  public Pattern makeGroup(List<Pattern> patterns, Locator loc, AnnotationsImpl anno)
           throws BuildException {
+    int nPatterns = patterns.size();
     if (nPatterns <= 0)
       throw new IllegalArgumentException();
-    Pattern result = (Pattern)patterns[0];
+    Pattern result = patterns.get(0);
     for (int i = 1; i < nPatterns; i++)
-      result = pb.makeGroup(result, (Pattern)patterns[i]);
+      result = pb.makeGroup(result, patterns.get(i));
     return result;
   }
 
-  public ParsedPattern makeOneOrMore(ParsedPattern p, Location loc, Annotations anno)
+  public Pattern makeOneOrMore(Pattern p, Locator loc, AnnotationsImpl anno)
           throws BuildException {
-    return pb.makeOneOrMore((Pattern)p);
+    return pb.makeOneOrMore(p);
   }
 
-  public ParsedPattern makeZeroOrMore(ParsedPattern p, Location loc, Annotations anno)
+  public Pattern makeZeroOrMore(Pattern p, Locator loc, AnnotationsImpl anno)
           throws BuildException {
-    return pb.makeZeroOrMore((Pattern)p);
+    return pb.makeZeroOrMore(p);
   }
 
-  public ParsedPattern makeOptional(ParsedPattern p, Location loc, Annotations anno)
+  public Pattern makeOptional(Pattern p, Locator loc, AnnotationsImpl anno)
           throws BuildException {
-    return pb.makeOptional((Pattern)p);
+    return pb.makeOptional(p);
   }
 
-  public ParsedPattern makeList(ParsedPattern p, Location loc, Annotations anno)
+  public Pattern makeList(Pattern p, Locator loc, AnnotationsImpl anno)
           throws BuildException {
-    return pb.makeList((Pattern)p, (Locator)loc);
+    return pb.makeList(p, loc);
   }
 
-  public ParsedPattern makeMixed(ParsedPattern p, Location loc, Annotations anno)
+  public Pattern makeMixed(Pattern p, Locator loc, AnnotationsImpl anno)
           throws BuildException {
-    return pb.makeMixed((Pattern)p);
+    return pb.makeMixed(p);
   }
 
-  public ParsedPattern makeEmpty(Location loc, Annotations anno) {
+  public Pattern makeEmpty(Locator loc, AnnotationsImpl anno) {
     return pb.makeEmpty();
   }
 
-  public ParsedPattern makeNotAllowed(Location loc, Annotations anno) {
+  public Pattern makeNotAllowed(Locator loc, AnnotationsImpl anno) {
     return pb.makeUnexpandedNotAllowed();
   }
 
-  public ParsedPattern makeText(Location loc, Annotations anno) {
+  public Pattern makeText(Locator loc, AnnotationsImpl anno) {
     return pb.makeText();
   }
 
-  public ParsedPattern makeErrorPattern() {
+  public Pattern makeErrorPattern() {
     return pb.makeError();
   }
 
-  public ParsedNameClass makeErrorNameClass() {
+  public NameClass makeErrorNameClass() {
     return new ErrorNameClass();
   }
 
-  public ParsedPattern makeAttribute(ParsedNameClass nc, ParsedPattern p, Location loc, Annotations anno)
+  public Pattern makeAttribute(NameClass nc, Pattern p, Locator loc, AnnotationsImpl anno)
           throws BuildException {
-    String messageId = attributeNameClassChecker.checkNameClass((NameClass)nc);
+    String messageId = attributeNameClassChecker.checkNameClass(nc);
     if (messageId != null)
-      error(messageId, (Locator)loc);
-    return pb.makeAttribute((NameClass)nc, (Pattern)p, (Locator)loc);
+      error(messageId, loc);
+    return pb.makeAttribute(nc, p, loc);
   }
 
-  public ParsedPattern makeElement(ParsedNameClass nc, ParsedPattern p, Location loc, Annotations anno)
+  public Pattern makeElement(NameClass nc, Pattern p, Locator loc, AnnotationsImpl anno)
           throws BuildException {
-    return pb.makeElement((NameClass)nc, (Pattern)p, (Locator)loc);
+    return pb.makeElement(nc, p, loc);
   }
 
-  private class DummyDataPatternBuilder implements DataPatternBuilder {
-    public void addParam(String name, String value, Context context, String ns, Location loc, Annotations anno)
+  private class DummyDataPatternBuilder implements DataPatternBuilder<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> {
+    public void addParam(String name, String value, Context context, String ns, Locator loc, AnnotationsImpl anno)
             throws BuildException {
     }
 
-    public void annotation(ParsedElementAnnotation ea)
+    public void annotation(VoidValue ea)
             throws BuildException {
     }
 
-    public ParsedPattern makePattern(Location loc, Annotations anno)
+    public Pattern makePattern(Locator loc, AnnotationsImpl anno)
             throws BuildException {
       return pb.makeError();
     }
 
-    public ParsedPattern makePattern(ParsedPattern except, Location loc, Annotations anno)
+    public Pattern makePattern(Pattern except, Locator loc, AnnotationsImpl anno)
             throws BuildException {
       return pb.makeError();
     }
@@ -320,13 +324,13 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     }
   }
 
-  private class DataPatternBuilderImpl implements DataPatternBuilder {
+  private class DataPatternBuilderImpl implements DataPatternBuilder<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> {
     private final DatatypeBuilder dtb;
     DataPatternBuilderImpl(DatatypeBuilder dtb) {
       this.dtb = dtb;
     }
 
-    public void addParam(String name, String value, Context context, String ns, Location loc, Annotations anno)
+    public void addParam(String name, String value, Context context, String ns, Locator loc, AnnotationsImpl anno)
             throws BuildException {
       try {
         dtb.addParameter(name, value, new ValidationContextImpl(context, ns));
@@ -341,18 +345,18 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
           displayedParam = displayParam(value, pos);
         if (displayedParam != null) {
           if (detail != null)
-            error("invalid_param_detail_display", detail, displayedParam, (Locator)loc);
+            error("invalid_param_detail_display", detail, displayedParam, loc);
           else
-            error("invalid_param_display", displayedParam, (Locator)loc);
+            error("invalid_param_display", displayedParam, loc);
         }
 	else if (detail != null)
-	  error("invalid_param_detail", detail, (Locator)loc);
+	  error("invalid_param_detail", detail, loc);
 	else
-	  error("invalid_param", (Locator)loc);
+	  error("invalid_param", loc);
       }
     }
 
-    public void annotation(ParsedElementAnnotation ea)
+    public void annotation(VoidValue ea)
             throws BuildException {
     }
 
@@ -364,7 +368,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       return localizer.message("display_param", value.substring(0, pos), value.substring(pos));
     }
 
-    public ParsedPattern makePattern(Location loc, Annotations anno)
+    public Pattern makePattern(Locator loc, AnnotationsImpl anno)
             throws BuildException {
       try {
         return pb.makeData(dtb.createDatatype());
@@ -372,34 +376,34 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       catch (DatatypeException e) {
 	String detail = e.getMessage();
 	if (detail != null)
-	  error("invalid_params_detail", detail, (Locator)loc);
+	  error("invalid_params_detail", detail, loc);
 	else
-	  error("invalid_params", (Locator)loc);
+	  error("invalid_params", loc);
         return pb.makeError();
       }
     }
 
-    public ParsedPattern makePattern(ParsedPattern except, Location loc, Annotations anno)
+    public Pattern makePattern(Pattern except, Locator loc, AnnotationsImpl anno)
             throws BuildException {
       try {
-        return pb.makeDataExcept(dtb.createDatatype(), (Pattern)except, (Locator)loc);
+        return pb.makeDataExcept(dtb.createDatatype(), except, loc);
       }
       catch (DatatypeException e) {
 	String detail = e.getMessage();
 	if (detail != null)
-	  error("invalid_params_detail", detail, (Locator)loc);
+	  error("invalid_params_detail", detail, loc);
 	else
-	  error("invalid_params", (Locator)loc);
+	  error("invalid_params", loc);
         return pb.makeError();
       }
     }
   }
 
-  public DataPatternBuilder makeDataPatternBuilder(String datatypeLibrary, String type, Location loc)
+  public DataPatternBuilder<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> makeDataPatternBuilder(String datatypeLibrary, String type, Locator loc)
           throws BuildException {
     DatatypeLibrary dl = datatypeLibraryFactory.createDatatypeLibrary(datatypeLibrary);
     if (dl == null)
-      error("unrecognized_datatype_library", datatypeLibrary, (Locator)loc);
+      error("unrecognized_datatype_library", datatypeLibrary, loc);
     else {
       try {
         return new DataPatternBuilderImpl(dl.createDatatypeBuilder(type));
@@ -407,19 +411,19 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       catch (DatatypeException e) {
 	String detail = e.getMessage();
 	if (detail != null)
-	  error("unsupported_datatype_detail", datatypeLibrary, type, detail, (Locator)loc);
+	  error("unsupported_datatype_detail", datatypeLibrary, type, detail, loc);
 	else
-	  error("unrecognized_datatype", datatypeLibrary, type, (Locator)loc);
+	  error("unrecognized_datatype", datatypeLibrary, type, loc);
       }
     }
     return new DummyDataPatternBuilder();
   }
 
-  public ParsedPattern makeValue(String datatypeLibrary, String type, String value, Context context, String ns,
-                                 Location loc, Annotations anno) throws BuildException {
+  public Pattern makeValue(String datatypeLibrary, String type, String value, Context context, String ns,
+                                 Locator loc, AnnotationsImpl anno) throws BuildException {
     DatatypeLibrary dl = datatypeLibraryFactory.createDatatypeLibrary(datatypeLibrary);
     if (dl == null)
-      error("unrecognized_datatype_library", datatypeLibrary, (Locator)loc);
+      error("unrecognized_datatype_library", datatypeLibrary, loc);
     else {
       try {
         DatatypeBuilder dtb = dl.createDatatypeBuilder(type);
@@ -428,30 +432,30 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
           Object obj = dt.createValue(value, new ValidationContextImpl(context, ns));
           if (obj != null)
             return pb.makeValue(dt, obj);
-          error("invalid_value", value, (Locator)loc);
+          error("invalid_value", value, loc);
         }
         catch (DatatypeException e) {
           String detail = e.getMessage();
           if (detail != null)
-            error("datatype_requires_param_detail", detail, (Locator)loc);
+            error("datatype_requires_param_detail", detail, loc);
           else
-            error("datatype_requires_param", (Locator)loc);
+            error("datatype_requires_param", loc);
         }
       }
       catch (DatatypeException e) {
-        error("unrecognized_datatype", datatypeLibrary, type, (Locator)loc);
+        error("unrecognized_datatype", datatypeLibrary, type, loc);
       }
     }
     return pb.makeError();
   }
 
-  static class GrammarImpl implements Grammar, Div, IncludedGrammar {
+  static class GrammarImpl implements Grammar<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl>, Div<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl>, IncludedGrammar<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> {
     private final SchemaBuilderImpl sb;
     private final Map<String, RefPattern> defines;
     private final RefPattern startRef;
-    private final Scope parent;
+    private final Scope<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> parent;
 
-    private GrammarImpl(SchemaBuilderImpl sb, Scope parent) {
+    private GrammarImpl(SchemaBuilderImpl sb, Scope<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> parent) {
       this.sb = sb;
       this.parent = parent;
       this.defines = new HashMap<String, RefPattern>();
@@ -465,7 +469,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       defines = g.defines;
     }
 
-    public ParsedPattern endGrammar(Location loc, Annotations anno) throws BuildException {
+    public Pattern endGrammar(Locator loc, AnnotationsImpl anno) throws BuildException {
       for (String name : defines.keySet()) {
         RefPattern rp = defines.get(name);
         if (rp.getPattern() == null) {
@@ -475,35 +479,35 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       }
       Pattern start = startRef.getPattern();
       if (start == null) {
-        sb.error("missing_start_element", (Locator)loc);
+        sb.error("missing_start_element", loc);
         start = sb.pb.makeError();
       }
       return start;
     }
 
-    public void endDiv(Location loc, Annotations anno) throws BuildException {
+    public void endDiv(Locator loc, AnnotationsImpl anno) throws BuildException {
       // nothing to do
     }
 
-    public ParsedPattern endIncludedGrammar(Location loc, Annotations anno) throws BuildException {
+    public Pattern endIncludedGrammar(Locator loc, AnnotationsImpl anno) throws BuildException {
       return null;
     }
 
-    public void define(String name, GrammarSection.Combine combine, ParsedPattern pattern, Location loc, Annotations anno)
+    public void define(String name, GrammarSection.Combine combine, Pattern pattern, Locator loc, AnnotationsImpl anno)
             throws BuildException {
       define(lookup(name), combine, pattern, loc);
     }
 
-    private void define(RefPattern rp, GrammarSection.Combine combine, ParsedPattern pattern, Location loc)
+    private void define(RefPattern rp, GrammarSection.Combine combine, Pattern pattern, Locator loc)
             throws BuildException {
       switch (rp.getReplacementStatus()) {
       case RefPattern.REPLACEMENT_KEEP:
         if (combine == null) {
           if (rp.isCombineImplicit()) {
             if (rp.getName() == null)
-              sb.error("duplicate_start", (Locator)loc);
+              sb.error("duplicate_start", loc);
             else
-              sb.error("duplicate_define", rp.getName(), (Locator)loc);
+              sb.error("duplicate_define", rp.getName(), loc);
           }
           else
             rp.setCombineImplicit();
@@ -513,19 +517,18 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
           if (rp.getCombineType() != RefPattern.COMBINE_NONE
               && rp.getCombineType() != combineType) {
             if (rp.getName() == null)
-              sb.error("conflict_combine_start", (Locator)loc);
+              sb.error("conflict_combine_start", loc);
             else
-              sb.error("conflict_combine_define", rp.getName(), (Locator)loc);
+              sb.error("conflict_combine_define", rp.getName(), loc);
           }
           rp.setCombineType(combineType);
         }
-        Pattern p = (Pattern)pattern;
         if (rp.getPattern() == null)
-          rp.setPattern(p);
+          rp.setPattern(pattern);
         else if (rp.getCombineType() == RefPattern.COMBINE_INTERLEAVE)
-          rp.setPattern(sb.pb.makeInterleave(rp.getPattern(), p));
+          rp.setPattern(sb.pb.makeInterleave(rp.getPattern(), pattern));
         else
-          rp.setPattern(sb.pb.makeChoice(rp.getPattern(), p));
+          rp.setPattern(sb.pb.makeChoice(rp.getPattern(), pattern));
         break;
       case RefPattern.REPLACEMENT_REQUIRE:
         rp.setReplacementStatus(RefPattern.REPLACEMENT_IGNORE);
@@ -535,10 +538,10 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       }
     }
 
-    public void topLevelAnnotation(ParsedElementAnnotation ea) throws BuildException {
+    public void topLevelAnnotation(VoidValue ea) throws BuildException {
     }
 
-    public void topLevelComment(CommentList comments) throws BuildException {
+    public void topLevelComment(CommentListImpl comments) throws BuildException {
     }
 
     private RefPattern lookup(String name) {
@@ -556,43 +559,43 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       return p;
     }
 
-    public ParsedPattern makeRef(String name, Location loc, Annotations anno) throws BuildException {
+    public Pattern makeRef(String name, Locator loc, AnnotationsImpl anno) throws BuildException {
       RefPattern p = lookup1(name);
       if (p.getRefLocator() == null && loc != null)
-        p.setRefLocator((Locator)loc);
+        p.setRefLocator(loc);
       return p;
     }
 
-    public ParsedPattern makeParentRef(String name, Location loc, Annotations anno) throws BuildException {
+    public Pattern makeParentRef(String name, Locator loc, AnnotationsImpl anno) throws BuildException {
       if (parent == null) {
-        sb.error("parent_ref_outside_grammar", (Locator)loc);
+        sb.error("parent_ref_outside_grammar", loc);
         return sb.makeErrorPattern();
       }
       return parent.makeRef(name, loc, anno);
     }
 
-    public Div makeDiv() {
+    public Div<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> makeDiv() {
       return this;
     }
 
-    public Include makeInclude() {
+    public Include<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> makeInclude() {
       return new IncludeImpl(sb, this);
     }
 
   }
 
-  static class RootScope implements Scope {
+  static class RootScope implements Scope<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> {
     private final SchemaBuilderImpl sb;
     RootScope(SchemaBuilderImpl sb) {
       this.sb = sb;
     }
 
-    public ParsedPattern makeParentRef(String name, Location loc, Annotations anno) throws BuildException {
-      sb.error("parent_ref_outside_grammar", (Locator)loc);
+    public Pattern makeParentRef(String name, Locator loc, AnnotationsImpl anno) throws BuildException {
+      sb.error("parent_ref_outside_grammar", loc);
       return sb.makeErrorPattern();
     }
-    public ParsedPattern makeRef(String name, Location loc, Annotations anno) throws BuildException {
-      sb.error("ref_outside_grammar", (Locator)loc);
+    public Pattern makeRef(String name, Locator loc, AnnotationsImpl anno) throws BuildException {
+      sb.error("ref_outside_grammar", loc);
       return sb.makeErrorPattern();
     }
 
@@ -610,7 +613,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
   }
 
 
-  private static class IncludeImpl implements Include, Div {
+  private static class IncludeImpl implements Include<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl>, Div<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> {
     private final SchemaBuilderImpl sb;
     private Override overrides;
     private final GrammarImpl grammar;
@@ -620,37 +623,38 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       this.grammar = grammar;
     }
 
-    public void define(String name, GrammarSection.Combine combine, ParsedPattern pattern, Location loc, Annotations anno)
+    public void define(String name, GrammarSection.Combine combine, Pattern pattern, Locator loc, AnnotationsImpl anno)
             throws BuildException {
       RefPattern rp = grammar.lookup(name);
       overrides = new Override(rp, overrides);
       grammar.define(rp, combine, pattern, loc);
     }
 
-    public void endDiv(Location loc, Annotations anno) throws BuildException {
+    public void endDiv(Locator loc, AnnotationsImpl anno) throws BuildException {
       // nothing to do
     }
 
-    public void topLevelAnnotation(ParsedElementAnnotation ea) throws BuildException {
+    public void topLevelAnnotation(VoidValue ea) throws BuildException {
       // nothing to do
     }
 
-    public void topLevelComment(CommentList comments) throws BuildException {
+    public void topLevelComment(CommentListImpl comments) throws BuildException {
     }
 
-    public Div makeDiv() {
+    public Div<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> makeDiv() {
       return this;
     }
 
     public void endInclude(String href, String base, String ns,
-                           Location loc, Annotations anno) throws BuildException {
-      SubParseable subParseable = sb.subParser.createSubParseable(href, base);
+                           Locator loc, AnnotationsImpl anno) throws BuildException {
+      SubParseable<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl> subParseable
+              = sb.subParser.createSubParseable(href, base);
       String uri = subParseable.getUri();
       for (OpenIncludes inc = sb.openIncludes;
            inc != null;
            inc = inc.parent) {
         if (inc.uri.equals(uri)) {
-          sb.error("recursive_include", uri, (Locator)loc);
+          sb.error("recursive_include", uri, loc);
           return;
         }
       }
@@ -665,9 +669,9 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
         for (Override o = overrides; o != null; o = o.next) {
           if (o.prp.getReplacementStatus() == RefPattern.REPLACEMENT_REQUIRE) {
             if (o.prp.getName() == null)
-              sb.error("missing_start_replacement", (Locator)loc);
+              sb.error("missing_start_replacement", loc);
             else
-              sb.error("missing_define_replacement", o.prp.getName(), (Locator)loc);
+              sb.error("missing_define_replacement", o.prp.getName(), loc);
           }
         }
       }
@@ -680,49 +684,26 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
       }
     }
 
-    public Include makeInclude() {
+    public Include<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> makeInclude() {
       return null;
     }
   }
 
-  public Grammar makeGrammar(Scope parent) {
+  public Grammar<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> makeGrammar(Scope<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> parent) {
     return new GrammarImpl(this, parent);
   }
 
-  public ParsedPattern annotate(ParsedPattern p, Annotations anno) throws BuildException {
-    return p;
-  }
-
-  public ParsedNameClass annotate(ParsedNameClass nc, Annotations anno) throws BuildException {
-    return nc;
-  }
-
-  public ParsedPattern annotateAfter(ParsedPattern p, ParsedElementAnnotation e) throws BuildException {
-    return p;
-  }
-
-  public ParsedNameClass annotateAfter(ParsedNameClass nc, ParsedElementAnnotation e) throws BuildException {
-    return nc;
-  }
-
-  public ParsedPattern commentAfter(ParsedPattern p, CommentList comments) throws BuildException {
-    return p;
-  }
-
-  public ParsedNameClass commentAfter(ParsedNameClass nc, CommentList comments) throws BuildException {
-    return nc;
-  }
-
-  public ParsedPattern makeExternalRef(String href, String base, String ns, Scope scope,
-                                       Location loc, Annotations anno)
+  public Pattern makeExternalRef(String href, String base, String ns, Scope<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> scope,
+                                 Locator loc, AnnotationsImpl anno)
           throws BuildException {
-    SubParseable subParseable = subParser.createSubParseable(href, base);
+    SubParseable<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl> subParseable
+            = subParser.createSubParseable(href, base);
     String uri = subParseable.getUri();
     for (OpenIncludes inc = openIncludes;
          inc != null;
          inc = inc.parent) {
       if (inc.uri.equals(uri)) {
-        error("recursive_include", uri, (Locator)loc);
+        error("recursive_include", uri, loc);
         return pb.makeError();
       }
     }
@@ -735,33 +716,83 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     }
   }
 
-  public ParsedNameClass makeChoice(ParsedNameClass[] nameClasses, int nNameClasses, Location loc, Annotations anno) {
+  public NameClass makeNameClassChoice(List<NameClass> nameClasses, Locator loc, AnnotationsImpl anno) {
+    int nNameClasses = nameClasses.size();
     if (nNameClasses <= 0)
       throw new IllegalArgumentException();
-    NameClass result = (NameClass)nameClasses[0];
+    NameClass result = nameClasses.get(0);
     for (int i = 1; i < nNameClasses; i++)
-      result = new ChoiceNameClass(result, (NameClass)nameClasses[i]);
+      result = new ChoiceNameClass(result, nameClasses.get(i));
     return result;
   }
 
-  public ParsedNameClass makeName(String ns, String localName, String prefix, Location loc, Annotations anno) {
+  public NameClass makeName(String ns, String localName, String prefix, Locator loc, AnnotationsImpl anno) {
     return new SimpleNameClass(new Name(resolveInherit(ns), localName));
   }
 
-  public ParsedNameClass makeNsName(String ns, Location loc, Annotations anno) {
+  public NameClass makeNsName(String ns, Locator loc, AnnotationsImpl anno) {
     return new NsNameClass(resolveInherit(ns));
   }
 
-  public ParsedNameClass makeNsName(String ns, ParsedNameClass except, Location loc, Annotations anno) {
-    return new NsNameExceptNameClass(resolveInherit(ns), (NameClass)except);
+  public NameClass makeNsName(String ns, NameClass except, Locator loc, AnnotationsImpl anno) {
+    return new NsNameExceptNameClass(resolveInherit(ns), except);
   }
 
-  public ParsedNameClass makeAnyName(Location loc, Annotations anno) {
+  public NameClass makeAnyName(Locator loc, AnnotationsImpl anno) {
     return new AnyNameClass();
   }
 
-  public ParsedNameClass makeAnyName(ParsedNameClass except, Location loc, Annotations anno) {
-    return new AnyNameExceptNameClass((NameClass)except);
+  public NameClass makeAnyName(NameClass except, Locator loc, AnnotationsImpl anno) {
+    return new AnyNameExceptNameClass(except);
+  }
+
+  public AnnotationsImpl makeAnnotations(CommentListImpl comments, Context context) {
+    return this;
+  }
+
+  public VoidValue makeElementAnnotation() throws BuildException {
+     return VoidValue.VOID;
+  }
+
+  public void addText(String value, Locator loc, CommentListImpl comments) throws BuildException {
+  }
+
+  public ElementAnnotationBuilder<Locator, VoidValue, CommentListImpl>
+  makeElementAnnotationBuilder(String ns, String localName, String prefix,
+                               Locator loc, CommentListImpl comments, Context context) {
+    return this;
+  }
+
+  public CommentListImpl makeCommentList() {
+    return this;
+  }
+
+  public boolean usesComments() {
+    return false;
+  }
+
+  public Pattern annotatePattern(Pattern p, AnnotationsImpl anno) throws BuildException {
+    return p;
+  }
+
+  public NameClass annotateNameClass(NameClass nc, AnnotationsImpl anno) throws BuildException {
+    return nc;
+  }
+
+  public Pattern annotateAfterPattern(Pattern p, VoidValue e) throws BuildException {
+    return p;
+  }
+
+  public NameClass annotateAfterNameClass(NameClass nc, VoidValue e) throws BuildException {
+    return nc;
+  }
+
+  public Pattern commentAfterPattern(Pattern p, CommentListImpl comments) throws BuildException {
+    return p;
+  }
+
+  public NameClass commentAfterNameClass(NameClass nc, CommentListImpl comments) throws BuildException {
+    return nc;
   }
 
   private String resolveInherit(String ns) {
@@ -770,7 +801,7 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     return ns;
   }
 
-  private class LocatorImpl implements Locator, Location {
+  private class LocatorImpl implements Locator {
     private final String systemId;
     private final int lineNumber;
     private final int columnNumber;
@@ -798,52 +829,8 @@ public class SchemaBuilderImpl implements SchemaBuilder, ElementAnnotationBuilde
     }
   }
 
-  public Location makeLocation(String systemId, int lineNumber, int columnNumber) {
+  public Locator makeLocation(String systemId, int lineNumber, int columnNumber) {
     return new LocatorImpl(systemId, lineNumber, columnNumber);
-  }
-
-  public Annotations makeAnnotations(CommentList comments, Context context) {
-    return this;
-  }
-
-  public ElementAnnotationBuilder makeElementAnnotationBuilder(String ns, String localName, String prefix,
-                                                               Location loc, CommentList comments, Context context) {
-    return this;
-  }
-
-  public CommentList makeCommentList() {
-    return this;
-  }
-
-  public void addComment(String value, Location loc) throws BuildException {
-  }
-
-  public void addAttribute(String ns, String localName, String prefix, String value, Location loc) {
-    // nothing needed
-  }
-
-  public void addElement(ParsedElementAnnotation ea) {
-    // nothing needed
-  }
-
-  public void addComment(CommentList comments) throws BuildException {
-    // nothing needed
-  }
-
-  public void addLeadingComment(CommentList comments) throws BuildException {
-    // nothing needed
-  }
-
-  public void addText(String value, Location loc, CommentList comments) {
-    // nothing needed
-  }
-
-  public ParsedElementAnnotation makeElementAnnotation() {
-    return null;
-  }
-
-  public boolean usesComments() {
-    return false;
   }
 
   private void error(SAXParseException message) throws BuildException {

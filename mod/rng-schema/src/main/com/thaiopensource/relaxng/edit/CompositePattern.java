@@ -1,10 +1,10 @@
 package com.thaiopensource.relaxng.edit;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 public abstract class CompositePattern extends Pattern {
-  private final List<Pattern> children = new Vector<Pattern>();
+  private final List<Pattern> children = new ArrayList<Pattern>();
   public List<Pattern> getChildren() {
     return children;
   }

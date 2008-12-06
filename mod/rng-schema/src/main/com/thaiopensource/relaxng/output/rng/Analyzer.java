@@ -25,11 +25,10 @@ import com.thaiopensource.relaxng.edit.Param;
 import com.thaiopensource.relaxng.edit.Pattern;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
-import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.relaxng.parse.Context;
+import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
 
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -218,10 +217,8 @@ class Analyzer extends AbstractVisitor {
     if (context == null || context == lastContext)
       return;
     lastContext = context;
-    for (Enumeration e = context.prefixes(); e.hasMoreElements();) {
-      String prefix = (String)e.nextElement();
+    for (String prefix : context.prefixes())
       noteNs(prefix, context.resolveNamespacePrefix(prefix));
-    }
   }
 
   Map<String, String> getPrefixMap() {

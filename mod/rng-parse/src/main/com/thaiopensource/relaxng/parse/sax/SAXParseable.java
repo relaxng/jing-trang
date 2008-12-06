@@ -1,9 +1,10 @@
 package com.thaiopensource.relaxng.parse.sax;
 
+import com.thaiopensource.relaxng.parse.Annotations;
 import com.thaiopensource.relaxng.parse.BuildException;
+import com.thaiopensource.relaxng.parse.CommentList;
 import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.IncludedGrammar;
-import com.thaiopensource.relaxng.parse.ParsedPattern;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Scope;
 import com.thaiopensource.relaxng.parse.SubParseable;
@@ -16,7 +17,8 @@ import org.xml.sax.XMLReader;
 import javax.xml.transform.sax.SAXSource;
 import java.io.IOException;
 
-public class SAXParseable extends SAXSubParser implements SubParseable {
+public class SAXParseable<P, NC, L, EA, CL extends CommentList<L>, A extends Annotations<L, EA, CL>>
+        extends SAXSubParser<P, NC, L, EA, CL, A> implements SubParseable<P, NC, L, EA, CL, A> {
   private final SAXSource source;
 
   /**
@@ -30,10 +32,10 @@ public class SAXParseable extends SAXSubParser implements SubParseable {
     this.source = source;
   }
 
-  public ParsedPattern parse(SchemaBuilder schemaBuilder, Scope scope) throws BuildException, IllegalSchemaException {
+  public P parse(SchemaBuilder<P, NC, L, EA, CL, A> schemaBuilder, Scope<P, L, EA, CL, A> scope) throws BuildException, IllegalSchemaException {
     try {
       XMLReader xr = source.getXMLReader();
-      SchemaParser sp = new SchemaParser(xr, eh, schemaBuilder, null, scope);
+      SchemaParser<P, NC, L, EA, CL, A> sp = new SchemaParser<P, NC, L, EA, CL, A>(xr, eh, schemaBuilder, null, scope);
       xr.parse(source.getInputSource());
       return sp.getParsedPattern();
     }
@@ -45,11 +47,11 @@ public class SAXParseable extends SAXSubParser implements SubParseable {
     }
   }
 
-  public ParsedPattern parseAsInclude(SchemaBuilder schemaBuilder, IncludedGrammar g)
+  public P parseAsInclude(SchemaBuilder<P, NC, L, EA, CL, A> schemaBuilder, IncludedGrammar<P, L, EA, CL, A> g)
           throws BuildException, IllegalSchemaException {
     try {
       XMLReader xr = source.getXMLReader();
-      SchemaParser sp = new SchemaParser(xr, eh, schemaBuilder, g, g);
+      SchemaParser<P, NC, L, EA, CL, A> sp = new SchemaParser<P, NC, L, EA, CL, A>(xr, eh, schemaBuilder, g, g);
       xr.parse(source.getInputSource());
       return sp.getParsedPattern();
     }

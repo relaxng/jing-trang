@@ -8,25 +8,22 @@ PARSER_BEGIN(CompactSyntax)
 
 package com.thaiopensource.relaxng.parse.compact;
 
-import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.relaxng.parse.Annotations;
-import com.thaiopensource.relaxng.parse.DataPatternBuilder;
-import com.thaiopensource.relaxng.parse.ParsedElementAnnotation;
-import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
+import com.thaiopensource.relaxng.parse.BuildException;
 import com.thaiopensource.relaxng.parse.CommentList;
-import com.thaiopensource.relaxng.parse.ParsedPattern;
-import com.thaiopensource.relaxng.parse.ParsedNameClass;
-import com.thaiopensource.relaxng.parse.Scope;
-import com.thaiopensource.relaxng.parse.GrammarSection;
+import com.thaiopensource.relaxng.parse.Context;
+import com.thaiopensource.relaxng.parse.DataPatternBuilder;
 import com.thaiopensource.relaxng.parse.Div;
+import com.thaiopensource.relaxng.parse.ElementAnnotationBuilder;
 import com.thaiopensource.relaxng.parse.Grammar;
+import com.thaiopensource.relaxng.parse.GrammarSection;
+import com.thaiopensource.relaxng.parse.IllegalSchemaException;
 import com.thaiopensource.relaxng.parse.Include;
 import com.thaiopensource.relaxng.parse.IncludedGrammar;
-import com.thaiopensource.relaxng.parse.IllegalSchemaException;
-import com.thaiopensource.relaxng.parse.BuildException;
-import com.thaiopensource.relaxng.parse.Location;
-import com.thaiopensource.relaxng.parse.Context;
+import com.thaiopensource.relaxng.parse.SchemaBuilder;
+import com.thaiopensource.relaxng.parse.Scope;
 
+import com.thaiopensource.util.Ref;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
 
 import com.thaiopensource.util.Localizer;
@@ -36,13 +33,19 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.LocatorImpl;
 
-import java.util.Hashtable;
-import java.util.Enumeration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.io.Reader;
-import java.net.MalformedURLException;
-import java.net.URL;
 
-public class CompactSyntax implements Context {
+public class CompactSyntax<Pattern, NameClass, Location, ElementAnnotation,
+                           CommentListImpl extends CommentList<Location>,
+                           AnnotationsImpl extends Annotations<Location, ElementAnnotation, CommentListImpl>>
+    implements Context {
   private static final int IN_ELEMENT = 0;
   private static final int IN_ATTRIBUTE = 1;
   private static final int IN_ANY_NAME = 2;
@@ -50,14 +53,14 @@ public class CompactSyntax implements Context {
 
   private String defaultNamespace = SchemaBuilder.INHERIT_NS;
   private String compatibilityPrefix = null;
-  private SchemaBuilder sb;
+  private SchemaBuilder<Pattern, NameClass, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> sb;
   private String sourceUri;
   private ErrorHandler eh;
-  private final Hashtable namespaceTable = new Hashtable();
-  private final Hashtable datatypesTable = new Hashtable();
+  private final Map<String, String> namespaceMap = new HashMap<String, String>();
+  private final Map<String, String> datatypesMap = new HashMap<String, String>();
   private boolean hadError = false;
   private static final Localizer localizer = new Localizer(CompactSyntax.class);
-  private final Hashtable attributeNameTable = new Hashtable();
+  private final Set<String> attributeNames = new HashSet<String>();
   private boolean annotationsIncludeElements = false;
 
   final class LocatedString {
@@ -83,7 +86,7 @@ public class CompactSyntax implements Context {
 
   }
 
-  public CompactSyntax(Reader r, String sourceUri, SchemaBuilder sb, ErrorHandler eh) {
+  public CompactSyntax(Reader r, String sourceUri, SchemaBuilder<Pattern, NameClass, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> sb, ErrorHandler eh) {
     this(r);
     this.sourceUri = sourceUri;
     this.sb = sb;
@@ -93,9 +96,9 @@ public class CompactSyntax implements Context {
     this.topLevelComments = sb.makeCommentList();
   }
 
-  ParsedPattern parse(Scope scope) throws IllegalSchemaException {
+  Pattern parse(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope) throws IllegalSchemaException {
     try {
-      ParsedPattern p = Input(scope);
+      Pattern p = Input(scope);
       if (!hadError)
         return p;
     }
@@ -108,9 +111,9 @@ public class CompactSyntax implements Context {
     throw new IllegalSchemaException();
   }
 
-  ParsedPattern parseInclude(IncludedGrammar g) throws IllegalSchemaException {
+  Pattern parseInclude(IncludedGrammar<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> g) throws IllegalSchemaException {
     try {
-      ParsedPattern p = IncludedGrammar(g);
+      Pattern p = IncludedGrammar(g);
       if (!hadError)
         return p;
     }
@@ -191,34 +194,24 @@ public class CompactSyntax implements Context {
     return sb.makeLocation(sourceUri, t.beginLine, t.beginColumn);
   }
 
-  private static ParsedPattern[] addPattern(ParsedPattern[] patterns, int i, ParsedPattern p) {
-    if (i >= patterns.length) {
-      ParsedPattern[] oldPatterns = patterns;
-      patterns = new ParsedPattern[oldPatterns.length*2];
-      System.arraycopy(oldPatterns, 0, patterns, 0, oldPatterns.length);
-    }
-    patterns[i] = p;
-    return patterns;
-  }
-
   String getCompatibilityPrefix() {
     if (compatibilityPrefix == null) {
       compatibilityPrefix = "a";
-      while (namespaceTable.get(compatibilityPrefix) != null)
+      while (namespaceMap.get(compatibilityPrefix) != null)
         compatibilityPrefix = compatibilityPrefix + "a";
     }
     return compatibilityPrefix;
   }
 
   public String resolveNamespacePrefix(String prefix) {
-    String result = (String)namespaceTable.get(prefix);
+    String result = namespaceMap.get(prefix);
     if (result == null || result.length() == 0)
       return null;
     return result;
   }
 
-  public Enumeration prefixes() {
-    return namespaceTable.keys();
+  public Set<String> prefixes() {
+    return namespaceMap.keySet();
   }
 
   public String getBaseUri() {
@@ -241,14 +234,14 @@ public class CompactSyntax implements Context {
     return this;
   }
 
-  private CommentList getComments() {
+  private CommentListImpl getComments() {
     return getComments(getTopLevelComments());
   }
 
-  private CommentList topLevelComments;
+  private CommentListImpl topLevelComments;
 
-  private CommentList getTopLevelComments() {
-    CommentList tem = topLevelComments;
+  private CommentListImpl getTopLevelComments() {
+    CommentListImpl tem = topLevelComments;
     topLevelComments = null;
     return tem;
   }
@@ -257,13 +250,13 @@ public class CompactSyntax implements Context {
     topLevelComments = getComments(topLevelComments);
   }
 
-  private void topLevelComments(GrammarSection section) {
+  private void topLevelComments(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section) {
     section.topLevelComment(getComments(null));
   }
 
   private Token lastCommentSourceToken = null;
 
-  private CommentList getComments(CommentList comments) {
+  private CommentListImpl getComments(CommentListImpl comments) {
     Token nextToken = getToken(1);
     if (lastCommentSourceToken != nextToken) {
       if (lastCommentSourceToken == null)
@@ -298,18 +291,18 @@ public class CompactSyntax implements Context {
     return comments;
   }
 
-  private ParsedPattern afterComments(ParsedPattern p) {
-    CommentList comments = getComments(null);
+  private Pattern afterPatternComments(Pattern p) {
+    CommentListImpl comments = getComments(null);
     if (comments == null)
       return p;
-    return sb.commentAfter(p, comments);
+    return sb.commentAfterPattern(p, comments);
   }
 
-  private ParsedNameClass afterComments(ParsedNameClass nc) {
-    CommentList comments = getComments(null);
+  private NameClass afterNameClassComments(NameClass nc) {
+    CommentListImpl comments = getComments(null);
     if (comments == null)
       return nc;
-    return sb.commentAfter(nc, comments);
+    return sb.commentAfterNameClass(nc, comments);
   }
 
   private static String mungeComment(String image) {
@@ -321,15 +314,15 @@ public class CompactSyntax implements Context {
     return image.substring(i);
   }
 
-  private Annotations getCommentsAsAnnotations() {
-    CommentList comments = getComments();
+  private AnnotationsImpl getCommentsAsAnnotations() {
+    CommentListImpl comments = getComments();
     if (comments == null)
       return null;
     return sb.makeAnnotations(comments, getContext());
   }
 
-  private Annotations addCommentsToChildAnnotations(Annotations a) {
-    CommentList comments = getComments();
+  private AnnotationsImpl addCommentsToChildAnnotations(AnnotationsImpl a) {
+    CommentListImpl comments = getComments();
     if (comments == null)
       return a;
     if (a == null)
@@ -338,8 +331,8 @@ public class CompactSyntax implements Context {
     return a;
   }
 
-  private Annotations addCommentsToLeadingAnnotations(Annotations a) {
-    CommentList comments = getComments();
+  private AnnotationsImpl addCommentsToLeadingAnnotations(AnnotationsImpl a) {
+    CommentListImpl comments = getComments();
     if (comments == null)
       return a;
     if (a == null)
@@ -348,23 +341,23 @@ public class CompactSyntax implements Context {
     return a;
   }
 
-  private Annotations getTopLevelCommentsAsAnnotations() {
-    CommentList comments = getTopLevelComments();
+  private AnnotationsImpl getTopLevelCommentsAsAnnotations() {
+    CommentListImpl comments = getTopLevelComments();
     if (comments == null)
       return null;
     return sb.makeAnnotations(comments, getContext());
   }
 
   private void clearAttributeList() {
-    attributeNameTable.clear();
+    attributeNames.clear();
   }
 
-  private void addAttribute(Annotations a, String ns, String localName, String prefix, String value, Token tok) {
+  private void addAttribute(Annotations<Location, ElementAnnotation, CommentListImpl> a, String ns, String localName, String prefix, String value, Token tok) {
     String key = ns + "#" + localName;
-    if (attributeNameTable.get(key) != null)
+    if (attributeNames.contains(key))
       error("duplicate_attribute", ns, localName, tok);
     else {
-      attributeNameTable.put(key, key);
+      attributeNames.add(key);
       a.addAttribute(ns, localName, prefix, value, makeLocation(tok));
     }
   }
@@ -375,7 +368,7 @@ public class CompactSyntax implements Context {
   }
 
   private String lookupPrefix(String prefix, Token t) {
-    String ns = (String)namespaceTable.get(prefix);
+    String ns = namespaceMap.get(prefix);
     if (ns == null) {
       error("undeclared_prefix", prefix, t);
       return "#error";
@@ -383,7 +376,7 @@ public class CompactSyntax implements Context {
     return ns;
   }
   private String lookupDatatype(String prefix, Token t) {
-    String ns = (String)datatypesTable.get(prefix);
+    String ns = datatypesMap.get(prefix);
     if (ns == null) {
       error("undeclared_prefix", prefix, t);
       return ""; // XXX
@@ -394,14 +387,14 @@ public class CompactSyntax implements Context {
 
 PARSER_END(CompactSyntax)
 
-ParsedPattern Input(Scope scope) :
+Pattern Input(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope) :
 {
-  ParsedPattern p;
+  Pattern p;
 }
 {
   Preamble()
   (LOOKAHEAD(TopLevelLookahead()) p = TopLevelGrammar(scope)
-   | p = Expr(true, scope, null, null) { p = afterComments(p); } <EOF>)
+   | p = Expr(true, scope, null, null) { p = afterPatternComments(p); } <EOF>)
   { return p; }
 }
 
@@ -442,30 +435,30 @@ void LookaheadBody() :
   "]"
 }
 
-ParsedPattern IncludedGrammar(IncludedGrammar g) :
+Pattern IncludedGrammar(IncludedGrammar<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> g) :
 {
-  Annotations a;
-  ParsedPattern p;
+  AnnotationsImpl a;
+  Pattern p;
 }
 {
   Preamble()
   (LOOKAHEAD(TopLevelLookahead()) a = GrammarBody(g, g, getTopLevelCommentsAsAnnotations())
-   | a = Annotations() "grammar" "{" a = GrammarBody(g, g, a) { topLevelComments(g); } "}")
-  { p = afterComments(g.endIncludedGrammar(sb.makeLocation(sourceUri, 1, 1), a)); }
+   | a = AnnotationsImpl() "grammar" "{" a = GrammarBody(g, g, a) { topLevelComments(g); } "}")
+  { p = afterPatternComments(g.endIncludedGrammar(sb.makeLocation(sourceUri, 1, 1), a)); }
   <EOF>
   { return p; }
 }
 
-ParsedPattern TopLevelGrammar(Scope scope) :
+Pattern TopLevelGrammar(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope) :
 {
-  Annotations a = getTopLevelCommentsAsAnnotations();
-  Grammar g;
-  ParsedPattern p;
+  AnnotationsImpl a = getTopLevelCommentsAsAnnotations();
+  Grammar<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> g;
+  Pattern p;
 }
 {
   { g = sb.makeGrammar(scope); }
   a = GrammarBody(g, g, a)
-  { p = afterComments(g.endGrammar(sb.makeLocation(sourceUri, 1, 1), a)); }
+  { p = afterPatternComments(g.endGrammar(sb.makeLocation(sourceUri, 1, 1), a)); }
   <EOF>
   { return p; }
 }
@@ -475,9 +468,9 @@ void Preamble() :
 {
   (NamespaceDecl() | DatatypesDecl())*
   {
-    namespaceTable.put("xml", WellKnownNamespaces.XML);
-    if (datatypesTable.get("xsd") == null)
-      datatypesTable.put("xsd", WellKnownNamespaces.XML_SCHEMA_DATATYPES);
+    namespaceMap.put("xml", WellKnownNamespaces.XML);
+    if (datatypesMap.get("xsd") == null)
+      datatypesMap.put("xsd", WellKnownNamespaces.XML_SCHEMA_DATATYPES);
   }
 }
 
@@ -509,7 +502,7 @@ void NamespaceDecl() :
       else {
         if (namespaceName.equals(WellKnownNamespaces.RELAX_NG_COMPATIBILITY_ANNOTATIONS))
           compatibilityPrefix = prefix.getString();
-        namespaceTable.put(prefix.getString(), namespaceName);
+        namespaceMap.put(prefix.getString(), namespaceName);
       }
     }
   }
@@ -533,33 +526,33 @@ void DatatypesDecl() :
   { noteTopLevelComments(); }
   "datatypes" prefix = UnprefixedName() "=" uri = Literal()
   {
-    datatypesTable.put(prefix.getString(), uri);
+    datatypesMap.put(prefix.getString(), uri);
   }
 }
 
-ParsedPattern AnnotatedPrimaryExpr(boolean topLevel, Scope scope, Token[] except) :
+Pattern AnnotatedPrimaryExpr(boolean topLevel, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, Token[] except) :
 {
-  Annotations a;
-  ParsedPattern p;
-  ParsedElementAnnotation e;
+  AnnotationsImpl a;
+  Pattern p;
+  ElementAnnotation e;
   Token t;
 }
 {
-  a = Annotations()
+  a = AnnotationsImpl()
   p = PrimaryExpr(topLevel, scope, a, except)
   ( t = <FANNOTATE> e = AnnotationElement(false) {
        if (topLevel)
          error("top_level_follow_annotation", t);
        else
-         p = sb.annotateAfter(p, e);
+         p = sb.annotateAfterPattern(p, e);
      })*
   { return p; }
 }
 
 
-ParsedPattern PrimaryExpr(boolean topLevel, Scope scope, Annotations a, Token[] except) :
+Pattern PrimaryExpr(boolean topLevel, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a, Token[] except) :
 {
-  ParsedPattern p;
+  Pattern p;
 }
 {
   (p = ElementExpr(scope, a)
@@ -579,7 +572,7 @@ ParsedPattern PrimaryExpr(boolean topLevel, Scope scope, Annotations a, Token[] 
   { return p; }
 }
 
-ParsedPattern EmptyExpr(Annotations a) :
+Pattern EmptyExpr(AnnotationsImpl a) :
 {
   Token t;
 }
@@ -588,7 +581,7 @@ ParsedPattern EmptyExpr(Annotations a) :
   { return sb.makeEmpty(makeLocation(t), a); }
 }
 
-ParsedPattern TextExpr(Annotations a) :
+Pattern TextExpr(AnnotationsImpl a) :
 {
   Token t;
 }
@@ -597,7 +590,7 @@ ParsedPattern TextExpr(Annotations a) :
   { return sb.makeText(makeLocation(t), a); }
 }
 
-ParsedPattern NotAllowedExpr(Annotations a) :
+Pattern NotAllowedExpr(AnnotationsImpl a) :
 {
   Token t;
 }
@@ -606,52 +599,51 @@ ParsedPattern NotAllowedExpr(Annotations a) :
   { return sb.makeNotAllowed(makeLocation(t), a); }
 }
 
-ParsedPattern Expr(boolean topLevel, Scope scope, Token t, Annotations a) :
+Pattern Expr(boolean topLevel, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, Token t, AnnotationsImpl a) :
 {
-  ParsedPattern p;
-  ParsedPattern[] patterns = new ParsedPattern[2];
-  int nPatterns = 1;
+  Pattern p;
+  List<Pattern> patterns = new ArrayList<Pattern>();
   boolean[] hadOccur = new boolean[1];
   Token[] except = new Token[1];
 }
 {
   p = UnaryExpr(topLevel, scope, hadOccur, except)
-  { patterns[0] = p; }
+  { patterns.add(p); }
   (
    { checkExcept(except); }
    (t = "|" p = UnaryExpr(topLevel, scope, null, except)
-     { patterns = addPattern(patterns, nPatterns++, p); checkExcept(except); } )+
-    { p = sb.makeChoice(patterns, nPatterns, makeLocation(t), a); }
+     { patterns.add(p); checkExcept(except); } )+
+    { p = sb.makeChoice(patterns, makeLocation(t), a); }
     | (t = "&" p = UnaryExpr(topLevel, scope, null, except)
-     { patterns = addPattern(patterns, nPatterns++, p); checkExcept(except); } )+
-    { p = sb.makeInterleave(patterns, nPatterns, makeLocation(t), a); }
+     { patterns.add(p); checkExcept(except); } )+
+    { p = sb.makeInterleave(patterns, makeLocation(t), a); }
     | (t = "," p = UnaryExpr(topLevel, scope, null, except)
-     { patterns = addPattern(patterns, nPatterns++, p); checkExcept(except); } )+
-    { p = sb.makeGroup(patterns, nPatterns, makeLocation(t), a); }
+     { patterns.add(p); checkExcept(except); } )+
+    { p = sb.makeGroup(patterns, makeLocation(t), a); }
   )?
   {
-    if (nPatterns == 1 && a != null) {
+    if (patterns.size() == 1 && a != null) {
       if (hadOccur[0])
-        p = sb.annotate(p, a);
+        p = sb.annotatePattern(p, a);
       else
-        p = sb.makeGroup(patterns, nPatterns, makeLocation(t), a);
+        p = sb.makeGroup(patterns, makeLocation(t), a);
     }
     return p;
   }
 }
 
-ParsedPattern UnaryExpr(boolean topLevel, Scope scope, boolean[] hadOccur, Token[] except) :
+Pattern UnaryExpr(boolean topLevel, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, boolean[] hadOccur, Token[] except) :
 {
-  ParsedPattern p;
+  Pattern p;
   Token t;
-  ParsedElementAnnotation e;
+  ElementAnnotation e;
 }
 {
   p = AnnotatedPrimaryExpr(topLevel, scope, except)
   (
    {
      if (hadOccur != null) hadOccur[0] = true;
-     p = afterComments(p);
+     p = afterPatternComments(p);
    }
    (t = "+" { checkExcept(except); p = sb.makeOneOrMore(p, makeLocation(t), null); }
     | t = "?" { checkExcept(except); p = sb.makeOptional(p, makeLocation(t), null); }
@@ -660,117 +652,110 @@ ParsedPattern UnaryExpr(boolean topLevel, Scope scope, boolean[] hadOccur, Token
         if (topLevel)
           error("top_level_follow_annotation", t);
         else
-          p = sb.annotateAfter(p, e);
+          p = sb.annotateAfterPattern(p, e);
      } )*
   )?
   { return p; }
 }
 
-ParsedPattern ElementExpr(Scope scope, Annotations a) :
+Pattern ElementExpr(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   Token t;
-  ParsedNameClass nc;
-  ParsedPattern p;
+  NameClass nc;
+  Pattern p;
 }
 {
   t = "element"
   nc = NameClass(IN_ELEMENT, null)
   "{"
   p = Expr(false, scope, null, null)
-  { p = afterComments(p); }
+  { p = afterPatternComments(p); }
   "}"
   { return sb.makeElement(nc, p, makeLocation(t), a); }
 }
 
-ParsedPattern AttributeExpr(Scope scope, Annotations a) :
+Pattern AttributeExpr(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   Token t;
-  ParsedNameClass nc;
-  ParsedPattern p;
+  NameClass nc;
+  Pattern p;
 }
 {
   t = "attribute"
   nc = NameClass(IN_ATTRIBUTE, null)
   "{"
   p = Expr(false, scope, null, null)
-  { p = afterComments(p); }
+  { p = afterPatternComments(p); }
   "}"
   { return sb.makeAttribute(nc, p, makeLocation(t), a); }
 }
 
-ParsedNameClass NameClass(int context, Annotations[] pa) :
+NameClass NameClass(int context, Ref<AnnotationsImpl> ra) :
 {
-  Annotations a;
-  ParsedNameClass nc;
+  AnnotationsImpl a;
+  NameClass nc;
 }
 {
-  a = Annotations()
-  (nc = PrimaryNameClass(context, a) nc = AnnotateAfter(nc) nc = NameClassAlternatives(context, nc, pa)
-   | nc = AnyNameExceptClass(context, a, pa)
-   | nc = NsNameExceptClass(context, a, pa))
+  a = AnnotationsImpl()
+  (nc = PrimaryNameClass(context, a) nc = AnnotateAfter(nc) nc = NameClassAlternatives(context, nc, ra)
+   | nc = AnyNameExceptClass(context, a, ra)
+   | nc = NsNameExceptClass(context, a, ra))
   { return nc; }
 }
 
-ParsedNameClass AnnotateAfter(ParsedNameClass nc) :
+NameClass AnnotateAfter(NameClass nc) :
 {
-  ParsedElementAnnotation e;
+  ElementAnnotation e;
 }
 {
-  ( <FANNOTATE> e = AnnotationElement(false) { nc = sb.annotateAfter(nc, e); })*
+  ( <FANNOTATE> e = AnnotationElement(false) { nc = sb.annotateAfterNameClass(nc, e); })*
   { return nc; }
 }
 
-ParsedNameClass NameClassAlternatives(int context, ParsedNameClass nc, Annotations[] pa) :
+NameClass NameClassAlternatives(int context, NameClass nc, Ref<AnnotationsImpl> ra) :
 {
   Token t;
-  ParsedNameClass[] nameClasses;
-  int nNameClasses;
+  List<NameClass> nameClasses;
 }
 {
   (
     {
-      nameClasses = new ParsedNameClass[2];
-      nameClasses[0] = nc;
-      nNameClasses = 1;
+      nameClasses = new ArrayList<NameClass>();
+      nameClasses.add(nc);
     }
     (t = "|" nc = BasicNameClass(context) nc = AnnotateAfter(nc)
     {
-      if (nNameClasses >= nameClasses.length) {
-	ParsedNameClass[] oldNameClasses = nameClasses;
-	nameClasses = new ParsedNameClass[oldNameClasses.length*2];
-	System.arraycopy(oldNameClasses, 0, nameClasses, 0, oldNameClasses.length);
-      }
-      nameClasses[nNameClasses++] = nc;
+      nameClasses.add(nc);
     })+
     {
-      Annotations a;
-      if (pa == null)
+      AnnotationsImpl a;
+      if (ra == null)
         a = null;
       else {
-        a = pa[0];
-        pa[0] = null;
+	a = ra.get();
+        ra.clear();
       }
-      nc = sb.makeChoice(nameClasses, nNameClasses, makeLocation(t), a);
+      nc = sb.makeNameClassChoice(nameClasses, makeLocation(t), a);
     }
   )?
   { return nc; }
 }
 
-ParsedNameClass BasicNameClass(int context) :
+NameClass BasicNameClass(int context) :
 {
-  Annotations a;
-  ParsedNameClass nc;
+  AnnotationsImpl a;
+  NameClass nc;
 }
 {
-  a = Annotations()
+  a = AnnotationsImpl()
   (nc = PrimaryNameClass(context, a)
    | nc = OpenNameClass(context, a))
   { return nc; }
 }
 
-ParsedNameClass PrimaryNameClass(int context, Annotations a) :
+NameClass PrimaryNameClass(int context, AnnotationsImpl a) :
 {
-  ParsedNameClass nc;
+  NameClass nc;
 }
 {
   (nc = UnprefixedNameClass(context, a)
@@ -779,7 +764,7 @@ ParsedNameClass PrimaryNameClass(int context, Annotations a) :
   { return nc; }
 }
 
-ParsedNameClass OpenNameClass(int context, Annotations a) :
+NameClass OpenNameClass(int context, AnnotationsImpl a) :
 {
   Token t;
   LocatedString ns;
@@ -790,7 +775,7 @@ ParsedNameClass OpenNameClass(int context, Annotations a) :
 }
 
 
-ParsedNameClass UnprefixedNameClass(int context, Annotations a) :
+NameClass UnprefixedNameClass(int context, AnnotationsImpl a) :
 {
   LocatedString name;
 }
@@ -806,7 +791,7 @@ ParsedNameClass UnprefixedNameClass(int context, Annotations a) :
   }
 }
 
-ParsedNameClass PrefixedNameClass(Annotations a) :
+NameClass PrefixedNameClass(AnnotationsImpl a) :
 {
   Token t;
 }
@@ -820,10 +805,10 @@ ParsedNameClass PrefixedNameClass(Annotations a) :
   }
 }
 
-ParsedNameClass NsNameExceptClass(int context, Annotations a, Annotations[] pa) :
+NameClass NsNameExceptClass(int context, AnnotationsImpl a, Ref<AnnotationsImpl> ra) :
 {
   LocatedString ns;
-  ParsedNameClass nc;
+  NameClass nc;
 }
 {
   ns = NsName()
@@ -833,7 +818,7 @@ ParsedNameClass NsNameExceptClass(int context, Annotations a, Annotations[] pa) 
    nc = AnnotateAfter(nc)
   | { nc = sb.makeNsName(ns.getString(), ns.getLocation(), a); }
     nc = AnnotateAfter(nc)
-    nc = NameClassAlternatives(context, nc, pa))
+    nc = NameClassAlternatives(context, nc, ra))
   { return nc; }
 }
 
@@ -850,10 +835,10 @@ LocatedString NsName() :
   }
 }
 
-ParsedNameClass AnyNameExceptClass(int context, Annotations a, Annotations[] pa) :
+NameClass AnyNameExceptClass(int context, AnnotationsImpl a, Ref<AnnotationsImpl> ra) :
 {
   Token t;
-  ParsedNameClass nc;
+  NameClass nc;
 }
 {
   t = "*"
@@ -863,66 +848,66 @@ ParsedNameClass AnyNameExceptClass(int context, Annotations a, Annotations[] pa)
    nc = AnnotateAfter(nc)
   | { nc = sb.makeAnyName(makeLocation(t), a); }
     nc = AnnotateAfter(nc)
-    nc = NameClassAlternatives(context, nc, pa))
+    nc = NameClassAlternatives(context, nc, ra))
   { return nc; }
 }
 
-ParsedNameClass ParenNameClass(int context, Annotations a) :
+NameClass ParenNameClass(int context, AnnotationsImpl a) :
 {
   Token t;
-  ParsedNameClass nc;
-  Annotations[] pa = new Annotations[]{ a };
+  NameClass nc;
+  Ref<AnnotationsImpl> ra = new Ref<AnnotationsImpl>(a);
 }
 {
-  t = "(" nc = NameClass(context, pa) { nc = afterComments(nc); } ")"
+  t = "(" nc = NameClass(context, ra) { nc = afterNameClassComments(nc); } ")"
   {
-    if (pa[0] != null)
-      nc = sb.makeChoice(new ParsedNameClass[] { nc }, 1, makeLocation(t), pa[0]);
+    if (ra.get() != null)
+      nc = sb.makeNameClassChoice(Collections.singletonList(nc), makeLocation(t), ra.get());
     return nc;
   }
 }
 
-ParsedNameClass ExceptNameClass(int context) :
+NameClass ExceptNameClass(int context) :
 {
-  ParsedNameClass nc;
+  NameClass nc;
 }
 {
   "-" nc = BasicNameClass(context)
   { return nc; }
 }
 
-ParsedPattern ListExpr(Scope scope, Annotations a) :
+Pattern ListExpr(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   Token t;
-  ParsedPattern p;
+  Pattern p;
 }
 {
   t = "list"
   "{"
   p = Expr(false, scope, null, null)
-  { p = afterComments(p); }
+  { p = afterPatternComments(p); }
   "}"
   { return sb.makeList(p, makeLocation(t), a); }
 }
 
-ParsedPattern MixedExpr(Scope scope, Annotations a) :
+Pattern MixedExpr(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   Token t;
-  ParsedPattern p;
+  Pattern p;
 }
 {
   t = "mixed"
   "{"
   p = Expr(false, scope, null, null)
-  { p = afterComments(p); }
+  { p = afterPatternComments(p); }
   "}"
   { return sb.makeMixed(p, makeLocation(t), a); }
 }
 
-ParsedPattern GrammarExpr(Scope scope, Annotations a) :
+Pattern GrammarExpr(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   Token t;
-  Grammar g;
+  Grammar<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> g;
 }
 {
   t = "grammar" { g = sb.makeGrammar(scope); }
@@ -930,19 +915,19 @@ ParsedPattern GrammarExpr(Scope scope, Annotations a) :
   { return g.endGrammar(makeLocation(t), a); }
 }
 
-ParsedPattern ParenExpr(boolean topLevel, Scope scope, Annotations a) :
+Pattern ParenExpr(boolean topLevel, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   Token t;
-  ParsedPattern p;
+  Pattern p;
 }
 {
-  t = "(" p = Expr(topLevel, scope, t, a) { p = afterComments(p); } ")"
+  t = "(" p = Expr(topLevel, scope, t, a) { p = afterPatternComments(p); } ")"
   { return p; }
 }
 
-Annotations GrammarBody(GrammarSection section, Scope scope, Annotations a) :
+AnnotationsImpl GrammarBody(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
-  ParsedElementAnnotation e;
+  ElementAnnotation e;
 }
 {
   (LOOKAHEAD(2) e = AnnotationElementNotKeyword()
@@ -951,41 +936,41 @@ Annotations GrammarBody(GrammarSection section, Scope scope, Annotations a) :
   { return a; }
 }
 
-void GrammarComponent(GrammarSection section, Scope scope) :
+void GrammarComponent(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope) :
 {
-  ParsedElementAnnotation e;
-  Annotations a;
+  ElementAnnotation e;
+  AnnotationsImpl a;
 }
 {
-  (a = Annotations()
+  (a = AnnotationsImpl()
    (Definition(section, scope, a)
     | Include(section, scope, a)
     | Div(section, scope, a)))
   (LOOKAHEAD(2) e = AnnotationElementNotKeyword() { section.topLevelAnnotation(e); })*
 }
 
-void Definition(GrammarSection section, Scope scope, Annotations a) :
+void Definition(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {}
 {
   (Define(section, scope, a) | Start(section, scope, a))
 }
 
-void Start(GrammarSection section, Scope scope, Annotations a) :
+void Start(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   Token t;
   GrammarSection.Combine combine;
-  ParsedPattern p;
+  Pattern p;
 }
 {
   t = "start" combine = AssignOp() p = Expr(false, scope, null, null)
   { section.define(GrammarSection.START, combine, p, makeLocation(t), a); }
 }
 
-void Define(GrammarSection section, Scope scope, Annotations a) :
+void Define(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   LocatedString name;
   GrammarSection.Combine combine;
-  ParsedPattern p;
+  Pattern p;
 }
 {
   name = Identifier() combine = AssignOp() p = Expr(false, scope, null, null)
@@ -1000,7 +985,7 @@ GrammarSection.Combine AssignOp() :
   | "&=" { return GrammarSection.COMBINE_INTERLEAVE; }
 }
 
-void Include(GrammarSection section, Scope scope, Annotations a) :
+void Include(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   Token t;
   String href;
@@ -1019,9 +1004,9 @@ void Include(GrammarSection section, Scope scope, Annotations a) :
   }
 }
 
-Annotations IncludeBody(GrammarSection section, Scope scope, Annotations a) :
+AnnotationsImpl IncludeBody(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
-  ParsedElementAnnotation e;
+  ElementAnnotation e;
 }
 {
   (LOOKAHEAD(2) e = AnnotationElementNotKeyword()
@@ -1031,38 +1016,38 @@ Annotations IncludeBody(GrammarSection section, Scope scope, Annotations a) :
 }
 
 
-void IncludeComponent(GrammarSection section, Scope scope) :
+void IncludeComponent(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope) :
 {
-  ParsedElementAnnotation e;
-  Annotations a;
+  ElementAnnotation e;
+  AnnotationsImpl a;
 }
 {
-  (a = Annotations() (Definition(section, scope, a)
+  (a = AnnotationsImpl() (Definition(section, scope, a)
                       | IncludeDiv(section, scope, a)))
   (LOOKAHEAD(2) e = AnnotationElementNotKeyword() { section.topLevelAnnotation(e); })*
 }
 
-void Div(GrammarSection section, Scope scope, Annotations a) :
+void Div(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   Token t;
-  Div div = section.makeDiv();
+  Div<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> div = section.makeDiv();
 }
 {
   t = "div" "{" a = GrammarBody(div, scope, a) { topLevelComments(div); } "}"
   { div.endDiv(makeLocation(t), a); }
 }
 
-void IncludeDiv(GrammarSection section, Scope scope, Annotations a) :
+void IncludeDiv(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> section, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   Token t;
-  Div div = section.makeDiv();
+  Div<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> div = section.makeDiv();
 }
 {
   t = "div" "{" a = IncludeBody(div, scope, a) { topLevelComments(div); } "}"
   { div.endDiv(makeLocation(t), a); }
 }
 
-ParsedPattern ExternalRefExpr(Scope scope, Annotations a) :
+Pattern ExternalRefExpr(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   Token t;
   String href;
@@ -1094,7 +1079,7 @@ String Inherit() :
   }
 }
 
-ParsedPattern ParentExpr(Scope scope, Annotations a) :
+Pattern ParentExpr(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   LocatedString name;
 }
@@ -1105,7 +1090,7 @@ ParsedPattern ParentExpr(Scope scope, Annotations a) :
   }
 }
 
-ParsedPattern IdentifierExpr(Scope scope, Annotations a) :
+Pattern IdentifierExpr(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a) :
 {
   LocatedString name;
 }
@@ -1116,7 +1101,7 @@ ParsedPattern IdentifierExpr(Scope scope, Annotations a) :
   }
 }
 
-ParsedPattern ValueExpr(boolean topLevel, Annotations a) :
+Pattern ValueExpr(boolean topLevel, AnnotationsImpl a) :
 {
   LocatedString s;
 }
@@ -1131,15 +1116,15 @@ ParsedPattern ValueExpr(boolean topLevel, Annotations a) :
   }
 }
 
-ParsedPattern DataExpr(boolean topLevel, Scope scope, Annotations a, Token[] except) :
+Pattern DataExpr(boolean topLevel, Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, AnnotationsImpl a, Token[] except) :
 {
   Token datatypeToken;
   Location loc;
   String datatype;
   String datatypeUri = null;
   String s = null;
-  ParsedPattern e = null;
-  DataPatternBuilder dpb;
+  Pattern e = null;
+  DataPatternBuilder<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> dpb;
 }
 {
   datatypeToken = DatatypeName()
@@ -1213,32 +1198,32 @@ LocatedString UnprefixedName() :
   { return s; }
 }
 
-void Params(DataPatternBuilder dpb) :
+void Params(DataPatternBuilder<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> dpb) :
 {}
 {
   "{" (Param(dpb))* "}"
 }
 
-void Param(DataPatternBuilder dpb) :
+void Param(DataPatternBuilder<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> dpb) :
 {
   LocatedString name;
-  Annotations a;
+  AnnotationsImpl a;
   String value;
 }
 {
-  a = Annotations() name = UnprefixedName() "=" { a = addCommentsToLeadingAnnotations(a); } value = Literal()
+  a = AnnotationsImpl() name = UnprefixedName() "=" { a = addCommentsToLeadingAnnotations(a); } value = Literal()
   { dpb.addParam(name.getString(), value, getContext(), defaultNamespace, name.getLocation(), a); }
 }
 
-ParsedPattern Except(Scope scope, Token[] except) :
+Pattern Except(Scope<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> scope, Token[] except) :
 {
-  Annotations a;
-  ParsedPattern p;
+  AnnotationsImpl a;
+  Pattern p;
   Token t;
   Token[] innerExcept = new Token[1];
 }
 {
-  t = "-" a = Annotations() p = PrimaryExpr(false, scope, a, innerExcept)
+  t = "-" a = AnnotationsImpl() p = PrimaryExpr(false, scope, a, innerExcept)
   {
     checkExcept(innerExcept);
     except[0] = t;
@@ -1246,10 +1231,10 @@ ParsedPattern Except(Scope scope, Token[] except) :
   }
 }
 
-ParsedElementAnnotation Documentation() :
+ElementAnnotation Documentation() :
 {
-  CommentList comments = getComments();
-  ElementAnnotationBuilder eab;
+  CommentListImpl comments = getComments();
+  ElementAnnotationBuilder<Location, ElementAnnotation, CommentListImpl> eab;
   Token t;
 }
 {
@@ -1267,11 +1252,11 @@ ParsedElementAnnotation Documentation() :
   { return eab.makeElementAnnotation(); }
 }
 
-Annotations Annotations() :
+AnnotationsImpl AnnotationsImpl() :
 {
-  CommentList comments = getComments();
-  Annotations a = null;
-  ParsedElementAnnotation e;
+  CommentListImpl comments = getComments();
+  AnnotationsImpl a = null;
+  ElementAnnotation e;
 }
 {
   ( { a = sb.makeAnnotations(comments, getContext()); }
@@ -1294,13 +1279,13 @@ Annotations Annotations() :
   }
 }
 
-void AnnotationAttribute(Annotations a) :
+void AnnotationAttribute(Annotations<Location, ElementAnnotation, CommentListImpl> a) :
 {}
 {
   PrefixedAnnotationAttribute(a, true) | UnprefixedAnnotationAttribute(a)
 }
 
-void PrefixedAnnotationAttribute(Annotations a, boolean nested) :
+void PrefixedAnnotationAttribute(Annotations<Location, ElementAnnotation, CommentListImpl> a, boolean nested) :
 {
   Token t;
   String value;
@@ -1332,7 +1317,7 @@ void PrefixedAnnotationAttribute(Annotations a, boolean nested) :
   }
 }
 
-void UnprefixedAnnotationAttribute(Annotations a) :
+void UnprefixedAnnotationAttribute(Annotations<Location, ElementAnnotation, CommentListImpl> a) :
 {
   LocatedString name;
   String value;
@@ -1347,9 +1332,9 @@ void UnprefixedAnnotationAttribute(Annotations a) :
   }
 }
 
-ParsedElementAnnotation AnnotationElement(boolean nested) :
+ElementAnnotation AnnotationElement(boolean nested) :
 {
-  ParsedElementAnnotation a;
+  ElementAnnotation a;
 }
 {
   (a = PrefixedAnnotationElement(nested)
@@ -1357,9 +1342,9 @@ ParsedElementAnnotation AnnotationElement(boolean nested) :
   { return a; }
 }
 
-ParsedElementAnnotation AnnotationElementNotKeyword() :
+ElementAnnotation AnnotationElementNotKeyword() :
 {
-  ParsedElementAnnotation a;
+  ElementAnnotation a;
 }
 {
   (a = PrefixedAnnotationElement(false)
@@ -1367,11 +1352,11 @@ ParsedElementAnnotation AnnotationElementNotKeyword() :
   { return a; }
 }
 
-ParsedElementAnnotation PrefixedAnnotationElement(boolean nested) :
+ElementAnnotation PrefixedAnnotationElement(boolean nested) :
 {
-  CommentList comments = getComments();
+  CommentListImpl comments = getComments();
   Token t;
-  ElementAnnotationBuilder eab;
+  ElementAnnotationBuilder<Location, ElementAnnotation, CommentListImpl> eab;
 }
 {
   t = <PREFIXED_NAME>
@@ -1399,11 +1384,11 @@ ParsedElementAnnotation PrefixedAnnotationElement(boolean nested) :
   { return eab.makeElementAnnotation(); }
 }
 
-ParsedElementAnnotation UnprefixedAnnotationElement() :
+ElementAnnotation UnprefixedAnnotationElement() :
 {
-  CommentList comments = getComments();
+  CommentListImpl comments = getComments();
   LocatedString name;
-  ElementAnnotationBuilder eab;
+  ElementAnnotationBuilder<Location, ElementAnnotation, CommentListImpl> eab;
 }
 {
   name = UnprefixedName()
@@ -1415,11 +1400,11 @@ ParsedElementAnnotation UnprefixedAnnotationElement() :
   { return eab.makeElementAnnotation(); }
 }
 
-ParsedElementAnnotation IdentifierAnnotationElement() :
+ElementAnnotation IdentifierAnnotationElement() :
 {
-  CommentList comments = getComments();
+  CommentListImpl comments = getComments();
   LocatedString name;
-  ElementAnnotationBuilder eab;
+  ElementAnnotationBuilder<Location, ElementAnnotation, CommentListImpl> eab;
 }
 {
   name = Identifier()
@@ -1431,9 +1416,9 @@ ParsedElementAnnotation IdentifierAnnotationElement() :
   { return eab.makeElementAnnotation(); }
 }
 
-void AnnotationElementContent(ElementAnnotationBuilder eab) :
+void AnnotationElementContent(ElementAnnotationBuilder<Location, ElementAnnotation, CommentListImpl> eab) :
 {
-  ParsedElementAnnotation e;
+  ElementAnnotation e;
 }
 {
   "[" { clearAttributeList(); }
@@ -1445,10 +1430,10 @@ void AnnotationElementContent(ElementAnnotationBuilder eab) :
   "]"
 }
 
-void AnnotationElementLiteral(ElementAnnotationBuilder eab) :
+void AnnotationElementLiteral(ElementAnnotationBuilder<Location, ElementAnnotation, CommentListImpl> eab) :
 {
   Token t;
-  CommentList comments = getComments();
+  CommentListImpl comments = getComments();
 }
 {
   t = <LITERAL> { eab.addText(unquote(t.image), makeLocation(t), comments); }

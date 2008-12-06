@@ -1,11 +1,11 @@
 package com.thaiopensource.relaxng.parse;
 
-public interface DataPatternBuilder {
-  void addParam(String name, String value, Context context, String ns, Location loc, Annotations anno)
+public interface DataPatternBuilder<P, L, EA, CL extends CommentList<L>, A extends Annotations<L, EA, CL>> {
+  void addParam(String name, String value, Context context, String ns, L loc, A anno)
     throws BuildException;
-  void annotation(ParsedElementAnnotation ea);
-  ParsedPattern makePattern(Location loc, Annotations anno)
+  void annotation(EA ea);
+  P makePattern(L loc, A anno)
     throws BuildException;
-  ParsedPattern makePattern(ParsedPattern except, Location loc, Annotations anno)
+  P makePattern(P except, L loc, A anno)
     throws BuildException;
 }
