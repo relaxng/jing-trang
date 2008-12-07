@@ -5,9 +5,10 @@ import com.thaiopensource.util.OptionParser;
 import com.thaiopensource.util.PropertyMapBuilder;
 import com.thaiopensource.util.Version;
 import com.thaiopensource.validate.Flag;
-import com.thaiopensource.validate.Option;
+import com.thaiopensource.validate.FlagOption;
 import com.thaiopensource.validate.OptionArgumentException;
 import com.thaiopensource.validate.SchemaReader;
+import com.thaiopensource.validate.StringOption;
 import com.thaiopensource.validate.ValidateProperty;
 import com.thaiopensource.validate.ValidationDriver;
 import com.thaiopensource.validate.auto.AutoSchemaReader;
@@ -56,7 +57,7 @@ class Driver {
           {
             if (sr == null)
               sr = new AutoSchemaReader();
-            Option option = sr.getOption(SchemaReader.BASE_URI + "diagnose");
+            FlagOption option = (FlagOption)sr.getOption(SchemaReader.BASE_URI + "diagnose");
             if (option == null) {
               eh.print(localizer.message("no_schematron", op.getOptionCharString()));
               return 2;
@@ -77,7 +78,7 @@ class Driver {
           {
             if (sr == null)
               sr = new AutoSchemaReader();
-            Option option = sr.getOption(SchemaReader.BASE_URI + "phase");
+            StringOption option = (StringOption)sr.getOption(SchemaReader.BASE_URI + "phase");
             if (option == null) {
               eh.print(localizer.message("no_schematron", op.getOptionCharString()));
               return 2;
