@@ -8,7 +8,7 @@ import java.util.MissingResourceException;
 public class Version {
   private Version() { }
 
-  public static String getVersion(Class cls) {
+  public static String getVersion(Class<?> cls) {
     InputStream in = cls.getResourceAsStream("resources/Version.properties");
     if (in != null) {
       Properties props = new Properties();

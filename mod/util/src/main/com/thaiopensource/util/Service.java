@@ -72,7 +72,7 @@ public final class Service<T> {
       return new Singleton<URL>(url);
     }
 
-    Class loadClass(String name) throws ClassNotFoundException {
+    Class<?> loadClass(String name) throws ClassNotFoundException {
       return Class.forName(name);
     }
   }
@@ -109,7 +109,7 @@ public final class Service<T> {
       }
     }
 
-    Class loadClass(String name) throws ClassNotFoundException {
+    Class<?> loadClass(String name) throws ClassNotFoundException {
       return Class.forName(name, true, cl);
     }
   }
@@ -144,7 +144,7 @@ public final class Service<T> {
       while (classNames.hasNext()) {
 	String className = classNames.next();
 	try {
-	  Class cls = loader.loadClass(className);
+	  Class<?> cls = loader.loadClass(className);
 	  Object obj = cls.newInstance();
 	  if (serviceClass.isInstance(obj)) {
 	    providers.add(serviceClass.cast(obj));
