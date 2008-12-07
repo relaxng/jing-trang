@@ -1,9 +1,9 @@
 package com.thaiopensource.validate;
 
-import com.thaiopensource.validate.SchemaReader;
 import com.thaiopensource.util.Service;
 
-import java.util.Enumeration;
+import java.util.Iterator;
+
 /**
  * A SchemaReaderFactory that automatically discovers SchemaReader implementations.
  * For a SchemeaReader implementation to be discoverable by this class, it must have
@@ -12,10 +12,10 @@ import java.util.Enumeration;
  * <code>META-INF/services/com.thaiopensource.validate.SchemaReaderFactory</code>.
  */
 public class SchemaReaderLoader implements SchemaReaderFactory {
-  private final Service service = new Service(SchemaReaderFactory.class);
+  private final Service<SchemaReaderFactory> service = Service.newInstance(SchemaReaderFactory.class);
   public SchemaReader createSchemaReader(String namespaceUri) {
-    for (Enumeration e = service.getProviders(); e.hasMoreElements();) {
-      SchemaReaderFactory srf = (SchemaReaderFactory)e.nextElement();
+    for (Iterator<SchemaReaderFactory> iter = service.getProviders(); iter.hasNext();) {
+      SchemaReaderFactory srf = iter.next();
       SchemaReader sr = srf.createSchemaReader(namespaceUri);
       if (sr != null)
         return sr;
@@ -24,8 +24,8 @@ public class SchemaReaderLoader implements SchemaReaderFactory {
   }
 
   public Option getOption(String uri) {
-    for (Enumeration e = service.getProviders(); e.hasMoreElements();) {
-      SchemaReaderFactory srf = (SchemaReaderFactory)e.nextElement();
+    for (Iterator<SchemaReaderFactory> iter = service.getProviders(); iter.hasNext();) {
+      SchemaReaderFactory srf = iter.next();
       Option option = srf.getOption(uri);
       if (option != null)
         return option;
