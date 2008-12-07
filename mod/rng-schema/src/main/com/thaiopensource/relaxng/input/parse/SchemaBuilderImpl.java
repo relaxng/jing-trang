@@ -477,7 +477,7 @@ class SchemaBuilderImpl implements
     public void addParam(String name, String value, Context context, String ns, SourceLocation loc, AnnotationsImpl anno)
             throws BuildException {
       Param param = new Param(name, value);
-      param.setContext(context.copy());
+      param.setContext(new NamespaceContextImpl(context));
       finishAnnotated(param, loc, anno);
       p.getParams().add(param);
       if (dtb != null) {
@@ -541,7 +541,7 @@ class SchemaBuilderImpl implements
     ElementAnnotation element = new ElementAnnotation(ns, localName);
     element.setPrefix(prefix);
     element.setSourceLocation(loc);
-    element.setContext(context.copy());
+    element.setContext(new NamespaceContextImpl(context));
     return new ElementAnnotationBuilderImpl(comments, element);
   }
 

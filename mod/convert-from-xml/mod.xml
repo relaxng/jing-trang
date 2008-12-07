@@ -3,7 +3,6 @@
   <depends module="resolver"/>
   <depends module="infer"/>
   <depends module="datatype"/>
-  <depends module="rng-parse"/>
   <depends module="rng-schema"/>
   <compile/>
 </module>

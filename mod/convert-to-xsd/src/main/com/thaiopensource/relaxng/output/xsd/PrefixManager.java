@@ -11,7 +11,7 @@ import com.thaiopensource.relaxng.edit.IncludeComponent;
 import com.thaiopensource.relaxng.edit.NameNameClass;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
-import com.thaiopensource.relaxng.parse.Context;
+import com.thaiopensource.relaxng.edit.NamespaceContext;
 import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.xml.util.Naming;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
@@ -46,11 +46,11 @@ public class PrefixManager implements SourceUriGenerator {
       this.si = si;
       this.inheritedNamespace = "";
       si.getGrammar().componentsAccept(this);
-      Context context = si.getGrammar().getContext();
+      NamespaceContext context = si.getGrammar().getContext();
       if (context != null) {
-        for (String prefix : context.prefixes()) {
+        for (String prefix : context.getPrefixes()) {
           if (!prefix.equals(""))
-            notePrefix(prefix, resolveNamespace(context.resolveNamespacePrefix(prefix)));
+            notePrefix(prefix, resolveNamespace(context.getNamespace(prefix)));
         }
       }
     }

@@ -4,8 +4,6 @@ Finish upgrading code to use Java 5 everywhere.
 
 pattern.StringNormalizer sucks.
 
-relaxng.edit should not depend on parse.Context.
-
 When too many possible element/attribute names, give only those with
 declared namespaces.
 

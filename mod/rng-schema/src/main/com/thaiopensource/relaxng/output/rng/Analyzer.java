@@ -25,7 +25,7 @@ import com.thaiopensource.relaxng.edit.Param;
 import com.thaiopensource.relaxng.edit.Pattern;
 import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
-import com.thaiopensource.relaxng.parse.Context;
+import com.thaiopensource.relaxng.edit.NamespaceContext;
 import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
 
@@ -186,7 +186,7 @@ class Analyzer extends AbstractVisitor {
   private String datatypeLibrary = null;
   private final Map<String, String> prefixMap = new HashMap<String, String>();
   private boolean haveInherit = false;
-  private Context lastContext = null;
+  private NamespaceContext lastContext = null;
   private String noPrefixNs = null;
 
   private void noteDatatypeLibrary(String uri) {
@@ -213,12 +213,12 @@ class Analyzer extends AbstractVisitor {
     prefixMap.put(prefix, ns);
   }
 
-  private void noteContext(Context context) {
+  private void noteContext(NamespaceContext context) {
     if (context == null || context == lastContext)
       return;
     lastContext = context;
-    for (String prefix : context.prefixes())
-      noteNs(prefix, context.resolveNamespacePrefix(prefix));
+    for (String prefix : context.getPrefixes())
+      noteNs(prefix, context.getNamespace(prefix));
   }
 
   Map<String, String> getPrefixMap() {

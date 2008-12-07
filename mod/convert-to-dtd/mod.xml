@@ -1,6 +1,5 @@
 <module>
   <depends module="util"/>
-  <depends module="rng-parse"/>
   <depends module="rng-schema"/>
   <compile/>
 </module>
