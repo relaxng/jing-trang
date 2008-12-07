@@ -3,7 +3,6 @@
   <depends module="resolver"/>
   <depends module="datatype"/>
   <depends module="rng-parse"/>
-  <java5/>
   <test name="compact" type="convert" schema="trang/test/compacttest.rnc" output="xml"/>
   <compile/>
 </module>

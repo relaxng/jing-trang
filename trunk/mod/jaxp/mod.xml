@@ -1,5 +1,4 @@
 <module>
-  <java5/>
   <depends module="util"/>
   <depends module="resolver"/>
   <compile/>

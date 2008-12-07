@@ -10,6 +10,8 @@
   <project>
     <xmlproperty file="version.xml"/>
     <property name="build.dir" value="${{basedir}}/build"/>
+    <property name="ant.build.javac.source" value="1.5"/>
+    <property name="ant.build.javac.target" value="1.5"/>
     <taskdef name="testng" classname="org.testng.TestNGAntTask">
       <classpath>
 	<pathelement location="lib/testng.jar"/>
@@ -97,7 +99,6 @@
     <mkdir dir="{$build}/mod/{$name}/classes/main"/>
     <xsl:if test="compile">
       <javac destdir="{$build}/mod/{$name}/classes/main" debug="true" debuglevel="lines,source">
-	<xsl:call-template name="javac-attributes"/>
 	<src>
 	  <pathelement location="mod/{$name}/src/main"/>
 	  <xsl:if test="ant/@precompile">
@@ -139,9 +140,6 @@
     <mkdir dir="{$build}/mod/{$name}/classes/test"/>
     <xsl:if test="compile[@test]">
       <javac destdir="{$build}/mod/{$name}/classes/test" debug="true">
-	<xsl:call-template name="javac-attributes">
-	  <xsl:with-param name="test" select="true()"/>
-	</xsl:call-template>
 	<src>
 	  <pathelement location="mod/{$name}/src/test"/>
 	</src>
@@ -393,21 +391,6 @@
       </classpath>
     </testng>
   </target>
-</xsl:template>
-
-<xsl:template name="javac-attributes">
-  <xsl:param name="test" select="false()"/>
-  <xsl:attribute name="includeAntRuntime">no</xsl:attribute>
-  <xsl:choose>
-    <xsl:when test="java5 or ($test and test[@type='testng'])">
-      <xsl:attribute name="source">1.5</xsl:attribute>
-      <xsl:attribute name="target">1.5</xsl:attribute>
-    </xsl:when>
-    <xsl:otherwise>
-      <xsl:attribute name="source">1.3</xsl:attribute>
-      <xsl:attribute name="target">1.1</xsl:attribute>
-    </xsl:otherwise>
-  </xsl:choose>
 </xsl:template>
 
 <xsl:template match="service" mode="jar">
