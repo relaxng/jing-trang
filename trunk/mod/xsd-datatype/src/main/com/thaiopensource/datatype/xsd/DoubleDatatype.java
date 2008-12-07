@@ -55,11 +55,11 @@ class DoubleDatatype extends DatatypeBase implements OrderRelation {
 
   Object getValue(String str, ValidationContext vc) {
     if (str.equals("INF"))
-      return new Double(Double.POSITIVE_INFINITY);
+      return Double.POSITIVE_INFINITY;
     if (str.equals("-INF"))
-      return new Double(Double.NEGATIVE_INFINITY);
+      return Double.NEGATIVE_INFINITY;
     if (str.equals("NaN"))
-      return new Double(Double.NaN);
+      return Double.NaN;
     return new Double(str);
   }
 
@@ -68,12 +68,12 @@ class DoubleDatatype extends DatatypeBase implements OrderRelation {
   }
 
   public boolean isLessThan(Object obj1, Object obj2) {
-    return ((Double)obj1).doubleValue() < ((Double)obj2).doubleValue();
+    return (Double)obj1 < (Double)obj2;
   }
 
   public boolean sameValue(Object value1, Object value2) {
-    double d1 = ((Double)value1).doubleValue();
-    double d2 = ((Double)value2).doubleValue();
+    double d1 = (Double)value1;
+    double d2 = (Double)value2;
     // NaN = NaN
     return d1 == d2 || (d1 != d1 && d2 != d2);
   }
