@@ -7,10 +7,11 @@ import org.relaxng.datatype.DatatypeBuilder;
 import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.DatatypeLibrary;
 
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DatatypeLibraryImpl implements DatatypeLibrary {
-  private final Hashtable typeTable = new Hashtable();
+  private final Map<String, DatatypeBase> typeMap = new HashMap<String, DatatypeBase>();
   private final RegexEngine regexEngine;
 
   static private final String LONG_MAX = "9223372036854775807";
@@ -31,71 +32,71 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
 
   public DatatypeLibraryImpl(RegexEngine regexEngine) {
     this.regexEngine = regexEngine;
-    typeTable.put("string", new StringDatatype());
-    typeTable.put("normalizedString", new CdataDatatype());
-    typeTable.put("token", new TokenDatatype());
-    typeTable.put("boolean", new BooleanDatatype());
+    typeMap.put("string", new StringDatatype());
+    typeMap.put("normalizedString", new CdataDatatype());
+    typeMap.put("token", new TokenDatatype());
+    typeMap.put("boolean", new BooleanDatatype());
 
     DatatypeBase decimalType = new DecimalDatatype();
-    typeTable.put("decimal", decimalType);
+    typeMap.put("decimal", decimalType);
     DatatypeBase integerType = new IntegerRestrictDatatype(decimalType);
-    typeTable.put("integer", integerType);
-    typeTable.put("nonPositiveInteger", restrictMax(integerType, "0"));
-    typeTable.put("negativeInteger", restrictMax(integerType, "-1"));
-    typeTable.put("long", restrictMax(restrictMin(integerType, LONG_MIN), LONG_MAX));
-    typeTable.put("int", restrictMax(restrictMin(integerType, INT_MIN), INT_MAX));
-    typeTable.put("short", restrictMax(restrictMin(integerType, SHORT_MIN), SHORT_MAX));
-    typeTable.put("byte", restrictMax(restrictMin(integerType, BYTE_MIN), BYTE_MAX));
+    typeMap.put("integer", integerType);
+    typeMap.put("nonPositiveInteger", restrictMax(integerType, "0"));
+    typeMap.put("negativeInteger", restrictMax(integerType, "-1"));
+    typeMap.put("long", restrictMax(restrictMin(integerType, LONG_MIN), LONG_MAX));
+    typeMap.put("int", restrictMax(restrictMin(integerType, INT_MIN), INT_MAX));
+    typeMap.put("short", restrictMax(restrictMin(integerType, SHORT_MIN), SHORT_MAX));
+    typeMap.put("byte", restrictMax(restrictMin(integerType, BYTE_MIN), BYTE_MAX));
     DatatypeBase nonNegativeIntegerType = restrictMin(integerType, "0");
-    typeTable.put("nonNegativeInteger", nonNegativeIntegerType);
-    typeTable.put("unsignedLong", restrictMax(nonNegativeIntegerType, UNSIGNED_LONG_MAX));
-    typeTable.put("unsignedInt", restrictMax(nonNegativeIntegerType, UNSIGNED_INT_MAX));
-    typeTable.put("unsignedShort", restrictMax(nonNegativeIntegerType, UNSIGNED_SHORT_MAX));
-    typeTable.put("unsignedByte", restrictMax(nonNegativeIntegerType, UNSIGNED_BYTE_MAX));
-    typeTable.put("positiveInteger", restrictMin(integerType, "1"));
-    typeTable.put("double", new DoubleDatatype());
-    typeTable.put("float", new FloatDatatype());
+    typeMap.put("nonNegativeInteger", nonNegativeIntegerType);
+    typeMap.put("unsignedLong", restrictMax(nonNegativeIntegerType, UNSIGNED_LONG_MAX));
+    typeMap.put("unsignedInt", restrictMax(nonNegativeIntegerType, UNSIGNED_INT_MAX));
+    typeMap.put("unsignedShort", restrictMax(nonNegativeIntegerType, UNSIGNED_SHORT_MAX));
+    typeMap.put("unsignedByte", restrictMax(nonNegativeIntegerType, UNSIGNED_BYTE_MAX));
+    typeMap.put("positiveInteger", restrictMin(integerType, "1"));
+    typeMap.put("double", new DoubleDatatype());
+    typeMap.put("float", new FloatDatatype());
 
-    typeTable.put("Name", new NameDatatype());
-    typeTable.put("QName", new QNameDatatype());
+    typeMap.put("Name", new NameDatatype());
+    typeMap.put("QName", new QNameDatatype());
 
     DatatypeBase ncNameType = new NCNameDatatype();
-    typeTable.put("NCName", ncNameType);
+    typeMap.put("NCName", ncNameType);
 
     DatatypeBase nmtokenDatatype = new NmtokenDatatype();
-    typeTable.put("NMTOKEN", nmtokenDatatype);
-    typeTable.put("NMTOKENS", list(nmtokenDatatype));
+    typeMap.put("NMTOKEN", nmtokenDatatype);
+    typeMap.put("NMTOKENS", list(nmtokenDatatype));
 
-    typeTable.put("ID", new IdDatatype());
+    typeMap.put("ID", new IdDatatype());
     DatatypeBase idrefType = new IdrefDatatype();
-    typeTable.put("IDREF", idrefType);
-    typeTable.put("IDREFS", list(idrefType));
+    typeMap.put("IDREF", idrefType);
+    typeMap.put("IDREFS", list(idrefType));
 
-    typeTable.put("NOTATION", new QNameDatatype());
+    typeMap.put("NOTATION", new QNameDatatype());
 
-    typeTable.put("base64Binary", new Base64BinaryDatatype());
-    typeTable.put("hexBinary", new HexBinaryDatatype());
-    typeTable.put("anyURI", new AnyUriDatatype());
-    typeTable.put("language", new RegexDatatype(LANGUAGE_PATTERN));
+    typeMap.put("base64Binary", new Base64BinaryDatatype());
+    typeMap.put("hexBinary", new HexBinaryDatatype());
+    typeMap.put("anyURI", new AnyUriDatatype());
+    typeMap.put("language", new RegexDatatype(LANGUAGE_PATTERN));
 
-    typeTable.put("dateTime", new DateTimeDatatype("Y-M-DTt"));
-    typeTable.put("time", new DateTimeDatatype("t"));
-    typeTable.put("date", new DateTimeDatatype("Y-M-D"));
-    typeTable.put("gYearMonth", new DateTimeDatatype("Y-M"));
-    typeTable.put("gYear", new DateTimeDatatype("Y"));
-    typeTable.put("gMonthDay", new DateTimeDatatype("--M-D"));
-    typeTable.put("gDay", new DateTimeDatatype("---D"));
-    typeTable.put("gMonth", new DateTimeDatatype("--M"));
+    typeMap.put("dateTime", new DateTimeDatatype("Y-M-DTt"));
+    typeMap.put("time", new DateTimeDatatype("t"));
+    typeMap.put("date", new DateTimeDatatype("Y-M-D"));
+    typeMap.put("gYearMonth", new DateTimeDatatype("Y-M"));
+    typeMap.put("gYear", new DateTimeDatatype("Y"));
+    typeMap.put("gMonthDay", new DateTimeDatatype("--M-D"));
+    typeMap.put("gDay", new DateTimeDatatype("---D"));
+    typeMap.put("gMonth", new DateTimeDatatype("--M"));
 
     DatatypeBase entityType = new EntityDatatype();
-    typeTable.put("ENTITY", entityType);
-    typeTable.put("ENTITIES", list(entityType));
+    typeMap.put("ENTITY", entityType);
+    typeMap.put("ENTITIES", list(entityType));
     // Partially implemented
-    typeTable.put("duration", new DurationDatatype());
+    typeMap.put("duration", new DurationDatatype());
   }
 
   public DatatypeBuilder createDatatypeBuilder(String localName) throws DatatypeException {
-    DatatypeBase base = (DatatypeBase)typeTable.get(localName);
+    DatatypeBase base = typeMap.get(localName);
     if (base == null)
       throw new DatatypeException();
     if (base instanceof RegexDatatype) {
