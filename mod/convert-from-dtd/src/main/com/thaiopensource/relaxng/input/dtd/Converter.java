@@ -53,7 +53,6 @@ import com.thaiopensource.xml.util.WellKnownNamespaces;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -88,11 +87,11 @@ public class Converter {
   /**
    * Maps each element name to an Integer containing a set of flags.
    */
-  private final Map<String, Integer> elementNameTable = new Hashtable<String, Integer>();
+  private final Map<String, Integer> elementNameTable = new HashMap<String, Integer>();
   /**
    * Maps each element name to a List of attribute groups of each attlist declaration.
    */
-  private final Map<String, List<AttributeGroup>> attlistDeclTable = new Hashtable<String, List<AttributeGroup>>();
+  private final Map<String, List<AttributeGroup>> attlistDeclTable = new HashMap<String, List<AttributeGroup>>();
   /**
    * Set of strings representing names for which there are definitions in the DTD.
    */
@@ -100,13 +99,13 @@ public class Converter {
   /**
    * Maps prefixes to namespace URIs.
    */
-  private final Map<String, String> prefixTable = new Hashtable<String, String>();
+  private final Map<String, String> prefixTable = new HashMap<String, String>();
 
   /**
    * Maps a string representing an element name to the set of names of attributes
    * that have been declated for that element.
    */
-  private final Map<String, Set<String>> attributeNamesTable = new Hashtable<String, Set<String>>();
+  private final Map<String, Set<String>> attributeNamesTable = new HashMap<String, Set<String>>();
   /**
    * Contains the set of attribute names that have already been output in the current scope.
    */
@@ -828,7 +827,7 @@ public class Converter {
   }
 
   private String namingPattern() {
-    Map<String, Integer> patternTable = new Hashtable<String, Integer>();
+    Map<String, Integer> patternTable = new HashMap<String, Integer>();
     for (String name : definedNames) {
       for (int i = 0; i < SEPARATORS.length(); i++) {
         char sep = SEPARATORS.charAt(i);
