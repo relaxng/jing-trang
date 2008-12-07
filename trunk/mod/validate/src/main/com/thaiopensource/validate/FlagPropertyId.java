@@ -1,6 +1,5 @@
 package com.thaiopensource.validate;
 
-import com.thaiopensource.validate.Flag;
 import com.thaiopensource.util.PropertyId;
 import com.thaiopensource.util.PropertyMapBuilder;
 
@@ -11,7 +10,7 @@ import com.thaiopensource.util.PropertyMapBuilder;
  *
  * @see Flag
  */
-public class FlagPropertyId extends PropertyId {
+public class FlagPropertyId extends PropertyId<Flag> {
   public FlagPropertyId(String name) {
     super(name, Flag.class);
   }

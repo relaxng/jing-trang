@@ -2,11 +2,11 @@ package com.thaiopensource.util;
 
 public interface PropertyMap {
   public static final PropertyMap EMPTY = new PropertyMap() {
-    public Object get(PropertyId pid) {
+    public <T> T get(PropertyId<T> pid) {
       return null;
     }
 
-    public boolean contains(PropertyId pid) {
+    public boolean contains(PropertyId<?> pid) {
       return false;
     }
 
@@ -14,12 +14,12 @@ public interface PropertyMap {
       return 0;
     }
 
-    public PropertyId getKey(int i) {
+    public PropertyId<?> getKey(int i) {
       throw new IndexOutOfBoundsException();
     }
   };
-  Object get(PropertyId pid);
-  boolean contains(PropertyId pid);
+  <T> T get(PropertyId<T> pid);
+  boolean contains(PropertyId<?> pid);
   int size();
-  PropertyId getKey(int i);
+  PropertyId<?> getKey(int i);
 }

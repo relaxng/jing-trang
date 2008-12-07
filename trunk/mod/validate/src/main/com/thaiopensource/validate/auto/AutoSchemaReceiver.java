@@ -42,7 +42,7 @@ public class AutoSchemaReceiver implements SchemaReceiver {
     public void startElement(String uri, String localName,
                              String qName, Attributes attributes)
             throws SAXException {
-      SchemaReceiverFactory srf = SchemaReceiverFactory.PROPERTY.get(properties);
+      SchemaReceiverFactory srf = properties.get(SchemaReceiverFactory.PROPERTY);
       SchemaReceiver sr = srf.createSchemaReceiver(uri, properties);
       if (sr == null) {
         Localizer localizer = new Localizer(AutoSchemaReceiver.class);

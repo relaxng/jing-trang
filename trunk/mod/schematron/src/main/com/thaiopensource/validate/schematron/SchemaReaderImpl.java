@@ -82,7 +82,7 @@ class SchemaReaderImpl extends AbstractSchemaReader {
     schematron = transformerFactory.newTemplates(source);
     InputSource schemaSource = new InputSource(getResourceAsStream(fullResourceName(SCHEMATRON_SCHEMA)));
     PropertyMapBuilder builder = new PropertyMapBuilder();
-    ValidateProperty.ERROR_HANDLER.put(builder, new DraconianErrorHandler());
+    builder.put(ValidateProperty.ERROR_HANDLER, new DraconianErrorHandler());
     RngProperty.CHECK_ID_IDREF.add(builder);
     try {
       schematronSchema = CompactSchemaReader.getInstance().createSchema(schemaSource, builder.toPropertyMap());
@@ -410,7 +410,7 @@ class SchemaReaderImpl extends AbstractSchemaReader {
 
   private Schema createSchema2(SAXSource source, PropertyMap properties)
             throws IOException, SAXException, IncorrectSchemaException {
-    ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
+    ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
     CountingErrorHandler ceh = new CountingErrorHandler(eh);
     InputSource in = source.getInputSource();
     String systemId = in.getSystemId();
@@ -420,7 +420,7 @@ class SchemaReaderImpl extends AbstractSchemaReader {
       TransformerHandler transformerHandler = factory.newTransformerHandler(schematron);
       // XXX set up phase and diagnose
       PropertyMapBuilder builder = new PropertyMapBuilder(properties);
-      ValidateProperty.ERROR_HANDLER.put(builder, ceh);
+      builder.put(ValidateProperty.ERROR_HANDLER, ceh);
       Validator validator = schematronSchema.createValidator(builder.toPropertyMap());
       XMLReader xr = source.getXMLReader();
       if (xr == null)
@@ -458,16 +458,16 @@ class SchemaReaderImpl extends AbstractSchemaReader {
 
   public Schema createSchema(SAXSource source, PropertyMap properties)
           throws IOException, SAXException, IncorrectSchemaException {
-    ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
+    ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
     SAXErrorListener errorListener = new SAXErrorListener(eh, source.getSystemId());
     UserWrapErrorHandler ueh1 = new UserWrapErrorHandler(eh);
     UserWrapErrorHandler ueh2 = new UserWrapErrorHandler(eh);
     try {
       PropertyMapBuilder builder = new PropertyMapBuilder(properties);
-      ValidateProperty.ERROR_HANDLER.put(builder, ueh1);
+      builder.put(ValidateProperty.ERROR_HANDLER, ueh1);
       source = createValidatingSource(source, builder.toPropertyMap(), ueh1);
       source = createTransformingSource(source,
-                                        SchematronProperty.PHASE.get(properties),
+                                        properties.get(SchematronProperty.PHASE),
                                         properties.contains(SchematronProperty.DIAGNOSE),
                                         source.getSystemId(),
                                         ueh2);

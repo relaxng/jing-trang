@@ -30,7 +30,7 @@ class SchemaReceiverImpl implements SchemaReceiver {
   private Schema mnsSchema = null;
 
   public SchemaReceiverImpl(PropertyMap properties) {
-    Name attributeOwner = WrapProperty.ATTRIBUTE_OWNER.get(properties);
+    Name attributeOwner = properties.get(WrapProperty.ATTRIBUTE_OWNER);
     attributesSchema = (attributeOwner != null);
     PropertyMapBuilder builder = new PropertyMapBuilder(properties);
     if (ValidatorImpl.OWNER_NAME.equals(attributeOwner)) {
@@ -45,10 +45,10 @@ class SchemaReceiverImpl implements SchemaReceiver {
         builder.put(WrapProperty.ATTRIBUTE_OWNER, null);
         this.properties = builder.toPropertyMap();
       }
-      WrapProperty.ATTRIBUTE_OWNER.put(builder, ValidatorImpl.OWNER_NAME);
+      builder.put(WrapProperty.ATTRIBUTE_OWNER, ValidatorImpl.OWNER_NAME);
       attributeSchemaProperties = builder.toPropertyMap();
     }
-    this.autoSchemaLanguage = new AutoSchemaReader(SchemaReceiverFactory.PROPERTY.get(properties));
+    this.autoSchemaLanguage = new AutoSchemaReader(properties.get(SchemaReceiverFactory.PROPERTY));
   }
 
   public SchemaFuture installHandlers(XMLReader xr) {

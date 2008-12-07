@@ -70,7 +70,7 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
 
   ValidatorImpl(SymbolTable symbolTable, XMLGrammarPool grammarPool, PropertyMap properties) {
     this.symbolTable = symbolTable;
-    XMLErrorHandler errorHandlerWrapper = new ErrorHandlerWrapper(ValidateProperty.ERROR_HANDLER.get(properties));
+    XMLErrorHandler errorHandlerWrapper = new ErrorHandlerWrapper(properties.get(ValidateProperty.ERROR_HANDLER));
     components = new XMLComponent[] { errorReporter, schemaValidator };
     for (int i = 0; i < components.length; i++) {
       addRecognizedFeatures(components[i].getRecognizedFeatures());

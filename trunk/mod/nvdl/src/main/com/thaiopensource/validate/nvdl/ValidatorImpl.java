@@ -343,7 +343,7 @@ class ValidatorImpl extends DefaultHandler implements Validator {
   ValidatorImpl(Mode mode, List triggers, PropertyMap properties) {
     this.properties = properties;
     this.triggers = triggers;
-    this.eh = ValidateProperty.ERROR_HANDLER.get(properties);
+    this.eh = properties.get(ValidateProperty.ERROR_HANDLER);
     this.startMode = mode;
     this.elementsLocalNameStack = new Stack();
     initCurrentSection();

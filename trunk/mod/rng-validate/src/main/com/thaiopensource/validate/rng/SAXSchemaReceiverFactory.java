@@ -20,7 +20,7 @@ public class SAXSchemaReceiverFactory implements SchemaReceiverFactory {
     if (!WellKnownNamespaces.RELAX_NG.equals(namespaceUri))
       return null;
     SAXResolver resolver = ResolverFactory.createResolver(properties);
-    ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
+    ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
     return new SchemaReceiverImpl(new SAXParseReceiver(resolver, eh), properties);
   }
 

@@ -163,7 +163,7 @@ public class JingTask extends Task {
    * @param phase the attribute value
    */
   public void setPhase(String phase) {
-    SchematronProperty.PHASE.put(properties, phase);
+    properties.put(SchematronProperty.PHASE, phase);
   }
 
   /**

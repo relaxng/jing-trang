@@ -1,21 +1,19 @@
 package com.thaiopensource.validate.picl;
 
-import com.thaiopensource.validate.auto.SchemaReceiver;
-import com.thaiopensource.validate.auto.SchemaFuture;
+import com.thaiopensource.util.PropertyMap;
+import com.thaiopensource.util.SinglePropertyMap;
+import com.thaiopensource.validate.IncorrectSchemaException;
 import com.thaiopensource.validate.Schema;
 import com.thaiopensource.validate.ValidateProperty;
-import com.thaiopensource.validate.IncorrectSchemaException;
+import com.thaiopensource.validate.auto.SchemaFuture;
+import com.thaiopensource.validate.auto.SchemaReceiver;
 import com.thaiopensource.validate.rng.CompactSchemaReader;
-import com.thaiopensource.util.SinglePropertyMap;
-import com.thaiopensource.util.PropertyMap;
-
-import java.net.URL;
-import java.io.IOException;
-
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-import org.xml.sax.ContentHandler;
+
+import java.io.IOException;
+import java.net.URL;
 
 class SchemaReceiverImpl implements SchemaReceiver {
   private final String PICL_SCHEMA = "picl.rnc";
@@ -23,8 +21,8 @@ class SchemaReceiverImpl implements SchemaReceiver {
   private final PropertyMap properties;
 
   SchemaReceiverImpl(PropertyMap properties) {
-    this.properties = new SinglePropertyMap(ValidateProperty.ERROR_HANDLER,
-                                            ValidateProperty.ERROR_HANDLER.get(properties));
+    this.properties = SinglePropertyMap.newInstance(ValidateProperty.ERROR_HANDLER,
+                                                    properties.get(ValidateProperty.ERROR_HANDLER));
   }
 
   public SchemaFuture installHandlers(XMLReader xr) throws SAXException {

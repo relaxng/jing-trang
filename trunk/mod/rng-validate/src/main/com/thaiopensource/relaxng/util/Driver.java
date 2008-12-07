@@ -38,7 +38,7 @@ class Driver {
     ErrorHandlerImpl eh = new ErrorHandlerImpl(System.out);
     OptionParser op = new OptionParser("itcdfe:p:", args);
     PropertyMapBuilder properties = new PropertyMapBuilder();
-    ValidateProperty.ERROR_HANDLER.put(properties, eh);
+    properties.put(ValidateProperty.ERROR_HANDLER, eh);
     RngProperty.CHECK_ID_IDREF.add(properties);
     SchemaReader sr = null;
     boolean compact = false;

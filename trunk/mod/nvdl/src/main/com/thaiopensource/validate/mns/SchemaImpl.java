@@ -132,7 +132,7 @@ class SchemaImpl extends AbstractSchema {
 
     Handler(SchemaReceiverImpl sr) {
       this.sr = sr;
-      this.eh = ValidateProperty.ERROR_HANDLER.get(sr.getProperties());
+      this.eh = sr.getProperties().get(ValidateProperty.ERROR_HANDLER);
       this.ceh = new CountingErrorHandler(eh);
     }
 
@@ -144,7 +144,7 @@ class SchemaImpl extends AbstractSchema {
     public void startDocument() throws SAXException {
       try {
         PropertyMapBuilder builder = new PropertyMapBuilder(sr.getProperties());
-        ValidateProperty.ERROR_HANDLER.put(builder, ceh);
+        builder.put(ValidateProperty.ERROR_HANDLER, ceh);
         validator = sr.getMnsSchema().createValidator(builder.toPropertyMap());
       }
       catch (IOException e) {

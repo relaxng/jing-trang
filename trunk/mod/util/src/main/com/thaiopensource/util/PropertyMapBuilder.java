@@ -1,40 +1,40 @@
 package com.thaiopensource.util;
 
-import java.util.Hashtable;
-import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PropertyMapBuilder {
-  private Hashtable map;
-  private PropertyId[] keys;
+  private Map<PropertyId<?>, Object> map;
+  private PropertyId<?>[] keys;
 
   private static class PropertyMapImpl implements PropertyMap {
-    private final Hashtable map;
-    private final PropertyId[] keys;
+    private final Map<PropertyId<?>, Object> map;
+    private final PropertyId<?>[] keys;
 
-    private PropertyMapImpl(Hashtable map, PropertyId[] keys) {
+    private PropertyMapImpl(Map<PropertyId<?>, Object> map, PropertyId<?>[] keys) {
       this.map = map;
       this.keys = keys;
     }
 
-    public Object get(PropertyId pid) {
-      return map.get(pid);
+    public <T> T get(PropertyId<T> pid) {
+      return pid.getValueClass().cast(map.get(pid));
     }
 
     public int size() {
       return keys.length;
     }
 
-    public boolean contains(PropertyId pid) {
+    public boolean contains(PropertyId<?> pid) {
       return map.get(pid) != null;
     }
 
-    public PropertyId getKey(int i) {
+    public PropertyId<?> getKey(int i) {
       return keys[i];
     }
   }
 
   public PropertyMapBuilder() {
-    this.map = new Hashtable();
+    this.map = new HashMap<PropertyId<?>, Object>();
   }
 
   public PropertyMapBuilder(PropertyMap pm) {
@@ -44,27 +44,33 @@ public class PropertyMapBuilder {
       this.keys = pmi.keys;
     }
     else {
-      this.map = new Hashtable();
-      for (int i = 0, len = pm.size(); i < len; i++) {
-        PropertyId pid = pm.getKey(i);
-        put(pid, pm.get(pid));
-      }
+      this.map = new HashMap<PropertyId<?>, Object>();
+      add(pm);
     }
+  }
+
+  public void add(PropertyMap pm) {
+   for (int i = 0, len = pm.size(); i < len; i++)
+     copy(pm.getKey(i), pm);
+  }
+  
+  private <T> void copy(PropertyId<T> pid, PropertyMap pm) {
+    put(pid, pm.get(pid));
   }
 
   private void lock() {
     if (keys != null)
       return;
-    keys = new PropertyId[map.size()];
+    keys = new PropertyId<?>[map.size()];
     int i = 0;
-    for (Enumeration e = map.keys(); e.hasMoreElements();)
-      keys[i++] = (PropertyId)e.nextElement();
+    for (PropertyId<?> propertyId : map.keySet())
+      keys[i++] = propertyId;
   }
 
   private void copyIfLocked() {
     if (keys == null)
       return;
-    Hashtable newMap = new Hashtable();
+    Map<PropertyId<?>, Object> newMap = new HashMap<PropertyId<?>, Object>();
     for (int i = 0; i < keys.length; i++)
       newMap.put(keys[i], map.get(keys[i]));
     map = newMap;
@@ -76,20 +82,19 @@ public class PropertyMapBuilder {
     return new PropertyMapImpl(map, keys);
   }
 
-  public Object put(PropertyId id, Object value) {
+  public <T> T put(PropertyId<T> id, T value) {
     copyIfLocked();
+    final Class<T> cls = id.getValueClass();
     if (value == null)
-      return map.remove(id);
-    if (!id.getValueClass().isInstance(value))
-      throw new ClassCastException();
-    return map.put(id, value);
+      return cls.cast(map.remove(id));
+    return cls.cast(map.put(id, cls.cast(value)));
   }
 
-  public Object get(PropertyId pid) {
-    return map.get(pid);
+  public <T> T get(PropertyId<T> pid) {
+    return pid.getValueClass().cast(map.get(pid));
   }
 
-  public boolean contains(PropertyId pid) {
+  public boolean contains(PropertyId<?> pid) {
     return map.get(pid) != null;
   }
 }

@@ -46,8 +46,8 @@ public abstract class SchemaReaderImpl extends AbstractSchemaReader {
           throws IOException, SAXException, IncorrectSchemaException {
     SchemaPatternBuilder spb = new SchemaPatternBuilder();
     SAXResolver resolver = ResolverFactory.createResolver(properties);
-    ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
-    DatatypeLibraryFactory dlf = RngProperty.DATATYPE_LIBRARY_FACTORY.get(properties);
+    ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
+    DatatypeLibraryFactory dlf = properties.get(RngProperty.DATATYPE_LIBRARY_FACTORY);
     if (dlf == null)
       dlf = new DatatypeLibraryLoader();
     try {
@@ -70,7 +70,7 @@ public abstract class SchemaReaderImpl extends AbstractSchemaReader {
       start = FeasibleTransform.transform(spb, start);
     Schema schema = new PatternSchema(spb, start, properties);
     if (spb.hasIdTypes() && properties.contains(RngProperty.CHECK_ID_IDREF)) {
-      ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
+      ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
       IdTypeMap idTypeMap = new IdTypeMapBuilder(eh, start).getIdTypeMap();
       if (idTypeMap == null)
         throw new IncorrectSchemaException();

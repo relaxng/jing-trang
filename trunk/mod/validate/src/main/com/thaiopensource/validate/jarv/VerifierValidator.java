@@ -29,8 +29,8 @@ public class VerifierValidator implements Validator {
 
   public VerifierValidator(Verifier verifier, PropertyMap properties) {
     this.verifier = verifier;
-    verifier.setErrorHandler(ValidateProperty.ERROR_HANDLER.get(properties));
-    EntityResolver er = ValidateProperty.ENTITY_RESOLVER.get(properties);
+    verifier.setErrorHandler(properties.get(ValidateProperty.ERROR_HANDLER));
+    EntityResolver er = properties.get(ValidateProperty.ENTITY_RESOLVER);
     if (er != null)
       verifier.setEntityResolver(er);
     try {

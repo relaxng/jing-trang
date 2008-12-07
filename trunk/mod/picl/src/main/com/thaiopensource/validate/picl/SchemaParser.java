@@ -29,8 +29,8 @@ class SchemaParser extends DelegatingContentHandler implements SchemaFuture, Nam
 
   SchemaParser(PropertyMap properties, Schema piclSchema) {
     this.properties = properties;
-    ceh = new CountingErrorHandler(ValidateProperty.ERROR_HANDLER.get(properties));
-    Validator validator = piclSchema.createValidator(new SinglePropertyMap(ValidateProperty.ERROR_HANDLER, ceh));
+    ceh = new CountingErrorHandler(properties.get(ValidateProperty.ERROR_HANDLER));
+    Validator validator = piclSchema.createValidator(SinglePropertyMap.newInstance(ValidateProperty.ERROR_HANDLER, ceh));
     setDelegate(validator.getContentHandler());
     patternParser = new PatternParser(ceh, localizer);
   }

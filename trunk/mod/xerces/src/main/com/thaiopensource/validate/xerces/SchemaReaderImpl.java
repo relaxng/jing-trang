@@ -41,15 +41,15 @@ class SchemaReaderImpl extends AbstractSchemaReader {
     XMLGrammarPool grammarPool = new XMLGrammarPoolImpl();
     preparser.registerPreparser(XMLGrammarDescription.XML_SCHEMA, null);
     preparser.setGrammarPool(grammarPool);
-    ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
+    ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
     SAXXMLErrorHandler xeh = new SAXXMLErrorHandler(eh);
     preparser.setErrorHandler(xeh);
-    EntityResolver er = ValidateProperty.ENTITY_RESOLVER.get(properties);
+    EntityResolver er = properties.get(ValidateProperty.ENTITY_RESOLVER);
     if (er != null)
       preparser.setEntityResolver(new EntityResolverWrapper(er));
     try {
       preparser.preparseGrammar(XMLGrammarDescription.XML_SCHEMA, toXMLInputSource(source.getInputSource()));
-      Name attributeOwner = WrapProperty.ATTRIBUTE_OWNER.get(properties);
+      Name attributeOwner = properties.get(WrapProperty.ATTRIBUTE_OWNER);
       if (attributeOwner != null) {
         Reader r = new StringReader(createWrapper(attributeOwner));
    	preparser.preparseGrammar(XMLGrammarDescription.XML_SCHEMA,

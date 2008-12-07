@@ -33,8 +33,8 @@ public class SchemaReceiverImpl implements SchemaReceiver {
 
   public SchemaFuture installHandlers(XMLReader xr) throws SAXException {
     final SchemaPatternBuilder pb = new SchemaPatternBuilder();
-    ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
-    DatatypeLibraryFactory dlf = RngProperty.DATATYPE_LIBRARY_FACTORY.get(properties);
+    ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
+    DatatypeLibraryFactory dlf = properties.get(RngProperty.DATATYPE_LIBRARY_FACTORY);
     if (dlf == null)
       dlf = new DatatypeLibraryLoader();
     final PatternFuture pf = SchemaBuilderImpl.installHandlers(parser, xr, eh, dlf, pb);

@@ -31,9 +31,9 @@ public class AutoSchemaReader extends AbstractSchemaReader {
 
   public Schema createSchema(SAXSource source, PropertyMap properties)
           throws IOException, SAXException, IncorrectSchemaException {
-    if (SchemaReceiverFactory.PROPERTY.get(properties) != srf) {
+    if (properties.get(SchemaReceiverFactory.PROPERTY) != srf) {
       PropertyMapBuilder builder = new PropertyMapBuilder(properties);
-      SchemaReceiverFactory.PROPERTY.put(builder, srf);
+      builder.put(SchemaReceiverFactory.PROPERTY, srf);
       properties = builder.toPropertyMap();
     }
     SAXResolver resolver = ResolverFactory.createResolver(properties);
@@ -56,7 +56,7 @@ public class AutoSchemaReader extends AbstractSchemaReader {
     XMLReader xr = source.getXMLReader();
     if (xr == null)
       xr = resolver.createXMLReader();
-    ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
+    ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
     if (eh != null)
       xr.setErrorHandler(eh);
     SchemaFuture sf = sr.installHandlers(xr);
