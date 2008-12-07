@@ -1,7 +1,5 @@
 package com.thaiopensource.validate;
 
-import com.thaiopensource.util.PropertyId;
-
 public class StringOption implements Option {
   private final StringPropertyId pid;
 
@@ -9,11 +7,11 @@ public class StringOption implements Option {
     this.pid = pid;
   }
 
-  public PropertyId getPropertyId() {
+  public StringPropertyId getPropertyId() {
     return pid;
   }
 
-  public Object valueOf(String arg) throws OptionArgumentException {
+  public String valueOf(String arg) throws OptionArgumentException {
     if (arg == null)
       return defaultValue();
     return normalize(arg);

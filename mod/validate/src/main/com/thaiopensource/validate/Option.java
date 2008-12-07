@@ -3,7 +3,7 @@ package com.thaiopensource.validate;
 import com.thaiopensource.util.PropertyId;
 
 public interface Option {
-  PropertyId getPropertyId();
+  PropertyId<?> getPropertyId();
   Object valueOf(String arg) throws OptionArgumentException;
   /**
    * Combines multiple values of an option into a single value.  A property
