@@ -1,7 +1,5 @@
 package com.thaiopensource.relaxng.edit;
 
-import com.thaiopensource.relaxng.parse.Context;
-
 import java.util.List;
 import java.util.Vector;
 
@@ -9,7 +7,7 @@ public class ElementAnnotation extends AnnotationChild {
   private String namespaceUri;
   private String localName;
   private String prefix;
-  private Context context;
+  private NamespaceContext context;
   private final List<AttributeAnnotation> attributes = new Vector<AttributeAnnotation>();
   private final List<AnnotationChild> children = new Vector<AnnotationChild>();
 
@@ -50,11 +48,11 @@ public class ElementAnnotation extends AnnotationChild {
     this.prefix = prefix;
   }
 
-  public Context getContext() {
+  public NamespaceContext getContext() {
     return context;
   }
 
-  public void setContext(Context context) {
+  public void setContext(NamespaceContext context) {
     this.context = context;
   }
 

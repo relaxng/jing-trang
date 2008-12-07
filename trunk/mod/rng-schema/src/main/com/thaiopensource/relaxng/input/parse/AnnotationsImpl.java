@@ -50,7 +50,7 @@ public class AnnotationsImpl implements Annotations<SourceLocation, ElementAnnot
   }
 
   void apply(Annotated subject) {
-    subject.setContext(context.copy());
+    subject.setContext(new NamespaceContextImpl(context));
     if (comments != null)
       subject.getLeadingComments().addAll(comments.list);
     subject.getAttributeAnnotations().addAll(attributes);

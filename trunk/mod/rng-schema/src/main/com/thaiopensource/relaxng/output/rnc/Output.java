@@ -47,9 +47,9 @@ import com.thaiopensource.relaxng.edit.UnaryPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
 import com.thaiopensource.relaxng.edit.VoidVisitor;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
+import com.thaiopensource.relaxng.edit.NamespaceContext;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
-import com.thaiopensource.relaxng.parse.Context;
 import com.thaiopensource.relaxng.parse.SchemaBuilder;
 import com.thaiopensource.util.Utf16;
 import com.thaiopensource.util.VoidValue;
@@ -336,13 +336,13 @@ class Output {
       noteContext(ea.getContext(), true);
     }
 
-    private void noteContext(Context context, boolean required) {
+    private void noteContext(NamespaceContext context, boolean required) {
       if (context == null)
         return;
-      for (String prefix : context.prefixes()) {
+      for (String prefix : context.getPrefixes()) {
         // Default namespace is not relevant to annotations
         if (!prefix.equals("")) {
-          String ns = context.resolveNamespacePrefix(prefix);
+          String ns = context.getNamespace(prefix);
           if (ns != null && !ns.equals(SchemaBuilder.INHERIT_NS)) {
             if (required)
               nsm.requireBinding(prefix, ns);
@@ -1192,13 +1192,13 @@ class Output {
     }
   }
 
-  private void checkContext(Context context, SourceLocation loc) {
+  private void checkContext(NamespaceContext context, SourceLocation loc) {
     if (context == null)
       return;
-    for (String prefix : context.prefixes()) {
+    for (String prefix : context.getPrefixes()) {
       // Default namespace is not relevant to annotations
       if (!prefix.equals("")) {
-        String ns = context.resolveNamespacePrefix(prefix);
+        String ns = context.getNamespace(prefix);
         if (ns != null && !ns.equals(SchemaBuilder.INHERIT_NS)
             && !nsb.getNamespaceUri(prefix).equals(ns))
           er.warning("annotation_inconsistent_binding", prefix, ns, loc);

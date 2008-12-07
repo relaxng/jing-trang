@@ -1,7 +1,5 @@
 package com.thaiopensource.relaxng.edit;
 
-import com.thaiopensource.relaxng.parse.Context;
-
 import java.util.List;
 import java.util.Vector;
 
@@ -10,7 +8,7 @@ public abstract class Annotated extends SourceObject {
   private final List<AttributeAnnotation> attributeAnnotations = new Vector<AttributeAnnotation>();
   private final List<AnnotationChild> childElementAnnotations = new Vector<AnnotationChild>();
   private final List<AnnotationChild> followingElementAnnotations = new Vector<AnnotationChild>();
-  private Context context;
+  private NamespaceContext context;
 
   public List<Comment> getLeadingComments() {
     return leadingComments;
@@ -32,11 +30,11 @@ public abstract class Annotated extends SourceObject {
     return false;
   }
 
-  public Context getContext() {
+  public NamespaceContext getContext() {
     return context;
   }
 
-  public void setContext(Context context) {
+  public void setContext(NamespaceContext context) {
     this.context = context;
   }
 
