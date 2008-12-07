@@ -2,18 +2,16 @@ package com.thaiopensource.validate.auto;
 
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.util.Service;
-import com.thaiopensource.validate.auto.SchemaReceiver;
-import com.thaiopensource.validate.auto.SchemaReceiverFactory;
 import com.thaiopensource.validate.Option;
 
-import java.util.Enumeration;
+import java.util.Iterator;
 
 public class SchemaReceiverLoader implements SchemaReceiverFactory {
-  private final Service service = new Service(SchemaReceiverFactory.class);
+  private final Service<SchemaReceiverFactory> service = Service.newInstance(SchemaReceiverFactory.class);
   public SchemaReceiver createSchemaReceiver(String namespaceUri,
                                              PropertyMap properties) {
-    for (Enumeration e = service.getProviders(); e.hasMoreElements();) {
-      SchemaReceiverFactory srf = (SchemaReceiverFactory)e.nextElement();
+    for (Iterator<SchemaReceiverFactory> iter = service.getProviders(); iter.hasNext();) {
+      SchemaReceiverFactory srf = iter.next();
       SchemaReceiver sr = srf.createSchemaReceiver(namespaceUri, properties);
       if (sr != null)
         return sr;
@@ -22,8 +20,8 @@ public class SchemaReceiverLoader implements SchemaReceiverFactory {
   }
 
   public Option getOption(String uri) {
-    for (Enumeration e = service.getProviders(); e.hasMoreElements();) {
-      SchemaReceiverFactory srf = (SchemaReceiverFactory)e.nextElement();
+    for (Iterator<SchemaReceiverFactory> iter = service.getProviders(); iter.hasNext();) {
+      SchemaReceiverFactory srf = iter.next();
       Option option = srf.getOption(uri);
       if (option != null)
         return option;

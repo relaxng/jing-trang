@@ -1,12 +1,12 @@
 package com.thaiopensource.datatype.xsd;
 
 import com.thaiopensource.datatype.xsd.regex.RegexEngine;
-import com.thaiopensource.xml.util.WellKnownNamespaces;
 import com.thaiopensource.util.Service;
+import com.thaiopensource.xml.util.WellKnownNamespaces;
 import org.relaxng.datatype.DatatypeLibrary;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 
-import java.util.Enumeration;
+import java.util.Iterator;
 
 public class DatatypeLibraryFactoryImpl implements DatatypeLibraryFactory {
 
@@ -35,10 +35,10 @@ public class DatatypeLibraryFactoryImpl implements DatatypeLibraryFactory {
   }
 
   private static RegexEngine findRegexEngine() {
-    Enumeration e = new Service(RegexEngine.class).getProviders();
-    if (!e.hasMoreElements())
+    Iterator<RegexEngine> iter = Service.newInstance(RegexEngine.class).getProviders();
+    if (!iter.hasNext())
       return null;
-    return (RegexEngine)e.nextElement();
+    return iter.next();
   }
 
 }

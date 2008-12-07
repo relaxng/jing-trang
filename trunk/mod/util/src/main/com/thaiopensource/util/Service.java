@@ -1,43 +1,49 @@
 package com.thaiopensource.util;
 
-import java.util.Enumeration;
-import java.util.NoSuchElementException;
-import java.util.Vector;
-import java.io.Reader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 
-public class Service {
-  private final Class serviceClass;
-  private final Enumeration configFiles;
-  private Enumeration classNames = null;
-  private final Vector providers = new Vector();
+public final class Service<T> {
+  private final Class<T> serviceClass;
+  private final Enumeration<URL> configFiles;
+  private Iterator<String> classNames = null;
+  private final List<T> providers = new ArrayList<T>();
   private Loader loader;
 
-  private class ProviderEnumeration implements Enumeration {
+  private class ProviderIterator implements Iterator<T> {
     private int nextIndex = 0;
 
-    public boolean hasMoreElements() {
+    public boolean hasNext() {
       return nextIndex < providers.size() || moreProviders();
     }
 
-    public Object nextElement() {
+    public T next() {
       try {
-	return providers.elementAt(nextIndex++);
+	return providers.get(nextIndex++);
       }
-      catch (ArrayIndexOutOfBoundsException e) {
+      catch (IndexOutOfBoundsException e) {
 	throw new NoSuchElementException();
       }
     }
+
+    public void remove() {
+      throw new UnsupportedOperationException();
+    }
   }
 
-  private static class Singleton implements Enumeration {
-    private Object obj;
-    private Singleton(Object obj) {
+  private static class Singleton<T> implements Enumeration<T> {
+    private T obj;
+    private Singleton(T obj) {
       this.obj = obj;
     }
 
@@ -45,10 +51,10 @@ public class Service {
       return obj != null;
     }
 
-    public Object nextElement() {
+    public T nextElement() {
       if (obj == null)
 	throw new NoSuchElementException();
-      Object tem = obj;
+      T tem = obj;
       obj = null;
       return tem;
     }
@@ -56,14 +62,14 @@ public class Service {
 
   // JDK 1.1
   private static class Loader {
-    Enumeration getResources(String resName) {
+    Enumeration<URL> getResources(String resName) {
       ClassLoader cl = Loader.class.getClassLoader();
       URL url;
       if (cl == null)
 	url = ClassLoader.getSystemResource(resName);
       else
 	url = cl.getResource(resName);
-      return new Singleton(url);
+      return new Singleton<URL>(url);
     }
 
     Class loadClass(String name) throws ClassNotFoundException {
@@ -89,17 +95,17 @@ public class Service {
 	}
     }
 
-    Enumeration getResources(String resName) {
+    Enumeration<URL> getResources(String resName) {
       try {
-        Enumeration resources = cl.getResources(resName);
+        Enumeration<URL> resources = cl.getResources(resName);
         if (resources.hasMoreElements())
 	  return resources;
         // Some application servers apparently do not implement findResources
         // in their class loaders, so fall back to getResource.
-        return new Singleton(cl.getResource(resName));
+        return new Singleton<URL>(cl.getResource(resName));
       }
       catch (IOException e) {
-	return new Singleton(null);
+	return new Singleton<URL>(null);
       }
     }
 
@@ -108,7 +114,11 @@ public class Service {
     }
   }
 
-  public Service(Class cls) {
+  static public <T> Service<T> newInstance(Class<T> cls) {
+    return new Service<T>(cls);
+  }
+
+  private Service(Class<T> cls) {
     try {
       loader = new Loader2();
     }
@@ -120,8 +130,8 @@ public class Service {
     configFiles = loader.getResources(resName);
   }
 
-  public Enumeration getProviders() {
-    return new ProviderEnumeration();
+  public Iterator<T> getProviders() {
+    return new ProviderIterator();
   }
 
   synchronized private boolean moreProviders() {
@@ -129,15 +139,15 @@ public class Service {
       while (classNames == null) {
 	if (!configFiles.hasMoreElements())
 	  return false;
-	classNames = parseConfigFile((URL)configFiles.nextElement());
+	classNames = parseConfigFile(configFiles.nextElement());
       }
-      while (classNames.hasMoreElements()) {
-	String className = (String)classNames.nextElement();
+      while (classNames.hasNext()) {
+	String className = classNames.next();
 	try {
 	  Class cls = loader.loadClass(className);
 	  Object obj = cls.newInstance();
 	  if (serviceClass.isInstance(obj)) {
-	    providers.addElement(obj);
+	    providers.add(serviceClass.cast(obj));
 	    return true;
 	  }
 	}
@@ -154,7 +164,7 @@ public class Service {
   private static final int IN_NAME = 1;
   private static final int IN_COMMENT = 2;
 
-  private static Enumeration parseConfigFile(URL url) {
+  private static Iterator<String> parseConfigFile(URL url) {
     try {
       InputStream in = url.openStream();
       Reader r;
@@ -165,8 +175,8 @@ public class Service {
 	r = new InputStreamReader(in, "UTF8");
       }
       r = new BufferedReader(r);
-      Vector tokens = new Vector();
-      StringBuffer tokenBuf = new StringBuffer();
+      List<String> tokens = new ArrayList<String>();
+      StringBuilder tokenBuf = new StringBuilder();
       int state = START;
       for (;;) {
 	int n = r.read();
@@ -192,22 +202,23 @@ public class Service {
 	  break;
 	}
 	if (tokenBuf.length() != 0 && state != IN_NAME) {
-	  tokens.addElement(tokenBuf.toString());
+	  tokens.add(tokenBuf.toString());
 	  tokenBuf.setLength(0);
 	}
       }
       if (tokenBuf.length() != 0)
-	tokens.addElement(tokenBuf.toString());
-      return tokens.elements();
+	tokens.add(tokenBuf.toString());
+      return tokens.iterator();
     }
     catch (IOException e) {
       return null;
     }
   }
 
+
   public static void main(String[] args) throws ClassNotFoundException {
-    Service svc = new Service(Class.forName(args[0]));
-    for (Enumeration e = svc.getProviders(); e.hasMoreElements();)
-      System.out.println(e.nextElement().getClass().getName());
+    Service<?> svc = Service.newInstance(Class.forName(args[0]));
+    for (Iterator<?> iter = svc.getProviders(); iter.hasNext();)
+      System.out.println(iter.next().getClass().getName());
   }
 }
