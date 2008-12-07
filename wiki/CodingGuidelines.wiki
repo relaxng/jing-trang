@@ -53,21 +53,15 @@ if (foo)
 
 (but you can use braces if you prefer).
 
-= Collections =
+= Java version =
 
-Jing was originally written to require only Java 1.1, so did not use the Java 1.2 Collections library.  However, this restriction is no longer necessary, so new code for Jing should use the 1.2 Collections.  This implies
+Code should take advantage of Java 5 language features such as generics, as well as Java 5 APIs. In particular,
 
  * use HashMap not Hashtable (Hashtable has the overhead of synchronization)
  * use ArrayList not Vector (Vector has the overhead of synchronization)
  * use Iterator not Enumeration
 
-Each package should consistently be either old (1.1) style or new (1.2) style.
-
-Trang was written from the start to use Java 1.2 collections.
-
-= Generics =
-
-Code used in modules that are used only in Trang can and should use generics.  Code used in Jing should not use generics. (This may be changed in the future.)
+Originally Jing and Trang were written to use Java 1.1 language features only, and not all code has yet been upgraded.
 
 = Subversion =
 
@@ -86,5 +80,3 @@ enable-auto-props = yes
 }}}
 
 On Windows Vista, my Subversion config file is in `C:\Users\jjc\AppData\Roaming\Subversion\config`.
-
-
