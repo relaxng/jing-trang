@@ -8,6 +8,5 @@
   <depends module="pattern"/>
   <depends module="jaxp"/>
   <compile test="yes"/>
-  <java5/>
   <test name="unit" type="testng"/>
 </module>

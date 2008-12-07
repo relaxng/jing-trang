@@ -1,4 +1,4 @@
-Make build system use Java 5 everywhere; update wiki.
+Look at turning BuildException into a type parameter.
 
 Finish upgrading code to use Java 5 everywhere.
 

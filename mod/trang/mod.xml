@@ -12,7 +12,6 @@
   <depends module="convert-to-xsd"/>
   <depends module="convert-from-dtd"/>
   <depends module="convert-to-dtd"/>
-  <java5/>
   <compile/>
   <version package="com/thaiopensource/relaxng/translate"/>
   <jar>

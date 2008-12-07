@@ -5,5 +5,4 @@
   <depends module="rng-parse"/>
   <compile test="yes"/>
   <test name="unit" type="testng"/>
-  <java5/>
 </module>
