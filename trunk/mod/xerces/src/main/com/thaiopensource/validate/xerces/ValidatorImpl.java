@@ -7,12 +7,12 @@ import org.apache.xerces.impl.XMLErrorReporter;
 import org.apache.xerces.impl.validation.EntityState;
 import org.apache.xerces.impl.validation.ValidationManager;
 import org.apache.xerces.impl.xs.XMLSchemaValidator;
+import org.apache.xerces.util.ErrorHandlerWrapper;
 import org.apache.xerces.util.NamespaceSupport;
 import org.apache.xerces.util.ParserConfigurationSettings;
 import org.apache.xerces.util.SymbolTable;
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.util.XMLSymbols;
-import org.apache.xerces.util.ErrorHandlerWrapper;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
@@ -23,18 +23,19 @@ import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.grammars.XMLGrammarPool;
 import org.apache.xerces.xni.parser.XMLComponent;
 import org.apache.xerces.xni.parser.XMLEntityResolver;
+import org.apache.xerces.xni.parser.XMLErrorHandler;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParseException;
-import org.apache.xerces.xni.parser.XMLErrorHandler;
 import org.xml.sax.Attributes;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.DTDHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
-import org.xml.sax.DTDHandler;
-import org.xml.sax.ContentHandler;
 
 import java.io.IOException;
-import java.util.Hashtable;
+import java.util.HashSet;
+import java.util.Set;
 
 class ValidatorImpl extends ParserConfigurationSettings implements Validator, ContentHandler, DTDHandler, XMLLocator, XMLEntityResolver, EntityState {
 
@@ -46,7 +47,7 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
   private final SymbolTable symbolTable;
   private final XMLComponent[] components;
   private Locator locator;
-  private final Hashtable entityTable = new Hashtable();
+  private final Set<String> entities = new HashSet<String>();
   private boolean pushedContext = false;
 
   // XXX deal with baseURI
@@ -125,15 +126,15 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
                                  String publicId,
                                  String systemId,
                                  String notationName) {
-    entityTable.put(name, name);
+    entities.add(name);
   }
 
   public boolean isEntityDeclared(String name) {
-    return entityTable.get(name) != null;
+    return entities.contains(name);
   }
 
   public boolean isEntityUnparsed(String name) {
-    return entityTable.get(name) != null;
+    return entities.contains(name);
   }
 
   public void startDocument()
