@@ -4,10 +4,10 @@ import java.util.ResourceBundle;
 import java.text.MessageFormat;
 
 public class Localizer {
-  private final Class cls;
+  private final Class<?> cls;
   private ResourceBundle bundle;
 
-  public Localizer(Class cls) {
+  public Localizer(Class<?> cls) {
     this.cls = cls;
   }
 
