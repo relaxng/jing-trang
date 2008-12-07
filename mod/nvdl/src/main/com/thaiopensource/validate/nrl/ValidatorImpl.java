@@ -142,7 +142,7 @@ class ValidatorImpl extends DefaultHandler implements Validator {
 
   ValidatorImpl(Mode mode, PropertyMap properties) {
     this.properties = properties;
-    this.eh = ValidateProperty.ERROR_HANDLER.get(properties);
+    this.eh = properties.get(ValidateProperty.ERROR_HANDLER);
     this.startMode = mode;
     initCurrentSection();
   }

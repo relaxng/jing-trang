@@ -33,7 +33,7 @@ class TestDriver {
     PropertyMapBuilder properties = new PropertyMapBuilder();
     // This is an optimization.  It ensures that all SchemaReaders share a
     // single DatatypeLibraryLoader.
-    RngProperty.DATATYPE_LIBRARY_FACTORY.put(properties, new DatatypeLibraryLoader());
+    properties.put(RngProperty.DATATYPE_LIBRARY_FACTORY, new DatatypeLibraryLoader());
     try {
       while (op.moveToNextOption()) {
         switch (op.getOptionChar()) {
@@ -53,7 +53,7 @@ class TestDriver {
     }
     args = op.getRemainingArgs();
     eh = new ErrorHandlerImpl(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(args[0]))));
-    ValidateProperty.ERROR_HANDLER.put(properties, eh);
+    properties.put(ValidateProperty.ERROR_HANDLER, eh);
     driver = new ValidationDriver(properties.toPropertyMap());
     int result = 0;
     for (int i = 1; i < args.length; i++) {

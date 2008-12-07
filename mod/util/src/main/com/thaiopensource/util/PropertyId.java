@@ -1,17 +1,21 @@
 package com.thaiopensource.util;
 
-public class PropertyId {
+public class PropertyId<T> {
   private final String name;
-  private final Class valueClass;
+  private final Class<T> valueClass;
 
-  public PropertyId(String name, Class valueClass) {
+  public static <T> PropertyId<T> newInstance(String name, Class<T> valueClass) {
+    return new PropertyId<T>(name, valueClass);
+  }
+
+  protected PropertyId(String name, Class<T> valueClass) {
     if (name == null || valueClass == null)
       throw new NullPointerException();
     this.name = name;
     this.valueClass = valueClass;
   }
 
-  public Class getValueClass() {
+  public Class<T> getValueClass() {
     return valueClass;
   }
 
@@ -25,5 +29,19 @@ public class PropertyId {
 
   public String toString() {
     return name;
+  }
+
+  /**
+   * @deprecated
+   */
+  public T get(PropertyMap map) {
+    return map.get(this);
+  }
+
+  /**
+   * @deprecated
+   */
+  public T put(PropertyMapBuilder builder, T value) {
+    return builder.put(this, value);
   }
 }

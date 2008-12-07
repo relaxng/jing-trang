@@ -46,22 +46,22 @@ public class ValidationDriver {
   public ValidationDriver(PropertyMap schemaProperties,
                           PropertyMap instanceProperties,
                           SchemaReader schemaReader) {
-    ErrorHandler seh = ValidateProperty.ERROR_HANDLER.get(schemaProperties);
+    ErrorHandler seh = schemaProperties.get(ValidateProperty.ERROR_HANDLER);
     PropertyMapBuilder builder;
     if (seh == null) {
       seh = new ErrorHandlerImpl();
       builder = new PropertyMapBuilder(schemaProperties);
-      ValidateProperty.ERROR_HANDLER.put(builder, seh);
+      builder.put(ValidateProperty.ERROR_HANDLER, seh);
       this.schemaProperties = builder.toPropertyMap();
     }
     else
       this.schemaProperties = schemaProperties;
     builder = new PropertyMapBuilder(instanceProperties);
-    ErrorHandler ieh = ValidateProperty.ERROR_HANDLER.get(instanceProperties);
+    ErrorHandler ieh = instanceProperties.get(ValidateProperty.ERROR_HANDLER);
     if (ieh == null)
       ieh = seh;
     eh = new CountingErrorHandler(ieh);
-    ValidateProperty.ERROR_HANDLER.put(builder, eh);
+    builder.put(ValidateProperty.ERROR_HANDLER, eh);
     this.instanceProperties = builder.toPropertyMap();
     this.sr = schemaReader == null ? new AutoSchemaReader() : schemaReader;
   }

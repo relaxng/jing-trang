@@ -26,7 +26,7 @@ class ValidatorImpl implements Validator {
   ValidatorImpl(Templates templates, SAXTransformerFactory factory, PropertyMap properties) {
     this.templates = templates;
     this.factory = factory;
-    ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
+    ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
     outputHandler = new OutputHandler(eh);
     resolver = ResolverFactory.createResolver(properties).getResolver();
     initTransformerHandler();

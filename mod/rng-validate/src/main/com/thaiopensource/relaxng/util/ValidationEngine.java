@@ -67,9 +67,9 @@ public class ValidationEngine extends ValidationDriver {
     PropertyMapBuilder builder = new PropertyMapBuilder();
     if (xrc == null)
       xrc = new Sax2XMLReaderCreator();
-    ValidateProperty.XML_READER_CREATOR.put(builder, xrc);
+    builder.put(ValidateProperty.XML_READER_CREATOR, xrc);
     if (eh != null)
-      ValidateProperty.ERROR_HANDLER.put(builder, eh);
+      builder.put(ValidateProperty.ERROR_HANDLER, eh);
     if ((flags & CHECK_ID_IDREF) != 0)
       RngProperty.CHECK_ID_IDREF.add(builder);
     if ((flags & FEASIBLE) != 0)

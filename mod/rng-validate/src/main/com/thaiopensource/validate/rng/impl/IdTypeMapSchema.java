@@ -16,7 +16,7 @@ public class IdTypeMapSchema extends AbstractSchema {
   }
 
   public Validator createValidator(PropertyMap properties) {
-    ErrorHandler eh = ValidateProperty.ERROR_HANDLER.get(properties);
+    ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
     return new IdValidator(idTypeMap, eh);
   }
 }

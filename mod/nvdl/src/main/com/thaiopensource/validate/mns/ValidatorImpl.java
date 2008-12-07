@@ -71,7 +71,7 @@ class ValidatorImpl extends DefaultHandler implements Validator {
   ValidatorImpl(SchemaImpl.Mode mode, PropertyMap properties) {
     this.currentMode = mode;
     this.properties = properties;
-    this.eh = ValidateProperty.ERROR_HANDLER.get(properties);
+    this.eh = properties.get(ValidateProperty.ERROR_HANDLER);
   }
 
   public void setDocumentLocator(Locator locator) {

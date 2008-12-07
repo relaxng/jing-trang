@@ -90,7 +90,7 @@ class ValidatorImpl extends DefaultHandler implements Validator, Path, PatternMa
 
   ValidatorImpl(Constraint constraint, PropertyMap properties) {
     this.constraint = constraint;
-    this.eh = ValidateProperty.ERROR_HANDLER.get(properties);
+    this.eh = properties.get(ValidateProperty.ERROR_HANDLER);
   }
 
   public ContentHandler getContentHandler() {
