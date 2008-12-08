@@ -1,14 +1,17 @@
 package com.thaiopensource.relaxng.pattern;
 
 import com.thaiopensource.datatype.Datatype2;
+import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.Datatype;
 
 class DataPattern extends StringPattern {
   private final Datatype dt;
+  private final Name dtName;
 
-  DataPattern(Datatype dt) {
+  DataPattern(Datatype dt, Name dtName) {
     super(combineHashCode(DATA_HASH_CODE, dt.hashCode()));
     this.dt = dt;
+    this.dtName = dtName;
   }
 
   boolean samePattern(Pattern other) {
@@ -17,16 +20,16 @@ class DataPattern extends StringPattern {
     return dt.equals(((DataPattern)other).dt);
   }
 
-  void accept(PatternVisitor visitor) {
-    visitor.visitData(dt);
-  }
-
   <T> T apply(PatternFunction<T> f) {
     return f.caseData(this);
   }
 
   Datatype getDatatype() {
     return dt;
+  }
+
+  Name getDatatypeName() {
+    return dtName;
   }
 
   boolean allowsAnyString() {

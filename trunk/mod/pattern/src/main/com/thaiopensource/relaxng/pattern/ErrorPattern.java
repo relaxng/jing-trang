@@ -7,9 +7,7 @@ class ErrorPattern extends Pattern {
   boolean samePattern(Pattern other) {
     return other instanceof ErrorPattern;
   }
-  void accept(PatternVisitor visitor) {
-    visitor.visitError();
-  }
+
   <T> T apply(PatternFunction<T> f) {
     return f.caseError(this);
   }

@@ -37,12 +37,13 @@ class Driver {
 
   public int doMain(String[] args) {
     ErrorHandlerImpl eh = new ErrorHandlerImpl(System.out);
-    OptionParser op = new OptionParser("itcdfe:p:", args);
+    OptionParser op = new OptionParser("itcdfe:p:s", args);
     PropertyMapBuilder properties = new PropertyMapBuilder();
     properties.put(ValidateProperty.ERROR_HANDLER, eh);
     RngProperty.CHECK_ID_IDREF.add(properties);
     SchemaReader sr = null;
     boolean compact = false;
+    boolean outputSimplifiedSchema = false;
 
     try {
       while (op.moveToNextOption()) {
@@ -74,6 +75,9 @@ class Driver {
         case 'f':
           RngProperty.FEASIBLE.add(properties);
           break;
+        case 's':
+          outputSimplifiedSchema = true;
+          break;
         case 'p':
           {
             if (sr == null)
@@ -100,7 +104,7 @@ class Driver {
       return 2;
     }
     catch (OptionParser.MissingArgumentException e) {
-      eh.print(localizer.message("option_missing_argument",op.getOptionCharString()));
+      eh.print(localizer.message("option_missing_argument", op.getOptionCharString()));
       return 2;
     }
     if (compact)
@@ -120,6 +124,15 @@ class Driver {
         in.setEncoding(encoding);
       if (driver.loadSchema(in)) {
         loadedPatternTime = System.currentTimeMillis();
+        if (outputSimplifiedSchema) {
+          String simplifiedSchema = driver.getSchemaProperties().get(RngProperty.SIMPLIFIED_SCHEMA);
+          if (simplifiedSchema == null) {
+            eh.print(localizer.message("no_simplified_schema"));
+            hadError = true;
+          }
+          else
+            System.out.print(simplifiedSchema);
+        }
 	for (int i = 1; i < args.length; i++) {
 	  if (!driver.validate(ValidationDriver.uriOrFileInputSource(args[i])))
 	    hadError = true;
@@ -142,9 +155,9 @@ class Driver {
         loadedPatternTime = endTime;
       eh.print(localizer.message("elapsed_time",
 		       new Object[] {
-                         new Long(loadedPatternTime - startTime),
-                         new Long(endTime - loadedPatternTime),
-                         new Long(endTime - startTime)
+                               loadedPatternTime - startTime,
+                               endTime - loadedPatternTime,
+                               endTime - startTime
                        }));
     }
     if (hadError)

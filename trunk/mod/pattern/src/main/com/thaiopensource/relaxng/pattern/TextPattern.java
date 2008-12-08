@@ -9,10 +9,6 @@ class TextPattern extends Pattern {
     return other instanceof TextPattern;
   }
 
-  void accept(PatternVisitor visitor) {
-    visitor.visitText();
-  }
-
   <T> T apply(PatternFunction<T> f) {
     return f.caseText(this);
   }

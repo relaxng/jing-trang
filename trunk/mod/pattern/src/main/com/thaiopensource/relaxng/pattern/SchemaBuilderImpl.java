@@ -326,8 +326,10 @@ public class SchemaBuilderImpl extends AnnotationsImpl implements
 
   private class DataPatternBuilderImpl implements DataPatternBuilder<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> {
     private final DatatypeBuilder dtb;
-    DataPatternBuilderImpl(DatatypeBuilder dtb) {
+    private final Name dtName;
+    DataPatternBuilderImpl(DatatypeBuilder dtb, Name dtName) {
       this.dtb = dtb;
+      this.dtName = dtName;
     }
 
     public void addParam(String name, String value, Context context, String ns, Locator loc, AnnotationsImpl anno)
@@ -371,7 +373,7 @@ public class SchemaBuilderImpl extends AnnotationsImpl implements
     public Pattern makePattern(Locator loc, AnnotationsImpl anno)
             throws BuildException {
       try {
-        return pb.makeData(dtb.createDatatype());
+        return pb.makeData(dtb.createDatatype(), dtName);
       }
       catch (DatatypeException e) {
 	String detail = e.getMessage();
@@ -386,7 +388,7 @@ public class SchemaBuilderImpl extends AnnotationsImpl implements
     public Pattern makePattern(Pattern except, Locator loc, AnnotationsImpl anno)
             throws BuildException {
       try {
-        return pb.makeDataExcept(dtb.createDatatype(), except, loc);
+        return pb.makeDataExcept(dtb.createDatatype(), dtName, except, loc);
       }
       catch (DatatypeException e) {
 	String detail = e.getMessage();
@@ -406,7 +408,7 @@ public class SchemaBuilderImpl extends AnnotationsImpl implements
       error("unrecognized_datatype_library", datatypeLibrary, loc);
     else {
       try {
-        return new DataPatternBuilderImpl(dl.createDatatypeBuilder(type));
+        return new DataPatternBuilderImpl(dl.createDatatypeBuilder(type), new Name(datatypeLibrary, type));
       }
       catch (DatatypeException e) {
 	String detail = e.getMessage();
@@ -431,7 +433,7 @@ public class SchemaBuilderImpl extends AnnotationsImpl implements
           Datatype dt = dtb.createDatatype();
           Object obj = dt.createValue(value, new ValidationContextImpl(context, ns));
           if (obj != null)
-            return pb.makeValue(dt, obj);
+            return pb.makeValue(dt, new Name(datatypeLibrary, type), obj, value);
           error("invalid_value", value, loc);
         }
         catch (DatatypeException e) {

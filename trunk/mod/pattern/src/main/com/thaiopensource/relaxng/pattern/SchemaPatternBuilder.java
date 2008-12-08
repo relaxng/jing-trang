@@ -2,6 +2,7 @@ package com.thaiopensource.relaxng.pattern;
 
 import org.relaxng.datatype.Datatype;
 import org.xml.sax.Locator;
+import com.thaiopensource.xml.util.Name;
 
 public class SchemaPatternBuilder extends PatternBuilder {
   private boolean idTypes;
@@ -27,21 +28,21 @@ public class SchemaPatternBuilder extends PatternBuilder {
     return schemaInterner.intern(p);
   }
 
-  Pattern makeData(Datatype dt) {
+  Pattern makeData(Datatype dt, Name dtName) {
     noteDatatype(dt);
-    Pattern p = new DataPattern(dt);
+    Pattern p = new DataPattern(dt, dtName);
     return schemaInterner.intern(p);
   }
 
-  Pattern makeDataExcept(Datatype dt, Pattern except, Locator loc) {
+  Pattern makeDataExcept(Datatype dt, Name dtName, Pattern except, Locator loc) {
     noteDatatype(dt);
-    Pattern p = new DataExceptPattern(dt, except, loc);
+    Pattern p = new DataExceptPattern(dt, dtName, except, loc);
     return schemaInterner.intern(p);
   }
 
-  Pattern makeValue(Datatype dt, Object obj) {
+  Pattern makeValue(Datatype dt, Name dtName, Object value, String stringValue) {
     noteDatatype(dt);
-    Pattern p = new ValuePattern(dt, obj);
+    Pattern p = new ValuePattern(dt, dtName, value, stringValue);
     return schemaInterner.intern(p);
   }
 

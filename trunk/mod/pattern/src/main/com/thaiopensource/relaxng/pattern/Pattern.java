@@ -89,7 +89,6 @@ public abstract class Pattern {
     return this == p;
   }
 
-  abstract void accept(PatternVisitor visitor);
   abstract <T> T apply(PatternFunction<T> f);
 
   static boolean contentTypeGroupable(int ct1, int ct2) {

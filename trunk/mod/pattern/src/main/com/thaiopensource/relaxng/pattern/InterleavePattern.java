@@ -52,9 +52,6 @@ class InterleavePattern extends BinaryPattern {
       throw new RestrictionViolationException("interleave_text_overlap");
   }
 
-  void accept(PatternVisitor visitor) {
-    visitor.visitInterleave(p1, p2);
-  }
   <T> T apply(PatternFunction<T> f) {
     return f.caseInterleave(this);
   }
