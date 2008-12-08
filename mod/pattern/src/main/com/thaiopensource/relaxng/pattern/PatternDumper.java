@@ -250,17 +250,16 @@ public class PatternDumper {
         p2.apply(optionalDumper);
       else if (p2 instanceof EmptyPattern)
         p1.apply(optionalDumper);
-      else {
-        if (p.isNullable())
-          startElement("optional");
-        startElement("choice");
-        p1.apply(choiceDumper);
-        p2.apply(choiceDumper);
-        endElement();
-        if (p.isNullable())
-          endElement();
-      }
+      else
+        choice(p1, p2);
       return VoidValue.VOID;
+    }
+
+    protected void choice(Pattern p1, Pattern p2) {
+      startElement("choice");
+      p1.apply(choiceDumper);
+      p2.apply(choiceDumper);
+      endElement();
     }
 
     public VoidValue caseOneOrMore(OneOrMorePattern p) {
@@ -407,14 +406,9 @@ public class PatternDumper {
   }
 
   class ChoiceDumper extends Dumper {
-    public VoidValue caseChoice(ChoicePattern p) {
-      p.getOperand1().apply(this);
-      p.getOperand2().apply(this);
-      return VoidValue.VOID;
-    }
-
-    public VoidValue caseEmpty(EmptyPattern p) {
-      return VoidValue.VOID;
+    protected void choice(Pattern p1, Pattern p2) {
+      p1.apply(this);
+      p2.apply(this);
     }
   }
 
