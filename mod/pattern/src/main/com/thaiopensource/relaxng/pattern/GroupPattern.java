@@ -34,9 +34,6 @@ class GroupPattern extends BinaryPattern {
       throw new RestrictionViolationException("group_string");
   }
 
-  void accept(PatternVisitor visitor) {
-    visitor.visitGroup(p1, p2);
-  }
   <T> T apply(PatternFunction<T> f) {
     return f.caseGroup(this);
   }

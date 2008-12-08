@@ -166,6 +166,17 @@ public class ValidationDriver {
   }
 
   /**
+   * Get the actual properties of the loaded schema
+   * @return a PropertyMap with the schema properties
+   * @throws java.lang.IllegalStateException if there is no currently loaded schema
+   */
+  public PropertyMap getSchemaProperties() {
+    if (schema == null)
+      throw new IllegalStateException("getSchemaProperties requires a schema");
+    return schema.getProperties();
+  }
+
+  /**
    * Returns an <code>InputSource</code> for a filename.
    *
    * @param filename a String specifying the filename

@@ -2,13 +2,14 @@ package com.thaiopensource.relaxng.pattern;
 
 import org.relaxng.datatype.Datatype;
 import org.xml.sax.Locator;
+import com.thaiopensource.xml.util.Name;
 
 class DataExceptPattern extends DataPattern {
   private final Pattern except;
   private final Locator loc;
 
-  DataExceptPattern(Datatype dt, Pattern except, Locator loc) {
-    super(dt);
+  DataExceptPattern(Datatype dt, Name dtName, Pattern except, Locator loc) {
+    super(dt, dtName);
     this.except = except;
     this.loc = loc;
   }
@@ -17,10 +18,6 @@ class DataExceptPattern extends DataPattern {
     if (!super.samePattern(other))
       return false;
     return except.samePattern(((DataExceptPattern)other).except);
-  }
-
-  void accept(PatternVisitor visitor) {
-    visitor.visitDataExcept(getDatatype(), except);
   }
 
   <T> T apply(PatternFunction<T> f) {

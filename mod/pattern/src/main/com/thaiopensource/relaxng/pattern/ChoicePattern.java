@@ -20,10 +20,6 @@ class ChoicePattern extends BinaryPattern {
     return p1.containsChoice(p) || p2.containsChoice(p);
   }
 
-  void accept(PatternVisitor visitor) {
-    visitor.visitChoice(p1, p2);
-  }
-
   <T> T apply(PatternFunction<T> f) {
     return f.caseChoice(this);
   }

@@ -7,9 +7,7 @@ class EmptyPattern extends Pattern {
   boolean samePattern(Pattern other) {
     return other instanceof EmptyPattern;
   }
-  void accept(PatternVisitor visitor) {
-    visitor.visitEmpty();
-  }
+
   <T> T apply(PatternFunction<T> f) {
     return f.caseEmpty(this);
   }

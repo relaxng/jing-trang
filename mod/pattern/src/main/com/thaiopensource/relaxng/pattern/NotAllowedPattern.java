@@ -11,9 +11,7 @@ class NotAllowedPattern extends Pattern {
     // needs to work for UnexpandedNotAllowedPattern
     return other.getClass() == this.getClass();
   }
-  void accept(PatternVisitor visitor) {
-    visitor.visitNotAllowed();
-  }
+
   <T> T apply(PatternFunction<T> f) {
     return f.caseNotAllowed(this);
   }

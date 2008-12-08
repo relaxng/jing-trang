@@ -1,15 +1,20 @@
 package com.thaiopensource.relaxng.pattern;
 
+import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.Datatype;
 
 class ValuePattern extends StringPattern {
   private final Object obj;
   private final Datatype dt;
+  private final Name dtName;
+  private final String stringValue;
 
-  ValuePattern(Datatype dt, Object obj) {
+  ValuePattern(Datatype dt, Name dtName, Object obj, String stringValue) {
     super(combineHashCode(VALUE_HASH_CODE, dt.valueHashCode(obj)));
     this.dt = dt;
+    this.dtName = dtName;
     this.obj = obj;
+    this.stringValue = stringValue;
   }
 
   boolean samePattern(Pattern other) {
@@ -19,10 +24,6 @@ class ValuePattern extends StringPattern {
       return false;
     return (dt.equals(((ValuePattern)other).dt)
 	    && dt.sameValue(obj, ((ValuePattern)other).obj));
-  }
-
-  void accept(PatternVisitor visitor) {
-    visitor.visitValue(dt, obj);
   }
 
   <T> T apply(PatternFunction<T> f) {
@@ -41,8 +42,15 @@ class ValuePattern extends StringPattern {
     return dt;
   }
 
+  Name getDatatypeName() {
+    return dtName;
+  }
+
   Object getValue() {
     return obj;
   }
 
+  String getStringValue() {
+    return stringValue;
+  }
 }

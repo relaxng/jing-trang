@@ -48,10 +48,6 @@ class OneOrMorePattern extends Pattern {
 	    && p == ((OneOrMorePattern)other).p);
   }
 
-  void accept(PatternVisitor visitor) {
-    visitor.visitOneOrMore(p);
-  }
-
   <T> T apply(PatternFunction<T> f) {
     return f.caseOneOrMore(this);
   }

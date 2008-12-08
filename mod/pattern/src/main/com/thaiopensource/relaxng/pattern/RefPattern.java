@@ -66,10 +66,6 @@ class RefPattern extends Pattern {
     return false;
   }
 
-  void accept(PatternVisitor visitor) {
-    p.accept(visitor);
-  }
-
   <T> T apply(PatternFunction<T> f) {
     return f.caseRef(this);
   }

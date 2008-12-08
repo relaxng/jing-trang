@@ -16,7 +16,4 @@ class AfterPattern extends BinaryPattern {
   <T> T apply(PatternFunction<T> f) {
     return f.caseAfter(this);
   }
-  void accept(PatternVisitor visitor) {
-    // XXX visitor.visitAfter(p1, p2);
-  }
 }

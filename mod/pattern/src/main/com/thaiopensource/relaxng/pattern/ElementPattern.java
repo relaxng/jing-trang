@@ -69,10 +69,6 @@ class ElementPattern extends Pattern {
     p.checkRecursion(depth + 1);
   }
 
-  void accept(PatternVisitor visitor) {
-    visitor.visitElement(nameClass, p);
-  }
-
   <T> T apply(PatternFunction<T> f) {
     return f.caseElement(this);
   }

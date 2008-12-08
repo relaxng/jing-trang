@@ -32,10 +32,6 @@ class ListPattern extends Pattern {
 	    && p == ((ListPattern)other).p);
   }
 
-  void accept(PatternVisitor visitor) {
-    visitor.visitList(p);
-  }
-
   <T> T apply(PatternFunction<T> f) {
     return f.caseList(this);
   }

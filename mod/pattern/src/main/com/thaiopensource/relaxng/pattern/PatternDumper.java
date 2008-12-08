@@ -1,69 +1,100 @@
 package com.thaiopensource.relaxng.pattern;
 
+import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.xml.util.Name;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
-import org.relaxng.datatype.Datatype;
 
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class PatternDumper {
+  private static final String INTERNAL_NAMESPACE = "http://www.thaiopensource.com/relaxng/internal";
   private boolean startTagOpen = false;
   private final ArrayList<String> tagStack = new ArrayList<String>();
-  private final PrintWriter writer;
+  private final StringBuilder buf;
   private int level = 0;
   private boolean suppressIndent = false;
-  private final List<Pattern> patternList = new ArrayList<Pattern>();
-  private final Map<Pattern, String> patternTable = new HashMap<Pattern, String>();
+  private final List<ElementPattern> patternList = new ArrayList<ElementPattern>();
+  private final Map<String, Integer> localNamePatternCount = new HashMap<String, Integer>();
+  private int otherPatternCount;
+  private final Map<ElementPattern, String> patternNameMap = new HashMap<ElementPattern, String>();
 
-  private final PatternVisitor patternVisitor = new DumpPatternVisitor();
-  private final PatternVisitor groupPatternVisitor = new GroupDumpPatternVisitor();
-  private final PatternVisitor choicePatternVisitor = new ChoiceDumpPatternVisitor();
-  private final PatternVisitor interleavePatternVisitor = new InterleaveDumpPatternVisitor();
-  private final NameClassVisitor nameClassVisitor = new DumpNameClassVisitor();
-  private final NameClassVisitor choiceNameClassVisitor = new ChoiceDumpNameClassVisitor();
+  private final PatternFunction<VoidValue> dumper = new Dumper();
+  private final PatternFunction<VoidValue> elementDumper = new ElementDumper();
+  private final PatternFunction<VoidValue> optionalDumper = new OptionalDumper();
+  private final PatternFunction<VoidValue> groupDumper = new GroupDumper();
+  private final PatternFunction<VoidValue> choiceDumper = new ChoiceDumper();
+  private final PatternFunction<VoidValue> interleaveDumper = new InterleaveDumper();
+  private final NameClassVisitor nameClassDumper = new NameClassDumper();
+  private final NameClassVisitor choiceNameClassDumper = new ChoiceNameClassDumper();
 
-  static public void dump(PrintWriter writer, Pattern p) {
-    new PatternDumper(writer).dump(p);
+  static public String toString(Pattern p) {
+    return new PatternDumper().dump(p).getSchema();
   }
 
-  static public void dump(OutputStream out, Pattern p) {
-    new PatternDumper(new PrintWriter(out)).dump(p);
+  private PatternDumper() {
+    buf = new StringBuilder();
   }
 
-  private PatternDumper(PrintWriter writer) {
-    this.writer = writer;
+  private String getSchema() {
+    return buf.toString();
   }
 
-  private void dump(Pattern p) {
+  private PatternDumper dump(Pattern p) {
     write("<?xml version=\"1.0\"?>");
     startElement("grammar");
     attribute("xmlns", WellKnownNamespaces.RELAX_NG);
     startElement("start");
-    p.accept(groupPatternVisitor);
+    p.apply(dumper);
     endElement();
     for (int i = 0; i < patternList.size(); i++) {
       startElement("define");
-      Pattern tem = patternList.get(i);
+      ElementPattern tem = patternList.get(i);
       attribute("name", getName(tem));
-      tem.accept(groupPatternVisitor);
+      tem.apply(elementDumper);
       endElement();
     }
     endElement();
-    writer.println();
-    writer.flush();
+    write('\n');
+    return this;
   }
 
-  private String getName(Pattern p) {
-    String name = patternTable.get(p);
+  private String getName(ElementPattern p) {
+    String name = patternNameMap.get(p);
+    // patterns for element patterns with local name X are named: X, X_2, X_3
+    // however if X is of the form Y_N (N > 0), then the patterns are named: X_1, X_2, X_3
+    // for element patterns with complex name classes, the patterns are named: _1, _2, _3
     if (name == null) {
-      name = "p" + patternList.size();
+      NameClass nc = p.getNameClass();
+      if (nc instanceof SimpleNameClass) {
+        String localName = ((SimpleNameClass)nc).getName().getLocalName();
+        Integer i = localNamePatternCount.get(localName);
+        if (i == null) {
+          i = 1;
+          name = localName;
+          // see if the name can be the same as one of our generated names
+          int u = name.lastIndexOf('_');
+          if (u >= 0) {
+            try {
+              if (Integer.valueOf(name.substring(u + 1, name.length())) > 0)
+                // it can, so transform it so that it cannot
+                name += "_1";
+            }
+            catch (NumberFormatException e) {
+              // not a number, so cannot be the same as one of our generated names
+            }
+          }
+        }
+        else
+          name = localName + "_" + ++i;
+        localNamePatternCount.put(localName, i);
+      }
+      else
+        name = "_" + ++otherPatternCount;
       patternList.add(p);
-      patternTable.put(p, name);
+      patternNameMap.put(p, name);
     }
     return name;
   }
@@ -116,12 +147,27 @@ public class PatternDumper {
       case '>':
 	write("&gt;");
 	break;
+      case 0xD:
+        write("&#xD;");
+        break;
+      case 0xA:
+        if (isAttribute)
+          write("&#xA;");
+        else
+          write(c);
+        break;
+      case 0x9:
+        if (isAttribute)
+          write("&#x9;");
+        else
+          write(c);
+        break;
       case '"':
-	if (isAttribute) {
-	  write("&quot;");
-	  break;
-	}
-	// fall through
+        if (isAttribute)
+          write("&quot;");
+        else
+          write(c);
+        break;
       default:
 	write(c);
 	break;
@@ -147,17 +193,17 @@ public class PatternDumper {
   }
 
   private void indent(int level) {
-    writer.println();
+    write('\n');
     for (int i = 0; i < level; i++)
       write("  ");
   }
 
   private void write(String str) {
-    writer.print(str);
+    buf.append(str);
   }
 
   private void write(char c) {
-    writer.print(c);
+    buf.append(c);
   }
 
   private void push(String s) {
@@ -168,122 +214,223 @@ public class PatternDumper {
     return tagStack.remove(tagStack.size() - 1);
   }
 
-  class DumpPatternVisitor implements PatternVisitor {
-    public void visitEmpty() {
+  class Dumper implements PatternFunction<VoidValue> {
+    public VoidValue caseEmpty(EmptyPattern p) {
       startElement("empty");
       endElement();
+      return VoidValue.VOID;
     }
 
-    public void visitNotAllowed() {
+    public VoidValue caseNotAllowed(NotAllowedPattern p) {
       startElement("notAllowed");
       endElement();
+      return VoidValue.VOID;
     }
 
-    public void visitError() {
-      startElement("error");
-      endElement();
-    }
-
-    public void visitGroup(Pattern p1, Pattern p2) {
+    public VoidValue caseGroup(GroupPattern p) {
       startElement("group");
-      p1.accept(groupPatternVisitor);
-      p2.accept(groupPatternVisitor);
+      p.getOperand1().apply(groupDumper);
+      p.getOperand2().apply(groupDumper);
       endElement();
+      return VoidValue.VOID;
     }
 
-    public void visitInterleave(Pattern p1, Pattern p2) {
+    public VoidValue caseInterleave(InterleavePattern p) {
       startElement("interleave");
-      p1.accept(interleavePatternVisitor);
-      p2.accept(interleavePatternVisitor);
+      p.getOperand1().apply(interleaveDumper);
+      p.getOperand2().apply(interleaveDumper);
       endElement();
+      return VoidValue.VOID;
     }
 
-    public void visitChoice(Pattern p1, Pattern p2) {
-      startElement("choice");
-      p1.accept(choicePatternVisitor);
-      p2.accept(choicePatternVisitor);
-      endElement();
+    public VoidValue caseChoice(ChoicePattern p) {
+      final Pattern p1 = p.getOperand1();
+      final Pattern p2 = p.getOperand2();
+      if (p1 instanceof EmptyPattern)
+        p2.apply(optionalDumper);
+      else if (p2 instanceof EmptyPattern)
+        p1.apply(optionalDumper);
+      else {
+        if (p.isNullable())
+          startElement("optional");
+        startElement("choice");
+        p1.apply(choiceDumper);
+        p2.apply(choiceDumper);
+        endElement();
+        if (p.isNullable())
+          endElement();
+      }
+      return VoidValue.VOID;
     }
 
-    public void visitOneOrMore(Pattern p) {
+    public VoidValue caseOneOrMore(OneOrMorePattern p) {
       startElement("oneOrMore");
-      p.accept(groupPatternVisitor);
+      p.getOperand().apply(dumper);
       endElement();
+      return VoidValue.VOID;
     }
 
-    public void visitElement(NameClass nc, Pattern content) {
-      startElement("element");
-      nc.accept(nameClassVisitor);
+    public VoidValue caseElement(ElementPattern p) {
       startElement("ref");
-      attribute("name", getName(content));
+      attribute("name", getName(p));
       endElement();
-      endElement();
+      return VoidValue.VOID;
     }
 
-    public void visitAttribute(NameClass nc, Pattern value) {
+    public VoidValue caseAttribute(AttributePattern p) {
       startElement("attribute");
-      nc.accept(nameClassVisitor);
-      value.accept(patternVisitor);
+      outputName(p.getNameClass());
+      p.getContent().apply(dumper);
       endElement();
+      return VoidValue.VOID;
     }
 
-    public void visitData(Datatype dt) {
-      startElement("text");	// XXX
-      endElement();
+    protected void outputName(NameClass nc) {
+      if (nc instanceof SimpleNameClass) {
+        Name name = ((SimpleNameClass)nc).getName();
+        attribute("name", name.getLocalName());
+        attribute("ns", name.getNamespaceUri());
+      }
+      else
+        nc.accept(nameClassDumper);
     }
 
-    public void visitDataExcept(Datatype dt, Pattern except) {
-      startElement("text");	// XXX
+    public VoidValue caseData(DataPattern p) {
+      startElement("data");
+      final Name dtName = p.getDatatypeName();
+      attribute("type", dtName.getLocalName());
+      attribute("datatypeLibrary", dtName.getNamespaceUri());
       endElement();
+      return VoidValue.VOID;
     }
 
-    public void visitValue(Datatype dt, Object obj) {
-      startElement("value");
-      // XXX dump dt
-      // XXX toString will not handle QName
-      data(obj.toString());
+    public VoidValue caseDataExcept(DataExceptPattern p) {
+      startElement("data");
+      final Name dtName = p.getDatatypeName();
+      attribute("type", dtName.getLocalName());
+      attribute("datatypeLibrary", dtName.getNamespaceUri());
+      startElement("except");
+      p.getExcept().apply(dumper);
       endElement();
+      endElement();
+      return VoidValue.VOID;
     }
 
-    public void visitText() {
+    public VoidValue caseValue(ValuePattern p) {
+      startElement("value");      
+      Name dtName = p.getDatatypeName();
+      attribute("type", dtName.getLocalName());
+      attribute("datatypeLibrary", dtName.getNamespaceUri());
+      String stringValue = p.getStringValue();
+      final Object value = p.getValue();
+      String ns = "";
+      // XXX won't work with a datatypeLibrary that doesn't use Name to implement QName's
+      if (value instanceof Name) {
+        ns = ((Name)value).getNamespaceUri();
+        int colonIndex = stringValue.indexOf(':');
+        if (colonIndex < 0)
+          stringValue = stringValue.substring(colonIndex + 1, stringValue.length());
+      }
+      attribute("ns", ns);
+      data(stringValue);
+      endElement();
+      return VoidValue.VOID;
+    }
+
+    public VoidValue caseText(TextPattern p) {
       startElement("text");
       endElement();
+      return VoidValue.VOID;
     }
 
-    public void visitList(Pattern p) {
+    public VoidValue caseList(ListPattern p) {
       startElement("list");
-      p.accept(groupPatternVisitor);
+      p.getOperand().apply(dumper);
       endElement();
+      return VoidValue.VOID;
+    }
+
+    public VoidValue caseRef(RefPattern p) {
+      return p.getPattern().apply(this);
+    }
+
+    public VoidValue caseAfter(AfterPattern p) {
+      startElement("i:after");
+      attribute("xmlns:i", INTERNAL_NAMESPACE);
+      p.getOperand1().apply(this);
+      p.getOperand1().apply(this);
+      endElement();
+      return VoidValue.VOID;
+    }
+
+
+    public VoidValue caseError(ErrorPattern p) {
+      startElement("i:error");
+      attribute("xmlns:i", INTERNAL_NAMESPACE);
+      endElement();
+      return VoidValue.VOID;
     }
   }
 
-  class GroupDumpPatternVisitor extends DumpPatternVisitor {
-    public void visitGroup(Pattern p1, Pattern p2) {
-      p1.accept(this);
-      p2.accept(this);
+  class ElementDumper extends Dumper {
+    public VoidValue caseElement(ElementPattern p) {
+      startElement("element");
+      outputName(p.getNameClass());
+      p.getContent().apply(dumper);
+      endElement();
+      return VoidValue.VOID;
     }
   }
 
-  class ChoiceDumpPatternVisitor extends DumpPatternVisitor {
-    public void visitChoice(Pattern p1, Pattern p2) {
-      p1.accept(this);
-      p2.accept(this);
+  class OptionalDumper extends AbstractPatternFunction<VoidValue> {
+    public VoidValue caseOther(Pattern p) {
+      startElement("optional");
+      p.apply(dumper);
+      endElement();
+      return VoidValue.VOID;
+    }
+
+    public VoidValue caseOneOrMore(OneOrMorePattern p) {
+      startElement("zeroOrMore");
+      p.getOperand().apply(dumper);
+      endElement();
+      return VoidValue.VOID;
     }
   }
 
-  class InterleaveDumpPatternVisitor extends DumpPatternVisitor {
-    public void visitInterleave(Pattern p1, Pattern p2) {
-      p1.accept(this);
-      p2.accept(this);
+  class GroupDumper extends Dumper {
+    public VoidValue caseGroup(GroupPattern p) {
+      p.getOperand1().apply(this);
+      p.getOperand2().apply(this);
+      return VoidValue.VOID;
     }
   }
 
+  class ChoiceDumper extends Dumper {
+    public VoidValue caseChoice(ChoicePattern p) {
+      p.getOperand1().apply(this);
+      p.getOperand2().apply(this);
+      return VoidValue.VOID;
+    }
 
-  class DumpNameClassVisitor implements NameClassVisitor {
+    public VoidValue caseEmpty(EmptyPattern p) {
+      return VoidValue.VOID;
+    }
+  }
+
+  class InterleaveDumper extends Dumper {
+     public VoidValue caseInterleave(InterleavePattern p) {
+      p.getOperand1().apply(this);
+      p.getOperand2().apply(this);
+      return VoidValue.VOID;
+    }
+  }
+
+  class NameClassDumper implements NameClassVisitor {
     public void visitChoice(NameClass nc1, NameClass nc2) {
       startElement("choice");
-      nc1.accept(choiceNameClassVisitor);
-      nc2.accept(choiceNameClassVisitor);
+      nc1.accept(choiceNameClassDumper);
+      nc2.accept(choiceNameClassDumper);
       endElement();
     }
 
@@ -297,7 +444,7 @@ public class PatternDumper {
       startElement("nsName");
       attribute("ns", ns);
       startElement("except");
-      nc.accept(choiceNameClassVisitor);
+      nc.accept(nameClassDumper);
       endElement();
       endElement();
     }
@@ -310,7 +457,7 @@ public class PatternDumper {
     public void visitAnyNameExcept(NameClass nc) {
       startElement("anyName");
       startElement("except");
-      nc.accept(choiceNameClassVisitor);
+      nc.accept(nameClassDumper);
       endElement();
       endElement();
     }
@@ -332,7 +479,7 @@ public class PatternDumper {
     }
   }
 
-  class ChoiceDumpNameClassVisitor extends DumpNameClassVisitor {
+  class ChoiceNameClassDumper extends NameClassDumper {
     public void visitChoice(NameClass nc1, NameClass nc2) {
       nc1.accept(this);
       nc2.accept(this);

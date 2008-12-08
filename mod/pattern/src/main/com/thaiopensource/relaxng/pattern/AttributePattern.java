@@ -68,10 +68,6 @@ class AttributePattern extends Pattern {
     p.checkRecursion(depth);
   }
 
-  void accept(PatternVisitor visitor) {
-    visitor.visitAttribute(nameClass, p);
-  }
-
   <T> T apply(PatternFunction<T> f) {
     return f.caseAttribute(this);
   }
