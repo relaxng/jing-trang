@@ -6974,4 +6974,73 @@ before string sequence checking.</documentation>
 </invalid>
 </testCase>
 </testSuite>
+<testSuite>
+<documentation>Datatype problems</documentation>
+<requires datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+<testCase>
+<correct>
+<element name="e:foo" xmlns:e="http://www.example.com" xmlns="http://relaxng.org/ns/structure/1.0">
+  <value type="QName" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">xyzzy</value>
+</element>
+</correct>
+<valid>
+<e:foo xmlns:e="http://www.example.com">xyzzy</e:foo>
+</valid>
+<invalid>
+<e:foo xmlns:e="http://www.example.com" xmlns="http://relaxng.org/ns/structure/1.0">xyzzy</e:foo>
+</invalid>
+<invalid>
+<e:foo xmlns:e="http://www.example.com">x</e:foo>
+</invalid>
+<invalid>
+<foo xmlns="http://www.example.com">xyzzy</foo>
+</invalid>
+</testCase>
+<testCase>
+<correct>
+<element name="e:foo" xmlns:e="http://www.example.com/1" xmlns="http://relaxng.org/ns/structure/1.0">
+  <value type="QName" ns="http://www.example.com/2"
+	 datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">xyzzy</value>
+</element>
+</correct>
+<valid>
+<e1:foo xmlns:e1="http://www.example.com/1" xmlns:e2="http://www.example.com/2">e2:xyzzy</e1:foo>
+</valid>
+<valid>
+<e1:foo xmlns:e1="http://www.example.com/1" xmlns="http://www.example.com/2">xyzzy</e1:foo>
+</valid>
+<invalid>
+<e1:foo xmlns:e1="http://www.example.com/1">xyzzy</e1:foo>
+</invalid>
+<invalid>
+<e1:foo xmlns:e1="http://www.example.com/1" xmlns="http://www.example.com/3">xyzzy</e1:foo>
+</invalid>
+<invalid>
+<e1:foo xmlns:e1="http://www.example.com/1" xmlns="http://www.example.com/2">x</e1:foo>
+</invalid>
+</testCase>
+<testCase>
+<correct>
+<element name="e:foo" xmlns:e="http://www.example.com/1" xmlns="http://relaxng.org/ns/structure/1.0">
+  <value type="QName" xmlns:e3="http://www.example.com/2"
+	 datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">e3:xyzzy</value>
+</element>
+</correct>
+<valid>
+<e1:foo xmlns:e1="http://www.example.com/1" xmlns:e2="http://www.example.com/2">e2:xyzzy</e1:foo>
+</valid>
+<valid>
+<e1:foo xmlns:e1="http://www.example.com/1" xmlns="http://www.example.com/2">xyzzy</e1:foo>
+</valid>
+<invalid>
+<e1:foo xmlns:e1="http://www.example.com/1">xyzzy</e1:foo>
+</invalid>
+<invalid>
+<e1:foo xmlns:e1="http://www.example.com/1" xmlns="http://www.example.com/3">xyzzy</e1:foo>
+</invalid>
+<invalid>
+<e1:foo xmlns:e1="http://www.example.com/1" xmlns="http://www.example.com/2">x</e1:foo>
+</invalid>
+</testCase>
+</testSuite>
 </testSuite>
