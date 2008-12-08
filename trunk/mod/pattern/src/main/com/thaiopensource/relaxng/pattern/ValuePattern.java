@@ -7,7 +7,7 @@ class ValuePattern extends StringPattern {
   private final Datatype dt;
 
   ValuePattern(Datatype dt, Object obj) {
-    super(combineHashCode(VALUE_HASH_CODE, obj.hashCode()));
+    super(combineHashCode(VALUE_HASH_CODE, dt.valueHashCode(obj)));
     this.dt = dt;
     this.obj = obj;
   }
