@@ -12,7 +12,7 @@ class SchemaImpl extends AbstractSchema {
   private final Templates templates;
   private final Class factoryClass;
 
-  SchemaImpl(Templates templates, Class factoryClass, PropertyMap properties, PropertyId[] supportedPropertyIds) {
+  SchemaImpl(Templates templates, Class factoryClass, PropertyMap properties, PropertyId<?>[] supportedPropertyIds) {
     super(properties, supportedPropertyIds);
     this.templates = templates;
     this.factoryClass = factoryClass;

@@ -9,9 +9,13 @@ import com.thaiopensource.relaxng.pattern.IdTypeMapBuilder;
 import com.thaiopensource.relaxng.pattern.Pattern;
 import com.thaiopensource.relaxng.pattern.SchemaBuilderImpl;
 import com.thaiopensource.relaxng.pattern.SchemaPatternBuilder;
+import com.thaiopensource.relaxng.pattern.NameClass;
+import com.thaiopensource.relaxng.pattern.CommentListImpl;
+import com.thaiopensource.relaxng.pattern.AnnotationsImpl;
 import com.thaiopensource.resolver.xml.sax.SAXResolver;
 import com.thaiopensource.util.PropertyId;
 import com.thaiopensource.util.PropertyMap;
+import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.validate.AbstractSchema;
 import com.thaiopensource.validate.AbstractSchemaReader;
 import com.thaiopensource.validate.CombineSchema;
@@ -25,12 +29,13 @@ import com.thaiopensource.validate.prop.wrap.WrapProperty;
 import org.relaxng.datatype.DatatypeLibraryFactory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.Locator;
 
 import javax.xml.transform.sax.SAXSource;
 import java.io.IOException;
 
 public abstract class SchemaReaderImpl extends AbstractSchemaReader {
-  private static final PropertyId[] supportedPropertyIds = {
+  private static final PropertyId<?>[] supportedPropertyIds = {
     ValidateProperty.XML_READER_CREATOR,
     ValidateProperty.ERROR_HANDLER,
     ValidateProperty.ENTITY_RESOLVER,
@@ -84,7 +89,7 @@ public abstract class SchemaReaderImpl extends AbstractSchemaReader {
     return schema;
   }
 
-  protected abstract Parseable createParseable(SAXSource source, SAXResolver resolver, ErrorHandler eh, PropertyMap properties)
+  protected abstract Parseable<Pattern, NameClass, Locator, VoidValue, CommentListImpl, AnnotationsImpl> createParseable(SAXSource source, SAXResolver resolver, ErrorHandler eh, PropertyMap properties)
           throws SAXException;
 
 }
