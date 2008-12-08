@@ -4,16 +4,18 @@
   <depends module="regex"/>
   <depends module="datatype"/>
   <depends module="xsd-datatype"/>
-  <depends module="validate"/>
   <depends module="rng-parse"/>
   <depends module="pattern"/>
   <depends module="rng-jaxp"/>
-  <depends module="rng-jarv"/>
   <depends module="rng-validate"/>
   <depends module="nvdl"/>
   <depends module="schematron"/>
   <depends module="xerces"/>
   <depends module="picl"/>
+  <depends module="rng-jarv"/>
+  <!-- the order is important, because it controls the order of the service providers;
+       validate should be last because it provides fallback implementations in terms of other interfaces -->
+  <depends module="validate"/>
   <jar>
     <manifest>
       <attribute name="Main-Class" value="com/thaiopensource/relaxng/util/Driver"/>
