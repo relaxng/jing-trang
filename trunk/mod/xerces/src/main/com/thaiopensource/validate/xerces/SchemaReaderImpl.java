@@ -30,7 +30,7 @@ import java.io.Reader;
 import java.io.StringReader;
 
 class SchemaReaderImpl extends AbstractSchemaReader {
-  private static final PropertyId[] supportedPropertyIds = {
+  private static final PropertyId<?>[] supportedPropertyIds = {
     ValidateProperty.ERROR_HANDLER,
     ValidateProperty.ENTITY_RESOLVER,
   };
