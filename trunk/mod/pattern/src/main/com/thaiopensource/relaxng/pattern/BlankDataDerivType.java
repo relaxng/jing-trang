@@ -8,15 +8,16 @@ class BlankDataDerivType extends DataDerivType {
 
   BlankDataDerivType() { }
 
-  PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc) {
+  PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc,
+                        DataDerivFailure fail) {
     if (DataDerivFunction.isBlank(str)) {
       if (blankMemo == null)
-        blankMemo = super.dataDeriv(builder, p, str, vc);
+        blankMemo = super.dataDeriv(builder, p, str, vc, null);
       return blankMemo;
     }
     else {
       if (nonBlankMemo == null)
-        nonBlankMemo = super.dataDeriv(builder, p, str, vc);
+        nonBlankMemo = super.dataDeriv(builder, p, str, vc, null);
       return nonBlankMemo;
     }
   }
