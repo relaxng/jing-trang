@@ -182,7 +182,11 @@ final class PatternMemo {
   }
 
   PatternMemo dataDeriv(String str, ValidationContext vc) {
-    return dataDerivType().dataDeriv(builder, pattern, str, vc);
+    return dataDerivType().dataDeriv(builder, pattern, str, vc, null);
+  }
+
+  PatternMemo dataDeriv(String str, ValidationContext vc, DataDerivFailure fail) {
+    return dataDerivType().dataDeriv(builder, pattern, str, vc, fail);
   }
 
   PatternMemo recoverAfter() {

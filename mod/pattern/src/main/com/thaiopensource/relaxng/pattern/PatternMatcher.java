@@ -51,6 +51,8 @@ public class PatternMatcher implements Cloneable, Matcher {
   private boolean ignoreNextEndTagOrAttributeValue;
   private String errorMessage;
   private final Shared shared;
+  private DataDerivFailure dataDerivFailure = new DataDerivFailure();
+
 
   public PatternMatcher(Pattern start, ValidatorPatternBuilder builder) {
     shared = new Shared(start, builder);
@@ -85,7 +87,9 @@ public class PatternMatcher implements Cloneable, Matcher {
 
   public final Object clone() {
     try {
-      return super.clone();
+      PatternMatcher cloned = (PatternMatcher)super.clone();
+      cloned.dataDerivFailure = new DataDerivFailure();
+      return cloned;
     }
     catch (CloneNotSupportedException e) {
       throw new Error("unexpected CloneNotSupportedException");
@@ -159,9 +163,17 @@ public class PatternMatcher implements Cloneable, Matcher {
       ignoreNextEndTagOrAttributeValue = false;
       return true;
     }
-    if (setMemo(memo.dataDeriv(value, context)))
+    dataDerivFailure.reset();
+    if (setMemo(memo.dataDeriv(value, context, dataDerivFailure)))
       return true;
-    boolean ok = error("invalid_attribute_value", errorArgQName(qName, name, context, true));
+    boolean ok = ignoreError();
+    if (!ok) {
+      if (dataDerivFailure.isSet())
+        error("attribute_value_invalid_token",
+              errorArgQName(qName, name, context, true),
+              dataDerivFailure.substring(value));
+      error("invalid_attribute_value", errorArgQName(qName, name, context, true));
+    }
     memo = memo.recoverAfter();
     return ok;
   }
@@ -221,7 +233,8 @@ public class PatternMatcher implements Cloneable, Matcher {
   private boolean setDataDeriv(String string, Name name, String qName, MatchContext context) {
     textTyped = false;
     PatternMemo textOnlyMemo = memo.textOnly();
-    if (setMemo(textOnlyMemo.dataDeriv(string, context)))
+    dataDerivFailure.reset();
+    if (setMemo(textOnlyMemo.dataDeriv(string, context, dataDerivFailure)))
       return true;
     PatternMemo next = memo.recoverAfter();
     boolean ok = ignoreError();
@@ -232,6 +245,10 @@ public class PatternMatcher implements Cloneable, Matcher {
         error("blank_not_allowed",
               errorArgQName(qName, name, context, false),
               expectedContent(context));
+      else if (dataDerivFailure.isSet())
+        error("element_content_invalid_token",
+              errorArgQName(qName, name, context, false),
+              dataDerivFailure.substring(string));
       else
         error("invalid_element_value", errorArgQName(qName, name, context, false));
     }

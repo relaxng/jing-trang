@@ -7,11 +7,13 @@ class DataDerivFunction extends AbstractPatternFunction<Pattern> {
   private final ValidatorPatternBuilder builder;
   private final ValidationContext vc;
   private final String str;
+  private final DataDerivFailure fail;
 
-  DataDerivFunction(String str, ValidationContext vc, ValidatorPatternBuilder builder) {
+  DataDerivFunction(String str, ValidationContext vc, ValidatorPatternBuilder builder, DataDerivFailure fail) {
     this.str = str;
     this.vc = vc;
     this.builder = builder;
+    this.fail = fail;
   }
 
   static boolean isBlank(String str) {
@@ -64,7 +66,10 @@ class DataDerivFunction extends AbstractPatternFunction<Pattern> {
   }
 
   private PatternMemo tokenDeriv(PatternMemo p, int i, int j) {
-    return p.dataDeriv(str.substring(i, j), vc);
+    PatternMemo deriv = p.dataDeriv(str.substring(i, j), vc);
+    if (fail != null && deriv.isNotAllowed() && !p.isNotAllowed())
+      fail.set(i, j, p);
+    return deriv;
   }
 
   public Pattern caseValue(ValuePattern p) {
@@ -94,7 +99,7 @@ class DataDerivFunction extends AbstractPatternFunction<Pattern> {
 
   public Pattern caseAfter(AfterPattern p) {
     Pattern p1 = p.getOperand1();
-    if (memoApply(p1).isNullable() || (p1.isNullable() && isBlank(str)))
+    if (memoApplyWithFailure(p1).isNullable() || (p1.isNullable() && isBlank(str)))
       return p.getOperand2();
     return builder.makeNotAllowed();
   }
@@ -130,6 +135,10 @@ class DataDerivFunction extends AbstractPatternFunction<Pattern> {
   }
 
   private Pattern memoApply(Pattern p) {
-     return builder.getPatternMemo(p).dataDeriv(str, vc).getPattern();
-   }
+    return builder.getPatternMemo(p).dataDeriv(str, vc).getPattern();
+  }
+
+  private Pattern memoApplyWithFailure(Pattern p) {
+    return builder.getPatternMemo(p).dataDeriv(str, vc, fail).getPattern();
+  }
 }

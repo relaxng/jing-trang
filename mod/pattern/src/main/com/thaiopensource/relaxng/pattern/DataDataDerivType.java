@@ -12,15 +12,16 @@ class DataDataDerivType extends DataDerivType {
     this.dt = dt;
   }
 
-  PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc) {
+  PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc,
+                        DataDerivFailure fail) {
     if (dt.isValid(str, vc)) {
       if (validMemo == null)
-        validMemo = super.dataDeriv(builder, p, str, vc);
+        validMemo = super.dataDeriv(builder, p, str, vc, null);
       return validMemo;
     }
     else {
       if (invalidMemo == null)
-        invalidMemo = super.dataDeriv(builder, p, str, vc);
+        invalidMemo = super.dataDeriv(builder, p, str, vc, null);
       return invalidMemo;
     }
   }
