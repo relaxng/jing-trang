@@ -10,7 +10,7 @@ class EntityDatatype extends NCNameDatatype {
 
   Object getValue(String str, ValidationContext vc) throws DatatypeException {
     if (!allowsValue(str, vc))
-      throw new DatatypeException("entity_violation");
+      throw new DatatypeException(localizer().message("entity_violation"));
     return str;
   }
 }
