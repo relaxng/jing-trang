@@ -6,4 +6,8 @@ class NCNameDatatype extends NameDatatype {
   public boolean lexicallyAllows(String str) {
     return Naming.isNcname(str);
   }
+
+  String getLexicalSpaceKey() {
+    return "ncname";
+  }
 }

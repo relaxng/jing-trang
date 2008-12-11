@@ -14,4 +14,8 @@ class BooleanDatatype extends DatatypeBase {
     }
     return Boolean.FALSE;
   }
+
+  String getLexicalSpaceKey() {
+    return "boolean";
+  }
 }

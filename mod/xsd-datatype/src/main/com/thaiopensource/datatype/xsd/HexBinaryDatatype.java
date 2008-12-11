@@ -18,6 +18,10 @@ class HexBinaryDatatype extends BinaryDatatype {
     return i == len;
   }
 
+  String getLexicalSpaceKey() {
+    return "hex";
+  }
+
   Object getValue(String str, ValidationContext vc) {
     int len = str.length();
     int start = 0;

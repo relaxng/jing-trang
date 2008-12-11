@@ -7,6 +7,10 @@ class AnyUriDatatype extends TokenDatatype {
     return Uri.isValid(str);
   }
 
+  String getLexicalSpaceKey() {
+    return "uri";
+  }
+
   public boolean alwaysValid() {
     return false;
   }

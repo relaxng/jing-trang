@@ -1,5 +1,7 @@
 package com.thaiopensource.datatype.xsd;
 
+import org.relaxng.datatype.DatatypeException;
+
 class LengthRestrictDatatype extends ValueRestrictDatatype {
   private final int length;
   private final Measure measure;
@@ -10,7 +12,10 @@ class LengthRestrictDatatype extends ValueRestrictDatatype {
     this.length = length;
   }
 
-  boolean satisfiesRestriction(Object obj) {
-    return measure.getLength(obj) == length;
+   void checkRestriction(Object obj) throws DatatypeException {
+    int actualLength = measure.getLength(obj);
+    if (actualLength != length)
+      throw new DatatypeException(localizer().message("length_violation",
+                                                      new Object[] { getDescriptionForRestriction(), length, actualLength }));
   }
 }

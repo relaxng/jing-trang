@@ -77,7 +77,11 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
     typeMap.put("base64Binary", new Base64BinaryDatatype());
     typeMap.put("hexBinary", new HexBinaryDatatype());
     typeMap.put("anyURI", new AnyUriDatatype());
-    typeMap.put("language", new RegexDatatype(LANGUAGE_PATTERN));
+    typeMap.put("language", new RegexDatatype(LANGUAGE_PATTERN) {
+      String getLexicalSpaceKey() {
+        return "language";
+      }
+    });
 
     typeMap.put("dateTime", new DateTimeDatatype("Y-M-DTt"));
     typeMap.put("time", new DateTimeDatatype("t"));
@@ -117,11 +121,21 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
   }
 
   private static DatatypeBase restrictMax(DatatypeBase base, String limit) {
-    return new MaxInclusiveRestrictDatatype(base, base.getValue(limit, null));
+    try {
+      return new MaxInclusiveRestrictDatatype(base, base.getValue(limit, null), limit);
+    }
+    catch (DatatypeException e) {
+      throw new AssertionError();
+    }
   }
 
   private static DatatypeBase restrictMin(DatatypeBase base, String limit) {
-    return new MinInclusiveRestrictDatatype(base, base.getValue(limit, null));
+    try {
+      return new MinInclusiveRestrictDatatype(base, base.getValue(limit, null), limit);
+    }
+    catch (DatatypeException e) {
+      throw new AssertionError();
+    }
   }
 
   private static DatatypeBase list(DatatypeBase base) {

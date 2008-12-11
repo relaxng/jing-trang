@@ -3,7 +3,8 @@
   <depends module="datatype"/>
   <depends module="regex"/>
   <test name="xsd" type="validate" transform="xsdtest.xsl" schema="test/xsdtest.rnc"/>
-  <compile/>
+  <test name="unit" type="testng"/>
+  <compile test="yes"/>
   <service type="org.relaxng.datatype.DatatypeLibraryFactory">
     <provider classname="com.thaiopensource.datatype.xsd.DatatypeLibraryFactoryImpl"/>
   </service>

@@ -13,4 +13,8 @@ class NmtokenDatatype extends TokenDatatype {
   public boolean alwaysValid() {
     return false;
   }
+
+  String getLexicalSpaceKey() {
+    return "nmtoken";
+  }
 }

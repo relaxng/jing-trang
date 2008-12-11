@@ -1,7 +1,8 @@
 package com.thaiopensource.datatype.xsd;
 
-import org.relaxng.datatype.ValidationContext;
 import com.thaiopensource.util.Utf16;
+import org.relaxng.datatype.DatatypeException;
+import org.relaxng.datatype.ValidationContext;
 
 class TokenDatatype extends DatatypeBase implements Measure {
 
@@ -14,11 +15,15 @@ class TokenDatatype extends DatatypeBase implements Measure {
     return true;
   }
 
+  String getLexicalSpaceKey() {
+    return "string";
+  }
+
   public boolean alwaysValid() {
     return true;
   }
 
-  Object getValue(String str, ValidationContext vc) {
+  Object getValue(String str, ValidationContext vc) throws DatatypeException {
     return str;
   }
 

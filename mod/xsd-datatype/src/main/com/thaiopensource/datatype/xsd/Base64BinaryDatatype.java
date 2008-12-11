@@ -13,6 +13,10 @@ class Base64BinaryDatatype extends BinaryDatatype {
     return byteCount(str) >= 0;
   }
 
+  String getLexicalSpaceKey() {
+    return "base64";
+  }
+
   private static int byteCount(String str) {
     int nChars = 0;
     int nPadding = 0;

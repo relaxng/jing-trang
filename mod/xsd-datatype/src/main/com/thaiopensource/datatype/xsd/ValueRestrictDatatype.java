@@ -1,5 +1,6 @@
 package com.thaiopensource.datatype.xsd;
 
+import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.ValidationContext;
 
 abstract class ValueRestrictDatatype extends RestrictDatatype {
@@ -7,16 +8,11 @@ abstract class ValueRestrictDatatype extends RestrictDatatype {
     super(base);
   }
 
-  boolean allowsValue(String str, ValidationContext vc) {
-    return getValue(str, vc) != null;
-  }
-
-  Object getValue(String str, ValidationContext vc) {
-    Object obj = base.getValue(str, vc);
-    if (obj == null || !satisfiesRestriction(obj))
-      return null;
+  Object getValue(String str, ValidationContext vc) throws DatatypeException {
+    Object obj = super.getValue(str, vc);
+    checkRestriction(obj);
     return obj;
   }
 
-  abstract boolean satisfiesRestriction(Object value);
+  abstract void checkRestriction(Object obj) throws DatatypeException;
 }
