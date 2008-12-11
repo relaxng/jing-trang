@@ -1,5 +1,6 @@
 #summary How to build Jing and Trang from source
 #labels Featured
 
+ # Ensure you have a [http://subversion.tigris.org/links.html#clients Subversion client] installed.  On Windows, I like the [http://www.sliksvn.com/en/download Slik SVN] packages.
  # [http://code.google.com/p/jing-trang/source/checkout Check out] the source from the project's repository.
  # Follow the instructions in [http://jing-trang.googlecode.com/svn/trunk/readme.txt readme.txt].
