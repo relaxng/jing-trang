@@ -33,9 +33,10 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 public class SchemaBuilderImpl extends AnnotationsImpl implements
         ElementAnnotationBuilder<Locator, VoidValue, CommentListImpl>,
@@ -327,6 +328,7 @@ public class SchemaBuilderImpl extends AnnotationsImpl implements
   private class DataPatternBuilderImpl implements DataPatternBuilder<Pattern, Locator, VoidValue, CommentListImpl, AnnotationsImpl> {
     private final DatatypeBuilder dtb;
     private final Name dtName;
+    private final List<String> params = new ArrayList<String>();
     DataPatternBuilderImpl(DatatypeBuilder dtb, Name dtName) {
       this.dtb = dtb;
       this.dtName = dtName;
@@ -336,6 +338,8 @@ public class SchemaBuilderImpl extends AnnotationsImpl implements
             throws BuildException {
       try {
         dtb.addParameter(name, value, new ValidationContextImpl(context, ns));
+        params.add(name);
+        params.add(value);
       }
       catch (DatatypeException e) {
 	String detail = e.getMessage();
@@ -373,7 +377,7 @@ public class SchemaBuilderImpl extends AnnotationsImpl implements
     public Pattern makePattern(Locator loc, AnnotationsImpl anno)
             throws BuildException {
       try {
-        return pb.makeData(dtb.createDatatype(), dtName);
+        return pb.makeData(dtb.createDatatype(), dtName, params);
       }
       catch (DatatypeException e) {
 	String detail = e.getMessage();
@@ -388,7 +392,7 @@ public class SchemaBuilderImpl extends AnnotationsImpl implements
     public Pattern makePattern(Pattern except, Locator loc, AnnotationsImpl anno)
             throws BuildException {
       try {
-        return pb.makeDataExcept(dtb.createDatatype(), dtName, except, loc);
+        return pb.makeDataExcept(dtb.createDatatype(), dtName, params, except, loc);
       }
       catch (DatatypeException e) {
 	String detail = e.getMessage();

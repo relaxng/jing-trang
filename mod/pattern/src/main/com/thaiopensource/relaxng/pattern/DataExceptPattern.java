@@ -1,15 +1,17 @@
 package com.thaiopensource.relaxng.pattern;
 
+import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.Datatype;
 import org.xml.sax.Locator;
-import com.thaiopensource.xml.util.Name;
+
+import java.util.List;
 
 class DataExceptPattern extends DataPattern {
   private final Pattern except;
   private final Locator loc;
 
-  DataExceptPattern(Datatype dt, Name dtName, Pattern except, Locator loc) {
-    super(dt, dtName);
+  DataExceptPattern(Datatype dt, Name dtName, List<String> params, Pattern except, Locator loc) {
+    super(dt, dtName, params);
     this.except = except;
     this.loc = loc;
   }
