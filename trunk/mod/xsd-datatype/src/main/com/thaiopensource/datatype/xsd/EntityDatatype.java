@@ -1,5 +1,6 @@
 package com.thaiopensource.datatype.xsd;
 
+import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.ValidationContext;
 
 class EntityDatatype extends NCNameDatatype {
@@ -7,9 +8,9 @@ class EntityDatatype extends NCNameDatatype {
     return vc.isUnparsedEntity(str);
   }
 
-  Object getValue(String str, ValidationContext vc) {
+  Object getValue(String str, ValidationContext vc) throws DatatypeException {
     if (!allowsValue(str, vc))
-      return null;
-    return super.getValue(str, vc);
+      throw new DatatypeException("entity_violation");
+    return str;
   }
 }

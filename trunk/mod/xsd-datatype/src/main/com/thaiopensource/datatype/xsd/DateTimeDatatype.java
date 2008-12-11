@@ -1,5 +1,6 @@
 package com.thaiopensource.datatype.xsd;
 
+import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.ValidationContext;
 
 import java.util.Calendar;
@@ -14,6 +15,7 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
   static private final String TZ_PATTERN = "(Z|[+\\-][0-9][0-9]:[0-5][0-9])?";
 
   private final String template;
+  private final String lexicalSpaceKey;
 
   /**
    * The argument specifies the lexical representation accepted:
@@ -27,6 +29,26 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
   DateTimeDatatype(String template) {
     super(makePattern(template));
     this.template = template;
+    this.lexicalSpaceKey = makeLexicalSpaceKey(template);
+  }
+
+  String getLexicalSpaceKey() {
+    return lexicalSpaceKey;
+  }
+
+  static private String makeLexicalSpaceKey(String template) {
+    String key = "";
+    if (template.indexOf('Y') >= 0)
+      key += "_y";
+    if (template.indexOf('M') >= 0)
+      key += "_m";
+    if (template.indexOf('D') >= 0)
+      key += "_d";
+    if (key.length() > 0)
+      key = "date" + key;
+    if (template.indexOf('t') >= 0)
+      key = key.length() > 0 ? key + "_time" : "time";
+    return key;
   }
 
   static private String makePattern(String template) {
@@ -53,10 +75,6 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
     }
     pattern.append(TZ_PATTERN);
     return pattern.toString();
-  }
-
-  boolean allowsValue(String str, ValidationContext vc) {
-    return getValue(str, vc) != null;
   }
 
   static private class DateTime {
@@ -98,7 +116,7 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
 
   // XXX Check leap second validity?
   // XXX Allow 24:00:00?
-  Object getValue(String str, ValidationContext vc) {
+  Object getValue(String str, ValidationContext vc) throws DatatypeException {
     boolean negative = false;
     int year = 2000; // any leap year will do
     int month = 1;
@@ -122,7 +140,7 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
           year = Integer.parseInt(str.substring(yearStartIndex, pos));
         }
         catch (NumberFormatException e) {
-          return null;
+          throw createLexicallyInvalidException();
         }
         break;
       case 'M':
@@ -182,7 +200,7 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
       return new DateTime(date, leapMilliseconds, hasTimeZone);
     }
     catch (IllegalArgumentException e) {
-      return null;
+      throw createLexicallyInvalidException();
     }
   }
 

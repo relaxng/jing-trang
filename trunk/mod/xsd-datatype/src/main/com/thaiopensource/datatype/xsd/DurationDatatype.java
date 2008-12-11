@@ -23,6 +23,10 @@ class DurationDatatype extends RegexDatatype implements OrderRelation {
     return last != 'P' && last != 'T';
   }
 
+  String getLexicalSpaceKey() {
+    return "duration";
+  }
+
   static private class Duration {
     private final BigInteger years;
     private final BigInteger months;

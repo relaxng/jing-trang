@@ -1,8 +1,8 @@
 package com.thaiopensource.datatype.xsd;
 
-import java.math.BigDecimal;
-
 import org.relaxng.datatype.ValidationContext;
+
+import java.math.BigDecimal;
 
 class DecimalDatatype extends DatatypeBase implements OrderRelation {
 
@@ -46,6 +46,10 @@ class DecimalDatatype extends DatatypeBase implements OrderRelation {
       }
     } while (++i < len);
     return true;
+  }
+
+  String getLexicalSpaceKey() {
+    return "decimal";
   }
 
   Object getValue(String str, ValidationContext vc) {

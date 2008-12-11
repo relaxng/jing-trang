@@ -53,6 +53,10 @@ class DoubleDatatype extends DatatypeBase implements OrderRelation {
     return hadDigit;
   }
 
+  String getLexicalSpaceKey() {
+    return "float";
+  }
+
   Object getValue(String str, ValidationContext vc) {
     if (str.equals("INF"))
       return Double.POSITIVE_INFINITY;

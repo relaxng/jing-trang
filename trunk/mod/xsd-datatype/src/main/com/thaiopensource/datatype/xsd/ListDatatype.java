@@ -1,7 +1,8 @@
 package com.thaiopensource.datatype.xsd;
 
-import org.relaxng.datatype.ValidationContext;
 import com.thaiopensource.xml.util.StringSplitter;
+import org.relaxng.datatype.DatatypeException;
+import org.relaxng.datatype.ValidationContext;
 
 class ListDatatype extends DatatypeBase implements Measure {
   private final DatatypeBase itemType;
@@ -10,14 +11,23 @@ class ListDatatype extends DatatypeBase implements Measure {
     this.itemType = itemType;
   }
 
-  Object getValue(String str, ValidationContext vc) {
+  String getLexicalSpaceKey() {
+    return "list_" + itemType.getLexicalSpaceKey();
+  }
+
+  // For a blank string, we want to say we must have
+  // "a whitespace-delimited list with length greater than or equal to 1"
+  // rather than
+  // "a list of XML NMTOKENs with length greater than or equal to 1"
+  String getDescriptionForRestriction() {
+    return getLexicalSpaceDescription("list");
+  }
+
+  Object getValue(String str, ValidationContext vc) throws DatatypeException {
     String[] tokens = StringSplitter.split(str);
     Object[] items = new Object[tokens.length];
-    for (int i = 0; i < items.length; i++) {
+    for (int i = 0; i < items.length; i++)
       items[i] = itemType.getValue(tokens[i], vc);
-      if (items[i] == null)
-	return null;
-    }
     return items;
   }
 
@@ -25,14 +35,6 @@ class ListDatatype extends DatatypeBase implements Measure {
     String[] tokens = StringSplitter.split(str);
     for (int i = 0; i < tokens.length; i++)
       if (!itemType.lexicallyAllows(tokens[i]))
-	return false;
-    return true;
-  }
-
-  boolean allowsValue(String str, ValidationContext vc) {
-    String[] tokens = StringSplitter.split(str);
-    for (int i = 0; i < tokens.length; i++)
-      if (!itemType.allowsValue(tokens[i], vc))
 	return false;
     return true;
   }

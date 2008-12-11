@@ -1,6 +1,7 @@
 package com.thaiopensource.datatype.xsd;
 
 import com.thaiopensource.datatype.Datatype2;
+import com.thaiopensource.util.Localizer;
 import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.DatatypeStreamingValidator;
 import org.relaxng.datatype.ValidationContext;
@@ -32,15 +33,21 @@ abstract class DatatypeBase implements Datatype2 {
   }
 
   public void checkValid(String str, ValidationContext vc) throws DatatypeException {
-    if (!isValid(str, vc))
-      throw new DatatypeException();
+    str = normalizeWhiteSpace(str);
+    checkLexicallyAllows(str);
+    getValue(str, vc);
   }
 
   public Object createValue(String str, ValidationContext vc) {
     str = normalizeWhiteSpace(str);
     if (!lexicallyAllows(str))
       return null;
-    return getValue(str, vc);
+    try {
+      return getValue(str, vc);
+    }
+    catch (DatatypeException e) {
+      return null;
+    }
   }
 
   final String normalizeWhiteSpace(String str) {
@@ -52,16 +59,41 @@ abstract class DatatypeBase implements Datatype2 {
     }
     return str;
   }
-    
-  /* Requires lexicallyAllows to be true.  Must return same value as
-     getValue(str, vc) != null. */
-  boolean allowsValue(String str, ValidationContext vc) {
-    return true;
+
+  void checkLexicallyAllows(String str) throws DatatypeException {
+    if (!lexicallyAllows(str))
+      throw createLexicallyInvalidException();
   }
 
-  /* Requires lexicallyAllows to be true. Returns null if value does not satisfy
+  String getDescriptionForRestriction() {
+    return getLexicalSpaceDescription(getLexicalSpaceKey());
+  }
+
+  final String getLexicalSpaceDescription(String key) {
+    return localizer().message("lexical_space_" + key);
+  }
+
+  abstract String getLexicalSpaceKey();
+
+  DatatypeException createLexicallyInvalidException() {
+    return new DatatypeException(localizer().message("lexical_violation",
+                                                     getLexicalSpaceDescription(getLexicalSpaceKey())));
+  }
+
+  // Requires lexicallyAllows to be true
+  boolean allowsValue(String str, ValidationContext vc) {
+    try {
+      getValue(str, vc);
+      return true;
+    }
+    catch (DatatypeException e) {
+      return false;
+    }
+  }
+
+  /* Requires lexicallyAllows to be true. Throws DatatypeException if value does not satisfy
      constraints on value space. */
-  abstract Object getValue(String str, ValidationContext vc);
+  abstract Object getValue(String str, ValidationContext vc) throws DatatypeException;
   
   OrderRelation getOrderRelation() {
     return null;
@@ -72,7 +104,7 @@ abstract class DatatypeBase implements Datatype2 {
     return null;
   }
 
-  static private final String collapseWhiteSpace(String s) {
+  static private String collapseWhiteSpace(String s) {
     int i = collapseStart(s);
     if (i < 0)
       return s;
@@ -101,7 +133,7 @@ abstract class DatatypeBase implements Datatype2 {
     return buf.toString();
   }
 
-  static private final int collapseStart(String s) {
+  static private int collapseStart(String s) {
     for (int i = 0, len = s.length(); i < len; i++) {
       switch (s.charAt(i)) {
       case ' ':
@@ -117,7 +149,7 @@ abstract class DatatypeBase implements Datatype2 {
     return -1;
   }
 
-  static private final String replaceWhiteSpace(String s) {
+  static private String replaceWhiteSpace(String s) {
     int len = s.length();
     for (int i = 0; i < len; i++)
       switch (s.charAt(i)) {
@@ -166,5 +198,9 @@ abstract class DatatypeBase implements Datatype2 {
 
   public DatatypeStreamingValidator createStreamingValidator(ValidationContext vc) {
     return new StreamingValidatorImpl(this, vc);
+  }
+
+  protected static Localizer localizer() {
+    return DatatypeBuilderImpl.localizer;
   }
 }

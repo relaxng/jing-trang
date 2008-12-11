@@ -52,7 +52,8 @@ class DatatypeBuilderImpl implements DatatypeBuilder {
   private void addPatternParam(String value) throws DatatypeException {
     try {
       base = new PatternRestrictDatatype(base,
-					 library.getRegexEngine().compile(value));
+					 library.getRegexEngine().compile(value),
+                                         value);
     }
     catch (RegexSyntaxException e) {
       int pos = e.getPosition();
@@ -65,35 +66,43 @@ class DatatypeBuilderImpl implements DatatypeBuilder {
   private void addMinInclusiveParam(String value, ValidationContext context)
     throws DatatypeException {
     base = new MinInclusiveRestrictDatatype(base,
-					    getLimit(value, context));
+					    getLimit(value, context),
+                                            value);
   }
 
   private void addMaxInclusiveParam(String value, ValidationContext context)
     throws DatatypeException {
     base = new MaxInclusiveRestrictDatatype(base,
-					    getLimit(value, context));
+					    getLimit(value, context),
+                                            value);
   }
 
   private void addMinExclusiveParam(String value, ValidationContext context)
     throws DatatypeException {
     base = new MinExclusiveRestrictDatatype(base,
-					    getLimit(value, context));
+					    getLimit(value, context),
+                                            value);
   }
 
   private void addMaxExclusiveParam(String value, ValidationContext context)
     throws DatatypeException {
     base = new MaxExclusiveRestrictDatatype(base,
-					    getLimit(value, context));
+					    getLimit(value, context),
+                                            value);
   }
 
   private Object getLimit(String str, ValidationContext context)
     throws DatatypeException {
     if (base.getOrderRelation() == null)
       error("not_ordered");
-    Object value = base.createValue(str, context);
-    if (value == null)
-      error("invalid_limit", str);
-    return value;
+    str = base.normalizeWhiteSpace(str);
+    try {
+      base.checkLexicallyAllows(str);
+      return base.getValue(str, context);
+    }
+    catch (DatatypeException e) {
+      throw new DatatypeException(localizer.message("invalid_limit", str, e.getMessage()));
+    }
   }
 
   private void addLengthParam(String value) throws DatatypeException {
@@ -113,7 +122,7 @@ class DatatypeBuilderImpl implements DatatypeBuilder {
       error("no_length");
     int len = convertNonNegativeInteger(str);
     if (len < 0)
-      error("value_not_non_negative_integer");
+      error("length_not_non_negative_integer");
     return len;
   }
     
@@ -122,7 +131,7 @@ class DatatypeBuilderImpl implements DatatypeBuilder {
       error("scale_not_derived_from_decimal");
     int scale = convertNonNegativeInteger(str);
     if (scale < 0)
-      error("value_not_non_negative_integer");
+      error("scale_not_non_negative_integer");
     base = new ScaleRestrictDatatype(base, scale);
   }
 
@@ -131,7 +140,7 @@ class DatatypeBuilderImpl implements DatatypeBuilder {
       error("precision_not_derived_from_decimal");
     int scale = convertNonNegativeInteger(str);
     if (scale <= 0)
-      error("value_not_positive_integer");
+      error("precision_not_positive_integer");
     base = new PrecisionRestrictDatatype(base, scale);
   }
 

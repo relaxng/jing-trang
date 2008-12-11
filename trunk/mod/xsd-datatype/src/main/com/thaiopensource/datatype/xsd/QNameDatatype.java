@@ -2,6 +2,7 @@ package com.thaiopensource.datatype.xsd;
 
 import com.thaiopensource.xml.util.Name;
 import com.thaiopensource.xml.util.Naming;
+import org.relaxng.datatype.DatatypeException;
 import org.relaxng.datatype.ValidationContext;
 
 class QNameDatatype extends DatatypeBase {
@@ -9,7 +10,11 @@ class QNameDatatype extends DatatypeBase {
     return Naming.isQname(str);
   }
 
-  Object getValue(String str, ValidationContext vc) {
+  String getLexicalSpaceKey() {
+    return "qname";
+  }
+
+  Object getValue(String str, ValidationContext vc) throws DatatypeException {
     int i = str.indexOf(':');
     if (i < 0) {
       String ns = vc.resolveNamespacePrefix("");
@@ -21,7 +26,7 @@ class QNameDatatype extends DatatypeBase {
       String prefix = str.substring(0, i);
       String ns = vc.resolveNamespacePrefix(prefix);
       if (ns == null)
-	return null;
+	throw new DatatypeException(localizer().message("undeclared_prefix", prefix));
       return new Name(ns, str.substring(i + 1));
     }
   }
