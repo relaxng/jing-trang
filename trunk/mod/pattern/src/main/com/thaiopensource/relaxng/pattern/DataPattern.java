@@ -4,14 +4,19 @@ import com.thaiopensource.datatype.Datatype2;
 import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.Datatype;
 
+import java.util.Collections;
+import java.util.List;
+
 class DataPattern extends StringPattern {
   private final Datatype dt;
   private final Name dtName;
+  private final List<String> params;
 
-  DataPattern(Datatype dt, Name dtName) {
+  DataPattern(Datatype dt, Name dtName, List<String> params) {
     super(combineHashCode(DATA_HASH_CODE, dt.hashCode()));
     this.dt = dt;
     this.dtName = dtName;
+    this.params = params;
   }
 
   boolean samePattern(Pattern other) {
@@ -30,6 +35,10 @@ class DataPattern extends StringPattern {
 
   Name getDatatypeName() {
     return dtName;
+  }
+
+  List<String> getParams() {
+    return Collections.unmodifiableList(params);
   }
 
   boolean allowsAnyString() {

@@ -6,6 +6,7 @@ import com.thaiopensource.xml.util.WellKnownNamespaces;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -295,19 +296,26 @@ public class PatternDumper {
     }
 
     public VoidValue caseData(DataPattern p) {
-      startElement("data");
-      final Name dtName = p.getDatatypeName();
-      attribute("type", dtName.getLocalName());
-      attribute("datatypeLibrary", dtName.getNamespaceUri());
+      startData(p);
       endElement();
       return VoidValue.VOID;
     }
 
-    public VoidValue caseDataExcept(DataExceptPattern p) {
+    private void startData(DataPattern p) {
       startElement("data");
       final Name dtName = p.getDatatypeName();
       attribute("type", dtName.getLocalName());
       attribute("datatypeLibrary", dtName.getNamespaceUri());
+      for (Iterator<String> iter = p.getParams().iterator(); iter.hasNext();) {
+        startElement("param");
+        attribute("name", iter.next());
+        data(iter.next());
+        endElement();
+      }
+    }
+
+    public VoidValue caseDataExcept(DataExceptPattern p) {
+      startData(p);
       startElement("except");
       p.getExcept().apply(dumper);
       endElement();
