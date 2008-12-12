@@ -48,19 +48,19 @@ class DataDerivTypeFunction extends AbstractPatternFunction<DataDerivType> {
   }
 
   public DataDerivType caseValue(ValuePattern p) {
-    return new ValueDataDerivType(p.getDatatype());
+    return new ValueDataDerivType(p.getDatatype(), p.getDatatypeName());
   }
 
   public DataDerivType caseData(DataPattern p) {
     if (p.allowsAnyString())
       return new SingleDataDerivType();
-    return new DataDataDerivType(p.getDatatype());
+    return new DataDataDerivType(p);
   }
 
   public DataDerivType caseDataExcept(DataExceptPattern p) {
     if (p.allowsAnyString())
       return apply(p.getExcept());
-    return new DataDataDerivType(p.getDatatype()).combine(apply(p.getExcept()));
+    return new DataDataDerivType(p).combine(apply(p.getExcept()));
   }
 
   private DataDerivType apply(Pattern p) {

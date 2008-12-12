@@ -4,6 +4,7 @@ import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.ValidationContext;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 final class PatternMemo {
@@ -185,7 +186,7 @@ final class PatternMemo {
     return dataDerivType().dataDeriv(builder, pattern, str, vc, null);
   }
 
-  PatternMemo dataDeriv(String str, ValidationContext vc, DataDerivFailure fail) {
+  PatternMemo dataDeriv(String str, ValidationContext vc, List<DataDerivFailure> fail) {
     return dataDerivType().dataDeriv(builder, pattern, str, vc, fail);
   }
 
