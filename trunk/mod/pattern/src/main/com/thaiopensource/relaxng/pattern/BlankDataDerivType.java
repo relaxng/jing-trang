@@ -2,6 +2,8 @@ package com.thaiopensource.relaxng.pattern;
 
 import org.relaxng.datatype.ValidationContext;
 
+import java.util.List;
+
 class BlankDataDerivType extends DataDerivType {
   private PatternMemo blankMemo;
   private PatternMemo nonBlankMemo;
@@ -9,15 +11,15 @@ class BlankDataDerivType extends DataDerivType {
   BlankDataDerivType() { }
 
   PatternMemo dataDeriv(ValidatorPatternBuilder builder, Pattern p, String str, ValidationContext vc,
-                        DataDerivFailure fail) {
+                        List<DataDerivFailure> fail) {
     if (DataDerivFunction.isBlank(str)) {
-      if (blankMemo == null)
-        blankMemo = super.dataDeriv(builder, p, str, vc, null);
+      if (blankMemo == null || (fail != null && blankMemo.isNotAllowed()))
+        blankMemo = super.dataDeriv(builder, p, str, vc, fail);
       return blankMemo;
     }
     else {
-      if (nonBlankMemo == null)
-        nonBlankMemo = super.dataDeriv(builder, p, str, vc, null);
+      if (nonBlankMemo == null || (fail != null && nonBlankMemo.isNotAllowed()))
+        nonBlankMemo = super.dataDeriv(builder, p, str, vc, fail);
       return nonBlankMemo;
     }
   }

@@ -1,10 +1,12 @@
 package com.thaiopensource.relaxng.pattern;
 
+import com.thaiopensource.datatype.Datatype2;
 import com.thaiopensource.relaxng.match.MatchContext;
 import com.thaiopensource.relaxng.match.Matcher;
 import com.thaiopensource.util.Equal;
 import com.thaiopensource.util.Localizer;
 import com.thaiopensource.xml.util.Name;
+import org.relaxng.datatype.Datatype;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,8 +53,7 @@ public class PatternMatcher implements Cloneable, Matcher {
   private boolean ignoreNextEndTagOrAttributeValue;
   private String errorMessage;
   private final Shared shared;
-  private DataDerivFailure dataDerivFailure = new DataDerivFailure();
-
+  private List<DataDerivFailure> dataDerivFailureList = new ArrayList<DataDerivFailure>();
 
   public PatternMatcher(Pattern start, ValidatorPatternBuilder builder) {
     shared = new Shared(start, builder);
@@ -88,7 +89,7 @@ public class PatternMatcher implements Cloneable, Matcher {
   public final Object clone() {
     try {
       PatternMatcher cloned = (PatternMatcher)super.clone();
-      cloned.dataDerivFailure = new DataDerivFailure();
+      cloned.dataDerivFailureList = new ArrayList<DataDerivFailure>();
       return cloned;
     }
     catch (CloneNotSupportedException e) {
@@ -163,17 +164,11 @@ public class PatternMatcher implements Cloneable, Matcher {
       ignoreNextEndTagOrAttributeValue = false;
       return true;
     }
-    dataDerivFailure.reset();
-    if (setMemo(memo.dataDeriv(value, context, dataDerivFailure)))
+    dataDerivFailureList.clear();
+    if (setMemo(memo.dataDeriv(value, context, dataDerivFailureList)))
       return true;
-    boolean ok = ignoreError();
-    if (!ok) {
-      if (dataDerivFailure.isSet())
-        error("attribute_value_invalid_token",
-              errorArgQName(qName, name, context, true),
-              dataDerivFailure.substring(value));
-      error("invalid_attribute_value", errorArgQName(qName, name, context, true));
-    }
+    boolean ok = error("invalid_attribute_value", errorArgQName(qName, name, context, true),
+                       formatDataDerivFailures(value, context));
     memo = memo.recoverAfter();
     return ok;
   }
@@ -233,8 +228,8 @@ public class PatternMatcher implements Cloneable, Matcher {
   private boolean setDataDeriv(String string, Name name, String qName, MatchContext context) {
     textTyped = false;
     PatternMemo textOnlyMemo = memo.textOnly();
-    dataDerivFailure.reset();
-    if (setMemo(textOnlyMemo.dataDeriv(string, context, dataDerivFailure)))
+    dataDerivFailureList.clear();
+    if (setMemo(textOnlyMemo.dataDeriv(string, context, dataDerivFailureList)))
       return true;
     PatternMemo next = memo.recoverAfter();
     boolean ok = ignoreError();
@@ -245,12 +240,9 @@ public class PatternMatcher implements Cloneable, Matcher {
         error("blank_not_allowed",
               errorArgQName(qName, name, context, false),
               expectedContent(context));
-      else if (dataDerivFailure.isSet())
-        error("element_content_invalid_token",
-              errorArgQName(qName, name, context, false),
-              dataDerivFailure.substring(string));
       else
-        error("invalid_element_value", errorArgQName(qName, name, context, false));
+        error("invalid_element_value", errorArgQName(qName, name, context, false),
+              formatDataDerivFailures(string, context));
     }
     memo = next;
     return ok;
@@ -373,6 +365,98 @@ public class PatternMatcher implements Cloneable, Matcher {
     return quoteQName(qName);
   }
 
+  static private final int UNDEFINED_TOKEN_INDEX = -3;
+  static private final int INCONSISTENT_TOKEN_INDEX = -2;
+  
+  private String formatDataDerivFailures(String str, MatchContext context) {
+    if (ignoreError())
+      return null;
+    if (dataDerivFailureList.size() == 0)
+      return "";
+    if (dataDerivFailureList.size() > 1) {
+      // remove duplicates
+      Set<DataDerivFailure> failures = new HashSet<DataDerivFailure>();
+      failures.addAll(dataDerivFailureList);
+      dataDerivFailureList.clear();
+      dataDerivFailureList.addAll(failures);
+    }
+    List<String> stringValues = new ArrayList<String>();
+    Set<Name> names = new HashSet<Name>();
+    List<String> messages = new ArrayList<String>();
+    int tokenIndex = UNDEFINED_TOKEN_INDEX;
+    int tokenStart = -1;
+    int tokenEnd = -1;
+    for (DataDerivFailure fail : dataDerivFailureList) {
+      Datatype dt = fail.getDatatype();
+      String s = fail.getStringValue();
+      if (s != null) {
+        Object value = fail.getValue();
+        // we imply some special semantics for Datatype2
+        if (value instanceof Name && dt instanceof Datatype2)
+          names.add((Name)value);
+        else if (value instanceof String && dt instanceof Datatype2)
+          stringValues.add((String)value);
+        else
+          stringValues.add(s);
+      }
+      else {
+        String message = fail.getMessage();
+        // XXX this might produce strangely worded messages for 3rd party datatype libraries
+        if (message != null)
+          messages.add(message);
+        else if (fail.getExcept() != null)
+          return ""; // XXX do better for except
+        else
+          messages.add(localizer().message("require_datatype",
+                                           fail.getDatatypeName().getLocalName()));
+      }
+      switch (tokenIndex) {
+      case INCONSISTENT_TOKEN_INDEX:
+        break;
+      case UNDEFINED_TOKEN_INDEX:
+        tokenIndex = fail.getTokenIndex();
+        tokenStart = fail.getTokenStart();
+        tokenEnd = fail.getTokenEnd();
+        break;
+      default:
+        if (tokenIndex != fail.getTokenIndex())
+          tokenIndex = INCONSISTENT_TOKEN_INDEX;
+        break;
+      }
+    }
+    if (stringValues.size() > 0) {
+      Collections.sort(stringValues);
+      for (int i = 0; i < stringValues.size(); i++)
+        stringValues.set(i, quoteValue(stringValues.get(i)));
+      messages.add(localizer().message("require_values",
+                                       formatList(stringValues, "or")));
+    }
+    if (names.size() > 0)
+      // XXX provide the strings as well so that a sensible prefix can be chosen if none is declared
+      messages.add(localizer().message("require_qnames",
+                                       formatNames(names,
+                                                   FORMAT_NAMES_OR|FORMAT_NAMES_ELEMENT,
+                                                   context)));
+    if (messages.size() == 0)
+      return "";
+    String arg = formatList(messages, "or");
+    // XXX should do something with inconsistent token index (e.g. list { integer+ } | "foo" )
+    if (tokenIndex >= 0 && tokenStart >= 0 && tokenEnd <= str.length()) {
+      if (tokenStart == str.length())
+        return localizer().message("missing_token", arg);
+      return localizer().message("token_failures",
+                                 quoteValue(str.substring(tokenStart, tokenEnd)),
+                                 arg);
+    }
+    return localizer().message("data_failures", arg);
+  }
+
+  private String quoteValue(String str) {
+    StringBuilder buf = new StringBuilder();
+    appendAttributeValue(buf, str);
+    return buf.toString();
+  }
+
   private String expectedAttributes(MatchContext context) {
     if (ignoreError())
       return null;
@@ -430,6 +514,7 @@ public class PatternMatcher implements Cloneable, Matcher {
       return "";
     }
     Set<Name> expectedNames = nnc.getIncludedNames();
+    // XXX if the pattern is nullable, say something about the end-tag being allowed
     // XXX say something about wildcards
     if (!expectedNames.isEmpty()) {
       if (nnc.isAnyNameIncluded() || !nnc.getIncludedNamespaces().isEmpty())
@@ -504,9 +589,8 @@ public class PatternMatcher implements Cloneable, Matcher {
     else
       choosePrefixes(undeclaredNamespaces, context, nsDecls);
     // now nsDecls has a prefix for each namespace
-    for (Name name : namesWithUndeclaredNamespaces) {
+    for (Name name : namesWithUndeclaredNamespaces)
       qNames.add(makeQName(nsDecls.get(name.getNamespaceUri()), name.getLocalName()));
-    }
     return qNames;
   }
 
@@ -565,23 +649,8 @@ public class PatternMatcher implements Cloneable, Matcher {
         buf.append("xmlns");
       else
         buf.append("xmlns:").append(prefix);
-      buf.append("=\"");
-      String ns = entry.getKey();
-      for (int i = 0; i < ns.length(); i++) {
-        char c = ns.charAt(i);
-        switch (c) {
-        case '<':
-          buf.append("&lt;");
-          break;
-        case '"':
-          buf.append("&quot;");
-          break;
-        default:
-          buf.append(c);
-          break;
-        }
-      }
-      buf.append('"');
+      buf.append('=');
+      appendAttributeValue(buf, entry.getKey());
       list.add(buf.toString());
     }
     Collections.sort(list);
@@ -592,6 +661,38 @@ public class PatternMatcher implements Cloneable, Matcher {
       buf.append(aList);
     }
     return buf.toString();
+  }
+
+  private static String quoteForAttributeValue(char c) {
+    switch (c) {
+    case '<':
+      return "&lt;";
+    case '"':
+      return "&quot;";
+    case '&':
+      return "&amp;";
+    case 0xA:
+      return "&#xA;";
+    case 0xD:
+      return "&#xD;";
+    case 0x9:
+      return "&#x9;";
+    }
+    return null;
+  }
+
+  private static StringBuilder appendAttributeValue(StringBuilder buf, String value) {
+    buf.append('"');
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      String quoted = quoteForAttributeValue(c);
+      if (quoted != null)
+        buf.append(quoted);
+      else
+        buf.append(c);
+    }
+    buf.append('"');
+    return buf;
   }
 
   private static String makeQName(String prefix, String localName) {

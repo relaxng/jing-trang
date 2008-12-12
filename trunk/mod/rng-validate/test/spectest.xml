@@ -7043,4 +7043,143 @@ before string sequence checking.</documentation>
 </invalid>
 </testCase>
 </testSuite>
+<testSuite>
+<documentation>Datatype error reporting</documentation>
+<requires datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"/>
+<testCase>
+<correct>
+<element name="foo"
+	 xmlns="http://relaxng.org/ns/structure/1.0"
+	 datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <choice>
+    <value>x</value>
+    <value>y</value>
+  </choice>
+</element>
+</correct>
+<valid>
+<foo>x</foo>
+</valid>
+<invalid>
+<foo/>
+</invalid>
+<invalid>
+<foo>z</foo>
+</invalid>
+</testCase>
+<testCase>
+<correct>
+<element name="foo"
+	 xmlns="http://relaxng.org/ns/structure/1.0"
+	 datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <attribute name="bar">
+    <choice>
+      <value>x</value>
+      <value>y</value>
+    </choice>
+  </attribute>
+</element>
+</correct>
+<valid>
+<foo bar="x"/>
+</valid>
+<invalid>
+<foo/>
+</invalid>
+<invalid>
+<foo bar=""/>
+</invalid>
+<invalid>
+<foo bar="z"/>
+</invalid>
+</testCase>
+<testCase>
+<correct>
+<element name="foo"
+	 xmlns="http://relaxng.org/ns/structure/1.0"
+	 datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <attribute name="bar">
+    <choice>
+      <data type="NCName"/>
+      <value>#none</value>
+    </choice>
+  </attribute>
+</element>
+</correct>
+<valid>
+<foo bar="x"/>
+</valid>
+<valid>
+<foo bar="#none"/>
+</valid>
+<invalid>
+<foo/>
+</invalid>
+<invalid>
+<foo bar=""/>
+</invalid>
+<invalid>
+<foo bar="#any"/>
+</invalid>
+</testCase>
+<testCase>
+<correct>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+	 datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+<start>
+  <element name="foo"><ref name="content"/></element>
+</start>
+
+<define name="content">
+  <list>
+    <oneOrMore>
+      <choice>
+        <group>
+	  <ref name="d"/>
+	  <ref name="d"/>
+	</group>
+        <group>
+	  <value>rgb</value>
+	  <ref name="d"/>
+	  <ref name="d"/>
+	  <ref name="d"/>
+	</group>
+      </choice>
+    </oneOrMore>
+  </list>
+</define>
+
+<define name="d">
+  <data type="double">
+    <param name="minInclusive">0</param>
+    <param name="maxInclusive">1</param>
+  </data>
+</define>
+
+</grammar>
+</correct>
+<valid>
+<foo>0.5 0.5</foo>
+</valid>
+<invalid>
+<foo/>
+</invalid>
+<valid>
+<foo>0.5 0.4 rgb 0.9 0.8 0.8</foo>
+</valid>
+<invalid>
+<foo>0.5 0.4 rgb 0.9 1.1 0.8</foo>
+</invalid>
+<invalid>
+<foo>0.5 0.4 rgb -0.9 0.8 0.8</foo>
+</invalid>
+<invalid>
+<foo>0.5 0.4 rb 0.9 0.8 0.8</foo>
+</invalid>
+<invalid>
+<foo>0.5 0.4 rgb 0.9 0.8</foo>
+</invalid>
+</testCase>
+</testSuite>
 </testSuite>
