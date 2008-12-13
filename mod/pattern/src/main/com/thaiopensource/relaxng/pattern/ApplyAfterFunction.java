@@ -21,7 +21,7 @@ abstract class ApplyAfterFunction extends AbstractPatternFunction<Pattern> {
   }
 
   public Pattern caseOther(Pattern p) {
-    throw new RuntimeException("apply after botch");
+    throw new AssertionError("ApplyAfterFunction applied to " + p.getClass().getName());
   }
 
   abstract Pattern apply(Pattern p);
