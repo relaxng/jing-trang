@@ -108,8 +108,8 @@ public class PatternMatcher implements Cloneable, Matcher {
     if (setMemo(memo.startTagOpenDeriv(name)))
       return true;
     PatternMemo next = memo.startTagOpenRecoverDeriv(name);
+    boolean ok = ignoreError();
     if (!next.isNotAllowed()) {
-      boolean ok = ignoreError();
       if (!ok) {
         Set<Name> missing = requiredElementNames();
         if (!missing.isEmpty())
@@ -123,14 +123,15 @@ public class PatternMatcher implements Cloneable, Matcher {
                 errorArgQName(qName, name, context, false),
                 expectedContent(context));
       }
-      memo = next;
-      return ok;
     }
-    ValidatorPatternBuilder builder = shared.builder;
-    next = builder.getPatternMemo(builder.makeAfter(shared.findElement(name), memo.getPattern()));
-    boolean ok = error(next.isNotAllowed() ? "unknown_element" : "out_of_context_element",
-                       errorArgQName(qName, name, context, false),
-                       expectedContent(context));
+    else {
+      final ValidatorPatternBuilder builder = shared.builder;
+      next = builder.getPatternMemo(builder.makeAfter(shared.findElement(name), memo.getPattern()));
+      if (!ok)
+        error(next.isNotAllowed() ? "unknown_element" : "out_of_context_element",
+              errorArgQName(qName, name, context, false),
+              expectedContent(context));
+    }
     memo = next;
     return ok;
   }
@@ -468,61 +469,35 @@ public class PatternMatcher implements Cloneable, Matcher {
   private String expectedContent(MatchContext context) {
     if (ignoreError())
       return null;
-    return expectedContent(memo, context);
-  }
-
-  private static String expectedContent(PatternMemo memo, MatchContext context) {
-    // this shouldn't happen, but just in case
-    if (memo.isNotAllowed())
-      return "";
-    // getContentType isn't so well defined for after patterns    
-    memo = memo.emptyAfter();
-    int contentType = memo.getPattern().getContentType();
-    if (contentType == Pattern.EMPTY_CONTENT_TYPE)
-      return localizer().message("expected_end_element");
-    NormalizedNameClass nnc = memo.possibleStartTagNames();
-    if (nnc.isEmpty()) {
-      switch (contentType) {
-      case Pattern.MIXED_CONTENT_TYPE:
-        return localizer().message("expected_text");
-      case Pattern.DATA_CONTENT_TYPE:
-        return localizer().message("expected_data");
-      default:
-        // this shouldn't happen, but just in case
-        return "";
-      }
-    }
-    String key;
-    switch (contentType) {
+    List<String> expected = new ArrayList<String>();
+    if (!memo.endTagDeriv().isNotAllowed())
+      expected.add(localizer().message("element_end_tag"));
+    // getContentType isn't so well-defined on after patterns
+    switch (memo.emptyAfter().getPattern().getContentType()) {
     case Pattern.MIXED_CONTENT_TYPE:
       // A pattern such as (element foo { empty }, text) has a MIXED_CONTENT_TYPE
       // but text is not allowed everywhere.
-      if (!memo.mixedTextDeriv().isNotAllowed()) {
-        key = "expected_text_or_element";
-        break;
-      }
-      // fall through
-    case Pattern.ELEMENT_CONTENT_TYPE:
-      key = "expected_element";
+      if (!memo.mixedTextDeriv().isNotAllowed())
+        expected.add(localizer().message("text"));
       break;
     case Pattern.DATA_CONTENT_TYPE:
-      key = "expected_data_or_element";
+      expected.add(localizer().message("data"));
       break;
-    default:
-      return "";
     }
+    NormalizedNameClass nnc = memo.possibleStartTagNames();
     Set<Name> expectedNames = nnc.getIncludedNames();
-    // XXX if the pattern is nullable, say something about the end-tag being allowed
     // XXX say something about wildcards
     if (!expectedNames.isEmpty()) {
+      expected.add(localizer().message("element_list",
+                                       formatNames(expectedNames,
+                                                   FORMAT_NAMES_ELEMENT|FORMAT_NAMES_OR,
+                                                   context)));
       if (nnc.isAnyNameIncluded() || !nnc.getIncludedNamespaces().isEmpty())
-        key += "_or_other_ns";
-      return localizer().message(key, formatNames(expectedNames,
-                                                  FORMAT_NAMES_ELEMENT|FORMAT_NAMES_OR,
-                                                  context));
+        expected.add(localizer().message("element_other_ns"));
     }
-    // give up for now
-    return "";
+    if (expected.isEmpty())
+      return "";
+    return localizer().message("expected", formatList(expected, "or"));
   }
 
   static final String GENERATED_PREFIXES[] = { "ns", "ns-", "ns_", "NS", "NS-", "NS_"};
