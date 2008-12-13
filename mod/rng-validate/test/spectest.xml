@@ -7181,5 +7181,26 @@ before string sequence checking.</documentation>
 <foo>0.5 0.4 rgb 0.9 0.8</foo>
 </invalid>
 </testCase>
+<testCase>
+<correct>
+<element name="foo"
+	 xmlns="http://relaxng.org/ns/structure/1.0"
+	 datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <element name="bar">
+    <choice>
+      <value>x</value>
+      <value>y</value>
+    </choice>
+  </element>
+  <element name="baz"><empty/></element>
+</element>
+</correct>
+<valid>
+<foo><bar>x</bar><baz/></foo>
+</valid>
+<invalid>
+<foo><bar>z</bar><baz/></foo>
+</invalid>
+</testCase>
 </testSuite>
 </testSuite>

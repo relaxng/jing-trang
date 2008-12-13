@@ -37,14 +37,6 @@ public class PatternMatcher implements Cloneable, Matcher {
       }
       return p;
     }
-
-    PatternMemo fixAfter(PatternMemo p) {
-      return builder.getPatternMemo(p.getPattern().apply(new ApplyAfterFunction(builder) {
-        Pattern apply(Pattern p) {
-          return builder.makeEmpty();
-        }
-      }));
-    }
   }
 
   private PatternMemo memo;
@@ -234,7 +226,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     PatternMemo next = memo.recoverAfter();
     boolean ok = ignoreError();
     if (!ok && (!next.isNotAllowed()
-                || shared.fixAfter(textOnlyMemo).dataDeriv(string, context).isNotAllowed())) {
+                || textOnlyMemo.emptyAfter().dataDeriv(string, context).isNotAllowed())) {
       NormalizedNameClass nnc = memo.possibleStartTagNames();
       if (!nnc.isEmpty() && DataDerivFunction.isBlank(string))
         error("blank_not_allowed",
@@ -263,7 +255,7 @@ public class PatternMatcher implements Cloneable, Matcher {
     // is notAllowed; we don't want to give an error in this case.
     if (!ok && (!next.isNotAllowed()
                 // Retry computing the deriv on a pattern where the after is OK (not notAllowed)
-                || shared.fixAfter(memo).endTagDeriv().isNotAllowed())) {
+                || memo.emptyAfter().endTagDeriv().isNotAllowed())) {
       Set<Name> missing = requiredElementNames();
       if (!missing.isEmpty())
         error(missing.size() == 1
