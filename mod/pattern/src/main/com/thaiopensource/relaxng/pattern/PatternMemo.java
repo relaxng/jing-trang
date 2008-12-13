@@ -203,6 +203,11 @@ final class PatternMemo {
         Pattern apply(Pattern p) {
           return builder.makeEmpty();
         }
+
+        // allow emptyAfter to be applied to anything
+        public Pattern caseOther(Pattern p) {
+          return p;
+        }
       });
     return memoEmptyAfter;
   }
