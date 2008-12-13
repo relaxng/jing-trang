@@ -468,9 +468,15 @@ public class PatternMatcher implements Cloneable, Matcher {
   private String expectedContent(MatchContext context) {
     if (ignoreError())
       return null;
+    return expectedContent(memo, context);
+  }
+
+  private static String expectedContent(PatternMemo memo, MatchContext context) {
     // this shouldn't happen, but just in case
     if (memo.isNotAllowed())
       return "";
+    // getContentType isn't so well defined for after patterns    
+    memo = memo.emptyAfter();
     int contentType = memo.getPattern().getContentType();
     if (contentType == Pattern.EMPTY_CONTENT_TYPE)
       return localizer().message("expected_end_element");
