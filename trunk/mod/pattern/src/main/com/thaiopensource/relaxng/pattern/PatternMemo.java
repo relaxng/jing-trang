@@ -21,6 +21,7 @@ final class PatternMemo {
   private Map<Name, PatternMemo> startAttributeDerivMap;
   private DataDerivType memoDataDerivType;
   private PatternMemo memoRecoverAfter;
+  private PatternMemo memoEmptyAfter;
   private NormalizedNameClass memoPossibleAttributeNames;
   private NormalizedNameClass memoPossibleStartTagNames;
 
@@ -194,6 +195,16 @@ final class PatternMemo {
     if (memoRecoverAfter == null)
       memoRecoverAfter = applyForPatternMemo(builder.getRecoverAfterFunction());
     return memoRecoverAfter;
+  }
+
+  PatternMemo emptyAfter() {
+    if (memoEmptyAfter == null)
+      memoEmptyAfter = applyForPatternMemo(new ApplyAfterFunction(builder) {
+        Pattern apply(Pattern p) {
+          return builder.makeEmpty();
+        }
+      });
+    return memoEmptyAfter;
   }
 
   NormalizedNameClass possibleStartTagNames() {
