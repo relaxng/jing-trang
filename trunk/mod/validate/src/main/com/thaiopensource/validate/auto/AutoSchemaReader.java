@@ -43,9 +43,12 @@ public class AutoSchemaReader extends AbstractSchemaReader {
     in2.setPublicId(in.getPublicId());
     in2.setEncoding(in.getEncoding());
     Rewindable rewindable;
-    if (in.getCharacterStream() != null)
-      throw new IllegalArgumentException("character stream input sources not supported for auto-detection");
-    else {
+    if (in.getCharacterStream() != null) {
+      RewindableReader rewindableReader = new RewindableReader(in.getCharacterStream());
+      in.setCharacterStream(rewindableReader);
+      in2.setCharacterStream(rewindableReader);
+      rewindable = rewindableReader;    
+    } else {
       InputStream byteStream = in.getByteStream();
       RewindableInputStream rewindableByteStream = new RewindableInputStream(byteStream);
       in.setByteStream(rewindableByteStream);
