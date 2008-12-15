@@ -48,7 +48,8 @@ public class AutoSchemaReader extends AbstractSchemaReader {
       in.setCharacterStream(rewindableReader);
       in2.setCharacterStream(rewindableReader);
       rewindable = rewindableReader;    
-    } else {
+    }
+    else {
       InputStream byteStream = in.getByteStream();
       RewindableInputStream rewindableByteStream = new RewindableInputStream(byteStream);
       in.setByteStream(rewindableByteStream);
