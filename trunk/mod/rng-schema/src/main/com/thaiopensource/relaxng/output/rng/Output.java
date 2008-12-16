@@ -402,7 +402,10 @@ class Output implements PatternVisitor<VoidValue>, NameClassVisitor<VoidValue>, 
     if (c.getCombine() != null)
       xw.attribute("combine", c.getCombine().toString());
     innerAnnotations(c);
-    implicitGroup(c.getBody());
+    if (name == DefineComponent.START)
+      c.getBody().accept(this);
+    else
+      implicitGroup(c.getBody());
     end(c);
     return VoidValue.VOID;
   }

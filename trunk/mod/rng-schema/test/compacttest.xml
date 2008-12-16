@@ -2443,6 +2443,40 @@ xmlAttribute =
 </correct>
 </xml>
 </testCase>
+<testCase>
+<compact>
+<correct>
+start = element foo {
+	  grammar {
+	    start = element bar { text }, element doh {text}
+	  }
+	}
+</correct>
+</compact>
+<xml>
+<correct>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <element name="foo">
+      <grammar>
+        <start>
+          <group>
+	    <element name="bar">
+	      <text/>
+	    </element>
+	    <element name="doh">
+	      <text/>
+	    </element>
+	   </group>
+        </start>
+      </grammar>
+    </element>
+  </start>
+</grammar>
+
+</correct>
+</xml>
+</testCase>
 <!--
 <testCase>
 <compact>
