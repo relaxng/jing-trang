@@ -1,8 +1,10 @@
 package com.thaiopensource.relaxng.util;
 
+import com.thaiopensource.resolver.catalog.CatalogResolver;
 import com.thaiopensource.util.Localizer;
 import com.thaiopensource.util.OptionParser;
 import com.thaiopensource.util.PropertyMapBuilder;
+import com.thaiopensource.util.UriOrFile;
 import com.thaiopensource.util.Version;
 import com.thaiopensource.validate.Flag;
 import com.thaiopensource.validate.FlagOption;
@@ -19,6 +21,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 class Driver {
   static private String usageKey = "usage";
@@ -37,19 +41,23 @@ class Driver {
 
   public int doMain(String[] args) {
     ErrorHandlerImpl eh = new ErrorHandlerImpl(System.out);
-    OptionParser op = new OptionParser("itcdfe:p:s", args);
+    OptionParser op = new OptionParser("itcdfe:p:sC:", args);
     PropertyMapBuilder properties = new PropertyMapBuilder();
     properties.put(ValidateProperty.ERROR_HANDLER, eh);
     RngProperty.CHECK_ID_IDREF.add(properties);
     SchemaReader sr = null;
     boolean compact = false;
     boolean outputSimplifiedSchema = false;
+    List<String> catalogUris = new ArrayList<String>();
 
     try {
       while (op.moveToNextOption()) {
         switch (op.getOptionChar()) {
         case 'i':
           properties.put(RngProperty.CHECK_ID_IDREF, null);
+          break;
+        case 'C':
+          catalogUris.add(UriOrFile.toUri(op.getOptionArg()));
           break;
         case 'c':
           compact = true;
@@ -106,6 +114,15 @@ class Driver {
     catch (OptionParser.MissingArgumentException e) {
       eh.print(localizer.message("option_missing_argument", op.getOptionCharString()));
       return 2;
+    }
+    if (!catalogUris.isEmpty()) {
+      try {
+        properties.put(ValidateProperty.RESOLVER, new CatalogResolver(catalogUris));
+      }
+      catch (LinkageError e) {
+        eh.print(localizer.message("resolver_not_found"));
+        return 2;
+      }
     }
     if (compact)
       sr = CompactSchemaReader.getInstance();
