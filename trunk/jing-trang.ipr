@@ -9,9 +9,7 @@
       <maximumHeapSize value="128" />
       <maximumStackSize value="32" />
       <properties />
-      <executeOn event="beforeRun" target="services" runConfigurationType="Application" runConfigurationName="Jing" />
-      <executeOn event="beforeRun" target="services" runConfigurationType="Application" runConfigurationName="Trang" />
-      <executeOn event="beforeRun" target="services" runConfigurationType="Application" runConfigurationName="mns-test" />
+      <executeOn event="beforeRun" target="services" />
     </buildFile>
   </component>
   <component name="BuildJarProjectSettings">
@@ -160,6 +158,15 @@
         </inspection_tool>
         <inspection_tool class="OctalLiteral" level="WARNING" enabled="false" />
         <inspection_tool class="ThrowableInstanceNeverThrown" level="WARNING" enabled="false" />
+        <inspection_tool class="Since15" level="ERROR" enabled="true">
+          <option name="FORBID_15_API" value="false" />
+          <option name="FORBID_16_API" value="true" />
+        </inspection_tool>
+        <inspection_tool class="EmptyCatchBlock" level="WARNING" enabled="false">
+          <option name="m_includeComments" value="true" />
+          <option name="m_ignoreTestCases" value="true" />
+          <option name="m_ignoreIgnoreParameter" value="true" />
+        </inspection_tool>
       </profile>
       <profile version="1.0" is_locked="false">
         <option name="myName" value="Project Default" />
@@ -345,6 +352,7 @@
   <component name="ProjectFileVersion" converted="true" />
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/mod/catalog/catalog.iml" filepath="$PROJECT_DIR$/mod/catalog/catalog.iml" group="Common" />
       <module fileurl="file://$PROJECT_DIR$/mod/convert-from-dtd/convert-from-dtd.iml" filepath="$PROJECT_DIR$/mod/convert-from-dtd/convert-from-dtd.iml" group="Trang" />
       <module fileurl="file://$PROJECT_DIR$/mod/convert-from-xml/convert-from-xml.iml" filepath="$PROJECT_DIR$/mod/convert-from-xml/convert-from-xml.iml" group="Trang" />
       <module fileurl="file://$PROJECT_DIR$/mod/convert-to-dtd/convert-to-dtd.iml" filepath="$PROJECT_DIR$/mod/convert-to-dtd/convert-to-dtd.iml" group="Trang" />
@@ -494,6 +502,13 @@
     <library name="testng">
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/lib/testng.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="resolver">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/resolver.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />
