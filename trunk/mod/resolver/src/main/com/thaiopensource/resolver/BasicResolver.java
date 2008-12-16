@@ -43,11 +43,14 @@ public class BasicResolver implements Resolver {
 
   public static String resolveUri(Identifier id) throws ResolverException {
     try {
-      URI uri = new URI(id.getUriReference());
-      String base = id.getBase();
-      if (base != null)
-        uri = new URI(base).resolve(uri);
-      return uri.toString();
+      final String uriRef = id.getUriReference();
+      URI uri = new URI(uriRef);
+      if (!uri.isAbsolute()) {
+        String base = id.getBase();
+        if (base != null)
+          return new URI(base).resolve(uri).toString();
+      }
+      return uriRef;
     }
     catch (URISyntaxException e) {
       throw new ResolverException(e);
