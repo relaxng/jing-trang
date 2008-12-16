@@ -9,9 +9,7 @@ declared namespaces.
 
 Handle wildcards better in possibleContent/possibleAttributes.
 
-Enumerated values.
-
-Datatype errors.
+Provide matcher interface giving possible values.
 
 Diagnose missing namespace declaration
 
@@ -20,18 +18,18 @@ messages when no prefix is declared for a namespace.
 
 Use IntersectionNameClassNormalizer in DuplicateAttributeDetector.
 
-Use IntersectionNameClassNormalized in Alphabet.
+Use IntersectionNameClassNormalizer in Alphabet.
 
 Make Matcher available as a property of Validator/ValidatorHandler.  No need for other
 ways to get a Matcher.
 
-In ValidatorHandler ignore attributes that are xmlns:*.
+In ValidatorHandler ignore attributes that are xmlns or xmlns:*.
 
 Support feasible feature for JAXP.
 
 Support check-id-idref feature for JAXP.
 
-Support URIResolver, EntityResolver properties for JAXP.
+Support URIResolver, EntityResolver, Resolver properties for JAXP.
 
 Add JingTask parameter(s) to specify the resolver.
 
