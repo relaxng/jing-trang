@@ -18,6 +18,7 @@ import com.thaiopensource.relaxng.output.rng.RngOutputFormat;
 import com.thaiopensource.relaxng.output.xsd.XsdOutputFormat;
 import com.thaiopensource.relaxng.translate.util.InvalidParamsException;
 import com.thaiopensource.resolver.Resolver;
+import com.thaiopensource.resolver.catalog.CatalogResolver;
 import com.thaiopensource.util.Localizer;
 import com.thaiopensource.util.OptionParser;
 import com.thaiopensource.util.UriOrFile;
@@ -27,8 +28,8 @@ import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 public class Driver {
   static private final Localizer localizer = new Localizer(Driver.class);
@@ -44,13 +45,17 @@ public class Driver {
   }
 
   private int doMain(String[] args) {
-    List<String> inputParams = new Vector<String>();
-    List<String> outputParams = new Vector<String>();
+    List<String> inputParams = new ArrayList<String>();
+    List<String> outputParams = new ArrayList<String>();
+    List<String> catalogUris = new ArrayList<String>();
     try {
-      OptionParser op = new OptionParser("I:O:i:o:", args);
+      OptionParser op = new OptionParser("C:I:O:i:o:", args);
       try {
         while (op.moveToNextOption()) {
           switch (op.getOptionChar()) {
+          case 'C':
+            catalogUris.add(UriOrFile.toUri(op.getOptionArg()));
+            break;
           case 'I':
             inputType = op.getOptionArg();
             break;
@@ -117,10 +122,21 @@ public class Driver {
         error(localizer.message("unrecognized_output_type", outputType));
         return 2;
       }
-      String[] inputParamArray = inputParams.toArray(new String[0]);
+      Resolver resolver;
+      if (catalogUris.isEmpty())
+        resolver = null;
+      else {
+        try {
+          resolver = new CatalogResolver(catalogUris);
+        }
+        catch (LinkageError e) {
+          eh.print(localizer.message("resolver_not_found"));
+          return 2;
+        }
+      }
+      String[] inputParamArray = inputParams.toArray(new String[inputParams.size()]);
       outputType = outputType.toLowerCase();
       SchemaCollection sc;
-      Resolver resolver = null;
       if (args.length > 2) {
         if (!(inFormat instanceof MultiInputFormat)) {
           error(localizer.message("too_many_arguments"));
@@ -141,7 +157,7 @@ public class Driver {
                                                     DEFAULT_OUTPUT_ENCODING,
                                                     DEFAULT_LINE_LENGTH,
                                                     DEFAULT_INDENT);
-      of.output(sc, od, outputParams.toArray(new String[0]), inputType.toLowerCase(), eh);
+      of.output(sc, od, outputParams.toArray(new String[outputParams.size()]), inputType.toLowerCase(), eh);
       return 0;
     }
     catch (OutputFailedException e) {
