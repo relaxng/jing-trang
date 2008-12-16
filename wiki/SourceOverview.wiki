@@ -8,6 +8,7 @@ They can be divided into three groups.
  * *common* - modules used by both Jing and Trang
    * *util* - utility functions, some XML-related, some not; used by almost all other modules
    * *resolver* - integrates handling of the various kinds of URI/entity resolver found in the Java platform (e.g. EntityResolver, EntityResolver2, URIResolver, LSResourceResolver)
+   * *catalog* - integrates support for OASIS XML Catalogs into the framework provided by the resolver module; uses the Apache XML Commons Resolver
    * *regex* - supports regular expressions using the syntax of W3C XML Schema Part 2; includes code to translate W3C XML Schema regular expressions into `java.util.regex` regular expressions
    * *regex-gen* - code that generates some of the code in the regex module
    * *datatype* - supports the idea of a datatype library
