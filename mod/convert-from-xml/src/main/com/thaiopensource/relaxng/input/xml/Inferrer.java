@@ -239,7 +239,10 @@ class Inferrer {
     choosePrefixSeparator();
     grammar.getComponents().add(new DefineComponent(DefineComponent.START,
                                                     particleConverter.convert(schema.getStart())));
-    for (Name elementName : outputQueue) {
+    // Names can get added to outputQueue during this loop,
+    // so don't change this to a for each.
+    for (int i = 0; i < outputQueue.size(); i++) {
+      Name elementName = outputQueue.get(i);
       grammar.getComponents().add(new DefineComponent(getDefineName(elementName),
                                                       createElementPattern(elementName)));
     }
