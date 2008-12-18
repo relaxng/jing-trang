@@ -321,7 +321,8 @@
   <copy file="doc/compact/relaxng.rnc"
         tofile="${build.dir}/compact/relaxng.rnc.txt"/>
   <zip zipfile="${build.dir}/testSuite.zip">
-    <fileset dir="test" includes="index.html,spectest.xml,split.xsl,saxon.xsl,prep.xml"/>
+    <fileset dir="test" includes="index.html,split.xsl,saxon.xsl,prep.xml"/>
+    <fileset dir="mod/rng-validate/test" includes="spectest.xml"/>
     <fileset dir="eg" includes="testSuite.rng"/>
   </zip>
   <tar tarfile="${build.dir}/relaxng.tar" basedir="${build.dir}"
