@@ -10,9 +10,10 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 
 class SchemaImpl extends AbstractSchema {
   private final Templates templates;
-  private final Class factoryClass;
+  private final Class<? extends SAXTransformerFactory> factoryClass;
 
-  SchemaImpl(Templates templates, Class factoryClass, PropertyMap properties, PropertyId<?>[] supportedPropertyIds) {
+  SchemaImpl(Templates templates, Class<? extends SAXTransformerFactory> factoryClass,
+             PropertyMap properties, PropertyId<?>[] supportedPropertyIds) {
     super(properties, supportedPropertyIds);
     this.templates = templates;
     this.factoryClass = factoryClass;
@@ -20,9 +21,7 @@ class SchemaImpl extends AbstractSchema {
 
   public Validator createValidator(PropertyMap properties) {
     try {
-      return new ValidatorImpl(templates,
-                               (SAXTransformerFactory)factoryClass.newInstance(),
-                               properties);
+      return new ValidatorImpl(templates, factoryClass.newInstance(), properties);
     }
     catch (InstantiationException e) {
       throw new RuntimeException("unexpected InstantiationException creating SAXTransformerFactory");

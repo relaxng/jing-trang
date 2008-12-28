@@ -274,6 +274,16 @@
     <xsl:value-of select="$name"/>
     <xsl:text>/test</xsl:text>
   </xsl:variable>
+  <xsl:variable name="srctest">
+    <xsl:choose>
+      <xsl:when test="@in">
+	<xsl:value-of select="@in"/>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:value-of select="concat($srctestdir,'/',@name,'test.xml')"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
   <target name="mod.{$name}.test-{@name}"
 	  depends="mod.{$name}.compile-test,mod.{$app}.jar,mod.{$name}.split-{@name}">
     <java classname="{$class}"
@@ -286,9 +296,14 @@
       </xsl:if>
       <classpath>
 	<pathelement location="{$build}/{$app}.jar"/>
+	<xsl:if test="@lib">
+	  <pathelement location="lib/{@lib}.jar"/>
+	  <xsl:if test="@lib='xalan'">
+	    <pathelement location="lib/serializer.jar"/>
+	  </xsl:if>
+	</xsl:if>
 	<xsl:if test="$app = 'jing'">
 	  <pathelement location="lib/xercesImpl.jar"/>
-	  <pathelement location="lib/saxon.jar"/>
 	</xsl:if>
       </classpath>
     </java>
@@ -297,18 +312,17 @@
 	  depends="mod.{$name}.uptodate-split-{@name},jing-jar"
 	  unless="mod.{$name}.uptodate-split-{@name}">
     <xsl:if test="@schema">
-      <jing rngfile="{@schema}">
+      <jing rngfile="{@schema}" file="{$srctest}">
 	<xsl:if test="substring(@schema, string-length(@schema) - 3, 4) = '.rnc'">
 	  <xsl:attribute name="compactsyntax">true</xsl:attribute>
 	</xsl:if>
-	<fileset dir="{$srctestdir}" includes="{@name}test.xml"/>
       </jing>
     </xsl:if>
     <delete dir="{$runtestdir}"/>
     <mkdir dir="{$runtestdir}"/>
     <xsl:if test="@transform">
       <xslt style="{$srctestdir}/{@transform}"
-	    in="{$srctestdir}/{@name}test.xml"
+	    in="{$srctest}"
 	    out="{$runtestdir}/{@name}test.xml"/>
       <!-- XXX Could validate intermediate result against a schema -->
     </xsl:if>
@@ -317,13 +331,12 @@
       <xsl:attribute name="in">
 	<xsl:choose>
 	  <xsl:when test="@transform">
-	    <xsl:value-of select="$runtestdir"/>
+	    <xsl:value-of select="concat($runtestdir, '/',@name,'test.xml')"/>
 	  </xsl:when>
 	  <xsl:otherwise>
-	    <xsl:value-of select="$srctestdir"/>
+	    <xsl:value-of select="$srctest"/>
 	  </xsl:otherwise>
 	</xsl:choose>
-	<xsl:value-of select="concat('/',@name,'test.xml')"/>
       </xsl:attribute>
       <factory name="com.icl.saxon.TransformerFactoryImpl"/>
       <param name="dir" expression="{$runtestdir}"/>
@@ -333,7 +346,7 @@
     <!-- XXX include split.xsl in source files -->
     <uptodate property="mod.{$name}.uptodate-split-{@name}"
 	      targetfile="{$runtestdir}/stamp"
-	      srcfile="{$srctestdir}/{@name}test.xml"/>
+	      srcfile="{$srctest}"/>
   </target>
 </xsl:template>
 

@@ -6,7 +6,17 @@
   <depends lib="xalan"/>
   <depends lib="saxon"/>
   <depends lib="saxon9"/>
-  <test name="schematron" type="validate" schema="test/schematrontest.nrl"/>
+  <test name="old-saxon" in="mod/schematron/test/schematrontest.xml"
+	type="validate" schema="test/schematrontest.nrl"
+	lib="saxon"/>
+  <test name="new-saxon" in="mod/schematron/test/schematrontest.xml"
+	type="validate" schema="test/schematrontest.nrl"
+	lib="saxon9"/>
+  <test name="xalan" in="mod/schematron/test/schematrontest.xml"
+	type="validate" schema="test/schematrontest.nrl"
+	lib="xalan"/>
+  <test name="jaxp" in="mod/schematron/test/schematrontest.xml"
+	type="validate" schema="test/schematrontest.nrl"/>
   <ant rescompile="mod.schematron.compile-res">
     <target name="mod.schematron.compile-res">
       <property name="mod.schematron.respackage"

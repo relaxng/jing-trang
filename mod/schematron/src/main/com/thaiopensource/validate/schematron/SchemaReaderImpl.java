@@ -17,7 +17,6 @@ import com.thaiopensource.validate.rng.CompactSchemaReader;
 import com.thaiopensource.xml.sax.CountingErrorHandler;
 import com.thaiopensource.xml.sax.DelegatingContentHandler;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
-import com.thaiopensource.xml.sax.ForkContentHandler;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.ErrorHandler;
@@ -49,7 +48,7 @@ class SchemaReaderImpl extends AbstractSchemaReader {
   private static final String ERROR_URI = "http://www.thaiopensource.com/ns/error";
   private final Localizer localizer = new Localizer(SchemaReaderImpl.class);
 
-  private final Class transformerFactoryClass;
+  private final Class<? extends SAXTransformerFactory> transformerFactoryClass;
   private final TransformerFactoryInitializer transformerFactoryInitializer;
   private final Templates schematron;
   private final Schema schematronSchema;
@@ -74,7 +73,7 @@ class SchemaReaderImpl extends AbstractSchemaReader {
           throws TransformerConfigurationException, IncorrectSchemaException {
     this.transformerFactoryClass = transformerFactory.getClass();
     this.transformerFactoryInitializer = transformerFactoryInitializer;
-    final boolean isXsltc = (transformerFactoryClass.getName().indexOf(".xsltc.") >= 0);
+    final boolean isXsltc = isXsltc(transformerFactoryClass);
     final String stylesheet = isXsltc ? SCHEMATRON_XSLTC_STYLESHEET : SCHEMATRON_STYLESHEET;
     final String resourceName = fullResourceName(stylesheet);
     final StreamSource source = new StreamSource(getResourceAsStream(resourceName));
@@ -95,41 +94,16 @@ class SchemaReaderImpl extends AbstractSchemaReader {
     }
   }
 
+  static boolean isXsltc(Class<? extends SAXTransformerFactory> cls) {
+    return cls.getName().indexOf(".xsltc.") >= 0;
+  }
+
   public Option getOption(String uri) {
     return SchematronProperty.getOption(uri);
   }
 
   private void initTransformerFactory(TransformerFactory factory) {
     transformerFactoryInitializer.initTransformerFactory(factory);
-  }
-
-  static class ValidateStage extends XMLReaderImpl {
-    private final ContentHandler validator;
-    private ContentHandler contentHandler;
-    private final XMLReader reader;
-    private final CountingErrorHandler ceh;
-
-    ValidateStage(XMLReader reader, Validator validator, CountingErrorHandler ceh) {
-      this.reader = reader;
-      this.validator = validator.getContentHandler();
-      this.ceh = ceh;
-    }
-
-    public void parse(InputSource input)
-            throws SAXException, IOException {
-      reader.parse(input);
-      if (ceh.getHadErrorOrFatalError())
-        throw new SAXException(new IncorrectSchemaException());
-    }
-
-    public void setContentHandler(ContentHandler handler) {
-      this.contentHandler = handler;
-      reader.setContentHandler(new ForkContentHandler(validator, contentHandler));
-    }
-
-    public ContentHandler getContentHandler() {
-      return contentHandler;
-    }
   }
 
   static class UserException extends Exception {
@@ -284,51 +258,6 @@ class SchemaReaderImpl extends AbstractSchemaReader {
     }
   }
 
-  static class TransformStage extends XMLReaderImpl {
-    private ContentHandler contentHandler;
-    private final Transformer transformer;
-    private final SAXSource transformSource;
-    private final String systemId;
-    private final CountingErrorHandler ceh;
-    private final Localizer localizer;
-
-    TransformStage(Transformer transformer, SAXSource transformSource, String systemId,
-                   CountingErrorHandler ceh, Localizer localizer) {
-      this.transformer = transformer;
-      this.transformSource = transformSource;
-      this.systemId = systemId;
-      this.ceh = ceh;
-      this.localizer = localizer;
-    }
-
-    public void parse(InputSource input)
-            throws IOException, SAXException {
-      try {
-        LocationFilter handler = new LocationFilter(new ErrorFilter(contentHandler, ceh, localizer),
-                                                                    systemId);
-        transformer.transform(transformSource, new SAXResult(handler));
-        SAXException exception = handler.getException();
-        if (exception != null)
-          throw exception;
-      }
-      catch (TransformerException e) {
-        if (e.getException() instanceof IOException)
-          throw (IOException)e.getException();
-        throw toSAXException(e);
-      }
-      if (ceh.getHadErrorOrFatalError())
-        throw new SAXException(new IncorrectSchemaException());
-    }
-
-    public ContentHandler getContentHandler() {
-      return contentHandler;
-    }
-
-    public void setContentHandler(ContentHandler contentHandler) {
-      this.contentHandler = contentHandler;
-    }
-  }
-
   static class SAXErrorListener implements ErrorListener {
      private final ErrorHandler eh;
      private final String systemId;
@@ -392,7 +321,7 @@ class SchemaReaderImpl extends AbstractSchemaReader {
        // Xalan sometimes loses the mainSystemId; work around this.
        String s = locator.getSystemId();
        if (s == null)
-        s = systemId;
+         s = systemId;
        return new SAXParseException(exception.getMessage(),
                                     locator.getPublicId(),
                                     s,
@@ -402,33 +331,41 @@ class SchemaReaderImpl extends AbstractSchemaReader {
    }
 
 
-  // This is an alternative approach for implementing createSchema.
-  // This approach uses SAXTransformerFactory. We will stick with
-  // the original for now since it works and is debugged.  Also
+  // Minor problem is that
   // Saxon 6.5.2 prints to System.err in TemplatesHandlerImpl.getTemplates().
-  // XXX switch over to this implementation
 
-  private Schema createSchema2(SAXSource source, PropertyMap properties)
+  public Schema createSchema(SAXSource source, PropertyMap properties)
             throws IOException, SAXException, IncorrectSchemaException {
     ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
     CountingErrorHandler ceh = new CountingErrorHandler(eh);
     InputSource in = source.getInputSource();
     String systemId = in.getSystemId();
+    IfValidHandler ifValidHandler = new IfValidHandler();
+    ifValidHandler.setErrorHandler(ceh);
     try {
       SAXTransformerFactory factory = (SAXTransformerFactory)transformerFactoryClass.newInstance();
       initTransformerFactory(factory);
       TransformerHandler transformerHandler = factory.newTransformerHandler(schematron);
-      // XXX set up phase and diagnose
+      ifValidHandler.setDelegate(transformerHandler);
+      Transformer transformer = transformerHandler.getTransformer();
+      String phase = properties.get(SchematronProperty.PHASE);
+      if (phase != null)
+        transformer.setParameter("phase", phase);
+      boolean diagnose = properties.contains(SchematronProperty.DIAGNOSE);
+      if (diagnose)
+        transformer.setParameter("diagnose", Boolean.TRUE);
       PropertyMapBuilder builder = new PropertyMapBuilder(properties);
-      builder.put(ValidateProperty.ERROR_HANDLER, ceh);
+      builder.put(ValidateProperty.ERROR_HANDLER, ifValidHandler);
       Validator validator = schematronSchema.createValidator(builder.toPropertyMap());
+      ifValidHandler.setValidator(validator.getContentHandler());
       XMLReader xr = source.getXMLReader();
       if (xr == null)
         xr = ResolverFactory.createResolver(properties).createXMLReader();
-      xr.setContentHandler(new ForkContentHandler(validator.getContentHandler(),
-                                                  transformerHandler));
+      xr.setContentHandler(ifValidHandler);      
+      xr.setDTDHandler(validator.getDTDHandler());  // not strictly necessary
       factory.setErrorListener(new SAXErrorListener(ceh, systemId));
       TemplatesHandler templatesHandler = factory.newTemplatesHandler();
+      templatesHandler.setSystemId(systemId);
       LocationFilter stage2 = new LocationFilter(new ErrorFilter(templatesHandler, ceh, localizer), systemId);
       transformerHandler.setResult(new SAXResult(stage2));
       xr.setErrorHandler(ceh);
@@ -438,10 +375,17 @@ class SchemaReaderImpl extends AbstractSchemaReader {
         throw exception;
       if (ceh.getHadErrorOrFatalError())
         throw new IncorrectSchemaException();
-      return new SchemaImpl(templatesHandler.getTemplates(),
+      // Getting the templates can cause errors to be generated.
+      Templates templates = templatesHandler.getTemplates();
+      if (ceh.getHadErrorOrFatalError())
+        throw new IncorrectSchemaException();
+      return new SchemaImpl(templates,
                             transformerFactoryClass,
                             properties,
                             supportedPropertyIds);
+    }
+    catch (SAXException e) {
+      throw cleanupSAXException(e);
     }
     catch (TransformerConfigurationException e) {
       throw new SAXException(localizer.message("unexpected_schema_creation_error"));
@@ -453,101 +397,6 @@ class SchemaReaderImpl extends AbstractSchemaReader {
       throw new SAXException(e);
     }
   }
-
-  // This implementation was written in ignorance of SAXTransformerFactory.
-
-  public Schema createSchema(SAXSource source, PropertyMap properties)
-          throws IOException, SAXException, IncorrectSchemaException {
-    ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
-    SAXErrorListener errorListener = new SAXErrorListener(eh, source.getSystemId());
-    UserWrapErrorHandler ueh1 = new UserWrapErrorHandler(eh);
-    UserWrapErrorHandler ueh2 = new UserWrapErrorHandler(eh);
-    try {
-      PropertyMapBuilder builder = new PropertyMapBuilder(properties);
-      builder.put(ValidateProperty.ERROR_HANDLER, ueh1);
-      source = createValidatingSource(source, builder.toPropertyMap(), ueh1);
-      source = createTransformingSource(source,
-                                        properties.get(SchematronProperty.PHASE),
-                                        properties.contains(SchematronProperty.DIAGNOSE),
-                                        source.getSystemId(),
-                                        ueh2);
-      TransformerFactory transformerFactory = (TransformerFactory)transformerFactoryClass.newInstance();
-      initTransformerFactory(transformerFactory);
-      transformerFactory.setErrorListener(errorListener);
-      Templates templates = transformerFactory.newTemplates(source);
-      return new SchemaImpl(templates, transformerFactoryClass, properties, supportedPropertyIds);
-    }
-    catch (TransformerConfigurationException e) {
-      throw toSAXException(e, errorListener.getHadError()
-                              || ueh1.getHadErrorOrFatalError()
-                              || ueh2.getHadErrorOrFatalError());
-    }
-    catch (InstantiationException e) {
-      throw new SAXException(e);
-    }
-    catch (IllegalAccessException e) {
-      throw new SAXException(e);
-    }
-  }
-
-  private SAXSource createValidatingSource(SAXSource source, PropertyMap properties, CountingErrorHandler ceh) throws SAXException {
-    Validator validator = schematronSchema.createValidator(properties);
-    XMLReader xr = source.getXMLReader();
-    if (xr == null)
-      xr = ResolverFactory.createResolver(properties).createXMLReader();
-    xr.setErrorHandler(ceh);
-    return new SAXSource(new ValidateStage(xr, validator, ceh), source.getInputSource());
-  }
-
-  private SAXSource createTransformingSource(SAXSource in, String phase, boolean diagnose,
-                                             String systemId, CountingErrorHandler ceh) throws SAXException {
-    try {
-      Transformer transformer = schematron.newTransformer();
-      transformer.setErrorListener(new DraconianErrorListener());
-      if (phase != null)
-        transformer.setParameter("phase", phase);
-      if (diagnose)
-        transformer.setParameter("diagnose", Boolean.TRUE);
-      return new SAXSource(new TransformStage(transformer, in, systemId, ceh, localizer),
-                           new InputSource(systemId));
-    }
-    catch (TransformerConfigurationException e) {
-      throw new SAXException(e);
-    }
-  }
-
-  private SAXException toSAXException(TransformerException e, boolean hadError) throws IOException, IncorrectSchemaException {
-      return causeToSAXException(e.getException(), hadError);
-    }
-
-  private SAXException causeToSAXException(Throwable cause, boolean hadError) throws IOException, IncorrectSchemaException {
-      if (cause instanceof RuntimeException)
-        throw (RuntimeException)cause;
-      if (cause instanceof IOException)
-        throw (IOException)cause;
-      if (cause instanceof IncorrectSchemaException)
-        throw (IncorrectSchemaException)cause;
-      if (cause instanceof SAXException)
-        return causeToSAXException(((SAXException)cause).getException(), hadError);
-      if (cause instanceof TransformerException)
-        return toSAXException((TransformerException)cause, hadError);
-      if (cause instanceof UserException)
-        return toSAXException((UserException)cause);
-      if (hadError)
-        throw new IncorrectSchemaException();
-      return new SAXException(localizer.message("unexpected_schema_creation_error"),
-                              cause instanceof Exception ? (Exception)cause : null);
-    }
-
-  private static SAXException toSAXException(UserException e) throws IOException, IncorrectSchemaException {
-      SAXException se = e.getException();
-      Exception cause = se.getException();
-      if (cause instanceof IncorrectSchemaException)
-        throw (IncorrectSchemaException)cause;
-      if (cause instanceof IOException)
-        throw (IOException)cause;
-      return se;
-    }
 
   private static String fullResourceName(String name) {
     String className = SchemaReaderImpl.class.getName();
@@ -563,15 +412,52 @@ class SchemaReaderImpl extends AbstractSchemaReader {
       return cl.getResourceAsStream(resourceName);
   }
 
-  static SAXException toSAXException(TransformerException transformerException) {
-    // Unwrap where possible
-    Throwable wrapped = transformerException.getException();
-    if (wrapped instanceof SAXException)
-      return (SAXException)wrapped;
-    if (wrapped instanceof RuntimeException)
-      throw (RuntimeException)wrapped;
-    if (wrapped instanceof Exception)
-      return new SAXException((Exception)wrapped);
-    return new SAXException(transformerException);
+  private static SAXException cleanupSAXException(SAXException saxException) {
+    if (exceptionHasLocation(saxException))
+      return saxException;
+    Exception exception = saxException.getException();
+    if (exception instanceof SAXException && exception.getMessage() == null)
+      return cleanupSAXException((SAXException)exception);
+    if (exception instanceof TransformerException)
+      return cleanupTransformerException((TransformerException)exception);
+    return saxException;     
+  }
+
+  private static SAXException cleanupTransformerException(TransformerException e) {
+    String message = e.getMessage();
+    Throwable cause = e.getException();
+    SourceLocator transformLoc = e.getLocator();
+    // a TransformerException created with just a Throwable t argument
+    // gets a message of t.toString()
+    if (message != null && cause != null && message.equals(cause.toString()))
+      message = null;
+    if (message == null && cause instanceof SAXException && transformLoc == null)
+      return cleanupSAXException((SAXException)cause);
+    if (cause instanceof TransformerException && transformLoc == null)
+      return cleanupTransformerException((TransformerException)cause);
+    Exception exception = null;
+    if (cause instanceof Exception)
+      exception = (Exception)cause;
+    String publicId = null;
+    String systemId = null;
+    int lineNumber = -1;
+    int columnNumber = -1;
+    if (transformLoc != null) {
+      publicId = transformLoc.getPublicId();
+      systemId = transformLoc.getSystemId();
+      lineNumber = transformLoc.getLineNumber();
+      columnNumber = transformLoc.getColumnNumber();
+    }
+    if (publicId != null || systemId != null || lineNumber >= 0 || columnNumber >= 0)
+      return new SAXParseException(message, publicId, systemId, lineNumber, columnNumber, exception);
+    return new SAXException(message, exception);
+  }
+
+  private static boolean exceptionHasLocation(SAXException saxException) {
+    if (!(saxException instanceof SAXParseException))
+      return false;
+    SAXParseException pe = (SAXParseException)saxException;
+    return (pe.getPublicId() != null || pe.getSystemId() != null
+            || pe.getLineNumber() >= 0 || pe.getColumnNumber() >= 0);
   }
 }

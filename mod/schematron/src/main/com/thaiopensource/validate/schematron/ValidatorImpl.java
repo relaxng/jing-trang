@@ -47,7 +47,10 @@ class ValidatorImpl implements Validator {
   private void initTransformerHandler() {
     try {
       transformerHandler = factory.newTransformerHandler(templates);
-      transformerHandler.getTransformer().setURIResolver(Transform.createSAXURIResolver(resolver));
+      // When you specify a URIResolver, XSLTC uses a DOMCache, which
+      // doesn't seem to work too well.
+      if (!SchemaReaderImpl.isXsltc(factory.getClass()))
+        transformerHandler.getTransformer().setURIResolver(Transform.createSAXURIResolver(resolver));
       // XXX set up transformer with an ErrorListener that just throws
       // XXX (what about errors from document() calls?)
     }

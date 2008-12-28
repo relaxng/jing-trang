@@ -599,4 +599,27 @@ aaa
 </Document>
 </invalid>
 </testCase>
+<testCase>
+<incorrect>
+<schema xmlns="http://www.ascc.net/xml/schematron">
+<pattern name="foo">
+<rule context="foo bar">
+  <assert test="whatever">xxx</assert>
+</rule>
+</pattern>
+</schema>
+</incorrect>
+</testCase>
+<testCase>
+<incorrect>
+<schema xmlns="http://www.ascc.net/xml/schematron">
+<!-- pattern is missing the name attribute: should just get validation messages -->
+<pattern>
+<rule context="foo bar">
+  <assert test="whatever">xxx</assert>
+</rule>
+</pattern>
+</schema>
+</incorrect>
+</testCase>
 </testSuite>
