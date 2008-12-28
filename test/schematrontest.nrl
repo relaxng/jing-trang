@@ -3,6 +3,7 @@
     <namespace ns="">
       <validate schema="openTestSuite.rng">
         <context path="correct" useMode="schematron"/>
+        <context path="incorrect" useMode="#attach"/>
       </validate>
     </namespace>
   </mode>
