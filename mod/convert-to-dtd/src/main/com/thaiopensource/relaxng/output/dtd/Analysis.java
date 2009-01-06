@@ -35,10 +35,10 @@ import com.thaiopensource.relaxng.edit.RefPattern;
 import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.edit.TextPattern;
 import com.thaiopensource.relaxng.edit.ValuePattern;
-import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.relaxng.edit.ZeroOrMorePattern;
 import com.thaiopensource.relaxng.output.common.ErrorReporter;
 import com.thaiopensource.relaxng.output.common.NameClassSplitter;
+import com.thaiopensource.util.VoidValue;
 import com.thaiopensource.xml.util.Name;
 import com.thaiopensource.xml.util.Naming;
 import com.thaiopensource.xml.util.WellKnownNamespaces;
@@ -46,6 +46,7 @@ import com.thaiopensource.xml.util.WellKnownNamespaces;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -176,9 +177,12 @@ class Analysis {
 
     public ContentType visitChoice(ChoicePattern p) {
       List<Pattern> children = p.getChildren();
-      ContentType tem = analyzeContentType(children.get(0));
-      for (Pattern child : children)
-        tem = checkContentType("sorry_choice", ContentType.choice(tem, analyzeContentType(child)), p);
+      Iterator<Pattern> iter = children.iterator();
+      ContentType tem = analyzeContentType(iter.next());
+      while (iter.hasNext())
+        tem = checkContentType("sorry_choice",
+                               ContentType.choice(tem, analyzeContentType(iter.next())),
+                               p);
       if (getAttributeType(p) == AttributeType.MULTI) {
         Set<Name> attributeNames = new HashSet<Name>();
         for (Pattern child : children) {
