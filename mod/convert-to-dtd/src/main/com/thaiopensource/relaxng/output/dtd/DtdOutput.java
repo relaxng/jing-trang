@@ -901,7 +901,8 @@ class DtdOutput {
   }
 
   void outputRequiredComponents() {
-    for (String name : requiredParamEntities) {
+    for (int i=0; i < requiredParamEntities.size(); i++) {
+      String name = requiredParamEntities.get(i); 
       Component c = part.getWhereProvided(name);
       if (c == null)
         externallyRequiredParamEntities.add(name);
