@@ -28,7 +28,7 @@ class AttlistMapper {
       paramEntityToElementMap.put(paramEntityName, e);
   }
 
-  String getParamEntityElementName(String name) {
+  NameNameClass getParamEntityElementName(String name) {
     Object elem = paramEntityToElementMap.get(name);
     if (elem == null || elem == Boolean.FALSE)
       return null;
@@ -38,6 +38,6 @@ class AttlistMapper {
     NameClass nc = ((ElementPattern)elem).getNameClass();
     if (!(nc instanceof NameNameClass))
       return null;
-    return ((NameNameClass)nc).getLocalName();
+    return (NameNameClass)nc;
   }
 }

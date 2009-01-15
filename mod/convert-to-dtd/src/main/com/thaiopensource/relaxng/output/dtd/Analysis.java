@@ -551,12 +551,21 @@ class Analysis {
     return nsm.getPrefixForNamespaceUri(ns);
   }
 
-  String getDefaultNamespaceUri() {
-    return nsm.getDefaultNamespaceUri();
+  String getElementPrefixForNamespaceUri(String ns) {
+    if (ns.equals("") || ns.equals(nsm.getDefaultNamespaceUri()) || ns == NameClass.INHERIT_NS)
+      return null;
+    return nsm.getPrefixForNamespaceUri(ns);
   }
-
+  
   String getParamEntityElementName(String name) {
-    return am.getParamEntityElementName(name);
+    NameNameClass nc = am.getParamEntityElementName(name);
+    if (nc == null)
+      return null;
+    String prefix = getElementPrefixForNamespaceUri(nc.getNamespaceUri());
+    String localName = nc.getLocalName();
+    if (prefix == null)
+      return localName;
+    return prefix + ":" + localName;
   }
 
   ContentType getContentType(Pattern p) {

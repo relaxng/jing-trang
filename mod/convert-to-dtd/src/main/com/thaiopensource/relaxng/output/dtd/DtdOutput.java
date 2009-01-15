@@ -153,7 +153,6 @@ class DtdOutput {
       p.accept(nestedContentModelOutput);
       return VoidValue.VOID;
     }
-
   }
 
   private class GroupContentModelOutput extends ChoiceContentModelOutput {
@@ -165,9 +164,9 @@ class DtdOutput {
 
   class ContentModelOutput extends AbstractVisitor {
     public VoidValue visitName(NameNameClass nc) {
-      String ns = nc.getNamespaceUri();
-      if (!ns.equals("") && !ns.equals(analysis.getDefaultNamespaceUri()) && ns != NameClass.INHERIT_NS)
-        buf.append(analysis.getPrefixForNamespaceUri(ns)).append(':');
+      String prefix = analysis.getElementPrefixForNamespaceUri(nc.getNamespaceUri());
+      if (prefix != null)
+        buf.append(prefix).append(':');
       buf.append(nc.getLocalName());
       return VoidValue.VOID;
     }
@@ -1086,17 +1085,11 @@ class DtdOutput {
     outputLeadingComments(p);
     List<NameNameClass> names = NameClassSplitter.split(p.getNameClass());
     for (NameNameClass name : names) {
-      String ns = name.getNamespaceUri();
-      String qName;
-      String prefix;
-      if (ns.equals("") || ns.equals(analysis.getDefaultNamespaceUri()) || ns == NameClass.INHERIT_NS) {
-        qName = name.getLocalName();
-        prefix = null;
-      }
-      else {
-        prefix = analysis.getPrefixForNamespaceUri(ns);
-        qName = prefix + ":" + name.getLocalName();
-      }
+      final String ns = name.getNamespaceUri();
+      String qName = name.getLocalName();
+      final String prefix = analysis.getElementPrefixForNamespaceUri(ns);
+      if (prefix != null)
+        qName = prefix + ":" + qName;
       outputNewline();
       outputModelBreak("<!ELEMENT " + qName + " ", contentModel, ">");
       boolean needXmlns;
