@@ -164,7 +164,7 @@ public class Naming {
       return false;
     for (int i = 1; i < len; i++) {
       char c = s.charAt(i);
-      if (!isNameChar(c)) {
+      if (!isNameCharNs(c)) {
         if (c == ':' && ++i < len && isNameStartCharNs(s.charAt(i))) {
           for (++i; i < len; i++)
             if (!isNameCharNs(s.charAt(i)))
