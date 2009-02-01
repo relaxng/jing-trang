@@ -26,7 +26,9 @@
       <mkdir dir="${mod.schematron.resdir}"/>
       <xslt style="mod/schematron/lib/xsltc-fixup.xsl"
 	    in="mod/schematron/src/main/${mod.schematron.respackage}/schematron.xsl"
-	    out="${mod.schematron.resdir}/schematron-xsltc.xsl"/>
+	    out="${mod.schematron.resdir}/schematron-xsltc.xsl">
+	<factory name="com.icl.saxon.TransformerFactoryImpl"/>
+      </xslt>
     </target>
   </ant>
   <compile/>
