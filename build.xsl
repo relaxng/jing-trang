@@ -324,7 +324,9 @@
     <xsl:if test="@transform">
       <xslt style="{$srctestdir}/{@transform}"
 	    in="{$srctest}"
-	    out="{$runtestdir}/{@name}test.xml"/>
+	    out="{$runtestdir}/{@name}test.xml">
+	<factory name="com.icl.saxon.TransformerFactoryImpl"/>
+      </xslt>
       <!-- XXX Could validate intermediate result against a schema -->
     </xsl:if>
     <xslt style="{$split}"
