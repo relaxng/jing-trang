@@ -8,7 +8,7 @@
       <mkdir dir="${build.dir}/mod/rng-parse/gensrc/main/com/thaiopensource/relaxng/parse/compact"/>
       <javacc target="mod/rng-parse/src/main/com/thaiopensource/relaxng/parse/compact/CompactSyntax.jj"
               outputdirectory="${build.dir}/mod/rng-parse/gensrc/main/com/thaiopensource/relaxng/parse/compact"
-              javacchome="lib" />
+              javacchome="${javacc.dir}"/>
       <delete quiet="true">
 	<fileset dir="${build.dir}/mod/rng-parse/gensrc/main/com/thaiopensource/relaxng/parse/compact"
 		 includes="JavaCharStream.java"/>

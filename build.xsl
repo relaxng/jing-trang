@@ -10,6 +10,7 @@
   <project>
     <xmlproperty file="version.xml"/>
     <property name="build.dir" value="${{basedir}}/build"/>
+    <property name="javacc.dir" value="lib"/>
     <property name="ant.build.javac.source" value="1.5"/>
     <property name="ant.build.javac.target" value="1.5"/>
     <taskdef name="testng" classname="org.testng.TestNGAntTask">
