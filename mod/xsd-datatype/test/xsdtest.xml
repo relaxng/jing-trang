@@ -519,6 +519,7 @@ B EEF </value>
 <datatype name="QName">
 <valid>foo</valid>
 <valid xmlns:x="http://www.example.com">x:foo</valid>
+<invalid xmlns:x="http://www.example.com">x::foo</invalid>
 <invalid>y:foo</invalid>
 <equiv xmlns:x="http://www.example.com"
        xmlns:y="http://www.example.com/"
