@@ -4,18 +4,10 @@ import com.thaiopensource.relaxng.edit.SchemaCollection;
 import com.thaiopensource.relaxng.input.InputFailedException;
 import com.thaiopensource.relaxng.input.InputFormat;
 import com.thaiopensource.relaxng.input.MultiInputFormat;
-import com.thaiopensource.relaxng.input.dtd.DtdInputFormat;
-import com.thaiopensource.relaxng.input.parse.compact.CompactParseInputFormat;
-import com.thaiopensource.relaxng.input.parse.sax.SAXParseInputFormat;
-import com.thaiopensource.relaxng.input.xml.XmlInputFormat;
 import com.thaiopensource.relaxng.output.LocalOutputDirectory;
 import com.thaiopensource.relaxng.output.OutputDirectory;
 import com.thaiopensource.relaxng.output.OutputFailedException;
 import com.thaiopensource.relaxng.output.OutputFormat;
-import com.thaiopensource.relaxng.output.dtd.DtdOutputFormat;
-import com.thaiopensource.relaxng.output.rnc.RncOutputFormat;
-import com.thaiopensource.relaxng.output.rng.RngOutputFormat;
-import com.thaiopensource.relaxng.output.xsd.XsdOutputFormat;
 import com.thaiopensource.relaxng.translate.util.InvalidParamsException;
 import com.thaiopensource.resolver.Resolver;
 import com.thaiopensource.resolver.catalog.CatalogResolver;
@@ -35,16 +27,24 @@ public class Driver {
   static private final Localizer localizer = new Localizer(Driver.class);
   private String inputType;
   private String outputType;
-  private final ErrorHandlerImpl eh = new ErrorHandlerImpl();
+  private final ErrorHandlerImpl eh;
   private static final String DEFAULT_OUTPUT_ENCODING = "UTF-8";
   private static final int DEFAULT_LINE_LENGTH = 72;
   private static final int DEFAULT_INDENT = 2;
 
-  static public void main(String[] args) {
-    System.exit(new Driver().doMain(args));
+  public Driver() {
+    this(new ErrorHandlerImpl());
   }
 
-  private int doMain(String[] args) {
+  public Driver(ErrorHandlerImpl eh) {
+    this.eh = eh;
+  }
+
+  static public void main(String[] args) {
+    System.exit(new Driver().run(args));
+  }
+
+  public int run(String[] args) {
     List<String> inputParams = new ArrayList<String>();
     List<String> outputParams = new ArrayList<String>();
     List<String> catalogUris = new ArrayList<String>();
@@ -90,35 +90,19 @@ public class Driver {
         if (inputType.length() > 0)
           inputType = inputType.substring(1);
       }
-      InputFormat inFormat;
-      if (inputType.equalsIgnoreCase("rng"))
-        inFormat = new SAXParseInputFormat();
-      else if (inputType.equalsIgnoreCase("rnc"))
-        inFormat = new CompactParseInputFormat();
-      else if (inputType.equalsIgnoreCase("dtd"))
-        inFormat = new DtdInputFormat();
-      else if (inputType.equalsIgnoreCase("xml"))
-        inFormat = new XmlInputFormat();
-      else {
+      final InputFormat inputFormat = Formats.createInputFormat(inputType);
+      if (inputFormat == null) {
         error(localizer.message("unrecognized_input_type", inputType));
         return 2;
       }
-      OutputFormat of;
       String ext = extension(args[args.length - 1]);
       if (outputType == null) {
         outputType = ext;
         if (outputType.length() > 0)
           outputType = outputType.substring(1);
       }
-      if (outputType.equalsIgnoreCase("dtd"))
-        of = new DtdOutputFormat();
-      else if (outputType.equalsIgnoreCase("rng"))
-        of = new RngOutputFormat();
-      else if (outputType.equalsIgnoreCase("xsd"))
-        of = new XsdOutputFormat();
-      else if (outputType.equalsIgnoreCase("rnc"))
-        of = new RncOutputFormat();
-      else {
+      final OutputFormat outputFormat = Formats.createOutputFormat(outputType);
+      if (outputFormat == null) {
         error(localizer.message("unrecognized_output_type", outputType));
         return 2;
       }
@@ -138,17 +122,17 @@ public class Driver {
       outputType = outputType.toLowerCase();
       SchemaCollection sc;
       if (args.length > 2) {
-        if (!(inFormat instanceof MultiInputFormat)) {
+        if (!(inputFormat instanceof MultiInputFormat)) {
           error(localizer.message("too_many_arguments"));
           return 2;
         }
         String[] uris = new String[args.length - 1];
         for (int i = 0; i < uris.length; i++)
           uris[i] = UriOrFile.toUri(args[i]);
-        sc = ((MultiInputFormat)inFormat).load(uris, inputParamArray, outputType, eh, resolver);
+        sc = ((MultiInputFormat)inputFormat).load(uris, inputParamArray, outputType, eh, resolver);
       }
       else
-        sc = inFormat.load(UriOrFile.toUri(args[0]), inputParamArray, outputType, eh, resolver);
+        sc = inputFormat.load(UriOrFile.toUri(args[0]), inputParamArray, outputType, eh, resolver);
       if (ext.length() == 0)
         ext = outputType;
       OutputDirectory od = new LocalOutputDirectory(sc.getMainUri(),
@@ -157,7 +141,7 @@ public class Driver {
                                                     DEFAULT_OUTPUT_ENCODING,
                                                     DEFAULT_LINE_LENGTH,
                                                     DEFAULT_INDENT);
-      of.output(sc, od, outputParams.toArray(new String[outputParams.size()]), inputType.toLowerCase(), eh);
+      outputFormat.output(sc, od, outputParams.toArray(new String[outputParams.size()]), inputType.toLowerCase(), eh);
       return 0;
     }
     catch (OutputFailedException e) {
