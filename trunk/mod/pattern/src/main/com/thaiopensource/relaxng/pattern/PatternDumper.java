@@ -365,7 +365,7 @@ public class PatternDumper {
       startElement("i:after");
       attribute("xmlns:i", INTERNAL_NAMESPACE);
       p.getOperand1().apply(this);
-      p.getOperand1().apply(this);
+      p.getOperand2().apply(this);
       endElement();
       return VoidValue.VOID;
     }
