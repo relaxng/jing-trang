@@ -40,6 +40,10 @@ class DataDerivFunction extends AbstractPatternFunction<Pattern> {
     return p;
   }
 
+  public Pattern caseRef(RefPattern p) {
+    return memoApply(p.getPattern());
+  }
+
   public Pattern caseList(ListPattern p) {
     int len = str.length();
     int tokenIndex = 0;

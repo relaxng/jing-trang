@@ -15,6 +15,10 @@ class DataDerivTypeFunction extends AbstractPatternFunction<DataDerivType> {
     return new SingleDataDerivType();
   }
 
+  public DataDerivType caseRef(RefPattern p) {
+    return apply(p.getPattern());
+  }
+
   public DataDerivType caseAfter(AfterPattern p) {
     Pattern p1 = p.getOperand1();
     DataDerivType ddt = apply(p.getOperand1());
