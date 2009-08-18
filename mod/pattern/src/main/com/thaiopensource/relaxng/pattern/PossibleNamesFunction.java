@@ -11,6 +11,7 @@ abstract class PossibleNamesFunction extends AbstractPatternFunction<VoidValue> 
   private final UnionNameClassNormalizer normalizer = new UnionNameClassNormalizer();
 
   NormalizedNameClass applyTo(Pattern p) {
+    normalizer.setNameClass(new NullNameClass());
     p.apply(this);
     return normalizer.normalize();
   }
