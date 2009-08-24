@@ -1,0 +1,12 @@
+<module>
+  <depends module="util"/>
+  <depends module="resolver"/>
+  <depends module="datatype"/>
+  <depends module="xsd-datatype"/>
+  <depends module="regex"/>
+  <depends module="rng-parse"/>
+  <depends module="pattern"/>
+  <depends module="jaxp"/>
+  <compile test="yes"/>
+  <test name="unit" type="testng"/>
+</module>

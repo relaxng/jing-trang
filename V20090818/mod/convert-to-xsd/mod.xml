@@ -1,0 +1,7 @@
+<module>
+  <depends module="util"/>
+  <depends module="datatype"/>
+  <depends module="rng-schema"/>
+  <test name="toxsd" type="convert" schema="trang/test/toxsdtest.rnc" output="xsd"/>
+  <compile/>
+</module>
