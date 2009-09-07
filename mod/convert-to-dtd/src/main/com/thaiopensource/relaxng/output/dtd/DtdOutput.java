@@ -780,7 +780,7 @@ class DtdOutput {
       }
       else {
         if (getContentType(c.getBody()) == ContentType.DIRECT_SINGLE_ELEMENT)
-          outputElement((ElementPattern)c.getBody(), c);
+        	outputElement((ElementPattern)c.getBody(), c);
         else if (!doneParamEntities.contains(c.getName())) {
           doneParamEntities.add(c.getName());
           outputParamEntity(c);
@@ -797,7 +797,7 @@ class DtdOutput {
   }
 
   void outputQueuedElements() {
-    for (int i = 0, len = elementQueue.size(); i < len; i++)
+    for (int i = 0; i < elementQueue.size(); i++)
       outputElement(elementQueue.get(i), null);
     elementQueue.clear();
   }
@@ -824,6 +824,7 @@ class DtdOutput {
       outputLeadingComments(grammarPattern);
       outputInitialChildComments(grammarPattern);
       grammarOutput.visitContainer(grammarPattern);
+      
       outputFollowingComments(grammarPattern);
     }
     close();
