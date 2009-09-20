@@ -90,7 +90,7 @@ class NamespaceSpecification {
     // then we only need to check matchPrefix(a1, b1) and matchPrefix(an, bn) where
     // matchPrefix(a, b) means a starts with b or b starts with a.
     return matchPrefix(parts[0], otherParts[0])
-           || matchPrefix(parts[parts.length - 1], otherParts[otherParts.length - 1]);
+           && matchPrefix(parts[parts.length - 1], otherParts[otherParts.length - 1]);
   }
 
   /**
