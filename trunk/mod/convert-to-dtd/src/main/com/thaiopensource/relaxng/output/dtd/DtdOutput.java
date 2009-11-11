@@ -780,7 +780,7 @@ class DtdOutput {
       }
       else {
         if (getContentType(c.getBody()) == ContentType.DIRECT_SINGLE_ELEMENT)
-        	outputElement((ElementPattern)c.getBody(), c);
+          outputElement((ElementPattern)c.getBody(), c);
         else if (!doneParamEntities.contains(c.getName())) {
           doneParamEntities.add(c.getName());
           outputParamEntity(c);
