@@ -1,0 +1,7 @@
+<module>
+  <compile test="yes"/>
+  <test name="unit" type="testng"/>
+  <depends module="util"/>
+  <depends module="resolver"/>
+  <depends lib="resolver"/>
+</module>
