@@ -18,12 +18,12 @@ public class DatatypeRepertoire {
     "decimal",
     "double",
     "NCName",
-    "NMTOKEN",
     "time",
     "date",
     "dateTime",
     "duration",
     "hexBinary",
+    "NMTOKEN",
     "base64Binary",
     "anyURI"
   };
