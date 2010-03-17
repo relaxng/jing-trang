@@ -7,6 +7,7 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.xml.sax.Locator;
+import org.xml.sax.SAXException;
 import org.xml.sax.helpers.LocatorImpl;
 
 import java.util.Collections;
@@ -77,5 +78,46 @@ public class PatternMatcherTest extends SchemaPatternBuilder {
   @Test(dataProvider = "attributePairs")
   public void testPossibleAttributeNames(Matcher matcher, NormalizedNameClass nnc) {
     Assert.assertEquals(matcher.possibleAttributeNames(), nnc);
+  }
+  
+  
+  @DataProvider(name = "missingNamespacedAttribute")
+  Object[][] missingNamespacedAttribute() {
+    final Name foo = new Name("http://example.com/", "foo");
+    final Locator loc = new LocatorImpl();
+    return new Object[][] {{ 
+      rootMissingNamespacedAttributeMatcher(
+        makeElement(
+            new SimpleNameClass(root),
+            makeAttribute(new SimpleNameClass(foo), makeText(), loc),
+            loc
+        )
+      )
+    }};
+  }
+  
+  private Matcher rootMissingNamespacedAttributeMatcher(Pattern start) {
+    Matcher matcher = rootMatcher(start);
+    // Declare the attribute namespace "http://example.com/" as default namespace.
+    Context context = new Context();
+    try {
+      context.startPrefixMapping("", "http://example.com/");
+    } catch (SAXException e) {
+      Assert.fail(e.getMessage(), e);
+    }
+    // Start the root element
+    Assert.assertTrue(matcher.matchStartTagOpen(root, "", context));
+    // Close the root element, we should get the required attribute missing error.
+    Assert.assertFalse(matcher.matchStartTagClose(root, "", context));
+    return matcher;
+  }
+  
+  @Test(dataProvider = "missingNamespacedAttribute")
+  public void testErrorMessageAttributeNames(Matcher matcher) {
+    // Before fixing issue 105 the error message was
+    // element "root" missing required attribute "foo"
+    // Now we should get the correct namespace for the missing attribute:
+    Assert.assertEquals(matcher.getErrorMessage(), 
+        "element \"root\" missing required attribute \"ns:foo\" (with xmlns:ns=\"http://example.com/\")");
   }
 }

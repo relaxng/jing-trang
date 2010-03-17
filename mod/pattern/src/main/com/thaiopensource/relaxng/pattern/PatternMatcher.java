@@ -546,8 +546,13 @@ public class PatternMatcher implements Cloneable, Matcher {
       String prefix;
       if (ns.equals(defaultNamespace))
         prefix = "";
-      else
+      else {
         prefix = context.getPrefix(ns);
+        // If we have no prefix for the namespace and we have an attribute, set the prefix to null
+        // to mark that the namespace is undeclared.
+        if ((flags & FORMAT_NAMES_ATTRIBUTE) != 0 && "".equals(prefix) && !"".equals(ns))
+          prefix = null;
+      }
       if (prefix == null) {
         undeclaredNamespaces.add(ns);
         namesWithUndeclaredNamespaces.add(name);
