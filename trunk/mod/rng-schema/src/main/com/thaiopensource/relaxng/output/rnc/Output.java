@@ -666,6 +666,10 @@ class Output {
       else
         qn = p.getType();
       qn = encode(qn);
+      Pattern e = p.getExcept();
+      // open a parentheses on data except
+      if (e != null)
+        pp.text("(");
       pp.text(qn);
       List<Param> params = p.getParams();
       if (params.size() > 0) {
@@ -690,7 +694,6 @@ class Output {
         pp.text("}");
         pp.endGroup();
       }
-      Pattern e = p.getExcept();
       if (e != null) {
         boolean useParen = (!e.mayContainText()
                             && !e.getFollowingElementAnnotations().isEmpty());
@@ -712,6 +715,8 @@ class Output {
           pp.text(")");
         if (!params.isEmpty())
           pp.endGroup();
+        // close the parentheses on data except 
+        pp.text(")");
       }
       endAnnotations(p);
       return VoidValue.VOID;
