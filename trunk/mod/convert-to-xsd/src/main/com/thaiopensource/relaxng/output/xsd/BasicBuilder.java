@@ -452,6 +452,10 @@ public class BasicBuilder {
       return p.getChild().accept(this);
     }
 
+    public AttributeUse visitMixed(MixedPattern p) {
+      return p.getChild().accept(this);
+    }
+    
     public AttributeUse visitZeroOrMore(ZeroOrMorePattern p) {
       return p.getChild().accept(optionalAttributeUseBuilder);
     }
