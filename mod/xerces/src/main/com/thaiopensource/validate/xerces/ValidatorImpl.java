@@ -3,6 +3,7 @@ package com.thaiopensource.validate.xerces;
 import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.ValidateProperty;
 import com.thaiopensource.validate.Validator;
+import org.apache.xerces.impl.XMLEntityManager;
 import org.apache.xerces.impl.XMLErrorReporter;
 import org.apache.xerces.impl.validation.EntityState;
 import org.apache.xerces.impl.validation.ValidationManager;
@@ -41,6 +42,7 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
 
   private final XMLSchemaValidator schemaValidator = new XMLSchemaValidator();
   private final XMLErrorReporter errorReporter = new XMLErrorReporter();
+  private final XMLEntityManager entityManager = new XMLEntityManager();
   private final ValidationManager validationManager = new ValidationManager();
   private final NamespaceContext namespaceContext = new NamespaceSupport();
   private final XMLAttributes attributes = new XMLAttributesImpl();
@@ -72,7 +74,7 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
   ValidatorImpl(SymbolTable symbolTable, XMLGrammarPool grammarPool, PropertyMap properties) {
     this.symbolTable = symbolTable;
     XMLErrorHandler errorHandlerWrapper = new ErrorHandlerWrapper(properties.get(ValidateProperty.ERROR_HANDLER));
-    components = new XMLComponent[] { errorReporter, schemaValidator };
+    components = new XMLComponent[] { errorReporter, schemaValidator, entityManager };
     for (int i = 0; i < components.length; i++) {
       addRecognizedFeatures(components[i].getRecognizedFeatures());
       addRecognizedProperties(components[i].getRecognizedProperties());
@@ -89,9 +91,7 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
     setProperty(Properties.ERROR_REPORTER, errorReporter);
     setProperty(Properties.ERROR_HANDLER, errorHandlerWrapper);
     setProperty(Properties.VALIDATION_MANAGER, validationManager);
-    // In Xerces 2.4.0, XMLSchemaValidator uses ENTITY_MANAGER when
-    // it should use ENTITY_RESOLVER
-    // setProperty(Properties.ENTITY_MANAGER, this);
+    setProperty(Properties.ENTITY_MANAGER, entityManager);
     setProperty(Properties.ENTITY_RESOLVER, this);
     reset();
   }
