@@ -85,6 +85,8 @@ class ValidatorImpl extends ParserConfigurationSettings implements Validator, Co
     setFeature(Features.SCHEMA_FULL_CHECKING, true);
     setFeature(Features.VALIDATION, true);
     setFeature(Features.SCHEMA_VALIDATION, true);
+    setFeature(Features.ID_IDREF_CHECKING, true);
+    setFeature(Features.IDC_CHECKING, true);
     setProperty(Properties.XMLGRAMMAR_POOL, grammarPool);
     setProperty(Properties.SYMBOL_TABLE, symbolTable);
     errorReporter.setDocumentLocator(this);
