@@ -80,6 +80,7 @@ class Output {
   private final NameClassVisitor<VoidValue> noParenNameClassOutput = new NameClassOutput(false);
   private final PatternVisitor<VoidValue> noParenPatternOutput = new PatternOutput(false);
   private final PatternVisitor<VoidValue> patternOutput = new PatternOutput(true);
+  private final PatternVisitor<VoidValue> repeatedPatternOutput = new RepeatedPatternOutput();
   private final ComponentVisitor<VoidValue> componentOutput = new ComponentOutput();
   private final AnnotationChildVisitor<VoidValue> annotationChildOutput = new AnnotationChildOutput();
   private final AnnotationChildVisitor<VoidValue> followingAnnotationChildOutput = new FollowingAnnotationChildOutput();
@@ -445,6 +446,22 @@ class Output {
     }
   }
 
+  class RepeatedPatternOutput extends PatternOutput {
+    RepeatedPatternOutput() {
+      super(true);
+    }
+    protected void postfix(UnaryPattern p, String op) {
+      startAnnotations(p);
+      pp.text("(");
+      pp.startNest("(");
+      p.getChild().accept(repeatedPatternOutput);
+      pp.endNest();
+      pp.text(op);
+      pp.text(")");
+      endAnnotations(p);
+    }
+  }
+  
   class PatternOutput implements PatternVisitor<VoidValue> {
     private final boolean alwaysUseParens;
 
@@ -519,15 +536,15 @@ class Output {
       return VoidValue.VOID;
     }
 
-    private void postfix(UnaryPattern p, String op) {
+    protected void postfix(UnaryPattern p, String op) {
       if (!startAnnotations(p)) {
-        p.getChild().accept(patternOutput);
+        p.getChild().accept(repeatedPatternOutput);
         pp.text(op);
       }
       else {
         pp.text("(");
         pp.startNest("(");
-        p.getChild().accept(patternOutput);
+        p.getChild().accept(repeatedPatternOutput);
         pp.endNest();
         pp.text(op);
         pp.text(")");
