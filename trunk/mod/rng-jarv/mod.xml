@@ -5,7 +5,7 @@
   <depends module="rng-parse"/>
   <depends module="pattern"/>
   <depends lib="isorelax"/>
-  <compile test="yes"/>
+  <compile/>
   <service type="org.iso_relax.verifier.VerifierFactoryLoader">
     <provider classname="com.thaiopensource.relaxng.jarv.VerifierFactoryLoaderImpl"/>
   </service>
