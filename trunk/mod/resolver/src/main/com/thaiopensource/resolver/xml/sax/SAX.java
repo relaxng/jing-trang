@@ -15,6 +15,9 @@ import org.xml.sax.SAXException;
 import org.xml.sax.ext.EntityResolver2;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 /**
  *
@@ -37,6 +40,24 @@ public class SAX {
       this.promiscuous = promiscuous;
     }
 
+    public void open(Input input) throws IOException, ResolverException {
+      if (!input.isUriDefinitive())
+        return;
+      URI uri;
+      try {
+        uri = new URI(input.getUri());
+      }
+      catch (URISyntaxException e) {
+        throw new ResolverException(e);
+      }
+      if (!uri.isAbsolute())
+        throw new ResolverException("cannot open relative URI: " + uri);
+      URL url = new URL(uri.toASCIIString());
+      // XXX should set the encoding properly
+      // XXX if this is HTTP and we've been redirected, should do input.setURI with the new URI
+      input.setByteStream(url.openStream());
+    }
+    
     public void resolve(Identifier id, Input input) throws IOException, ResolverException {
       if (input.isResolved())
         return;
