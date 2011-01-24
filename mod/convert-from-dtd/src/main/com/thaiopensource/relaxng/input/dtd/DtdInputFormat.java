@@ -17,7 +17,7 @@ import com.thaiopensource.util.Localizer;
 import com.thaiopensource.xml.dtd.om.Dtd;
 import com.thaiopensource.xml.dtd.parse.DtdParserImpl;
 import com.thaiopensource.xml.dtd.parse.ParseException;
-import com.thaiopensource.xml.em.UriEntityManager;
+import com.thaiopensource.xml.em.ResolverUriEntityManager;
 import com.thaiopensource.xml.util.Naming;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
@@ -141,7 +141,7 @@ public class DtdInputFormat implements InputFormat {
     pp.setParamFactory(new NamespaceDeclParamFactory(options.prefixMap));
     pp.process(params, eh);
     try {
-      Dtd dtd = new DtdParserImpl().parse(uri, new UriEntityManager());
+      Dtd dtd = new DtdParserImpl().parse(uri, new ResolverUriEntityManager(resolver));
       try {
         return new Converter(dtd, er, options).convert();
       }
