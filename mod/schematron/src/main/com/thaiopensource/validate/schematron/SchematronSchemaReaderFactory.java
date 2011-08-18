@@ -13,14 +13,21 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 
 public class SchematronSchemaReaderFactory implements SchemaReaderFactory, TransformerFactoryInitializer {
   public SchemaReader createSchemaReader(String namespaceUri) {
-    if (namespaceUri.equals(SchemaReaderImpl.SCHEMATRON_URI)) {
+    if (namespaceUri.equals(ISOSchemaReaderImpl.SCHEMATRON_URI)) {
+      try {
+        return new ISOSchemaReaderImpl(newTransformerFactory(), this);
+      }
+      catch (TransformerFactoryConfigurationError e) { }
+      catch (IncorrectSchemaException e) { }
+      catch (TransformerConfigurationException e) { }
+    } else if (namespaceUri.equals(SchemaReaderImpl.SCHEMATRON_URI)) {
       try {
         return new SchemaReaderImpl(newTransformerFactory(), this);
       }
       catch (TransformerFactoryConfigurationError e) { }
       catch (IncorrectSchemaException e) { }
       catch (TransformerConfigurationException e) { }
-    }
+    } 
     return null;
   }
 
