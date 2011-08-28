@@ -81,8 +81,8 @@
     <xsl:param name="p"/>
     <xsl:choose>
       <xsl:when test="$p='#ALL'">
-        <!-- TODO: george@oxygenxml.com check skeleton impl to see what happens with
-          let instructions under phase in this case -->
+        <!-- george@oxygenxml.com: hanle let inside phase -->
+        <xsl:apply-templates select="sch:phase/sch:let"/>
         <xsl:call-template name="process-patterns">
           <xsl:with-param name="patterns" select="sch:pattern"/>
         </xsl:call-template>
