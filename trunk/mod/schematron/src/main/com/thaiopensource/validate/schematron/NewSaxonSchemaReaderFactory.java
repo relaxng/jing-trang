@@ -12,7 +12,11 @@ public class NewSaxonSchemaReaderFactory extends SchematronSchemaReaderFactory {
   }
 
   public void initTransformerFactory(TransformerFactory factory) {
-    factory.setAttribute(FeatureKeys.XSLT_VERSION, "2.0");
+    try {
+      factory.setAttribute(FeatureKeys.XSLT_VERSION, "2.0");
+    } catch (IllegalArgumentException e) {
+      // The old Saxon 9 (pre HE/PE/EE) throws this exception.
+    }
     factory.setAttribute(FeatureKeys.LINE_NUMBERING, Boolean.TRUE);
     factory.setAttribute(FeatureKeys.VERSION_WARNING, Boolean.FALSE);
   }
