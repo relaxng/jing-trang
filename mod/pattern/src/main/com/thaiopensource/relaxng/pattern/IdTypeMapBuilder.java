@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 public class IdTypeMapBuilder {
   private boolean hadError;
@@ -21,6 +22,7 @@ public class IdTypeMapBuilder {
   private final PatternFunction<Integer> idTypeFunction = new IdTypeFunction();
   private final IdTypeMapImpl idTypeMap = new IdTypeMapImpl();
   private final Set<ElementPattern> elementProcessed = new HashSet<ElementPattern>();
+  private final Stack<ElementPattern> elementsToProcess = new Stack<ElementPattern>();
   private final List<PossibleConflict> possibleConflicts = new ArrayList<PossibleConflict>();
 
   private void notePossibleConflict(NameClass elementNameClass, NameClass attributeNameClass, Locator loc) {
@@ -151,7 +153,7 @@ public class IdTypeMapBuilder {
       if (elementProcessed.contains(p))
         return VoidValue.VOID;
       elementProcessed.add(p);
-      p.getContent().apply(new BuildFunction(p.getNameClass(), p.getLocator()));
+      elementsToProcess.push(p);
       return VoidValue.VOID;
     }
 
@@ -281,6 +283,10 @@ public class IdTypeMapBuilder {
     this.eh = eh;
     try {
       pattern.apply(new BuildFunction(null, null));
+      while (elementsToProcess.size() > 0) {
+        ElementPattern p = elementsToProcess.pop();
+        p.getContent().apply(new BuildFunction(p.getNameClass(), p.getLocator()));
+      }
       for (PossibleConflict pc : possibleConflicts) {
         if (pc.elementNameClass instanceof SimpleNameClass
             && pc.attributeNameClass instanceof SimpleNameClass) {
