@@ -148,6 +148,8 @@ public class ValidatorPatternBuilder extends PatternBuilder {
       p2 = p2.apply(removeChoicesFunction);
       if (choiceMap.size() > 0)
         choiceMap.clear();
+      if (p2 == notAllowed)
+        return p1;
     }
     if (p1 instanceof AfterPattern && p2 instanceof AfterPattern) {
       AfterPattern ap1 = (AfterPattern)p1;
