@@ -1,0 +1,9 @@
+<module>
+  <depends module="util"/>
+  <depends module="resolver"/>
+  <depends module="datatype"/>
+  <depends module="xsd-datatype"/>
+  <depends module="regex"/>
+  <compile test="yes"/>
+  <test name="unit" type="testng"/>
+</module>

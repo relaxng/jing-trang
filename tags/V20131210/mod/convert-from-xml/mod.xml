@@ -1,0 +1,8 @@
+<module>
+  <depends module="util"/>
+  <depends module="resolver"/>
+  <depends module="infer"/>
+  <depends module="datatype"/>
+  <depends module="rng-schema"/>
+  <compile/>
+</module>

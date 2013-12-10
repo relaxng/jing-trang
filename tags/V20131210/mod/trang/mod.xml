@@ -1,0 +1,31 @@
+<module>
+  <depends module="util"/>
+  <depends module="resolver"/>
+  <depends module="catalog"/>
+  <depends module="regex"/>
+  <depends module="datatype"/>
+  <depends module="xsd-datatype"/>
+  <depends module="rng-parse"/>
+  <depends module="dtd-parse"/>
+  <depends module="infer"/>
+  <depends module="rng-schema"/>
+  <depends module="convert-from-xml"/>
+  <depends module="convert-to-xsd"/>
+  <depends module="convert-from-dtd"/>
+  <depends module="convert-to-dtd"/>
+  <depends lib="resolver"/>
+  <compile/>
+  <version package="com/thaiopensource/relaxng/translate"/>
+  <jar>
+    <manifest>
+      <attribute name="Main-Class" value="com/thaiopensource/relaxng/translate/Driver"/>
+      <attribute name="Class-Path" value="resolver.jar"/>
+    </manifest>
+    <service type="com.thaiopensource.datatype.xsd.regex.RegexEngine">
+      <provider classname="com.thaiopensource.datatype.xsd.regex.xerces2.RegexEngineImpl"/>
+      <provider classname="com.thaiopensource.datatype.xsd.regex.java.RegexEngineImpl"/>
+    </service>
+    <service type="org.relaxng.datatype.DatatypeLibraryFactory"
+	     provider="com.thaiopensource.datatype.xsd.DatatypeLibraryFactoryImpl"/>
+  </jar>
+</module>

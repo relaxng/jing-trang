@@ -1,0 +1,6 @@
+<!DOCTYPE catalog
+  PUBLIC "-//OASIS//DTD XML Catalogs V1.0//EN"
+         "http://www.oasis-open.org/committees/entity/release/1.0/catalog.dtd">
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+  <public publicId="The Great Foo" uri="http://www.example.com/bar.xml"/>
+</catalog>
