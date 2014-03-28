@@ -161,7 +161,7 @@ class DtdOutput {
       return VoidValue.VOID;
     }
   }
-
+  
   class ContentModelOutput extends AbstractVisitor {
     public VoidValue visitName(NameNameClass nc) {
       String prefix = analysis.getElementPrefixForNamespaceUri(nc.getNamespaceUri());
@@ -207,7 +207,11 @@ class DtdOutput {
 
     public VoidValue visitOneOrMore(OneOrMorePattern p) {
       p.getChild().accept(occurContentModelOutput);
-      buf.append('+');
+      ContentType t = getContentType(p);
+      if (t.isA(ContentType.MIXED_MODEL)) 
+        buf.append('*');
+      else 
+        buf.append('+');
       return VoidValue.VOID;
     }
 
@@ -322,7 +326,11 @@ class DtdOutput {
       buf.append('(');
       p.getChild().accept(nestedContentModelOutput);
       buf.append(')');
-      buf.append('+');
+      ContentType t = getContentType(p);
+      if (t.isA(ContentType.MIXED_MODEL)) 
+        buf.append('*');
+      else 
+        buf.append('+');
       return VoidValue.VOID;
     }
 
@@ -455,6 +463,11 @@ class DtdOutput {
       return VoidValue.VOID;
     }
 
+    public VoidValue visitOneOrMore(OneOrMorePattern p) {
+      p.getChild().accept(nestedContentModelOutput);
+      return VoidValue.VOID;
+    }
+    
     public VoidValue visitMixed(MixedPattern p) {
       if (getContentType(p.getChild()) == ContentType.EMPTY)
         buf.append("#PCDATA");
@@ -473,6 +486,10 @@ class DtdOutput {
 
   class ExpandedInnerElementClassOutput extends InnerElementClassOutput {
     public VoidValue visitZeroOrMore(ZeroOrMorePattern p) {
+      p.getChild().accept(expandedContentModelOutput);
+      return VoidValue.VOID;
+    }
+    public VoidValue visitOneOrMore(OneOrMorePattern p) {
       p.getChild().accept(expandedContentModelOutput);
       return VoidValue.VOID;
     }

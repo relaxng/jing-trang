@@ -48,6 +48,8 @@ class ContentType {
       return ERROR;
     if (t == EMPTY)
       return EMPTY;
+    if (t.isA(MIXED_ELEMENT_CLASS))
+      return MIXED_MODEL;
     if (t.isA(MODEL_GROUP))
       return MODEL_GROUP;
     return null;
