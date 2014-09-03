@@ -1,0 +1,123 @@
+Look at turning BuildException into a type parameter.
+
+Finish upgrading code to use Java 5 everywhere.
+
+pattern.StringNormalizer sucks.
+
+When too many possible element/attribute names, give only those with
+declared namespaces.
+
+Handle wildcards better in possibleContent/possibleAttributes.
+
+Provide matcher interface giving possible values.
+
+Diagnose missing namespace declaration
+
+Note prefixes used in the schema and use them in qNames in error
+messages when no prefix is declared for a namespace.
+
+Use IntersectionNameClassNormalizer in DuplicateAttributeDetector.
+
+Use IntersectionNameClassNormalizer in Alphabet.
+
+Make Matcher available as a property of Validator/ValidatorHandler.  No need for other
+ways to get a Matcher.
+
+In ValidatorHandler ignore attributes that are xmlns or xmlns:*.
+
+Support feasible feature for JAXP.
+
+Support check-id-idref feature for JAXP.
+
+Support URIResolver, EntityResolver, Resolver properties for JAXP.
+
+Add JingTask parameter(s) to specify the resolver.
+
+Figure out handling of non-ASCII chars in URIs.
+
+CompactSyntax.jj should check that externalRef and include literal is
+a valid Uri.
+
+Transformer in schematron needs a resolver.
+
+Add a target to explicitly run the regex category test.
+
+Reorganize schemas in source tree.
+
+Move test-related .xsl files into mod/*/test.
+
+Move java sources used for testing only into test hierarchy.
+
+Set some more svn:ignore properties; get rid of .cvsignore properties.
+
+test element in mod.xml should specify additional jars.
+
+Merge Jing changes from oNVDL.
+
+Fix bug with not checking "duplicate declaration" and maybe "xsd prefix"
+constraint.
+
+Fix bug with empty implicit grammars in compact syntax.
+
+See whether there's a DTDinst bug with a parameter entity containing a
+single percent token.
+
+Deal with complaints by XSV about trang's handling of Rahtz's example
+(mixed derived from non-mixed).
+
+Handling float/double/Name in trang DTD output module.
+
+Put jing/trang man pages online.
+
+Provide a validate method on Validator so that we can avoid messing
+with threads in some cases.
+
+Add doc with hints about how to run jars.
+
+Set Xerces properties to read DTDs but not validate
+
+Option to control DTD parsing
+
+Driver should check for options inappropriate for schema language
+
+Insist that the property
+map passed to schema.createValidator contains an error handler or
+maybe use DraconianErrorHandler by default.
+
+Maybe rename Validator to ValidationHandlers.
+
+Allow PropertyIds to be used to represent SAX properties/features.
+Make use of them in the various SchemaReader implementations.
+
+Move com.thaiopensource.relaxng.util to
+com.thaiopensource.validate.driver?
+
+Should have option for specifying non-XML language in a general way.
+
+Compact syntax parser should provide encoding information.
+
+Give a warning for a list containing a single token.
+
+Give a more helpful message for sequence of strings
+outside a list.
+
+Handle comments embedded within strings better.
+
+Put location information in error messages into a standard format
+understandable by Emacs.
+
+In a big choice or interleave or attribute group, memoization for each
+binary pattern is inefficient.
+
+Option to recover from unknown datatype libraries.
+
+Implement ValidationContext.getBaseUri in the instance.
+
+Support infoset modification for ID/IDREF/IDREFS.
+
+Maybe introduce a variant of the element pattern that has a mapping
+from names to content models.
+
+Better error message for wrong namespace URI.
+
+Option to be verbose.

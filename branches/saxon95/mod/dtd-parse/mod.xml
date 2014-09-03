@@ -1,0 +1,5 @@
+<module>
+  <depends module="util"/>
+  <depends module="resolver"/>
+  <compile/>
+</module>
