@@ -5,6 +5,7 @@
         xmlns:loc="http://www.thaiopensource.com/ns/location"
         xmlns:err="http://www.thaiopensource.com/ns/error"
         xmlns:xsltc="http://www.thaiopensource.com/ns/xsltc"
+        xmlns:jing-extension-functions="http://www.thaiopensource.com/ns/extension-functions"
         xmlns:osaxon="http://icl.com/saxon"
         xmlns:nsaxon="http://saxon.sf.net/"
         xmlns:xalan-node-info="http://xml.apache.org/xalan/java/org.apache.xalan.lib.NodeInfo">
@@ -270,6 +271,14 @@
                       and function-available('nsaxon:column-number')"
               xsltc:remove="yes"/>
 
+<!-- Use internal fallback if using Saxon HE for which extensions functions 
+      are not available. -->
+<xsl:variable name="internal"
+  select="function-available('jing-extension-functions:line-number')
+  and function-available('jing-extension-functions:system-id')
+  and function-available('jing-extension-functions:column-number')"
+  xsltc:remove="yes"/>
+
 <!-- The JDK 1.4 version of Xalan is buggy and gets an exception if we try
      to use these extension functions, so detect this version and don't use it. -->
 <xsl:variable name="xalan"
@@ -302,6 +311,17 @@
 	</axsl:attribute>
 	<axsl:attribute name="system-id">
 	  <axsl:value-of select="nsaxon:system-id()"/>
+	</axsl:attribute>
+      </xsl:when>
+      <xsl:when test="$internal">
+        <axsl:attribute name="column-number">
+	  <axsl:value-of select="jing-extension-functions:column-number()"/>
+	</axsl:attribute>
+        <axsl:attribute name="line-number">
+	  <axsl:value-of select="jing-extension-functions:line-number()"/>
+	</axsl:attribute>
+	<axsl:attribute name="system-id">
+	  <axsl:value-of select="jing-extension-functions:system-id()"/>
 	</axsl:attribute>
       </xsl:when>
       <xsl:when test="$xalan">
