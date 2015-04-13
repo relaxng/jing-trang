@@ -41,3 +41,5 @@ jars and then run some tests. On Linux,
 On Windows, use
 
   .\ant test
+
+Join the chat at https://gitter.im/relaxng/jing-trang
