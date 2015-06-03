@@ -990,7 +990,7 @@ void Include(GrammarSection<Pattern, Location, ElementAnnotation, CommentListImp
   Token t;
   String href;
   String ns;
-  Include include = section.makeInclude();
+  Include<Pattern, Location, ElementAnnotation, CommentListImpl, AnnotationsImpl> include = section.makeInclude();
 }
 {
   t = "include" href = Literal()
