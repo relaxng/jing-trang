@@ -38,3 +38,7 @@ After checking out from the repository, here's how to build.
    ```
    .\ant test
    ```
+
+### Build status
+
+[![Build Status](https://travis-ci.org/relaxng/jing-trang.svg)](https://travis-ci.org/relaxng/jing-trang)
