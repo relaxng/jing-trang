@@ -252,6 +252,9 @@ class DateTimeDatatype extends RegexDatatype implements OrderRelation {
     month -= 1;
     cal.set(year, month, day, hours, minutes, seconds);
     cal.set(Calendar.MILLISECOND, milliseconds);
+    if (negative) {
+      year = -(year - 1);
+    }
     checkDate(cal.isLeapYear(year), month, day); // for GCJ
     return cal.getTime();
   }
