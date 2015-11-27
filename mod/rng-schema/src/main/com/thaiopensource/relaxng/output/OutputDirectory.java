@@ -33,6 +33,7 @@ public interface OutputDirectory {
   String reference(String fromSourceUri, String toSourceUri);
   String getLineSeparator();
   int getLineLength();
+  void setLineLength(int lineLength);
   int getIndent();
   void setIndent(int indent);
   /**

@@ -17,7 +17,7 @@ public class LocalOutputDirectory implements OutputDirectory {
   private final String outputExtension;
   private String defaultEncoding;
   private boolean alwaysUseDefaultEncoding;
-  private final int lineLength;
+  private int lineLength;
   // maps URIs to filenames
   private final Map<String, String> uriMap = new HashMap<String, String>();
   private final String mainInputExtension;
@@ -87,6 +87,10 @@ public class LocalOutputDirectory implements OutputDirectory {
     return lineLength;
   }
 
+  public void setLineLength(int lineLength) {
+    this.lineLength = lineLength;
+  }
+  
   public int getIndent() {
     return indent;
   }
