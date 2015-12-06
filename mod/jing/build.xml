@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<project name="jing-integration-test">
+
+	<target name="run-all-integration-tests"
+	        depends="load-task,
+	        xsd-datatype-integration-tests,
+	        nvdl-integration-tests,
+	        rng-validate-integration-tests,
+	        picl-integration-tests,
+	        schematron-integration-tests"/>
+
+	<target name="load-task">
+		<taskdef name="jing" classname="com.thaiopensource.relaxng.util.JingTask">
+			<classpath>
+				<pathelement path="${test_classpath}"/>
+			</classpath>
+		</taskdef>
+	</target>
+
+	<property name="split_xsl" value="${it_resources_dir}/split.xsl"/>
+
+	<target name="xsd-datatype-integration-tests">
+		<property name="target_dir" value="${target_dir}/xsd-datatype"/>
+		<property name="testsuite" value="${mod_dir}/xsd-datatype/test/xsdtest.xml"/>
+		<property name="rng_testsuite" value="${it_resources_dir}/xsdtest.rnc"/>
+
+		<jing rngfile="${rng_testsuite}" file="${testsuite}" compactsyntax="true"/>
+		<delete dir="${target_dir}"/>
+		<mkdir dir="${target_dir}"/>
+		<xslt style="${mod_dir}/xsd-datatype/test/xsdtest.xsl" in="${testsuite}" out="${target_dir}/xsdtest.xml" classpath="${saxon:saxon:jar}">
+			<factory name="com.icl.saxon.TransformerFactoryImpl"/>
+		</xslt>
+		<xslt style="${split_xsl}" out="${target_dir}/stamp" in="${target_dir}/xsdtest.xml" classpath="${saxon:saxon:jar}">
+			<factory name="com.icl.saxon.TransformerFactoryImpl"/>
+			<param name="dir" expression="${target_dir}"/>
+		</xslt>
+
+		<antcall target="run-driver-integration-tests">
+			<param name="target_dir" value="${target_dir}"/>
+		</antcall>
+	</target>
+
+	<target name="nvdl-integration-tests">
+		<antcall target="run-integration-tests">
+			<param name="target_dir" value="${target_dir}/nvdl/mns"/>
+			<param name="testsuite" value="${mod_dir}/nvdl/test/mnstest.xml"/>
+			<param name="rng_testsuite" value="${it_resources_dir}/mnstest.rng"/>
+		</antcall>
+		<antcall target="run-integration-tests">
+			<param name="target_dir" value="${target_dir}/nvdl/nrl"/>
+			<param name="testsuite" value="${mod_dir}/nvdl/test/nrltest.xml"/>
+			<param name="rng_testsuite" value="${it_resources_dir}/nrltest.rng"/>
+		</antcall>
+		<antcall target="run-integration-tests">
+			<param name="target_dir" value="${target_dir}/nvdl/nvdl"/>
+			<param name="testsuite" value="${mod_dir}/nvdl/test/nvdltest.xml"/>
+			<param name="rng_testsuite" value="${it_resources_dir}/nvdltest.rng"/>
+		</antcall>
+	</target>
+
+	<target name="rng-validate-integration-tests">
+		<antcall target="run-integration-tests">
+			<param name="target_dir" value="${target_dir}/rng-validate"/>
+			<param name="testsuite" value="${mod_dir}/rng-validate/test/spectest.xml"/>
+			<param name="rng_testsuite" value="${it_resources_dir}/eg/testSuite.rng"/>
+		</antcall>
+	</target>
+
+	<target name="picl-integration-tests">
+		<antcall target="run-integration-tests">
+			<param name="target_dir" value="${target_dir}/picl"/>
+			<param name="testsuite" value="${mod_dir}/picl/test/picltest.xml"/>
+			<param name="rng_testsuite" value="${it_resources_dir}/picltest.nrl"/>
+		</antcall>
+	</target>
+
+	<target name="schematron-integration-tests">
+		<antcall target="run-integration-tests">
+			<param name="target_dir" value="${target_dir}/schematron/old-saxon"/>
+			<param name="testsuite" value="${mod_dir}/schematron/test/schematrontest.xml"/>
+			<param name="rng_testsuite" value="${it_resources_dir}/schematrontest.nrl"/>
+			<param name="additional_jar" value="${saxon:saxon:jar}"/>
+		</antcall>
+		<antcall target="run-integration-tests">
+			<param name="target_dir" value="${target_dir}/schematron/new-saxon"/>
+			<param name="testsuite" value="${mod_dir}/schematron/test/schematrontest.xml"/>
+			<param name="rng_testsuite" value="${it_resources_dir}/schematrontest.nrl"/>
+			<param name="additional_jar" value="${net.sf.saxon:Saxon-HE:jar}"/>
+		</antcall>
+		<antcall target="run-integration-tests">
+			<param name="target_dir" value="${target_dir}/schematron/xalan"/>
+			<param name="testsuite" value="${mod_dir}/schematron/test/schematrontest.xml"/>
+			<param name="rng_testsuite" value="${it_resources_dir}/schematrontest.nrl"/>
+			<param name="additional_jar" value="${xalan:xalan:jar};${xalan:serializer:jar}"/>
+		</antcall>
+		<antcall target="run-integration-tests">
+			<param name="target_dir" value="${target_dir}/schematron/jaxp"/>
+			<param name="testsuite" value="${mod_dir}/schematron/test/schematrontest.xml"/>
+			<param name="rng_testsuite" value="${it_resources_dir}/schematrontest.nrl"/>
+		</antcall>
+	</target>
+
+	<target name="run-integration-tests" depends="split-integration-tests,run-driver-integration-tests"/>
+
+	<target name="split-integration-tests">
+		<jing rngfile="${rng_testsuite}" file="${testsuite}"/>
+		<delete dir="${target_dir}"/>
+		<mkdir dir="${target_dir}"/>
+		<xslt style="${split_xsl}" out="${target_dir}/stamp" in="${testsuite}" classpath="${saxon:saxon:jar}">
+			<factory name="com.icl.saxon.TransformerFactoryImpl"/>
+			<param name="dir" expression="${target_dir}"/>
+		</xslt>
+	</target>
+
+	<target name="run-driver-integration-tests">
+		<java classname="com.thaiopensource.relaxng.util.TestDriver" fork="yes" failonerror="yes">
+			<arg value="${target_dir}/out.log"/>
+			<arg value="${target_dir}"/>
+			<classpath>
+				<pathelement path="${plugin_classpath}"/>
+				<pathelement path="${additional_jar}"/>
+			</classpath>
+		</java>
+	</target>
+</project>

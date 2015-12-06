@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                              http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.thaiopensource</groupId>
+    <artifactId>jing-trang-parent</artifactId>
+    <version>20131211-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Jing Trang Parent Project</name>
+    <description>Jing is an application for validating an XML document against a RELAX NG schema, in either the XML or the compact syntax. Trang is an application for converting different XML schema languages to and from RELAX NG.</description>
+    <url>http://www.thaiopensource.com</url>
+
+    <licenses>
+        <license>
+            <name>Thai Open Source Software License</name>
+            <url>http://www.thaiopensource.com/relaxng/copying.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>jjc@jclark.com</id>
+            <name>James Clark</name>
+            <email>jjc@jclark.com</email>
+            <url>http://www.jclark.com/</url>
+        </developer>
+        <developer>
+            <id>georgebina76</id>
+            <name>George Bina</name>
+            <email>georgebina76@gmail.com</email>
+        </developer>
+        <developer>
+            <id>hsivonen@iki.fi</id>
+            <name>Henri Sivonen</name>
+            <email>hsivonen@iki.fi</email>
+        </developer>
+        <developer>
+            <id>sideshowbarker</id>
+            <name>Michael Smith</name>
+            <email>sideshowbarker@gmail.com</email>
+        </developer>
+    </developers>
+
+    <mailingLists>
+        <mailingList>
+            <name>RELAX NG users mailing list</name>
+            <archive>https://groups.yahoo.com/neo/groups/rng-users/info</archive>
+        </mailingList>
+    </mailingLists>
+
+    <modules>
+        <!-- Common -->
+        <module>mod/util</module>
+        <module>mod/regex-gen</module>
+        <module>mod/resolver</module>
+        <module>mod/catalog</module>
+        <module>mod/regex</module>
+        <module>mod/datatype</module>
+        <module>mod/xsd-datatype</module>
+        <module>mod/rng-parse</module>
+
+        <!-- Jing -->
+        <module>mod/pattern</module>
+        <module>mod/rng-jarv</module>
+        <module>mod/jaxp</module>
+        <module>mod/rng-jaxp</module>
+        <module>mod/validate</module>
+        <module>mod/rng-validate</module>
+        <module>mod/nvdl</module>
+        <module>mod/schematron</module>
+        <module>mod/xerces</module>
+        <module>mod/picl</module>
+        <module>mod/jing</module>
+
+        <!-- Trang -->
+        <module>mod/rng-schema</module>
+        <module>mod/convert-to-xsd</module>
+        <module>mod/convert-to-dtd</module>
+        <module>mod/dtd-parse</module>
+        <module>mod/dtdinst</module>
+        <module>mod/convert-from-dtd</module>
+        <module>mod/infer</module>
+        <module>mod/convert-from-xml</module>
+        <module>mod/trang</module>
+
+        <module>mod/datatype-sample</module>
+
+        <module>mod/integration-test</module>
+    </modules>
+
+    <scm>
+        <connection>scm:git:https://github.com/relaxng/jing-trang.git</connection>
+        <url>https://github.com/relaxng/jing-trang</url>
+    </scm>
+
+    <issueManagement>
+        <url>https://github.com/relaxng/jing-trang/issues</url>
+    </issueManagement>
+
+    <distributionManagement>
+        <site>
+            <id>file.site</id>
+            <url>file:/tmp/deploy/</url>
+        </site>
+    </distributionManagement>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Used for the web pages, the property name can not contain dot -->
+        <projectVersion>${project.version}</projectVersion>
+
+        <!-- Third Party -->
+        <saxon6.version>6.5.3</saxon6.version>
+        <saxon9.version>9.5.1-8</saxon9.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>2.9.1</version>
+            </dependency>
+            <dependency>
+                <groupId>xalan</groupId>
+                <artifactId>xalan</artifactId>
+                <version>2.7.1</version>
+            </dependency>
+            <dependency>
+                <groupId>saxon</groupId>
+                <artifactId>saxon</artifactId>
+                <version>${saxon6.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.sf.saxon</groupId>
+                <artifactId>Saxon-HE</artifactId>
+                <version>${saxon9.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>isorelax</groupId>
+                <artifactId>isorelax</artifactId>
+                <version>20030108</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.4</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.8.7</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.3</version>
+                    <configuration>
+                        <source>1.5</source>
+                        <target>1.5</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.6</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.4</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.10.3</version>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.19</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.6</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.9.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.8</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.4</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.doxia</groupId>
+                            <artifactId>doxia-module-xhtml</artifactId>
+                            <version>1.6</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-project-info-reports-plugin</artifactId>
+                    <version>2.8.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>relaxng-post-site</id>
+                        <phase>post-site</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <inherited>false</inherited>
+                        <configuration>
+                            <target>
+                                <xslt in="${basedir}/src/site/xml/nrl.xml" out="${project.reporting.outputDirectory}/nrl.html" style="${basedir}/src/site/xml/nrl.xsl">
+                                    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+                                </xslt>
+                                <xslt in="${basedir}/src/site/xml/design.xml" out="${project.reporting.outputDirectory}/design.html" style="${basedir}/src/site/xml/design.xsl">
+                                    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+                                </xslt>
+                                <xslt in="${basedir}/src/site/xml/derivative.xml" out="${project.reporting.outputDirectory}/derivative.html" style="${basedir}/src/site/xml/derivative.xsl">
+                                    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+                                </xslt>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>net.sf.saxon</groupId>
+                        <artifactId>Saxon-HE</artifactId>
+                        <version>${saxon9.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>modules</report>
+                            <report>dependencies</report>
+                            <report>dependency-info</report>
+                            <report>project-team</report>
+                            <report>mailing-list</report>
+                            <report>issue-tracking</report>
+                            <report>license</report>
+                            <report>scm</report>
+                            <report>index</report>
+                            <report>summary</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>2.5</version>
+            </plugin>
+        </plugins>
+    </reporting>
+</project>

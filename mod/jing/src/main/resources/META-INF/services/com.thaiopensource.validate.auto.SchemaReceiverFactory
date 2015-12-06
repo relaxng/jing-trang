@@ -1,0 +1,6 @@
+com.thaiopensource.validate.rng.SAXSchemaReceiverFactory
+com.thaiopensource.validate.nvdl.NvdlSchemaReceiverFactory
+com.thaiopensource.validate.nrl.NrlSchemaReceiverFactory
+com.thaiopensource.validate.mns.MnsSchemaReceiverFactory
+com.thaiopensource.validate.picl.PiclSchemaReceiverFactory
+com.thaiopensource.validate.auto.SchemaReaderLoaderSchemaReceiverFactory

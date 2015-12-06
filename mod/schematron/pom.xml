@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.thaiopensource</groupId>
+        <artifactId>jing-trang-parent</artifactId>
+        <version>20131211-SNAPSHOT</version>
+        <relativePath>../..</relativePath>
+    </parent>
+
+    <artifactId>schematron</artifactId>
+    <packaging>jar</packaging>
+    <name>Jing - Schematron</name>
+    <description>Implements Schematron 1.5 for the framework provided by the validate module; depends on rng-validate (because it uses RELAX NG to validate Schematron schemas)</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rng-validate</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>saxon</groupId>
+            <artifactId>saxon</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.saxon</groupId>
+            <artifactId>Saxon-HE</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>xalan</groupId>
+            <artifactId>xalan</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <property name="mod.schematron.respackage" value="com/thaiopensource/validate/schematron/resources"/>
+                                <property name="mod.schematron.targetdir" value="${project.build.directory}/generated-resources/xsl/${mod.schematron.respackage}"/>
+                                <mkdir dir="${mod.schematron.targetdir}"/>
+                                <xslt in="${basedir}/src/main/resources/${mod.schematron.respackage}/schematron.xsl" out="${mod.schematron.targetdir}/schematron-xsltc.xsl" style="${basedir}/lib/xsltc-fixup.xsl">
+                                    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+                                </xslt>
+                                <xslt in="${basedir}/src/main/resources/${mod.schematron.respackage}/iso-schematron.xsl" out="${mod.schematron.targetdir}/iso-schematron-xsltc.xsl" style="${basedir}/lib/xsltc-fixup.xsl">
+                                    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+                                </xslt>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>net.sf.saxon</groupId>
+                        <artifactId>Saxon-HE</artifactId>
+                        <version>${saxon9.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-schematron-resources</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/generated-resources/xsl</directory>
+                                    <targetPath>${project.build.outputDirectory}</targetPath>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

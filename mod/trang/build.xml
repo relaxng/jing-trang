@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<project name="trang-integration-test">
+
+	<target name="run-all-integration-tests" depends="load-task,convert-to-xsd-integration-tests,rng-schema-integration-tests"/>
+
+	<target name="load-task">
+		<taskdef name="jing" classname="com.thaiopensource.relaxng.util.JingTask">
+			<classpath>
+				<pathelement path="${plugin_classpath}"/>
+			</classpath>
+		</taskdef>
+	</target>
+
+	<target name="convert-to-xsd-integration-tests">
+		<antcall target="run-integration-tests">
+			<param name="target_dir" value="${target_dir}/convert-to-xsd"/>
+			<param name="testsuite" value="${mod_dir}/xsd-datatype/test/xsdtest.xml"/>
+			<param name="rng_testsuite" value="${it_resources_dir}/xsdtest.rnc"/>
+			<param name="output" value="xsl"/>
+		</antcall>
+	</target>
+
+	<target name="rng-schema-integration-tests">
+		<antcall target="run-integration-tests">
+			<param name="target_dir" value="${target_dir}/rng-schema"/>
+			<param name="testsuite" value="${mod_dir}/rng-schema/test/compacttest.xml"/>
+			<param name="rng_testsuite" value="${basedir}/src/test/resources/compacttest.rnc"/>
+			<param name="output" value="xml"/>
+		</antcall>
+	</target>
+
+	<target name="run-integration-tests" depends="split-integration-tests,run-driver-integration-tests"/>
+
+	<target name="split-integration-tests">
+		<jing rngfile="${rng_testsuite}" file="${testsuite}" compactsyntax="true"/>
+		<delete dir="${target_dir}"/>
+		<mkdir dir="${target_dir}"/>
+		<xslt style="${it_resources_dir}/compactsplit.xsl" out="${target_dir}/stamp" in="${testsuite}">
+			<factory name="com.icl.saxon.TransformerFactoryImpl"/>
+			<param name="dir" expression="${target_dir}"/>
+		</xslt>
+	</target>
+
+	<target name="run-driver-integration-tests">
+		<java classname="com.thaiopensource.relaxng.translate.test.CompactTestDriver" fork="yes" failonerror="yes">
+			<arg value="${target_dir}/out.log"/>
+			<arg value="${target_dir}"/>
+			<arg value="${output}"/>
+			<classpath>
+				<pathelement path="${test_classpath}"/>
+			</classpath>
+		</java>
+	</target>
+</project>

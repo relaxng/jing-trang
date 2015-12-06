@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.thaiopensource</groupId>
+        <artifactId>jing-trang-parent</artifactId>
+        <version>20131211-SNAPSHOT</version>
+        <relativePath>../..</relativePath>
+    </parent>
+
+    <artifactId>integration-test</artifactId>
+    <packaging>jar</packaging>
+    <name>Integration tests</name>
+    <description>Validation tests for jing and trang</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>run-integration-test</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <property name="plugin_classpath" refid="maven.plugin.classpath"/>
+                                <property name="test_dir" value="${basedir}/src/test/resources"/>
+                                <property name="mod_dir" value="${basedir}/.."></property>
+
+                                <taskdef classname="com.thaiopensource.relaxng.util.JingTask" name="jing">
+                                    <classpath>
+                                        <pathelement path="${plugin_classpath}"/>
+                                    </classpath>
+                                </taskdef>
+
+                                <jing compactsyntax="true" rngfile="${test_dir}/regextest.rnc">
+                                    <fileset dir="${mod_dir}/regex/src/test/resources" includes="regextest.xml"/>
+                                </jing>
+
+                                <jing rngfile="${test_dir}/xhtml/xhtml.rng">
+                                    <fileset dir="${mod_dir}/../src/site/xhtml" includes="*.xhtml,*.xhtml.vm"/>
+                                    <fileset dir="${mod_dir}/regex/src/site/xhtml" includes="*.xhtml,*.xhtml.vm"/>
+                                    <fileset dir="${mod_dir}/jing/src/site/xhtml" includes="*.xhtml,*.xhtml.vm"/>
+                                    <fileset dir="${mod_dir}/trang/src/site/xhtml" includes="*.xhtml,*.xhtml.vm"/>
+                                    <fileset dir="${mod_dir}/trang/src/site/xhtml/compact" includes="*.xhtml,*.xhtml.vm"/>
+                                    <fileset dir="${mod_dir}/integration-test/src/site/xhtml" includes="*.xhtml,*.xhtml.vm"/>
+                                    <fileset dir="${mod_dir}/integration-test/src/site/xhtml/xhtml" includes="*.xhtml,*.xhtml.vm"/>
+                                    <fileset dir="${mod_dir}/datatype-sample/src/site/xhtml" includes="*.xhtml,*.xhtml.vm"/>
+                                    <fileset dir="${mod_dir}/../src/site/resources" includes="copying.html"/>
+                                </jing>
+
+                                <jing rngfile="${test_dir}/eg/relaxng.rng">
+                                    <fileset dir="${test_dir}/eg" includes="*.rng"/>
+                                    <fileset dir="${test_dir}/xhtml" includes="**/*.rng"/>
+                                </jing>
+
+                                <jing compactsyntax="true" rngfile="${mod_dir}/trang/src/site/resources/compact/relaxng.rnc">
+                                    <fileset dir="${test_dir}/eg" includes="relaxng.rng"/>
+                                </jing>
+
+                                <jing rngfile="${test_dir}/eg/xslt.rng">
+                                    <fileset dir="${mod_dir}/../src/site/resources/convert" includes="*.xsl"/>
+                                </jing>
+
+                                <jing rngfile="${test_dir}/design.rng">
+                                    <fileset dir="${mod_dir}/../src/site/xml" includes="design.xml"/>
+                                </jing>
+
+                                <jing rngfile="${test_dir}/nrl.rng">
+                                    <fileset dir="${mod_dir}/../src/site/xml" includes="nrl.xml"/>
+                                </jing>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>integration-test-post-site</id>
+                        <phase>post-site</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <property name="plugin_classpath" refid="maven.plugin.classpath"/>
+                                <property name="test_dir" value="${basedir}/src/test/resources"/>
+                                <property name="mod_dir" value="${basedir}/.."/>
+
+                                <copy todir="${project.reporting.outputDirectory}">
+                                    <fileset dir="${test_dir}" includes="xhtml/**/*.rng"/>
+                                    <fileset dir="${test_dir}/eg" includes="relaxng.rng,xslt.rng,relaxCore.rng,relaxCoreDatatypes.rng"/>
+                                </copy>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.thaiopensource</groupId>
+                        <artifactId>jing</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+</project>

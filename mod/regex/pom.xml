@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.thaiopensource</groupId>
+        <artifactId>jing-trang-parent</artifactId>
+        <version>20131211-SNAPSHOT</version>
+        <relativePath>../..</relativePath>
+    </parent>
+
+    <artifactId>regex</artifactId>
+    <packaging>jar</packaging>
+    <name>Common - Regex</name>
+    <description>Supports regular expressions using the syntax of W3C XML Schema Part 2; includes code to translate W3C XML Schema regular expressions into java.util.regex regular expressions</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <testResourcesDirectory>${basedir}/src/test/resources</testResourcesDirectory>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-sources-regex</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.build.directory}/generated-sources/antrun/com/thaiopensource/datatype/xsd/regex/java"/>
+                                <java classname="com.thaiopensource.datatype.xsd.regex.java.gen.NamingExceptionsGen" failonerror="yes" fork="yes">
+                                    <arg value="com.thaiopensource.datatype.xsd.regex.java.NamingExceptions"/>
+                                    <arg value="${project.build.directory}/generated-sources/antrun"/>
+                                    <classpath refid="maven.plugin.classpath"/>
+                                </java>
+                                <java classname="com.thaiopensource.datatype.xsd.regex.java.gen.CategoriesGen" failonerror="yes" fork="yes">
+                                    <arg value="com.thaiopensource.datatype.xsd.regex.java.Categories"/>
+                                    <arg value="${project.build.directory}/generated-sources/antrun"/>
+                                    <arg value="${basedir}/src/main/resources/UnicodeData-3.1.0.txt"/>
+                                    <classpath refid="maven.plugin.classpath"/>
+                                </java>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>test-regex</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <!-- was disabled in the ant build -->
+                        <!--<phase>test</phase>-->
+                        <configuration>
+                            <target unless="maven.test.skip">
+                                <property name="test_classpath" refid="maven.test.classpath"/>
+
+                                <mkdir dir="${project.build.directory}/test-category"/>
+                                <java classname="com.thaiopensource.datatype.xsd.regex.test.CategoryTest" failonerror="yes" fork="yes">
+                                    <arg value="com.thaiopensource.datatype.xsd.regex.java.RegexEngineImpl"/>
+                                    <arg value="${basedir}/src/main/resources/UnicodeData-4.0.0.txt"/>
+                                    <classpath>
+                                        <pathelement path="${test_classpath}"/>
+                                    </classpath>
+                                </java>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.thaiopensource</groupId>
+                        <artifactId>regex-gen</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-regex-gen-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/antrun</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

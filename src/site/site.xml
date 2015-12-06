@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/DECORATION/1.4.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.4.0 http://maven.apache.org/xsd/decoration-1.4.0.xsd">
+
+    <version position="right"/>
+    <body>
+        <menu ref="parent" inherit="top"/>
+        <menu name="RelaxNG">
+            <item name="Jing" href="jing/jing.html"/>
+            <item name="Trang" href="trang/trang.html"/>
+            <item name="DTDinst" href="dtdinst/index.html"/>
+            <item name="Namespace Routing Language (NRL)" href="dtdinst/index.html"/>
+            <item name="The Design of RELAX NG" href="dtdinst/index.html"/>
+            <item name="Notes" href="dtdinst/index.html"/>
+        </menu>
+        <menu ref="reports" inherit="bottom"/>
+        <menu ref="modules" inherit="bottom"/>
+    </body>
+</project>
