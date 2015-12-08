@@ -756,50 +756,9 @@
 <testCase>
 <section>3</section>
 <incorrect>
-<element name="&#xE35;" xmlns="http://relaxng.org/ns/structure/1.0">
-  <empty/>
-</element>
-</incorrect>
-</testCase>
-<testCase>
-<section>3</section>
-<incorrect>
 <element name="" xmlns="http://relaxng.org/ns/structure/1.0">
   <empty/>
 </element>
-</incorrect>
-</testCase>
-<testCase>
-<section>3</section>
-<incorrect>
-<element xmlns="http://relaxng.org/ns/structure/1.0">
-  <name>&#xE35;</name>
-  <empty/>
-</element>
-</incorrect>
-</testCase>
-<testCase>
-<section>3</section>
-<incorrect>
-<element name="foo" xmlns="http://relaxng.org/ns/structure/1.0">
-  <attribute name="&#xE35;"/>
-  <empty/>
-</element>
-</incorrect>
-</testCase>
-<testCase>
-<section>3</section>
-<incorrect>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0">
-  <start>
-    <ref name="&#xE35;"/>
-  </start>
-  <define name="&#xE35;">
-    <element name="foo">
-      <empty/>
-    </element>
-  </define>
-</grammar>
 </incorrect>
 </testCase>
 <testCase>
@@ -864,16 +823,6 @@
     </element>
   </define>
 </grammar>
-</incorrect>
-</testCase>
-<testCase>
-<section>3</section>
-<incorrect>
-<element xmlns="http://relaxng.org/ns/structure/1.0"
-         xmlns:x="http://www.example.com/x"
-         name="x:&#xE35;">
-  <empty/>
-</element>
 </incorrect>
 </testCase>
 <testCase>
