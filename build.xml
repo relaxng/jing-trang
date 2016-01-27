@@ -409,4 +409,8 @@
   <ant antfile="modbuild.xml" target="services"/>
 </target>
 
+<target name="echoproperties">
+  <echoproperties />
+</target>
+
 </project>
