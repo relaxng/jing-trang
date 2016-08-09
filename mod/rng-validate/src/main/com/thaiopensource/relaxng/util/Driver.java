@@ -41,7 +41,7 @@ class Driver {
 
   public int doMain(String[] args) {
     ErrorHandlerImpl eh = new ErrorHandlerImpl(System.out);
-    OptionParser op = new OptionParser("itcdfe:p:sC:", args);
+    OptionParser op = new OptionParser("itxcdfe:p:sC:", args);
     PropertyMapBuilder properties = new PropertyMapBuilder();
     properties.put(ValidateProperty.ERROR_HANDLER, eh);
     RngProperty.CHECK_ID_IDREF.add(properties);
@@ -76,6 +76,9 @@ class Driver {
           break;
         case 't':
           timing = true;
+          break;
+        case 'x':
+          // TODO: do something clever now
           break;
         case 'e':
           encoding = op.getOptionArg();
