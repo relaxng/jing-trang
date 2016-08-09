@@ -22,7 +22,7 @@ public class PatternSchema extends AbstractSchema {
 
   public Validator createValidator(PropertyMap properties) {
     ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
-    if (properties.contains(RngProperty.XPATH_LOCATORS)) System.out.println("TEST"); // TODO: return our new validator
+    if (properties.contains(RngProperty.XPATH_LOCATORS)) return new RngXpathValidator(start, new ValidatorPatternBuilder(spb), eh);
     return new RngValidator(start, new ValidatorPatternBuilder(spb), eh);
   }
 }
