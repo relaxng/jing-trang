@@ -1,0 +1,9 @@
+# ant stuff
+build/
+modbuild.xml
+modules.xml
+
+# idea stuff
+.idea/
+*.iml
+
