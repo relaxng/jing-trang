@@ -7,6 +7,7 @@ import com.thaiopensource.util.PropertyMap;
 import com.thaiopensource.validate.AbstractSchema;
 import com.thaiopensource.validate.ValidateProperty;
 import com.thaiopensource.validate.Validator;
+import com.thaiopensource.validate.prop.rng.RngProperty;
 import org.xml.sax.ErrorHandler;
 
 public class PatternSchema extends AbstractSchema {
@@ -21,6 +22,7 @@ public class PatternSchema extends AbstractSchema {
 
   public Validator createValidator(PropertyMap properties) {
     ErrorHandler eh = properties.get(ValidateProperty.ERROR_HANDLER);
+    if (properties.contains(RngProperty.XPATH_LOCATORS)) System.out.println("TEST"); // TODO: return our new validator
     return new RngValidator(start, new ValidatorPatternBuilder(spb), eh);
   }
 }

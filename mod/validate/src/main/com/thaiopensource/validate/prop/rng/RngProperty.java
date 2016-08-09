@@ -16,6 +16,7 @@ public class RngProperty {
           = PropertyId.newInstance("DATATYPE_LIBRARY_FACTORY", DatatypeLibraryFactory.class);
   public static final FlagPropertyId CHECK_ID_IDREF = new FlagPropertyId("CHECK_ID_IDREF");
   public static final FlagPropertyId FEASIBLE = new FlagPropertyId("FEASIBLE");
+  public static final FlagPropertyId XPATH_LOCATORS = new FlagPropertyId("XPATH_LOCATORS");
   public static final StringPropertyId SIMPLIFIED_SCHEMA = new StringPropertyId("SIMPLIFIED_SCHEMA");
 
   public static Option getOption(String uri) {

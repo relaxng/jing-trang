@@ -78,7 +78,7 @@ class Driver {
           timing = true;
           break;
         case 'x':
-          // TODO: do something clever now
+          RngProperty.XPATH_LOCATORS.add(properties);
           break;
         case 'e':
           encoding = op.getOptionArg();
