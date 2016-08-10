@@ -14,25 +14,48 @@ import java.util.Map;
  * Relax NG validator which outputs XPath locators.
  */
 public class RngXpathValidator extends RngValidator {
+    private Element curElement;
 
     private class Element {
         private Element parent;
         private String name;
+
         private boolean isClosed;
+        private int position;
+        private Map<String, Integer> sib2pos;
 
         public Element(Element parent, String name) {
             this.parent = parent;
             this.name = name;
+
             isClosed = false;
+            position = 1;
+            sib2pos = new HashMap<String, Integer>();
+        }
+
+        public Element sibling(String sibName) {
+            isClosed = false;
+
+            if (name.equals(sibName)) {
+                position++;
+            } else {
+                sib2pos.put(name, position);
+                name = sibName;
+                position = 1;
+                Integer sibPosition = sib2pos.remove(sibName);
+                if (sibPosition != null) position += sibPosition;
+            }
+
+            return this;
         }
 
         public void close() {
             isClosed = true;
         }
 
-        public String toXPath(Map<Element, Integer> element2numOccurrences) {
-            StringBuilder xpath = new StringBuilder("/" + name + "[" + element2numOccurrences.get(this) + "]");
-            if (parent != null) xpath.insert(0, parent.toXPath(element2numOccurrences));
+        public String toXPath() {
+            StringBuilder xpath = new StringBuilder("/" + name + "[" + position + "]");
+            if (parent != null) xpath.insert(0, parent.toXPath());
             return xpath.toString();
         }
 
@@ -42,6 +65,7 @@ public class RngXpathValidator extends RngValidator {
             if (object == null || getClass() != object.getClass()) return false;
             Element element = (Element) object;
 
+            if (position != element.position) return false;
             if (parent != null ? !parent.equals(element.parent) : element.parent != null) return false;
             return name.equals(element.name);
         }
@@ -50,12 +74,10 @@ public class RngXpathValidator extends RngValidator {
         public int hashCode() {
             int result = parent != null ? parent.hashCode() : 0;
             result = 31 * result + name.hashCode();
+            result = 31 * result + position;
             return result;
         }
     }
-
-    private Map<Element, Integer> element2numOccurrences;
-    private Element current;
 
     public RngXpathValidator(Pattern pattern, ValidatorPatternBuilder builder, ErrorHandler eh) {
         super(pattern, builder, eh);
@@ -68,33 +90,28 @@ public class RngXpathValidator extends RngValidator {
 
     @Override
     public void startDocument() throws SAXException {
-        element2numOccurrences = new HashMap<Element, Integer>();
         super.startDocument();
     }
 
     @Override
     public void endDocument() throws SAXException {
-        element2numOccurrences = null;
-        current = null;
+        curElement = null;
         super.endDocument();
     }
 
     @Override
     public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
-        if (current == null) current = new Element(null, qName);
-        else if (!current.isClosed) current = new Element(current, qName);
-        else current = new Element(current.parent, qName);
-
-        int numOccurrences = element2numOccurrences.getOrDefault(current, 0);
-        element2numOccurrences.put(current, numOccurrences + 1);
+        if (curElement == null) curElement = new Element(null, qName);
+        else if (curElement.isClosed) curElement = curElement.sibling(qName);
+        else curElement = new Element(curElement, qName);
 
         super.startElement(namespaceURI, localName, qName, atts);
     }
 
     @Override
     public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
-        if (current.isClosed) current = current.parent;
-        current.close();
+        if (curElement.isClosed) curElement = curElement.parent;
+        curElement.close();
 
         super.endElement(namespaceURI, localName, qName);
     }
@@ -106,13 +123,12 @@ public class RngXpathValidator extends RngValidator {
 
     @Override
     public void reset() {
-        element2numOccurrences = null;
-        current = null;
+        curElement = null;
         super.reset();
     }
 
     @Override
     protected void check(boolean ok) throws SAXException {
-        if (!ok) eh.error(new SAXParseException(current.toXPath(element2numOccurrences) + " - " + matcher.getErrorMessage(), locator));
+        if (!ok) eh.error(new SAXParseException(curElement.toXPath() + " - " + matcher.getErrorMessage(), locator));
     }
 }
