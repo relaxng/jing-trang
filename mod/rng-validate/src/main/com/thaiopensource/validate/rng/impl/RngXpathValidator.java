@@ -14,7 +14,7 @@ import java.util.Map;
  * Relax NG validator which outputs XPath locators.
  */
 public class RngXpathValidator extends RngValidator {
-    private static final String SEPARATOR = " - ";
+    private static final String XPATH_SEPARATOR = " - ";
 
     private Element curElement;
 
@@ -137,6 +137,6 @@ public class RngXpathValidator extends RngValidator {
 
     @Override
     protected void check(boolean ok) throws SAXException {
-        if (!ok) eh.error(new SAXParseException(curElement.toXPath() + SEPARATOR + matcher.getErrorMessage(), locator));
+        if (!ok) eh.error(new SAXParseException(curElement.toXPath() + XPATH_SEPARATOR + matcher.getErrorMessage(), locator));
     }
 }
