@@ -17,9 +17,12 @@ import com.thaiopensource.validate.auto.AutoSchemaReader;
 import com.thaiopensource.validate.prop.rng.RngProperty;
 import com.thaiopensource.validate.rng.CompactSchemaReader;
 import com.thaiopensource.xml.sax.ErrorHandlerImpl;
+import com.thaiopensource.xml.sax.SvrlErrorHandler;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +44,7 @@ class Driver {
 
   public int doMain(String[] args) {
     ErrorHandlerImpl eh = new ErrorHandlerImpl(System.out);
-    OptionParser op = new OptionParser("itxcdfe:p:sC:", args);
+    OptionParser op = new OptionParser("itxcdfe:p:sC:S:", args);
     PropertyMapBuilder properties = new PropertyMapBuilder();
     properties.put(ValidateProperty.ERROR_HANDLER, eh);
     RngProperty.CHECK_ID_IDREF.add(properties);
@@ -58,6 +61,10 @@ class Driver {
           break;
         case 'C':
           catalogUris.add(UriOrFile.toUri(op.getOptionArg()));
+          break;
+        case 'S':
+          RngProperty.XPATH_LOCATORS.add(properties);
+          properties.put(ValidateProperty.ERROR_HANDLER, new SvrlErrorHandler(new File(op.getOptionArg())));
           break;
         case 'c':
           compact = true;
@@ -160,6 +167,9 @@ class Driver {
       }
       else
 	hadError = true;
+
+      ErrorHandler errorHandler = properties.get(ValidateProperty.ERROR_HANDLER);
+      if (errorHandler instanceof SvrlErrorHandler) ((SvrlErrorHandler) errorHandler).close();
     }
     catch (SAXException e) {
       hadError = true;

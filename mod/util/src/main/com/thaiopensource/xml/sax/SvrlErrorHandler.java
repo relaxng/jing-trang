@@ -7,30 +7,45 @@ import org.xml.sax.SAXParseException;
 import java.io.*;
 
 public class SvrlErrorHandler implements ErrorHandler {
+    private static final OutputStream DEFAULT_OUTPUT = System.out;
     private static final String ENCODING = "UTF-8";
     private static final String XPATH_SEPARATOR = " - ";
 
-    private final PrintWriter writer;
+    private PrintWriter writer;
 
-    public SvrlErrorHandler(File file) throws FileNotFoundException, UnsupportedEncodingException {
-        writer = new PrintWriter(file, ENCODING);
+    public SvrlErrorHandler() {
+        this(DEFAULT_OUTPUT);
     }
 
     public SvrlErrorHandler(OutputStream output) {
         writer = new PrintWriter(output);
+        beginSVRL();
+    }
+
+    public SvrlErrorHandler(File file) {
+
+        try {
+            writer = new PrintWriter(file, ENCODING);
+            beginSVRL();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 
     public void close() throws IOException {
+        endSVRL();
         writer.close();
     }
 
-    public void beginSVRL() {
+    private void beginSVRL() {
         writer.println("<?xml version=\"1.0\" encoding=\"" + ENCODING + "\"?>");
         writer.println("<svrl:schematron-output xmlns:svrl=\"http://purl.oclc.org/dsdl/svrl\">");
         writer.flush();
     }
 
-    public void endSVRL() {
+    private void endSVRL() {
         writer.println("</svrl:schematron-output>");
         writer.flush();
     }
