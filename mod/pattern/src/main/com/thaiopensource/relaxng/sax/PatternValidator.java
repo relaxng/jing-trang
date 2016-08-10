@@ -14,11 +14,11 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 public class PatternValidator extends Context implements ContentHandler, DTDHandler {
-  private Matcher matcher;
-  private final ErrorHandler eh;
+  protected Matcher matcher;
+  protected final ErrorHandler eh;
   private boolean bufferingCharacters = false;
   private final StringBuilder charBuf = new StringBuilder();
-  private Locator locator = null;
+  protected Locator locator = null;
 
   public void startElement(String namespaceURI,
 			   String localName,
@@ -111,7 +111,7 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
     matcher = matcher.start();
   }
 
-  private void check(boolean ok) throws SAXException {
+  protected void check(boolean ok) throws SAXException {
     if (!ok)
       eh.error(new SAXParseException(matcher.getErrorMessage(), locator));
   }
