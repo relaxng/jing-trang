@@ -14,8 +14,13 @@ import java.util.Map;
  * Relax NG validator which outputs XPath locators.
  */
 public class RngXpathValidator extends RngValidator {
+    private static final String SEPARATOR = " - ";
+
     private Element curElement;
 
+    /**
+     * Represent an XML element.
+     */
     private class Element {
         private Element parent;
         private String name;
@@ -24,6 +29,12 @@ public class RngXpathValidator extends RngValidator {
         private int position;
         private Map<String, Integer> sib2pos;
 
+        /**
+         * Create a new element.
+         *
+         * @param parent The parent element of the new element.
+         * @param name   The qualified name of the new element.
+         */
         public Element(Element parent, String name) {
             this.parent = parent;
             this.name = name;
@@ -33,9 +44,15 @@ public class RngXpathValidator extends RngValidator {
             sib2pos = new HashMap<String, Integer>();
         }
 
+        /**
+         * Get the next sibling of this element.
+         *
+         * @param sibName The qualified name of the sibling.
+         */
         public Element sibling(String sibName) {
             isClosed = false;
 
+            // mutate this element into its sibling
             if (name.equals(sibName)) {
                 position++;
             } else {
@@ -49,10 +66,16 @@ public class RngXpathValidator extends RngValidator {
             return this;
         }
 
+        /**
+         * Close this element.
+         */
         public void close() {
             isClosed = true;
         }
 
+        /**
+         * Get the full XPath to this element.
+         */
         public String toXPath() {
             StringBuilder xpath = new StringBuilder("/" + name + "[" + position + "]");
             if (parent != null) xpath.insert(0, parent.toXPath());
@@ -84,16 +107,6 @@ public class RngXpathValidator extends RngValidator {
     }
 
     @Override
-    public void startPrefixMapping(String prefix, String uri) throws SAXException {
-        super.startPrefixMapping(prefix, uri);
-    }
-
-    @Override
-    public void startDocument() throws SAXException {
-        super.startDocument();
-    }
-
-    @Override
     public void endDocument() throws SAXException {
         curElement = null;
         super.endDocument();
@@ -117,11 +130,6 @@ public class RngXpathValidator extends RngValidator {
     }
 
     @Override
-    public void characters(char[] ch, int start, int length) throws SAXException {
-        super.characters(ch, start, length);
-    }
-
-    @Override
     public void reset() {
         curElement = null;
         super.reset();
@@ -129,6 +137,6 @@ public class RngXpathValidator extends RngValidator {
 
     @Override
     protected void check(boolean ok) throws SAXException {
-        if (!ok) eh.error(new SAXParseException(curElement.toXPath() + " - " + matcher.getErrorMessage(), locator));
+        if (!ok) eh.error(new SAXParseException(curElement.toXPath() + SEPARATOR + matcher.getErrorMessage(), locator));
     }
 }
