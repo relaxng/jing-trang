@@ -24,9 +24,12 @@ public class SchemaPatternBuilder extends PatternBuilder {
   }
 
   Pattern makeAttribute(NameClass nameClass, Pattern value, Locator loc) {
+    return makeAttribute(nameClass, value, loc, null);
+  }
+  Pattern makeAttribute(NameClass nameClass, Pattern value, Locator loc, String defaultValue) {
     if (value == notAllowed)
       return value;
-    Pattern p = new AttributePattern(nameClass, value, loc);
+    Pattern p = new AttributePattern(nameClass, value, loc, defaultValue);
     return schemaInterner.intern(p);
   }
 
