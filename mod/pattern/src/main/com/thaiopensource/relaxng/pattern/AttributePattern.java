@@ -7,8 +7,9 @@ class AttributePattern extends Pattern {
   private final NameClass nameClass;
   private final Pattern p;
   private final Locator loc;
+  private final String defaultValue;
 
-  AttributePattern(NameClass nameClass, Pattern value, Locator loc) {
+  AttributePattern(NameClass nameClass, Pattern value, Locator loc, String defaultValue) {
     super(false,
 	  EMPTY_CONTENT_TYPE,
 	  combineHashCode(ATTRIBUTE_HASH_CODE,
@@ -17,12 +18,13 @@ class AttributePattern extends Pattern {
     this.nameClass = nameClass;
     this.p = value;
     this.loc = loc;
+    this.defaultValue = defaultValue;
   }
 
   Pattern expand(SchemaPatternBuilder b) {
     Pattern ep = p.expand(b);
     if (ep != p)
-      return b.makeAttribute(nameClass, ep, loc);
+      return b.makeAttribute(nameClass, ep, loc, defaultValue);
     else
       return this;
   }
@@ -61,7 +63,9 @@ class AttributePattern extends Pattern {
     if (!(other instanceof AttributePattern))
       return false;
     AttributePattern ap = (AttributePattern)other;
-    return nameClass.equals(ap.nameClass)&& p == ap.p;
+    boolean sameDefaults = defaultValue == ap.defaultValue ? true :
+        (defaultValue != null ? defaultValue.equals(ap.defaultValue) : false);
+    return nameClass.equals(ap.nameClass)&& p == ap.p && sameDefaults;
   }
 
   void checkRecursion(int depth) throws SAXException {
@@ -83,4 +87,8 @@ class AttributePattern extends Pattern {
   Locator getLocator() {
     return loc;
   }
+  String getDefaultValue() {
+    return defaultValue;
+  }
+  
 }
