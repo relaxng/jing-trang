@@ -93,7 +93,7 @@ class Particle {
 	  if (p.entity.parsed.size() == 0
 	      && ((p.entity.groupFlags & Entity.GROUP_CONTAINS_SEQ) != 0)
               ||
-              p.entity.entityValue.endsWith(","))
+              (p.entity.entityValue != null && p.entity.entityValue.endsWith(",")))
 	    isSequence = true;
 	  i = indexOfReferenceEnd(v, i);
 	  break;
