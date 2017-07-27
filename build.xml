@@ -176,7 +176,7 @@
            destdir="${build.dir}/doccheck"
            packagenames="${javadoc.packagenames}"
            doclet="com.sun.tools.doclets.doccheck.DocCheck"
-           docletpath="lib/doccheck.jar"/>
+           docletpath="${lib.dir}/doccheck.jar"/>
 </target>
 
 <target name="datatype-sample" depends="jar">
@@ -366,7 +366,7 @@
 	depends="version,googlecode.properties"
 	description="Upload files to Google Code. Run dist before this.">
   <taskdef classname="net.bluecow.googlecode.ant.GoogleCodeUploadTask"
-	   classpath="lib/ant-googlecode.jar" name="gcupload"/>
+	   classpath="${lib.dir}/ant-googlecode.jar" name="gcupload"/>
   <gcupload username="${googlecode.username}" 
             password="${googlecode.password}" 
             projectname="jing-trang" 

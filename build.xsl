@@ -10,12 +10,12 @@
   <project>
     <xmlproperty file="version.xml"/>
     <property name="build.dir" value="${{basedir}}/build"/>
-    <property name="javacc.dir" value="lib"/>
+    <property name="javacc.dir" value="${{lib.dir}}"/>
     <property name="ant.build.javac.source" value="1.5"/>
     <property name="ant.build.javac.target" value="1.5"/>
     <taskdef name="testng" classname="org.testng.TestNGAntTask">
       <classpath>
-	<pathelement location="lib/testng.jar"/>
+	<pathelement location="${{lib.dir}}/testng.jar"/>
       </classpath>
     </taskdef>
     <target name="dummy"/>
@@ -111,7 +111,7 @@
 	    <pathelement location="{$build}/mod/{@module}/classes/main"/>
 	  </xsl:for-each>
 	  <xsl:for-each select="depends[@lib]">
-	    <pathelement location="lib/{@lib}.jar"/>
+	    <pathelement location="${{lib.dir}}/{@lib}.jar"/>
 	  </xsl:for-each>
 	</classpath>
       </javac>
@@ -151,10 +151,10 @@
 	    <pathelement location="{$build}/mod/{@module}/classes/main"/>
 	  </xsl:for-each>
 	  <xsl:for-each select="depends[@lib]">
-	    <pathelement location="lib/{@lib}.jar"/>
+	    <pathelement location="${{lib.dir}}/{@lib}.jar"/>
 	  </xsl:for-each>
 	  <xsl:if test="test[@type='testng']">
-	    <pathelement location="lib/testng.jar"/>
+	    <pathelement location="${{lib.dir}}/testng.jar"/>
 	  </xsl:if>
 	</classpath>
       </javac>
@@ -298,13 +298,13 @@
       <classpath>
 	<pathelement location="{$build}/{$app}.jar"/>
 	<xsl:if test="@lib">
-	  <pathelement location="lib/{@lib}.jar"/>
+	  <pathelement location="${{lib.dir}}/{@lib}.jar"/>
 	  <xsl:if test="@lib='xalan'">
-	    <pathelement location="lib/serializer.jar"/>
+	    <pathelement location="${{lib.dir}}/serializer.jar"/>
 	  </xsl:if>
 	</xsl:if>
 	<xsl:if test="$app = 'jing'">
-	  <pathelement location="lib/xercesImpl.jar"/>
+	  <pathelement location="${{lib.dir}}/xercesImpl.jar"/>
 	</xsl:if>
       </classpath>
     </java>
@@ -373,7 +373,7 @@
 	  <pathelement location="mod/{@module}/src/main"/>
 	</xsl:for-each>
 	<xsl:for-each select="../depends[@lib]">
-	  <pathelement location="lib/{@lib}.jar"/>
+	  <pathelement location="${{lib.dir}}/{@lib}.jar"/>
 	</xsl:for-each>
       </classpath>
     </java>
@@ -402,7 +402,7 @@
 	  <pathelement location="mod/{@module}/src/main"/>
 	</xsl:for-each>
 	<xsl:for-each select="../depends[@lib]">
-	  <pathelement location="lib/{@lib}.jar"/>
+	  <pathelement location="${{lib.dir}}/{@lib}.jar"/>
 	</xsl:for-each>
       </classpath>
     </testng>

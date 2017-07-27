@@ -25,7 +25,7 @@
   <test name="category" type="java"
 	class="com.thaiopensource.datatype.xsd.regex.test.CategoryTest">
     <arg value="com.thaiopensource.datatype.xsd.regex.java.RegexEngineImpl"/>
-    <arg value="lib/UnicodeData-4.0.0.txt"/>
+    <arg value="${lib.dir}/UnicodeData-4.0.0.txt"/>
   </test>
 -->
   <ant precompile="mod.regex.gen">
@@ -46,7 +46,7 @@
 	    failonerror="yes">
 	<arg value="com.thaiopensource.datatype.xsd.regex.java.Categories"/>
 	<arg value="${build.dir}/mod/regex/gensrc/main"/>
-	<arg value="lib/UnicodeData-3.1.0.txt"/>
+	<arg value="${lib.dir}/UnicodeData-3.1.0.txt"/>
 	<classpath>
 	  <pathelement location="${build.dir}/mod/regex-gen/classes/main"/>
 	  <pathelement location="${build.dir}/mod/util/classes/main"/>
