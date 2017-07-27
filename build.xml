@@ -150,11 +150,17 @@
   <mkdir dir="${build.dir}/api/regex"/>
   <javadoc sourcepath="mod/datatype/src/main" destdir="${build.dir}/api/datatype"
     doctitle="RELAX NG Datatype API" windowtitle="RELAX NG Datatype API"
-    packagenames="org.relaxng.datatype,org.relaxng.datatype.helpers"/>
+    packagenames="org.relaxng.datatype,org.relaxng.datatype.helpers">
+    <link offline="true" href="http://java.sun.com/j2se/1.5.0/docs/api/"
+	  packagelistLoc="extapidoc/jdk/1.5"/>
+  </javadoc>
   <javadoc sourcepath="mod/util/src/main:mod/regex/src/main" destdir="${build.dir}/api/regex"
     packagenames="com.thaiopensource.datatype.xsd.regex,
 		  com.thaiopensource.datatype.xsd.regex.java,
-		  com.thaiopensource.datatype.xsd.regex.xerces2"/>
+		  com.thaiopensource.datatype.xsd.regex.xerces2">
+    <link offline="true" href="http://java.sun.com/j2se/1.5.0/docs/api/"
+	  packagelistLoc="extapidoc/jdk/1.5"/>
+  </javadoc>
   <javadoc sourcepathref="javadoc.sourcepath" destdir="${build.dir}/api/jing"
     doctitle="Jing API" windowtitle="Jing API"
     packagenames="${javadoc.packagenames}">
