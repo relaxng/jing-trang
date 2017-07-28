@@ -4,7 +4,7 @@ import com.thaiopensource.validate.Schema;
 
 /**
  * Action set for attributes.
- * Consistes of two flags (attach, reject) and a list of schemas.
+ * Consists of two flags (attach, reject) and a list of schemas.
  */
 class AttributeActionSet {
   /**

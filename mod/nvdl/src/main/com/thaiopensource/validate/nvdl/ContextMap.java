@@ -78,7 +78,7 @@ class ContextMap {
    * any of the stored paths.
    * @param context The list of local names that represent a section context 
    * (path from root local element names from the same namespace).
-   * @param len The lenght we should take from the list.
+   * @param len The length we should take from the list.
    * @return A mode or null.
    */
   private Object get(Vector context, int len) {

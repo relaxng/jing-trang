@@ -6,7 +6,7 @@ import java.util.StringTokenizer;
  * Stores information about a namespace specification.
  * A namespace is specified with a namespace pattern and a wildcard.
  * The wildcard can be present in multiple places in the namespace 
- * specification and each occurence of the wildcard can be replaced with
+ * specification and each occurrence of the wildcard can be replaced with
  * an arbitrary sequence of characters.
  * 
  * @author george
@@ -23,7 +23,7 @@ class NamespaceSpecification {
   static final String ANY_NAMESPACE = "##any";
 
   /**
-   * The namespace pattern, may contain one or more occurances of the wildcard.
+   * The namespace pattern, may contain one or more occurrences of the wildcard.
    */
   String ns="\0";
   

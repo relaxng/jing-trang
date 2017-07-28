@@ -807,7 +807,7 @@ and can be used to diagnose the error.</p>
 <p>It some scenarios it may be sufficient to produce a single error
 message for an invalid document, and to cease validation as soon as it
 is determined that the document is invalid.  In other scenarios, it
-may desirable to attempt to recover from the error and continute
+may desirable to attempt to recover from the error and continue
 validation so as to find subsequent errors in the document.  Jing
 recovers from validation errors as follows:</p>
 

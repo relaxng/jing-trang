@@ -70,7 +70,7 @@ combine them or choose on of the target namespaces to be the main one
 - same file, same target namespace: files are related by include; try
 to use redefine; can combine two definitions from include parent and
 include descendant, not two definitions from two include children; in
-this case, rename defines in childen and add define to parent.
+this case, rename defines in children and add define to parent.
 
 Deal with annotations (provide special support for xs:key/xs:keyRef/xs:unique).
 

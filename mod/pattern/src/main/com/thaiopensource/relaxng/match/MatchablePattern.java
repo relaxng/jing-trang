@@ -2,7 +2,7 @@ package com.thaiopensource.relaxng.match;
 
 /**
  * A RELAX NG pattern that can be matched against an XML document.
- * A MatchablePattern object is safe for concurrent accesss
+ * A MatchablePattern object is safe for concurrent access
  * from multiple threads.
  */
 public interface MatchablePattern {

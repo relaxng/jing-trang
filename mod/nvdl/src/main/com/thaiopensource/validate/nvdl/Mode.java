@@ -162,7 +162,7 @@ class Mode {
       // iterate namespace specifications.
       for (Enumeration e = nssElementMap.keys(); e.hasMoreElements() && actions==null;) {
         NamespaceSpecification nssI = (NamespaceSpecification)e.nextElement();
-        // If a namespace specification convers the current namespace URI then we get those actions.
+        // If a namespace specification covers the current namespace URI then we get those actions.
         if (nssI.covers(ns)) {
           actions = (ActionSet)nssElementMap.get(nssI);
         }
@@ -234,7 +234,7 @@ class Mode {
       // iterate namespace specifications.
       for (Enumeration e = nssAttributeMap.keys(); e.hasMoreElements() && actions==null;) {
         NamespaceSpecification nssI = (NamespaceSpecification)e.nextElement();
-        // If a namespace specification convers the current namespace URI then we get those actions.
+        // If a namespace specification covers the current namespace URI then we get those actions.
         if (nssI.covers(ns)) {
           actions = (AttributeActionSet)nssAttributeMap.get(nssI);
         }
