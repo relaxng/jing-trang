@@ -26,7 +26,7 @@ public interface DatatypeBuilder {
 	 *		When the given parameter is inappropriate for some reason.
 	 *		The callee is responsible to recover from this error.
 	 *		That is, the object should behave as if no such error
-	 *		was occured.
+	 *		was occurred.
 	 */
 	void addParameter( String name, String strValue, ValidationContext context )
 		throws DatatypeException;

@@ -29,7 +29,7 @@ public class DatatypeException extends Exception {
 	public static final int UNKNOWN = -1;
 
 	/**
-	 * Gets the index of the content where the error occured.
+	 * Gets the index of the content where the error occurred.
 	 * UNKNOWN can be returned to indicate that no index information
 	 * is available.
 	 */

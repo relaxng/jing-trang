@@ -1228,7 +1228,7 @@ class SchemaImpl extends AbstractSchema {
    * 
    * @param attributes The attributes.
    * @param localName The attribute name.
-   * @return The mode refered by the licanName attribute.
+   * @return The mode referred by the licanName attribute.
    */
   private Mode getModeAttribute(Attributes attributes, String localName) {
     return lookupCreateMode(attributes.getValue("", localName));
