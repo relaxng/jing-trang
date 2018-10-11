@@ -51,4 +51,8 @@ class OasisCatalog extends Catalog {
                                     : new ResolverException(e));
     }
   }
+
+  protected Catalog newCatalog() {
+    return new OasisCatalog(catalogManager, saxResolver);
+  }
 }
