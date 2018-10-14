@@ -95,9 +95,19 @@ public class XmlWriter {
     write(' ');
     write(name);
     write('=');
-    write('"');
-    data(value);
-    write('"');
+    if (value.indexOf('"') != -1 && value.indexOf('\'') != -1) {
+      write('"');
+      quotedData(value, '"', "quot");
+      write('"');
+    } else if (value.indexOf('"') != -1) {
+      write('\'');
+      data(value);
+      write('\'');
+    } else {
+      write('"');
+      data(value);
+      write('"');
+    }
   }
 
   public void text(String s) {
@@ -157,6 +167,10 @@ public class XmlWriter {
   }
 
   private void data(String s) {
+    quotedData(s, '\0', "");
+  }
+
+  private void quotedData(String s, char q, String qRef) {
     int n = s.length();
     for (int i = 0; i < n; i++) {
       char c = s.charAt(i);
@@ -188,7 +202,11 @@ public class XmlWriter {
           else
             charRef(Utf16.scalarValue(c, c2));
         }
-        else if (!cr.contains(c))
+        else if (c == q) {
+          write('&');
+          write(qRef);
+          write(';');
+        } else if (!cr.contains(c))
           charRef(c);
         else
           write(c);
