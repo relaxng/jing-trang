@@ -36,6 +36,8 @@ public class DatatypeLibraryImpl implements DatatypeLibrary {
     typeMap.put("normalizedString", new CdataDatatype());
     typeMap.put("token", new TokenDatatype());
     typeMap.put("boolean", new BooleanDatatype());
+    typeMap.put("untypedAtomic", new UntypedAtomicDatatype());
+    typeMap.put("anyAtomicType", new AnyAtomicTypeDatatype());
 
     DatatypeBase decimalType = new DecimalDatatype();
     typeMap.put("decimal", decimalType);

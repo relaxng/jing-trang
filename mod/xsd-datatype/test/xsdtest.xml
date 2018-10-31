@@ -803,4 +803,10 @@ B EEF </value>
 "
 > foo bar </valid>
 </datatype>
+<datatype name="untypedAtomic">
+<valid>any thing at all!</valid>
+</datatype>
+<datatype name="anyAtomicType">
+<valid>any thing at all!</valid>
+</datatype>
 </xsdtest>
