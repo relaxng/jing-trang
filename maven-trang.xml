@@ -1,0 +1,122 @@
+<project name="trang" basedir="."
+  xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+  <xmlproperty file="version.xml"/>
+  <property name="dist" location="build/dist" />
+  <property name="base" location="${dist}/trang-${version}" />
+  <property name="src" location="mod" />
+  <property name="javadoc-dir" value="${dist}/javadoc" />
+  <property name="javadoc-jar" value="${base}-javadoc.jar" />
+  <property name="sources-jar" value="${base}-sources.jar" />
+  <property name="bundle-jar" value="${base}-bundle.jar" />
+  <property name="catalog-src" location="${src}/catalog/src/main" />
+  <property name="convert-from-dtd-src" location="${src}/convert-from-dtd/src/main" />
+  <property name="convert-from-xml-src" location="${src}/convert-from-xml/src/main" />
+  <property name="convert-to-dtd-src" location="${src}/convert-to-dtd/src/main" />
+  <property name="convert-to-xsd-src" location="${src}/convert-to-xsd/src/main" />
+  <property name="datatype-src" location="${src}/datatype/src/main" />
+  <property name="dtd-parse-src" location="${src}/dtd-parse/src/main" />
+  <property name="infer-src" location="${src}/infer/src/main" />
+  <property name="regex-src" location="${src}/regex/src/main" />
+  <property name="resolver-src" location="${src}/resolver/src/main" />
+  <property name="rng-parse-src" location="${src}/rng-parse/src/main" />
+  <property name="rng-schema-src" location="${src}/rng-schema/src/main" />
+  <property name="trang-src" location="${src}/trang/src/main" />
+  <property name="util-src" location="${src}/util/src/main" />
+  <property name="xsd-datatype-src" location="${src}/xsd-datatype/src/main" />
+  <target name="javadoc-jar">
+    <javadoc destdir="${javadoc-dir}" additionalparam="-html5 -Xdoclint:none">
+      <fileset dir="${catalog-src}"/>
+      <fileset dir="${convert-from-dtd-src}"/>
+      <fileset dir="${convert-from-xml-src}"/>
+      <fileset dir="${convert-to-dtd-src}"/>
+      <fileset dir="${convert-to-xsd-src}"/>
+      <fileset dir="${datatype-src}"/>
+      <fileset dir="${dtd-parse-src}"/>
+      <fileset dir="${infer-src}"/>
+      <fileset dir="${regex-src}"/>
+      <fileset dir="${resolver-src}"/>
+      <fileset dir="${rng-parse-src}"/>
+      <fileset dir="${rng-schema-src}"/>
+      <fileset dir="${trang-src}"/>
+      <fileset dir="${util-src}"/>
+      <fileset dir="${xsd-datatype-src}"/>
+      <classpath>
+        <fileset dir="lib/">
+          <include name="**/*.jar" />
+        </fileset>
+        <fileset dir="build">
+          <include name="*.jar"/>
+        </fileset>
+      </classpath>
+    </javadoc>
+    <jar destfile="${javadoc-jar}">
+      <fileset dir="${javadoc-dir}" />
+    </jar>
+    <delete dir="${javadoc-dir}"/>
+  </target>
+  <target name="sources-jar">
+    <jar destfile="${sources-jar}">
+      <fileset dir="${catalog-src}"/>
+      <fileset dir="${convert-from-dtd-src}"/>
+      <fileset dir="${convert-from-xml-src}"/>
+      <fileset dir="${convert-to-dtd-src}"/>
+      <fileset dir="${convert-to-xsd-src}"/>
+      <fileset dir="${datatype-src}"/>
+      <fileset dir="${dtd-parse-src}"/>
+      <fileset dir="${infer-src}"/>
+      <fileset dir="${regex-src}"/>
+      <fileset dir="${resolver-src}"/>
+      <fileset dir="${rng-parse-src}"/>
+      <fileset dir="${rng-schema-src}"/>
+      <fileset dir="${trang-src}"/>
+      <fileset dir="${util-src}"/>
+      <fileset dir="${xsd-datatype-src}"/>
+    </jar>
+  </target>
+  <target name="artifacts" depends="javadoc-jar,sources-jar">
+    <artifact:pom
+      id="trang-pom"
+      groupId="org.relaxng"
+      artifactId="trang"
+      version="${version}"
+      name="Trang"
+      description="Trang, a multi-format schema converter based on RELAX NG."
+      url="http://www.thaiopensource.com/relaxng/trang.html"
+      packaging="jar">
+      <license
+        name="3-clause BSD license"
+        distribution="repo"
+        url="https://github.com/relaxng/jing-trang/blob/master/copying.txt"/>
+      <scm
+        connection="scm:git:git@github.com:relaxng/jing-trang.git"
+        developerConnection="scm:git:git@github.com:relaxng/jing-trang.git"
+        url="https://github.com/relaxng/jing-trang/"/>
+      <issueManagement
+        system="GitHub Issues"
+        url="https://github.com/relaxng/jing-trang/issues"/>
+      <ciManagement
+        system="Travis CI"
+        url="https://travis-ci.org/relaxng/jing-trang"/>
+      <developer
+        name="James Clark"
+        id="jjc@jclark.com"
+        email="jjc@jclark.com"
+        url="http://jclark.com/"/>
+      <developer
+        name="George Bina"
+        id="georgebina"
+        email="george@oxygenxml.com"
+        url="http://www.oxygenxml.com"/>
+      <developer
+        name="Michael[tm] Smith"
+        id="sideshowbarker"
+        email="mike@w3.org"
+        url="https://people.w3.org/mike/"/>
+    </artifact:pom>
+    <artifact:writepom pomRefId="trang-pom" file="${base}.pom"/>
+    <copy file="build/trang.jar" tofile="${base}.jar"/>
+  </target>
+  <target name="bundle">
+    <jar basedir="${dist}" destfile="${bundle-jar}"/>
+  </target>
+</project>

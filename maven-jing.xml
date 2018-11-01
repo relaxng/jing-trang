@@ -1,0 +1,126 @@
+<project name="jing" basedir="."
+  xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+  <xmlproperty file="version.xml"/>
+  <property name="dist" location="build/dist" />
+  <property name="base" location="${dist}/jing-${version}" />
+  <property name="src" location="mod" />
+  <property name="javadoc-dir" value="${dist}/javadoc" />
+  <property name="javadoc-jar" value="${base}-javadoc.jar" />
+  <property name="sources-jar" value="${base}-sources.jar" />
+  <property name="bundle-jar" value="${base}-bundle.jar" />
+  <property name="catalog-src" location="${src}/catalog/src/main" />
+  <property name="datatype-src" location="${src}/datatype/src/main" />
+  <property name="jaxp-src" location="${src}/jaxp/src/main" />
+  <property name="nvdl-src" location="${src}/nvdl/src/main" />
+  <property name="pattern-src" location="${src}/pattern/src/main" />
+  <property name="picl-src" location="${src}/picl/src/main" />
+  <property name="resolver-src" location="${src}/resolver/src/main" />
+  <property name="rng-jarv-src" location="${src}/rng-jarv/src/main" />
+  <property name="rng-jaxp-src" location="${src}/rng-jaxp/src/main" />
+  <property name="rng-parse-src" location="${src}/rng-parse/src/main" />
+  <property name="rng-validate-src" location="${src}/rng-validate/src/main" />
+  <property name="schematron-src" location="${src}/schematron/src/main" />
+  <property name="util-src" location="${src}/util/src/main" />
+  <property name="validate-src" location="${src}/validate/src/main" />
+  <property name="xerces-src" location="${src}/xerces/src/main" />
+  <target name="javadoc-jar">
+    <javadoc destdir="${javadoc-dir}" additionalparam="-html5 -Xdoclint:none">
+      <fileset dir="${catalog-src}"/>
+      <fileset dir="${datatype-src}"/>
+      <fileset dir="${jaxp-src}"/>
+      <fileset dir="${nvdl-src}"/>
+      <fileset dir="${pattern-src}"/>
+      <fileset dir="${picl-src}"/>
+      <fileset dir="${resolver-src}"/>
+      <fileset dir="${rng-jarv-src}"/>
+      <fileset dir="${rng-jaxp-src}"/>
+      <fileset dir="${rng-parse-src}"/>
+      <fileset dir="${rng-validate-src}"/>
+      <fileset dir="${schematron-src}"/>
+      <fileset dir="${util-src}"/>
+      <fileset dir="${validate-src}"/>
+      <fileset dir="${xerces-src}"/>
+      <classpath>
+        <fileset dir="lib/">
+          <include name="**/*.jar" />
+        </fileset>
+        <fileset dir="build/">
+          <include name="*.jar"/>
+        </fileset>
+      </classpath>
+    </javadoc>
+    <jar destfile="${javadoc-jar}">
+      <fileset dir="${javadoc-dir}" />
+    </jar>
+    <delete dir="${javadoc-dir}"/>
+  </target>
+  <target name="sources-jar">
+    <jar destfile="${sources-jar}">
+      <fileset dir="${catalog-src}"/>
+      <fileset dir="${datatype-src}"/>
+      <fileset dir="${jaxp-src}"/>
+      <fileset dir="${nvdl-src}"/>
+      <fileset dir="${pattern-src}"/>
+      <fileset dir="${picl-src}"/>
+      <fileset dir="${resolver-src}"/>
+      <fileset dir="${rng-jarv-src}"/>
+      <fileset dir="${rng-jaxp-src}"/>
+      <fileset dir="${rng-parse-src}"/>
+      <fileset dir="${rng-validate-src}"/>
+      <fileset dir="${schematron-src}"/>
+      <fileset dir="${util-src}"/>
+      <fileset dir="${validate-src}"/>
+      <fileset dir="${xerces-src}"/>
+    </jar>
+  </target>
+  <target name="artifacts" depends="javadoc-jar,sources-jar">
+    <artifact:pom
+      id="jing-pom"
+      groupId="org.relaxng"
+      artifactId="jing"
+      version="${version}"
+      name="Jing"
+      description="Jing, a tool for validating documents against RelaxNG schemas."
+      url="http://www.thaiopensource.com/relaxng/jing.html"
+      packaging="jar">
+      <license
+        name="3-clause BSD license"
+        distribution="repo"
+        url="https://github.com/relaxng/jing-trang/blob/master/copying.txt"/>
+      <scm
+        connection="scm:git:git@github.com:relaxng/jing-trang.git"
+        developerConnection="scm:git:git@github.com:relaxng/jing-trang.git"
+        url="https://github.com/relaxng/jing-trang/"/>
+      <issueManagement
+        system="GitHub Issues"
+        url="https://github.com/relaxng/jing-trang/issues"/>
+      <ciManagement
+        system="Travis CI"
+        url="https://travis-ci.org/relaxng/jing-trang"/>
+      <developer
+        name="James Clark"
+        id="jjc@jclark.com"
+        email="jjc@jclark.com"
+        url="http://jclark.com/"/>
+      <developer
+        name="George Bina"
+        id="georgebina"
+        email="george@oxygenxml.com"
+        url="http://www.oxygenxml.com"/>
+      <developer
+        name="Michael[tm] Smith"
+        id="sideshowbarker"
+        email="mike@w3.org"
+        url="https://people.w3.org/mike/"/>
+      <dependency groupId="isorelax" artifactId="isorelax" version="20030108"/>
+      <dependency groupId="net.sf.saxon" artifactId="Saxon-HE" version="9.6.0-4"/>
+      <dependency groupId="xerces" artifactId="xercesImpl" version="2.9.1"/>
+      <dependency groupId="xml-apis" artifactId="xml-apis" version="1.0.b2"/>
+    </artifact:pom>
+    <artifact:writepom pomRefId="jing-pom" file="${base}.pom"/>
+    <copy file="build/jing.jar" tofile="${base}.jar"/>
+  </target>
+  <target name="bundle">
+    <jar basedir="${dist}" destfile="${bundle-jar}"/>
+  </target>
+</project>

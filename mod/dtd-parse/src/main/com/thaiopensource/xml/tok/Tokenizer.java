@@ -78,7 +78,7 @@ public class Tokenizer {
   public static final int TOK_CDATA_SECT_OPEN = TOK_END_TAG + 1;
 
   /**
-   * Represents the end of a CDATA section <code>]]></code>.
+   * Represents the end of a CDATA section <code>]]&gt;</code>.
    */
   public static final int TOK_CDATA_SECT_CLOSE = TOK_CDATA_SECT_OPEN + 1;
 
@@ -2088,7 +2088,7 @@ public class Tokenizer {
    * The subarray starts following the <code>&lt;![ IGNORE [</code>.
    *
    * @return the index of the character following the closing
-   * <code>]]></code>
+   * <code>]]&gt;</code>
    *
    * @exception PartialTokenException if the subarray does not contain the
    * complete ignored conditional section
