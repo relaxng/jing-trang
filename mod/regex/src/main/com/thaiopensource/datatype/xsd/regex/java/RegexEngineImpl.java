@@ -7,7 +7,7 @@ import com.thaiopensource.datatype.xsd.regex.RegexSyntaxException;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of <code>RegexEngine</code> using the JDK >= 1.4 <code>java.util.regex</code>
+ * An implementation of <code>RegexEngine</code> using the JDK 1.4+ <code>java.util.regex</code>
  * package.
  */
 public class RegexEngineImpl implements RegexEngine {
