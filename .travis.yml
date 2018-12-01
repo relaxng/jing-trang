@@ -13,6 +13,9 @@ jdk:
   #- oraclejdk7
   - oraclejdk8
   - oraclejdk9
+  # oracle jdk 10 is deprecated
+  #- oraclejdk10
+  - oraclejdk11
   - openjdk10
   - openjdk11
 
