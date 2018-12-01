@@ -6,12 +6,12 @@ addons:
       - openjdk-6-jdk
 
 jdk:
-  - openjdk6
-  - openjdk7
-  - openjdk8
+#  - openjdk6
+#  - openjdk7
+#  - openjdk8
   # https://github.com/travis-ci/travis-ci/issues/7884
   #- oraclejdk7
-  - oraclejdk8
+#  - oraclejdk8
   - oraclejdk9
   - openjdk10
   - openjdk11
