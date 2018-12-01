@@ -11,8 +11,8 @@
     <xmlproperty file="version.xml"/>
     <property name="build.dir" value="${{basedir}}/build"/>
     <property name="javacc.dir" value="${{lib.dir}}"/>
-    <property name="ant.build.javac.source" value="6"/>
-    <property name="ant.build.javac.target" value="1.6"/>
+    <property name="ant.build.javac.source" value="7"/>
+    <property name="ant.build.javac.target" value="7"/>
     <taskdef name="testng" classname="org.testng.TestNGAntTask">
       <classpath>
 	<pathelement location="${{lib.dir}}/testng.jar"/>
