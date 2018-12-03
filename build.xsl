@@ -6,10 +6,12 @@
 	    encoding="utf-8"/>
 	    
 <xsl:variable name="build" select="'${build.dir}'"/>
+<xsl:variable name="doc" select="'${doc.dir}'"/>
 <xsl:template match="/">
   <project>
     <xmlproperty file="version.xml"/>
     <property name="build.dir" value="${{basedir}}/build"/>
+    <property name="doc.dir" value="${{basedir}}/doc"/>
     <property name="javacc.dir" value="${{lib.dir}}"/>
     <property name="ant.build.javac.source" value="6"/>
     <property name="ant.build.javac.target" value="1.6"/>
@@ -21,6 +23,15 @@
     <target name="dummy"/>
     <target name="init">
       <mkdir dir="{$build}"/>
+      <exec executable="git">
+        <arg value="submodule"/>
+        <arg value="update"/>
+        <arg value="--init"/>
+        <arg value="--recursive"/>
+      </exec>
+      <copy todir="{$doc}">
+        <fileset dir="relaxng.org/jclark" includes="**"/>
+      </copy>
     </target>
     <xsl:for-each select="modules/module">
       <xsl:apply-templates select="document(concat('mod/', .,'/mod.xml'), .)/module">

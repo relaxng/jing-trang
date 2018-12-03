@@ -1,0 +1,3 @@
+[submodule "relaxng.org"]
+	path = relaxng.org
+	url = https://github.com/relaxng/relaxng.org.git
