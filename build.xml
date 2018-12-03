@@ -2,6 +2,7 @@
 
 <property name="lib.dir" value="lib"/>
 <property name="build.dir" value="${basedir}/build"/>
+<property name="doc.dir" value="${basedir}/doc"/>
 
 <property name="moddir" value="mod"/>
 <property name="modfile" value="mod.xml"/>
@@ -393,6 +394,12 @@
 <target name="clean" 
 	description="Remove almost all files created during the build process">
   <delete dir="${build.dir}"/>
+  <exec executable="git">
+    <arg value="clean"/>
+    <arg value="-d"/>
+    <arg value="--force"/>
+    <arg value="${doc.dir}"/>
+  </exec>
 </target>
 
 <target name="realclean" depends="clean"
