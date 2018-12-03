@@ -1,0 +1,6 @@
+.DS_Store
+.ant-targets-build.xml
+build/
+doc/
+modbuild.xml
+modules.xml
