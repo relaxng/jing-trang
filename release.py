@@ -134,8 +134,7 @@ class Release():
             '-DserverId=ossrh',
         ]
         output = subprocess.check_output(mvnArgs)
-        # idPrefix = 'orgrelaxng'  # TODO: Change this when
-        idPrefix = 'iogithubrelaxng'
+        idPrefix = 'orgrelaxng'
         # The rest of this is a hack that parses the output from the command
         # mvn -f <file> org.sonatype.plugins:nexus-staging-maven-plugin:rc-list
         # to get the right stagingRepositoryId so that we can fully automate the
@@ -143,8 +142,7 @@ class Release():
         for line in output.decode('utf-8').split('\n'):
             if idPrefix not in line:
                 continue
-            # stagingRepositoryId = '%s-%s' % (idPrefix, line[18:22])
-            stagingRepositoryId = '%s-%s' % (idPrefix, line[23:27])
+            stagingRepositoryId = '%s-%s' % (idPrefix, line[18:22])
             mvnArgs = [
                 mvnCmd,
                 '-f',
