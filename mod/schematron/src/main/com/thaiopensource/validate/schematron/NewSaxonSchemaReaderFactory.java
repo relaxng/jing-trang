@@ -19,5 +19,6 @@ public class NewSaxonSchemaReaderFactory extends SchematronSchemaReaderFactory {
     }
     factory.setAttribute(FeatureKeys.LINE_NUMBERING, Boolean.TRUE);
     factory.setAttribute(FeatureKeys.VERSION_WARNING, Boolean.FALSE);
+    factory.setErrorListener(new SilencingErrorListener());
   }
 }
