@@ -419,7 +419,7 @@
 <xsl:template match="*" mode="check"/>
 
 <xsl:template mode="check-cycles" match="sch:rule">
-  <xsl:param name="nodes" select="/.."/>
+  <xsl:param name="nodes"/>
   <xsl:param name="node-to-check"/>
   <xsl:variable name="nodes-or-self" select="$nodes|."/>
   <xsl:choose>
