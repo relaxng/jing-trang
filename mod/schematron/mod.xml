@@ -28,11 +28,21 @@
 	    in="mod/schematron/src/main/${mod.schematron.respackage}/schematron.xsl"
 	    out="${mod.schematron.resdir}/schematron-xsltc.xsl">
 	      <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+        <classpath>
+          <fileset dir="lib">
+            <filename name="saxon9.jar"/>
+          </fileset>
+        </classpath>
       </xslt>
       <xslt style="mod/schematron/lib/xsltc-fixup.xsl"
       in="mod/schematron/src/main/${mod.schematron.respackage}/iso-schematron.xsl"
       out="${mod.schematron.resdir}/iso-schematron-xsltc.xsl">
         <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+        <classpath>
+          <fileset dir="lib">
+            <filename name="saxon9.jar"/>
+          </fileset>
+        </classpath>
       </xslt>
     </target>
   </ant>
