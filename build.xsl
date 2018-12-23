@@ -336,7 +336,13 @@
       <xslt style="{$srctestdir}/{@transform}"
 	    in="{$srctest}"
 	    out="{$runtestdir}/{@name}test.xml">
-	<factory name="net.sf.saxon.TransformerFactoryImpl"/>
+	<factory name="net.sf.saxon.TransformerFactoryImpl">
+    <classpath>
+      <fileset dir="lib">
+        <filename name="saxon9.jar"/>
+      </fileset>
+    </classpath>
+  </factory>
       </xslt>
       <!-- XXX Could validate intermediate result against a schema -->
     </xsl:if>
@@ -353,6 +359,11 @@
 	</xsl:choose>
       </xsl:attribute>
       <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+      <classpath>
+        <fileset dir="lib">
+          <filename name="saxon9.jar"/>
+        </fileset>
+      </classpath>
       <param name="dir" expression="{$runtestdir}"/>
     </xslt>
   </target>
