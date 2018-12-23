@@ -336,7 +336,7 @@
       <xslt style="{$srctestdir}/{@transform}"
 	    in="{$srctest}"
 	    out="{$runtestdir}/{@name}test.xml">
-	<factory name="com.icl.saxon.TransformerFactoryImpl"/>
+	<factory name="net.sf.saxon.TransformerFactoryImpl"/>
       </xslt>
       <!-- XXX Could validate intermediate result against a schema -->
     </xsl:if>
@@ -352,7 +352,7 @@
 	  </xsl:otherwise>
 	</xsl:choose>
       </xsl:attribute>
-      <factory name="com.icl.saxon.TransformerFactoryImpl"/>
+      <factory name="net.sf.saxon.TransformerFactoryImpl"/>
       <param name="dir" expression="{$runtestdir}"/>
     </xslt>
   </target>

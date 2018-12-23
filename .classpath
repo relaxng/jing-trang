@@ -9,7 +9,6 @@
 	<classpathentry kind="lib" path="lib/isorelax.jar"/>
 	<classpathentry kind="lib" path="lib/javacc.jar"/>
 	<classpathentry kind="lib" path="lib/resolver.jar"/>
-	<classpathentry kind="lib" path="lib/saxon.jar"/>
 	<classpathentry kind="lib" path="lib/saxon9.jar"/>
 	<classpathentry kind="lib" path="lib/serializer.jar"/>
 	<classpathentry kind="lib" path="lib/testng.jar"/>

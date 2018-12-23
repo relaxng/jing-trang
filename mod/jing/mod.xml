@@ -22,7 +22,7 @@
     <manifest>
       <attribute name="Main-Class" value="com/thaiopensource/relaxng/util/Driver"/>
       <attribute name="Class-Path"
-		 value="xercesImpl.jar xml-apis.jar saxon.jar saxon9.jar xalan.jar isorelax.jar resolver.jar"/>
+		 value="xercesImpl.jar xml-apis.jar saxon9.jar xalan.jar isorelax.jar resolver.jar"/>
     </manifest>
     <service type="com.thaiopensource.datatype.xsd.regex.RegexEngine"/>
     <service type="org.relaxng.datatype.DatatypeLibraryFactory"/>
