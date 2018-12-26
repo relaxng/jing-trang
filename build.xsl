@@ -51,7 +51,7 @@
       </xsl:attribute>
     </target>
     <target name="compile" depends="mod.jing.compile-main,mod.trang.compile-main"/>
-    <target name="jar" depends="mod.dtdinst.jar,mod.jing.jar,mod.trang.jar"/>
+    <target name="ant-jar" depends="mod.dtdinst.jar,mod.jing.jar,mod.trang.jar"/>
     <target name="srczip" depends="mod.dtdinst.srczip,mod.jing.srczip,mod.trang.srczip"/>
     <target name="jing-jar" depends="mod.jing.jar">
       <taskdef name="jing" classname="com.thaiopensource.relaxng.util.JingTask">
