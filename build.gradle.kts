@@ -24,20 +24,19 @@ repositories {
     jcenter()
 }
 
-ant.importBuild("build.xml")
-defaultTasks("ant-clean", "ant-jar")
-
 // https://stackoverflow.com/questions/41794914/how-to-create-the-fat-jar-with-gradle-kotlin-script
 val jingTrang = task("jingtrang", Jar::class) {
     from(listOf("build/jing.jar", "build/trang.jar").map { it -> zipTree(it) })
     with(tasks.jar.get() as CopySpec)
 }
 
+ant.importBuild("build.xml")
+defaultTasks("ant-clean", "ant-jar", "jingtrang")
 
 tasks {
 
     build {
-        dependsOn(jingTrang)
+        dependsOn("ant-clean", "ant-jar", "jingtrang")
     }
 
 }
