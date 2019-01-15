@@ -27,6 +27,17 @@ repositories {
 ant.importBuild("build.xml")
 defaultTasks("ant-clean", "ant-jar")
 
+// https://stackoverflow.com/questions/41794914/how-to-create-the-fat-jar-with-gradle-kotlin-script
+val jingTrang = task("jing-trang", Jar::class) {
+    from("build/jing.jar", "build/trang.jar")
+    with(tasks.jar.get() as CopySpec)
+}
+
+
 tasks {
+
+    build {
+        dependsOn(jingTrang)
+    }
 
 }
