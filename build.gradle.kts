@@ -24,6 +24,16 @@ repositories {
     jcenter()
 }
 
+dependencies {
+    // TODO
+
+    api("org.xmlresolver", "xmlresolver", "0.14.0")
+    api("net.sf.saxon", "Saxon-HE", "9.8.0-14")
+
+    // Use TestNG framework, also requires calling test.useTestNG() below
+    testImplementation("org.testng:testng:6.14.3")
+}
+
 // https://stackoverflow.com/questions/41794914/how-to-create-the-fat-jar-with-gradle-kotlin-script
 val jingTrang = task("jingtrang", Jar::class) {
     from(listOf("build/jing.jar", "build/trang.jar").map { it -> zipTree(it) })
@@ -32,6 +42,13 @@ val jingTrang = task("jingtrang", Jar::class) {
 
 ant.importBuild("build.xml")
 defaultTasks("ant-clean", "ant-jar", "jingtrang")
+
+// if jing-trang is a composite, merged jar resolution
+// does not work, even if the artifact is declared like below
+artifacts {
+    add("archives", jingTrang)
+    add("default", jingTrang)
+}
 
 tasks {
 
