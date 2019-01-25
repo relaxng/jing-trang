@@ -34,14 +34,13 @@ dependencies {
     testImplementation("org.testng:testng:6.14.3")
 }
 
+ant.importBuild("build.xml")
+
 // https://stackoverflow.com/questions/41794914/how-to-create-the-fat-jar-with-gradle-kotlin-script
 val jingTrang = task("jingtrang", Jar::class) {
     from(listOf("build/jing.jar", "build/trang.jar").map { it -> zipTree(it) })
     with(tasks.jar.get() as CopySpec)
 }
-
-ant.importBuild("build.xml")
-defaultTasks("ant-clean", "ant-jar", "jingtrang")
 
 // if jing-trang is a composite, merged jar resolution
 // does not work, even if the artifact is declared like below
@@ -50,10 +49,17 @@ artifacts {
     add("default", jingTrang)
 }
 
-tasks {
-
-    build {
-        dependsOn("ant-clean", "ant-jar", "jingtrang")
-    }
-
+// https://docs.gradle.org/current/userguide/kotlin_dsl.html#using_the_container_api
+tasks.named("clean") {
+    dependsOn(":ant-clean")
 }
+
+tasks.named("jingtrang") {
+    dependsOn(":ant-jar")
+}
+
+tasks.named("build") {
+	dependsOn(jingTrang)
+}
+
+defaultTasks(":build")
