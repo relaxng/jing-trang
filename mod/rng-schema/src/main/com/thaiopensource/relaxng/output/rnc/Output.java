@@ -1222,7 +1222,7 @@ class Output {
       if (!prefix.equals("")) {
         String ns = context.getNamespace(prefix);
         if (ns != null && !ns.equals(SchemaBuilder.INHERIT_NS)
-            && !nsb.getNamespaceUri(prefix).equals(ns))
+            && !ns.equals(nsb.getNamespaceUri(prefix)))
           er.warning("annotation_inconsistent_binding", prefix, ns, loc);
       }
     }
