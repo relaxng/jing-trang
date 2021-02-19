@@ -13,8 +13,8 @@
     <property name="build.dir" value="${{basedir}}/build"/>
     <property name="doc.dir" value="${{basedir}}/doc"/>
     <property name="javacc.dir" value="${{lib.dir}}"/>
-    <property name="ant.build.javac.source" value="7"/>
-    <property name="ant.build.javac.target" value="1.7"/>
+    <property name="ant.build.javac.source" value="8"/>
+    <property name="ant.build.javac.target" value="1.8"/>
     <taskdef name="testng" classname="org.testng.TestNGAntTask">
       <classpath>
 	<pathelement location="${{lib.dir}}/testng.jar"/>
@@ -51,7 +51,7 @@
       </xsl:attribute>
     </target>
     <target name="compile" depends="mod.jing.compile-main,mod.trang.compile-main"/>
-    <target name="jar" depends="mod.dtdinst.jar,mod.jing.jar,mod.trang.jar"/>
+    <target name="ant-jar" depends="mod.dtdinst.jar,mod.jing.jar,mod.trang.jar"/>
     <target name="srczip" depends="mod.dtdinst.srczip,mod.jing.srczip,mod.trang.srczip"/>
     <target name="jing-jar" depends="mod.jing.jar">
       <taskdef name="jing" classname="com.thaiopensource.relaxng.util.JingTask">
@@ -336,7 +336,13 @@
       <xslt style="{$srctestdir}/{@transform}"
 	    in="{$srctest}"
 	    out="{$runtestdir}/{@name}test.xml">
-	<factory name="com.icl.saxon.TransformerFactoryImpl"/>
+	<factory name="net.sf.saxon.TransformerFactoryImpl">
+    <classpath>
+      <fileset dir="lib">
+        <filename name="saxon9.jar"/>
+      </fileset>
+    </classpath>
+  </factory>
       </xslt>
       <!-- XXX Could validate intermediate result against a schema -->
     </xsl:if>
@@ -352,7 +358,12 @@
 	  </xsl:otherwise>
 	</xsl:choose>
       </xsl:attribute>
-      <factory name="com.icl.saxon.TransformerFactoryImpl"/>
+      <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+      <classpath>
+        <fileset dir="lib">
+          <filename name="saxon9.jar"/>
+        </fileset>
+      </classpath>
       <param name="dir" expression="{$runtestdir}"/>
     </xslt>
   </target>

@@ -77,7 +77,6 @@ class Release():
             os.path.join('lib', 'ant-nodeps.jar'),
             os.path.join('lib', 'ant-trax.jar'),
             os.path.join('lib', 'javacc.jar'),
-            os.path.join('lib', 'saxon.jar'),
             os.path.join('lib', 'saxon9.jar'),
             os.path.join('lib', 'maven-ant-tasks-2.1.3.jar'),
         ])

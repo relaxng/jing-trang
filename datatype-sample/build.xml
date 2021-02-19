@@ -1,4 +1,4 @@
-<project name="RELAX NG Datatype Sample" default="jar" basedir=".">
+<project name="RELAX NG Datatype Sample" default="ant-jar" basedir=".">
 
 <property name="build.dir" value="build"/>
 <property name="jing.jar" value="jing.jar"/>
@@ -12,7 +12,7 @@
   <javac srcdir="src" destdir="${build.dir}/classes" classpath="${jing.jar}"/>
 </target>
 
-<target name="jar" depends="compile">
+<target name="ant-jar" depends="compile">
   <jar jarfile="${build.dir}/datatype-sample.jar">
     <fileset dir="${build.dir}/classes"/>
     <fileset dir="src" includes="META-INF/services/*"/>
