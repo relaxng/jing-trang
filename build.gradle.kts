@@ -29,11 +29,11 @@ repositories {
 dependencies {
     // TODO
 
-    api("org.xmlresolver", "xmlresolver", "0.14.0")
-    api("net.sf.saxon", "Saxon-HE", "9.8.0-14")
+    api("org.xmlresolver", "xmlresolver", "1.1.0")
+    api("net.sf.saxon", "Saxon-HE", "10.3")
 
     // Use TestNG framework, also requires calling test.useTestNG() below
-    testImplementation("org.testng:testng:6.14.3")
+    testImplementation("org.testng:testng:7.3.0")
 }
 
 ant.importBuild("build.xml")
