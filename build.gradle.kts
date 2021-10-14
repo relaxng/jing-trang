@@ -51,6 +51,8 @@ val jars = task("jars") {
 val jingTrang = task("jingtrang", Jar::class) {
     from(listOf("build/jing.jar", "build/trang.jar").map { it -> zipTree(it) })
     with(tasks.jar.get() as CopySpec)
+    dependsOn(":ant-jar")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE;
 }
 
 // if jing-trang is a composite, merged jar resolution
