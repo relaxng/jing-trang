@@ -6,6 +6,7 @@ import com.thaiopensource.util.UriOrFile;
 import com.thaiopensource.validate.auto.AutoSchemaReader;
 import com.thaiopensource.xml.sax.CountingErrorHandler;
 import com.thaiopensource.xml.sax.ErrorHandlerImpl;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.DTDHandler;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
@@ -166,6 +167,35 @@ public class ValidationDriver {
   }
 
   /**
+   * Validates the events of a producer against the currently loaded schema. This can be called
+   * multiple times in order to validate multiple documents.
+   *
+   * @param producer a producer that delivers SAX events to the handlers.
+   * @return <code>true</code> if the document is valid; <code>false</code> otherwise
+   * @throws java.lang.IllegalStateException if there is no currently loaded schema
+   * @throws java.io.IOException if an I/O error occurred
+   * @throws org.xml.sax.SAXException if an XMLReader or ErrorHandler threw a SAXException
+   */
+  public boolean validate(SaxProducer saxProducer) throws SAXException, IOException {
+    if (schema == null)
+      throw new IllegalStateException("cannot validate without schema");
+    if (validator == null)
+      validator = schema.createValidator(instanceProperties);
+
+    eh.reset();
+
+    DTDHandler dh = validator.getDTDHandler();
+
+    try {
+      saxProducer.produce(validator.getContentHandler(), dh, eh);
+      return !eh.getHadErrorOrFatalError();
+    }
+    finally {
+      validator.reset();
+    }
+  }
+
+  /**
    * Get the actual properties of the loaded schema
    * @return a PropertyMap with the schema properties
    * @throws java.lang.IllegalStateException if there is no currently loaded schema
@@ -206,5 +236,23 @@ public class ValidationDriver {
    */
   static public InputSource uriOrFileInputSource(String uriOrFile) {
     return new InputSource(UriOrFile.toUri(uriOrFile));
+  }
+
+  /**
+   * A producer of SAX events.
+   */
+  public interface SaxProducer {
+    /**
+     * Causes the producer to process and send SAX events to the handlers.
+     *
+     * @param contentHandler the content handler.
+     * @dtdHandler the DTD handler, or null if absent.
+     * @param errorHandler the error handler.
+     *
+     * @throws IOException if an error occurs during processing.
+     * @throws SAXException if a SAXException occurs when calling one of the handlers.
+     */
+    public void produce(ContentHandler contentHandler, DTDHandler dtdHandler, ErrorHandler errorHandler)
+      throws IOException, SAXException;
   }
 }
