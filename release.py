@@ -164,15 +164,12 @@ class Release():
             runCmd(mvnArgs)
 
     def createOrUpdateGithubData(self):
-        runCmd([gitCmd, 'tag', '-s', '-f',
-                '-m', 'V%s' % self.version, 'V%s' % self.version])
+        runCmd([gitCmd, 'tag', '-s', '-f', 'V%s' % self.version])
         args = [
             '-u',
             'relaxng',
             '-r',
             'jing-trang',
-            '-d',
-            'Released on %s.' % self.releaseDate,
             '-t',
             'V%s' % self.version,
         ]
