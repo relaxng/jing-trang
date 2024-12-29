@@ -50,10 +50,6 @@
   </xslt>
 </target>
 
-<target name="ant-test" depends="modbuild">
-  <ant antfile="modbuild.xml" target="ant-test"/>
-</target>
-
 <target name="srczip" depends="modbuild">
   <ant antfile="modbuild.xml" target="srczip"/>
 </target>
@@ -410,7 +406,7 @@
   <gzip zipfile="${build.dir}/dist/relaxng.tar.gz" src="${build.dir}/relaxng.tar"/>
 </target>
 
-<target name="dist" depends="ant-test,validate,jing-dist,trang-dist,dtdinst-dist,website"
+<target name="dist" depends="validate,jing-dist,trang-dist,dtdinst-dist,website"
 	description="Make a distribution, leaving artifacts in ${build.dir}/dist"/>
 
 <target name="googlecode.properties.available">
