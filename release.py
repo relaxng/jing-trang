@@ -65,8 +65,6 @@ class Release():
         self.buildDist()
         self.createOrUpdateGithubData()
         self.uploadToGithub()
-        self.uploadToCentral('jing')
-        self.uploadToCentral('trang')
 
     def setClasspath(self):
         self.classpath = os.pathsep.join([
