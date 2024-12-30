@@ -65,6 +65,8 @@ class Release():
         self.buildDist()
         self.createOrUpdateGithubData()
         self.uploadToGithub()
+        self.uploadToCentral('jing')
+        self.uploadToCentral('trang')
 
     def setClasspath(self):
         self.classpath = os.pathsep.join([
@@ -130,38 +132,6 @@ class Release():
             '-DnexusUrl=https://oss.sonatype.org/',
             '-DserverId=ossrh',
         ]
-        output = subprocess.check_output(mvnArgs)
-        idPrefix = 'orgrelaxng'
-        # The rest of this is a hack that parses the output from the command
-        # mvn -f <file> org.sonatype.plugins:nexus-staging-maven-plugin:rc-list
-        # to get the right stagingRepositoryId so that we can fully automate the
-        # release from the command line rather than manually with the Web UI.
-        for line in output.decode('utf-8').split('\n'):
-            if idPrefix not in line:
-                continue
-            stagingRepositoryId = '%s-%s' % (idPrefix, line[18:22])
-            mvnArgs = [
-                mvnCmd,
-                '-f',
-                '%s.pom' % os.path.join(distDir, basename),
-                'org.sonatype.plugins:nexus-staging-maven-plugin:rc-close',
-                '-DnexusUrl=https://oss.sonatype.org/',
-                '-DserverId=ossrh',
-                '-DautoReleaseAfterClose=true',
-                '-DstagingRepositoryId=' + stagingRepositoryId
-            ]
-            runCmd(mvnArgs)
-            mvnArgs = [
-                mvnCmd,
-                '-f',
-                '%s.pom' % os.path.join(distDir, basename),
-                'org.sonatype.plugins:nexus-staging-maven-plugin:rc-release',
-                '-DnexusUrl=https://oss.sonatype.org/',
-                '-DserverId=ossrh',
-                '-DautoReleaseAfterClose=true',
-                '-DstagingRepositoryId=' + stagingRepositoryId
-            ]
-            runCmd(mvnArgs)
 
     def createOrUpdateGithubData(self):
         runCmd([gitCmd, 'tag', '-s', '-f', 'V%s' % self.version])
