@@ -67,6 +67,12 @@
   <ant antfile="modbuild.xml" target="compile"/>
 </target>
 
+<!-- Restored test target (was ant-test until f31c15d0) to match README documentation -->
+<target name="test" depends="modbuild"  
+        description="Run the complete test suite defined in modbuild.xml">
+  <ant antfile="modbuild.xml" target="test"/>
+</target>
+
 <target name="gen" depends="modbuild,iml">
   <ant antfile="modbuild.xml" target="gen"/>
 </target>
@@ -76,12 +82,12 @@
 	includes="${moddir}/*/${modfile}"
 	filedirparameter="name"
 	destdir=".">
-    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
     <classpath>
       <fileset dir="lib">
         <filename name="saxon9.jar"/>
       </fileset>
     </classpath>
+    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
     <regexpmapper from="mod/([-a-zA-Z0-9_]*)/mod.xml"
 		  to="mod/\1/\1.iml"
 		  handledirsep="true"/>
@@ -233,30 +239,30 @@
 <target name="jing-doc" depends="version">
   <xslt basedir="doc" destdir="${build.dir}" includes="derivative.xml"
         style="doc/derivative.xsl">
-    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
     <classpath>
       <fileset dir="lib">
         <filename name="saxon9.jar"/>
       </fileset>
     </classpath>
+    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
   </xslt>
   <xslt basedir="doc" destdir="${build.dir}" includes="design.xml"
         style="doc/design.xsl">
-    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
     <classpath>
       <fileset dir="lib">
         <filename name="saxon9.jar"/>
       </fileset>
     </classpath>
+    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
   </xslt>
   <xslt basedir="doc" destdir="${build.dir}" includes="nrl.xml"
         style="doc/nrl.xsl">
-    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
     <classpath>
       <fileset dir="lib">
         <filename name="saxon9.jar"/>
       </fileset>
     </classpath>
+    <factory name="net.sf.saxon.TransformerFactoryImpl"/>
   </xslt>
   <copy todir="${build.dir}">
     <fileset dir="doc" includes="*.html"/>
