@@ -29,5 +29,6 @@
     <service type="org.iso_relax.verifier.VerifierFactoryLoader"/>
     <service type="com.thaiopensource.validate.SchemaReaderFactory"/>
     <service type="com.thaiopensource.validate.auto.SchemaReceiverFactory"/>
+    <service type="javax.xml.validation.SchemaFactory"/>
   </jar>
 </module>

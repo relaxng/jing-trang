@@ -9,4 +9,8 @@
   <depends module="jaxp"/>
   <compile test="yes"/>
   <test name="unit" type="testng"/>
+  <service type="javax.xml.validation.SchemaFactory">
+    <provider classname="com.thaiopensource.relaxng.jaxp.CompactSyntaxSchemaFactory"/>
+    <provider classname="com.thaiopensource.relaxng.jaxp.XMLSyntaxSchemaFactory"/>
+  </service>
 </module>
