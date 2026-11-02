@@ -1,0 +1,34 @@
+name: Test
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    strategy:
+      matrix:
+        jdk: [ 8, 11, 17, 21 ] # lts releases
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Set up JDK ${{ matrix.jdk }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.jdk }}
+      - name: Build modules
+        run: ./ant modbuild
+      - name: Build JAR
+        run: ./ant ant-jar
+      - name: Validate
+        run: ./ant validate
+      - name: Build Jing distribution
+        run: ./ant jing-dist
+      - name: Build Trang distribution
+        run: ./ant trang-dist
+      - name: Build DTDinst distribution
+        run: ./ant dtdinst-dist
+      - name: Build website
+        run: ./ant website
