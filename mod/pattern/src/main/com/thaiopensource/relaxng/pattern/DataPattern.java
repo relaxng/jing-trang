@@ -25,7 +25,7 @@ class DataPattern extends StringPattern {
     return dt.equals(((DataPattern)other).dt);
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseData(this);
   }
 

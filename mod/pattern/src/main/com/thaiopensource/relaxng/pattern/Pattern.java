@@ -53,11 +53,11 @@ public abstract class Pattern {
     return this;
   }
 
-  final boolean isNullable() {
+  public final boolean isNullable() {
     return nullable;
   }
 
-  boolean isNotAllowed() {
+  public boolean isNotAllowed() {
     return false;
   }
 
@@ -89,7 +89,7 @@ public abstract class Pattern {
     return this == p;
   }
 
-  abstract <T> T apply(PatternFunction<T> f);
+  public abstract <T> T apply(PatternFunction<T> f);
 
   static boolean contentTypeGroupable(int ct1, int ct2) {
     if (ct1 == EMPTY_CONTENT_TYPE || ct2 == EMPTY_CONTENT_TYPE)

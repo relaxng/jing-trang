@@ -3,7 +3,7 @@ package com.thaiopensource.relaxng.pattern;
 import com.thaiopensource.xml.util.Name;
 import org.relaxng.datatype.Datatype;
 
-class ValuePattern extends StringPattern {
+public class ValuePattern extends StringPattern {
   private final Object obj;
   private final Datatype dt;
   private final Name dtName;
@@ -26,7 +26,7 @@ class ValuePattern extends StringPattern {
 	    && dt.sameValue(obj, ((ValuePattern)other).obj));
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseValue(this);
   }
 
@@ -38,11 +38,11 @@ class ValuePattern extends StringPattern {
     }
   }
 
-  Datatype getDatatype() {
+  public Datatype getDatatype() {
     return dt;
   }
 
-  Name getDatatypeName() {
+  public Name getDatatypeName() {
     return dtName;
   }
 
@@ -50,7 +50,7 @@ class ValuePattern extends StringPattern {
     return obj;
   }
 
-  String getStringValue() {
+  public String getStringValue() {
     return stringValue;
   }
 }

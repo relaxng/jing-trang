@@ -66,7 +66,7 @@ class RefPattern extends Pattern {
     return false;
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseRef(this);
   }
 

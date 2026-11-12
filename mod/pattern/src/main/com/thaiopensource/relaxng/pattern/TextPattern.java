@@ -9,7 +9,7 @@ class TextPattern extends Pattern {
     return other instanceof TextPattern;
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseText(this);
   }
 

@@ -9,7 +9,7 @@ import java.util.Set;
  * The return value is a non-null Set each member of is a non-null Name. Note that
  * in the schema attribute foo|bar { text }, neither foo nor bar are required attributes.
  */
-class RequiredAttributesFunction extends RequiredElementsOrAttributesFunction {
+public class RequiredAttributesFunction extends RequiredElementsOrAttributesFunction {
   public Set<Name> caseAttribute(AttributePattern p) {
     return caseNamed(p.getNameClass());
   }

@@ -3,7 +3,7 @@ package com.thaiopensource.relaxng.pattern;
 import com.thaiopensource.xml.util.Name;
 
 
-class SimpleNameClass implements NameClass {
+public class SimpleNameClass implements NameClass {
 
   private final Name name;
 
@@ -30,7 +30,7 @@ class SimpleNameClass implements NameClass {
     return name.equals(other.name);
   }
 
-  Name getName() {
+  public Name getName() {
     return name;
   }
 

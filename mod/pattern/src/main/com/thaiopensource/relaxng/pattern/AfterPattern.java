@@ -1,7 +1,7 @@
 package com.thaiopensource.relaxng.pattern;
 
 
-class AfterPattern extends BinaryPattern {
+public class AfterPattern extends BinaryPattern {
   AfterPattern(Pattern p1, Pattern p2) {
     super(false,
 	  combineHashCode(AFTER_HASH_CODE, p1.hashCode(), p2.hashCode()),
@@ -9,11 +9,11 @@ class AfterPattern extends BinaryPattern {
 	  p2);
   }
 
-  boolean isNotAllowed() {
+  public boolean isNotAllowed() {
     return p1.isNotAllowed();
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseAfter(this);
   }
 }

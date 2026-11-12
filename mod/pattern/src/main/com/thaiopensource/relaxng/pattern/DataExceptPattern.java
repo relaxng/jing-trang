@@ -22,7 +22,7 @@ class DataExceptPattern extends DataPattern {
     return except.samePattern(((DataExceptPattern)other).except);
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseDataExcept(this);
   }
 

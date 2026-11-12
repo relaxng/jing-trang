@@ -3,7 +3,7 @@ package com.thaiopensource.relaxng.pattern;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 
-class AttributePattern extends Pattern {
+public class AttributePattern extends Pattern {
   private final NameClass nameClass;
   private final Pattern p;
   private final Locator loc;
@@ -72,22 +72,22 @@ class AttributePattern extends Pattern {
     p.checkRecursion(depth);
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseAttribute(this);
   }
 
-  Pattern getContent() {
+  public Pattern getContent() {
     return p;
   }
 
-  NameClass getNameClass() {
+  public NameClass getNameClass() {
     return nameClass;
   }
 
-  Locator getLocator() {
+  public Locator getLocator() {
     return loc;
   }
-  String getDefaultValue() {
+  public String getDefaultValue() {
     return defaultValue;
   }
   

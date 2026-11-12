@@ -8,7 +8,7 @@ class EmptyPattern extends Pattern {
     return other instanceof EmptyPattern;
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseEmpty(this);
   }
   void checkRestrictions(int context, DuplicateAttributeDetector dad, Alphabet alpha)
