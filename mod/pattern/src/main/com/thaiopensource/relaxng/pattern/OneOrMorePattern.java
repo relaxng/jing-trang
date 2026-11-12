@@ -2,7 +2,7 @@ package com.thaiopensource.relaxng.pattern;
 
 import org.xml.sax.SAXException;
 
-class OneOrMorePattern extends Pattern {
+public class OneOrMorePattern extends Pattern {
   private final Pattern p;
 
   OneOrMorePattern(Pattern p) {
@@ -48,11 +48,11 @@ class OneOrMorePattern extends Pattern {
 	    && p == ((OneOrMorePattern)other).p);
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseOneOrMore(this);
   }
 
-  Pattern getOperand() {
+  public Pattern getOperand() {
     return p;
   }
 }

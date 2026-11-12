@@ -2,7 +2,7 @@ package com.thaiopensource.relaxng.pattern;
 
 import org.xml.sax.SAXException;
 
-abstract class BinaryPattern extends Pattern {
+public abstract class BinaryPattern extends Pattern {
   final Pattern p1;
   final Pattern p2;
 
@@ -30,11 +30,11 @@ abstract class BinaryPattern extends Pattern {
     return p1 == b.p1 && p2 == b.p2;
   }
 
-  Pattern getOperand1() {
+  public Pattern getOperand1() {
     return p1;
   }
 
-  Pattern getOperand2() {
+  public Pattern getOperand2() {
     return p2;
   }
 }

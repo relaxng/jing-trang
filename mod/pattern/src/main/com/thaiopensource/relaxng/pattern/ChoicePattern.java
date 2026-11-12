@@ -1,6 +1,6 @@
 package com.thaiopensource.relaxng.pattern;
 
-class ChoicePattern extends BinaryPattern {
+public class ChoicePattern extends BinaryPattern {
   ChoicePattern(Pattern p1, Pattern p2) {
     super(p1.isNullable() || p2.isNullable(),
 	  combineHashCode(CHOICE_HASH_CODE, p1.hashCode(), p2.hashCode()),
@@ -20,7 +20,7 @@ class ChoicePattern extends BinaryPattern {
     return p1.containsChoice(p) || p2.containsChoice(p);
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseChoice(this);
   }
 

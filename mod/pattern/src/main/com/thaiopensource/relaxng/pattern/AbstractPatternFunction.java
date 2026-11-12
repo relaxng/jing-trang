@@ -1,6 +1,6 @@
 package com.thaiopensource.relaxng.pattern;
 
-abstract class AbstractPatternFunction<T> implements PatternFunction<T> {
+public abstract class AbstractPatternFunction<T> implements PatternFunction<T> {
   public T caseEmpty(EmptyPattern p) {
     return caseOther(p);
   }

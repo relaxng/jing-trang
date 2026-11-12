@@ -1,6 +1,6 @@
 package com.thaiopensource.relaxng.pattern;
 
-class InterleavePattern extends BinaryPattern {
+public class InterleavePattern extends BinaryPattern {
   InterleavePattern(Pattern p1, Pattern p2) {
     super(p1.isNullable() && p2.isNullable(),
 	  combineHashCode(INTERLEAVE_HASH_CODE, p1.hashCode(), p2.hashCode()),
@@ -52,7 +52,7 @@ class InterleavePattern extends BinaryPattern {
       throw new RestrictionViolationException("interleave_text_overlap");
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseInterleave(this);
   }
 }

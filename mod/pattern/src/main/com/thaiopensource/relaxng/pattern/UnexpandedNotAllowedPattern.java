@@ -3,7 +3,8 @@ package com.thaiopensource.relaxng.pattern;
 class UnexpandedNotAllowedPattern extends NotAllowedPattern {
   UnexpandedNotAllowedPattern() {
   }
-  boolean isNotAllowed() {
+  
+  public boolean isNotAllowed() {
     return false;
   }
   Pattern expand(SchemaPatternBuilder b) {

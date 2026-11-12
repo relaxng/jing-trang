@@ -3,7 +3,7 @@ package com.thaiopensource.relaxng.pattern;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 
-class ElementPattern extends Pattern {
+public class ElementPattern extends Pattern {
   private Pattern p;
   private final NameClass origNameClass;
   private NameClass nameClass;
@@ -11,7 +11,7 @@ class ElementPattern extends Pattern {
   private boolean checkedRestrictions = false;
   private final Locator loc;
 
-  ElementPattern(NameClass nameClass, Pattern p, Locator loc) {
+  public ElementPattern(NameClass nameClass, Pattern p, Locator loc) {
     super(false,
 	  ELEMENT_CONTENT_TYPE,
 	  combineHashCode(ELEMENT_HASH_CODE,
@@ -69,7 +69,7 @@ class ElementPattern extends Pattern {
     p.checkRecursion(depth + 1);
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseElement(this);
   }
 
@@ -77,15 +77,15 @@ class ElementPattern extends Pattern {
     this.p = p;
   }
 
-  Pattern getContent() {
+  public Pattern getContent() {
     return p;
   }
 
-  NameClass getNameClass() {
+  public NameClass getNameClass() {
     return nameClass;
   }
 
-  Locator getLocator() {
+  public Locator getLocator() {
     return loc;
   }
 }

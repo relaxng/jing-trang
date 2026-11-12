@@ -32,7 +32,7 @@ class ListPattern extends Pattern {
 	    && p == ((ListPattern)other).p);
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseList(this);
   }
 

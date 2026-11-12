@@ -8,7 +8,7 @@ class ErrorPattern extends Pattern {
     return other instanceof ErrorPattern;
   }
 
-  <T> T apply(PatternFunction<T> f) {
+  public <T> T apply(PatternFunction<T> f) {
     return f.caseError(this);
   }
 }
